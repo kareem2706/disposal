@@ -1497,7 +1497,7 @@ window.acPick   = function(iid,lid,v){ var i=document.getElementById(iid); if(i)
 const SB_URL='https://tuzfoqdxmxzjjhvlxsgb.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1emZvcWR4bXh6ampodmx4c2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzIyNDcsImV4cCI6MjA5MDAwODI0N30.xJU8CmI0KGiEl-YA87Rtv8yrrFkPU8_dAlUrY85DDzs';
 const DEMO_MODE_KEY='disposal_demo';
-const STRIPE_FEE_MULTIPLIER = 1.029;
+const STRIPE_FEE_MULTIPLIER = 1.029; // 1 + 2.9% Stripe fee
 
 let sb=null,_entering=false;           // Supabase client
 let currentUser = null;  // auth.User
@@ -3058,9 +3058,10 @@ window.openPaymentModal = function(offerId, driverId, amount){
   currentDriverId = driverId;
   currentOfferAmount = amount;
 
-  document.getElementById('payment-amount').textContent = amount.toFixed(0) + ' €';
+  document.getElementById('payment-amount').textContent = amount.toFixed(2) + ' €';
   var withFees = (amount * STRIPE_FEE_MULTIPLIER).toFixed(2);
-  document.getElementById('stripe-fee-label').textContent = 'Frais de 2.9% → Total ' + withFees + ' €';
+  var feePercent = ((STRIPE_FEE_MULTIPLIER - 1) * 100).toFixed(1);
+  document.getElementById('stripe-fee-label').textContent = 'Frais de ' + feePercent + '% → Total ' + withFees + ' €';
 
   var errEl = document.getElementById('payment-err');
   if(errEl){ errEl.classList.remove('show'); errEl.textContent = ''; }
@@ -3091,7 +3092,11 @@ window.confirmPayment = async function(method){
     if(errEl){ showError(errEl, acceptErr.message); }
     return;
   }
-  await sb.from('offers').update({status:'rejected'}).eq('ride_id', currentRideId).neq('id', currentOfferId);
+  var { error: rejectErr } = await sb.from('offers').update({status:'rejected'}).eq('ride_id', currentRideId).neq('id', currentOfferId);
+  if(rejectErr){
+    if(errEl){ showError(errEl, rejectErr.message); }
+    return;
+  }
 
   var { error } = await sb.from('rides').update({
     status: 'confirmed',
