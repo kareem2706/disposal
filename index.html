@@ -1200,7 +1200,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
       </div>
       <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Choisissez votre mode de paiement</div>
       <div id="payment-methods" style="display:flex;flex-direction:column;gap:10px;">
-        <button class="btn btn-green" style="justify-content:flex-start;gap:14px;padding:16px 20px;" onclick="confirmPayment('virement')">
+        <button class="btn btn-green" style="justify-content:flex-start;gap:14px;padding:16px 20px;" onclick="confirmPayment('bank_transfer')">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h20" stroke="currentColor" stroke-width="1.8"/><path d="M6 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           <div style="text-align:left;">
             <div style="font-weight:600;">Virement bancaire</div>
@@ -1497,11 +1497,15 @@ window.acPick   = function(iid,lid,v){ var i=document.getElementById(iid); if(i)
 const SB_URL='https://tuzfoqdxmxzjjhvlxsgb.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1emZvcWR4bXh6ampodmx4c2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzIyNDcsImV4cCI6MjA5MDAwODI0N30.xJU8CmI0KGiEl-YA87Rtv8yrrFkPU8_dAlUrY85DDzs';
 const DEMO_MODE_KEY='disposal_demo';
+const STRIPE_FEE_MULTIPLIER = 1.029;
 
 let sb=null,_entering=false;           // Supabase client
 let currentUser = null;  // auth.User
 let currentProfile = null; // profiles row
 let currentRideId = null;  // for offer modal
+let currentOfferId = null;    // for payment modal
+let currentDriverId = null;   // for payment modal
+let currentOfferAmount = 0;   // for payment modal
 var _myOffers = {};  // rideId -> {price, msg} for submitted offers
 let currentLang = localStorage.getItem('disposal_lang') || 'fr';
 
@@ -3047,6 +3051,66 @@ function renderOfferCard(o){
 
 window._pickOffer = function(btn){
   openPaymentModal(btn.dataset.oid, btn.dataset.did, parseFloat(btn.dataset.price));
+};
+
+window.openPaymentModal = function(offerId, driverId, amount){
+  currentOfferId = offerId;
+  currentDriverId = driverId;
+  currentOfferAmount = amount;
+
+  document.getElementById('payment-amount').textContent = amount.toFixed(0) + ' €';
+  var withFees = (amount * STRIPE_FEE_MULTIPLIER).toFixed(2);
+  document.getElementById('stripe-fee-label').textContent = 'Frais de 2.9% → Total ' + withFees + ' €';
+
+  var errEl = document.getElementById('payment-err');
+  if(errEl){ errEl.classList.remove('show'); errEl.textContent = ''; }
+
+  closeModal('m-view-offers');
+  openModal('m-payment');
+};
+
+window.confirmPayment = async function(method){
+  var errEl = document.getElementById('payment-err');
+  if(errEl){ errEl.classList.remove('show'); errEl.textContent = ''; }
+
+  var totalWithFees = method === 'stripe'
+    ? parseFloat((currentOfferAmount * STRIPE_FEE_MULTIPLIER).toFixed(2))
+    : currentOfferAmount;
+  var paymentStatus = method === 'stripe' ? 'confirmed' : 'pending_payment';
+
+  if(localStorage.getItem(DEMO_MODE_KEY) === '1'){
+    closeModal('m-payment');
+    showToast(t('toast_offer_acc'));
+    return;
+  }
+
+  if(!sb || !currentRideId || !currentOfferId){ return; }
+
+  var { error: acceptErr } = await sb.from('offers').update({status:'accepted'}).eq('id', currentOfferId);
+  if(acceptErr){
+    if(errEl){ showError(errEl, acceptErr.message); }
+    return;
+  }
+  await sb.from('offers').update({status:'rejected'}).eq('ride_id', currentRideId).neq('id', currentOfferId);
+
+  var { error } = await sb.from('rides').update({
+    status: 'confirmed',
+    driver_id: currentDriverId,
+    final_price: currentOfferAmount,
+    payment_method: method,
+    payment_status: paymentStatus,
+    accepted_offer_id: currentOfferId,
+    total_with_fees: totalWithFees
+  }).eq('id', currentRideId);
+
+  if(error){
+    if(errEl){ showError(errEl, error.message); }
+    return;
+  }
+
+  closeModal('m-payment');
+  showToast(t('toast_offer_acc'));
+  await loadClientDashboard();
 };
 
 function getDemoOffers(){
