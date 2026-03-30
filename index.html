@@ -1623,6 +1623,10 @@ window.setLang = function(l){
 
 // ── INIT ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  // Initialise stripe fee label from constant so it's always in sync
+  var _feeEl = document.getElementById('stripe-fee-label');
+  if(_feeEl){ _feeEl.textContent = 'Frais de ' + ((STRIPE_FEE_MULTIPLIER - 1) * 100).toFixed(1) + '% s\'appliquent'; }
+
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){initDemoMode();return;}
   initSupabase(SB_URL,SB_KEY);
   await checkSession();
