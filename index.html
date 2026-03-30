@@ -2228,7 +2228,7 @@ async function loadMarketplace(){
 
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     const [c, s] = await Promise.all([
-      sb.from('rides').select('*').eq('status','waiting').eq('is_subcontract',false).order('ride_date',{ascending:true}).order('ride_time',{ascending:true}),
+      sb.from('rides').select('*').eq('status','waiting').or('is_subcontract.is.null,is_subcontract.eq.false').order('ride_date',{ascending:true}).order('ride_time',{ascending:true}),
       sb.from('rides').select('*').eq('status','waiting').eq('is_subcontract',true).order('ride_date',{ascending:true}).order('ride_time',{ascending:true})
     ]);
     clientRides = c.data || [];
