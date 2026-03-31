@@ -1309,10 +1309,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
           <button class="btn btn-secondary btn-sm" onclick="addMixedSegment()">+ Segment</button>
         </div>
         <div id="mixed-segments"></div>
-        <div class="form-grid" style="margin-top:12px;">
-          <div class="input-group"><label>Date globale <span style="color:var(--red)">*</span></label><input id="mixed-date" type="date" min=""></div>
-          <div class="input-group"><label>Heure de départ</label><input id="mixed-time" type="time" value="08:00"></div>
-        </div>
       </div>
       <div id="ride-err" class="auth-error"></div>
     </div>
@@ -1411,12 +1407,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
           <button class="btn btn-secondary btn-sm" onclick="addSubSegment()">+ Segment</button>
         </div>
         <div id="sub-mixed-segments"></div>
-        <div class="form-grid" style="margin-top:12px;">
-          <div class="input-group"><label>Date globale <span style="color:var(--red)">*</span></label><input id="sub-mixed-date" type="date" min=""></div>
-          <div class="input-group"><label>Heure de d&eacute;part</label><input id="sub-mixed-time" type="time" value="08:00"></div>
-          <div class="input-group"><label>Passagers</label><select id="sub-mixed-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option></select></div>
-          <div class="input-group"><label>V&eacute;hicule</label><select id="sub-mixed-veh"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
-        </div>
       </div>
       <div style="margin-top:14px;">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
@@ -2172,10 +2162,10 @@ async function loadClientDashboard(){
   const wrap = document.getElementById('active-ride-wrap');
   if(wrap) wrap.style.display = active ? 'block' : 'none';
 
-  // Recent rides (last 4, sorted by ride_date desc for dashboard)
-  const recent = rides.slice().sort(function(a,b){
+  // Non-terminated rides sorted by ride_date desc for dashboard
+  const recent = rides.filter(function(r){ return r.status !== 'done' && r.status !== 'cancelled'; }).slice().sort(function(a,b){
     return ((b.ride_date||'')+(b.ride_time||'')).localeCompare((a.ride_date||'')+(a.ride_time||''));
-  }).slice(0,4);
+  });
 
   document.getElementById('recent-rides-list').innerHTML = recent.length
     ? recent.map(r => renderRideItem(r)).join('')
@@ -2536,6 +2526,11 @@ window.openOfferModal = function(rideId, summary, rideObj){
   document.getElementById('offer-price').value = existing ? existing.price : '';
   document.getElementById('offer-msg').value   = existing ? (existing.msg||'') : '';
   document.getElementById('offer-err').classList.remove('show');
+  // Disable price and message fields if offer already submitted (cannot be modified)
+  var priceEl = document.getElementById('offer-price');
+  var msgEl   = document.getElementById('offer-msg');
+  if(priceEl){ priceEl.disabled = !!existing; priceEl.style.opacity = existing ? '0.5' : ''; priceEl.style.cursor = existing ? 'not-allowed' : ''; }
+  if(msgEl){   msgEl.disabled   = !!existing; msgEl.style.opacity   = existing ? '0.5' : ''; msgEl.style.cursor   = existing ? 'not-allowed' : ''; }
   // Hide submit button if offer already submitted (submitted offers cannot be modified)
   var offerBtnWrap = document.getElementById('offer-btn-wrap');
   if(offerBtnWrap){ offerBtnWrap.style.display = existing ? 'none' : ''; }
@@ -2954,12 +2949,14 @@ window.submitRide = async function(){
     });
     from  = segs.length ? segs[0].replace(/^[^:]+:/,'').split('>')[0].trim() : 'Mixte';
     to    = '';
-    date  = g('mixed-date')||g('ride-date');
-    time  = g('mixed-time')||g('ride-time')||'00:00';
-    pax   = g('mixed-pax')||g('ride-pax');
-    veh   = g('mixed-vehicle')||g('ride-vehicle');
+    var firstSegEl = document.querySelector('#mixed-segments .mixed-segment');
+    var firstSegN  = firstSegEl ? firstSegEl.id.replace('seg-','') : null;
+    date  = firstSegN ? (g('sd8-'+firstSegN)||todayStr()) : todayStr();
+    time  = firstSegN ? (g('sh-'+firstSegN)||'00:00') : '00:00';
+    pax   = '1';
+    veh   = null;
     notes = 'Mixte: '+segs.join(' | ');
-    if(!date){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
+    if(!segs.length){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
   } else {
     from  = g('ride-from');
     to    = g('ride-to');
@@ -3154,12 +3151,12 @@ window.submitSubcontract = async function(){
     });
     from  = segs.length ? segs[0].replace(/^[^:]+:/,'').split('>')[0].trim() : 'Mixte';
     to    = '';
-    date  = g('sub-mixed-date');
+    date  = todayStr();
     time  = '00:00';
-    pax   = g('sub-mixed-pax');
-    veh   = g('sub-mixed-veh');
+    pax   = '1';
+    veh   = null;
     notes = 'Mixte: '+segs.join(' | ');
-    if(!date){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
+    if(!segs.length){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
   } else {
     from  = g('sub-from');
     to    = g('sub-to');
@@ -3728,7 +3725,7 @@ function showToast(msg){
 // Set today's date as default and minimum for ride form
 window.addEventListener('load', () => {
   var td = todayStr();
-  ['ride-date','disp-date','mixed-date','sub-date','sub-disp-date','sub-mixed-date'].forEach(function(id){
+  ['ride-date','disp-date','sub-date','sub-disp-date'].forEach(function(id){
     var dt = document.getElementById(id);
     if(dt){ dt.value = td; dt.min = td; }
   });
@@ -3773,7 +3770,7 @@ window.addMixedSegment=function(){
   d._abFields=abFields;
   d._dispFields=dispFields;
   var dateEl=document.getElementById('sd8-'+n);
-  if(dateEl) dateEl.value=todayStr();
+  if(dateEl){ dateEl.value=todayStr(); dateEl.min=todayStr(); }
   setTimeout(function(){ window.attachGPToSeg(n); }, 50);
 };
 window.setSegType=function(btn,n,t2){
@@ -3785,7 +3782,7 @@ window.setSegType=function(btn,n,t2){
   if(seg&&fieldsEl){
     fieldsEl.innerHTML=isD?seg._dispFields:seg._abFields;
     var dateEl=document.getElementById('sd8-'+n);
-    if(dateEl) dateEl.value=todayStr();
+    if(dateEl){ dateEl.value=todayStr(); dateEl.min=todayStr(); }
     setTimeout(function(){ window.attachGPToSeg(n); }, 50);
   }
 };
