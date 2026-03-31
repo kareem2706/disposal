@@ -1196,7 +1196,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
       <div id="payment-summary" style="background:var(--sand2);border-radius:var(--r);padding:14px;margin-bottom:20px;border:1px solid var(--sand3);">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:14px;font-weight:500;">Montant HTVA</span>
-          <span id="payment-amount" style="font-size:22px;font-weight:700;color:var(--green);">—</span>
+          <span id="payment-amount" style="font-size:18px;font-weight:700;color:var(--green);">—</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
           <span style="font-size:12px;color:var(--ink3);">TVA 6%</span>
@@ -1204,7 +1204,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:8px;border-top:1px solid var(--sand3);">
           <span style="font-size:14px;font-weight:600;">Total TVAC</span>
-          <span id="payment-total" style="font-size:18px;font-weight:700;color:var(--green);">—</span>
+          <span id="payment-total" style="font-size:22px;font-weight:700;color:var(--green);">—</span>
         </div>
         <div style="font-size:11px;color:var(--ink3);margin-top:6px;">Paiement sécurisé &bull; Confirmation immédiate*</div>
       </div>
@@ -1484,8 +1484,17 @@ function _attachGoogleAC(){
       });
       el._gp.addListener('place_changed', function(){
         var place = el._gp.getPlace();
-        if(place && place.formatted_address) el.value = place.formatted_address;
-        else if(place && place.name) el.value = place.name;
+        if(place){
+          var name = place.name || '';
+          var addr = place.formatted_address || '';
+          if(name && addr && addr.toLowerCase().indexOf(name.toLowerCase()) === -1){
+            el.value = name + ', ' + addr;
+          } else if(addr){
+            el.value = addr;
+          } else if(name){
+            el.value = name;
+          }
+        }
       });
     }
   });
@@ -1504,8 +1513,17 @@ window.attachGPToSeg = function(n){
       });
       el._gp.addListener('place_changed', function(){
         var place = el._gp.getPlace();
-        if(place && place.formatted_address) el.value = place.formatted_address;
-        else if(place && place.name) el.value = place.name;
+        if(place){
+          var name = place.name || '';
+          var addr = place.formatted_address || '';
+          if(name && addr && addr.toLowerCase().indexOf(name.toLowerCase()) === -1){
+            el.value = name + ', ' + addr;
+          } else if(addr){
+            el.value = addr;
+          } else if(name){
+            el.value = name;
+          }
+        }
       });
     }
   });
@@ -3165,7 +3183,8 @@ function _paymentShowStep(step){
   }
   if(step === 'bank'){
     document.getElementById('bank-ref').textContent = 'DISPOSAL-' + (currentRideId || '—');
-    document.getElementById('bank-amount').textContent = currentOfferAmount.toFixed(2) + ' €';
+    var bankTvac = currentOfferAmount * 1.06;
+    document.getElementById('bank-amount').textContent = bankTvac.toFixed(2) + ' €';
   }
 }
 
