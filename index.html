@@ -1198,7 +1198,15 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
           <span style="font-size:14px;font-weight:500;">Montant HTVA</span>
           <span id="payment-amount" style="font-size:22px;font-weight:700;color:var(--green);">—</span>
         </div>
-        <div style="font-size:11px;color:var(--ink3);margin-top:4px;">Paiement sécurisé &bull; Confirmation immédiate</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+          <span style="font-size:12px;color:var(--ink3);">TVA 6%</span>
+          <span id="payment-tva" style="font-size:13px;color:var(--ink3);">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:8px;border-top:1px solid var(--sand3);">
+          <span style="font-size:14px;font-weight:600;">Total TVAC</span>
+          <span id="payment-total" style="font-size:18px;font-weight:700;color:var(--green);">—</span>
+        </div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:6px;">Paiement sécurisé &bull; Confirmation immédiate*</div>
       </div>
 
       <!-- Step 1: choose payment method -->
@@ -1236,6 +1244,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
           </div>
         </div>
         <div style="font-size:11px;color:var(--ink3);margin-top:10px;">Votre réservation sera confirmée dès réception du virement.</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:4px;">* Confirmation à la réception du paiement</div>
         <div id="payment-err-bank" class="auth-error" style="margin-top:12px;"></div>
       </div>
 
@@ -1251,7 +1260,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
     <div class="modal-ft" style="display:flex;gap:8px;justify-content:flex-end;">
       <button class="btn btn-close" id="payment-btn-cancel" onclick="closeModal('m-payment')">Annuler</button>
       <button class="btn btn-secondary" id="payment-btn-back" style="display:none;" onclick="paymentGoBack()">← Retour</button>
-      <button class="btn btn-primary" id="payment-btn-next" onclick="paymentNextStep()">Suivant →</button>
+      <button class="btn btn-green" id="payment-btn-next" onclick="paymentNextStep()">Suivant →</button>
       <button class="btn btn-green" id="payment-btn-confirm-bank" style="display:none;" onclick="confirmPayment('bank_transfer')">Confirmer la réservation →</button>
       <button class="btn btn-green" id="payment-btn-confirm-stripe" style="display:none;" onclick="confirmStripePayment()">Payer →</button>
     </div>
@@ -1569,6 +1578,7 @@ const TX = {
        total_month:'Total ce mois', rides_month:'Courses ce mois',
        pending_offers:'En attente d\'offres', fav_drivers:'Chauffeurs favoris',
        missions_month:'Missions ce mois', revenue:'Revenus HT', score:'Score', acceptance:'Taux acceptation',
+       upcoming_missions:'Missions à venir',
        new_requests:'Nouvelles demandes', my_score:'Mon score',
        recent_rides:'Demandes récentes', see_all:'Voir tout →',
        btn_offer:'Soumettre une offre', btn_accept:'Accepter', btn_choose:'Choisir',
@@ -1602,6 +1612,7 @@ const TX = {
        total_month:'Total this month', rides_month:'Rides this month',
        pending_offers:'Awaiting offers', fav_drivers:'Favourite drivers',
        missions_month:'Missions this month', revenue:'Revenue', score:'Score', acceptance:'Acceptance rate',
+       upcoming_missions:'Upcoming missions',
        new_requests:'New requests', my_score:'My score',
        recent_rides:'Recent requests', see_all:'See all →',
        btn_offer:'Submit offer', btn_accept:'Accept', btn_choose:'Choose',
@@ -1635,6 +1646,7 @@ const TX = {
        total_month:'Total este mes', rides_month:'Trayectos este mes',
        pending_offers:'Esperando ofertas', fav_drivers:'Chóferes favoritos',
        missions_month:'Misiones este mes', revenue:'Ingresos', score:'Puntuación', acceptance:'Tasa aceptación',
+       upcoming_missions:'Misiones próximas',
        new_requests:'Nuevas solicitudes', my_score:'Mi puntuación',
        recent_rides:'Solicitudes recientes', see_all:'Ver todo →',
        btn_offer:'Enviar oferta', btn_accept:'Aceptar', btn_choose:'Elegir',
@@ -2225,10 +2237,13 @@ async function loadDriverDashboard(){
   }
 
   const now = new Date();
-  const monthMissions = missions.filter(r => new Date(r.created_at).getMonth() === now.getMonth());
-  const revenue = monthMissions.filter(r=>r.status==='done').reduce((a,r)=>a+(r.final_price||0),0);
+  const monthMissions = missions.filter(r => r.status === 'done' && new Date(r.created_at).getMonth() === now.getMonth() && new Date(r.created_at).getFullYear() === now.getFullYear());
+  const revenue = monthMissions.reduce((a,r)=>a+(r.final_price||0),0);
+  const upcomingMissions = missions.filter(r => r.status === 'confirmed' && r.ride_date >= now.toISOString().slice(0,10));
 
+  document.getElementById('driver-stats').style.gridTemplateColumns = 'repeat(5, 1fr)';
   document.getElementById('driver-stats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">${t('upcoming_missions')}</div><div class="stat-val">${upcomingMissions.length}</div></div>
     <div class="stat-card"><div class="stat-label">${t('missions_month')}</div><div class="stat-val">${monthMissions.length}</div></div>
     <div class="stat-card"><div class="stat-label">${t('revenue')}</div><div class="stat-val">${revenue > 0 ? revenue.toFixed(0)+' €' : '0 €'}</div></div>
     <div class="stat-card"><div class="stat-label">${t('score')}</div><div class="stat-val">${currentProfile?.rating?.toFixed(1)||'—'} ★</div><div class="stat-sub">${currentProfile?.rating_count||0} avis</div></div>
@@ -3105,6 +3120,10 @@ window.openPaymentModal = function(offerId, driverId, amount){
   _stripePaymentMethodId = null;
 
   document.getElementById('payment-amount').textContent = amount.toFixed(2) + ' €';
+  var tva = amount * 0.06;
+  var totalTvac = amount + tva;
+  document.getElementById('payment-tva').textContent = tva.toFixed(2) + ' €';
+  document.getElementById('payment-total').textContent = totalTvac.toFixed(2) + ' €';
   var withFees = (amount * STRIPE_FEE_MULTIPLIER).toFixed(2);
   var feePercent = ((STRIPE_FEE_MULTIPLIER - 1) * 100).toFixed(1);
   document.getElementById('stripe-fee-label').textContent = 'Frais de ' + feePercent + '% → Total ' + withFees + ' €';
