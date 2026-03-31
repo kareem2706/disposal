@@ -1206,7 +1206,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
           <span style="font-size:14px;font-weight:600;">Total TVAC</span>
           <span id="payment-total" style="font-size:22px;font-weight:700;color:var(--green);">—</span>
         </div>
-        <div style="font-size:11px;color:var(--ink3);margin-top:6px;">Paiement sécurisé &bull; Confirmation immédiate*</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:6px;" id="payment-confirm-label">Paiement sécurisé &bull; Confirmation immédiate*</div>
       </div>
 
       <!-- Step 1: choose payment method -->
@@ -1225,7 +1225,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
             <svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z" fill="#635BFF"/></svg>
             <div>
               <div style="font-weight:600;">Paiement via Stripe</div>
-              <div style="font-size:11px;color:var(--ink3);" id="stripe-fee-label">Des frais peuvent s'appliquer</div>
+              <div style="font-size:11px;color:var(--ink3);" id="stripe-fee-label">Des frais supplémentaires peuvent s'appliquer</div>
             </div>
           </div>
         </div>
@@ -1696,7 +1696,7 @@ window.setLang = function(l){
 document.addEventListener('DOMContentLoaded', async () => {
   // Initialise stripe fee label from constant so it's always in sync
   var _feeEl = document.getElementById('stripe-fee-label');
-  if(_feeEl){ _feeEl.textContent = 'Des frais peuvent s\'appliquer'; }
+  if(_feeEl){ _feeEl.textContent = 'Des frais supplémentaires peuvent s\'appliquer'; }
 
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){initDemoMode();return;}
   initSupabase(SB_URL,SB_KEY);
@@ -2153,10 +2153,9 @@ async function loadClientDashboard(){
   const total = rides.filter(r=>r.status==='done').reduce((a,r)=>a+(r.final_price||0),0);
 
   document.getElementById('client-stats').innerHTML =
-    '<div class="stat-card"><div class="stat-label">'+t('rides_month')+'</div><div class="stat-val">'+thisMonth.length+'</div></div>'
-    +'<div class="stat-card"><div class="stat-label">'+t('pending_offers')+'</div><div class="stat-val">'+pending+'</div></div>'
-    +'<div class="stat-card"><div class="stat-label">'+t('total_month')+'</div><div class="stat-val">'+(total>0?total.toFixed(0)+' €':'0 €')+'</div></div>'
-    +'<div class="stat-card"><div class="stat-label">'+t('fav_drivers')+'</div><div class="stat-val">—</div></div>';
+    '<div class="stat-card"><div class="stat-label">'+t('rides_month')+'</div><div class="stat-val" style="color:var(--green);">'+thisMonth.length+'</div></div>'
+    +'<div class="stat-card"><div class="stat-label">'+t('pending_offers')+'</div><div class="stat-val" style="color:var(--green);">'+pending+'</div></div>'
+    +'<div class="stat-card"><div class="stat-label">'+t('total_month')+'</div><div class="stat-val" style="color:var(--green);">'+(total>0?total.toFixed(0)+' €':'0 €')+'</div></div>';
 
   // Active ride
   const active = rides.find(r => r.status==='active');
@@ -2260,13 +2259,12 @@ async function loadDriverDashboard(){
   const revenue = monthMissions.reduce((a,r)=>a+(r.final_price||0),0);
   const upcomingMissions = missions.filter(r => r.status === 'confirmed' && r.ride_date >= now.toISOString().slice(0,10));
 
-  document.getElementById('driver-stats').style.gridTemplateColumns = 'repeat(5, 1fr)';
+  document.getElementById('driver-stats').style.gridTemplateColumns = 'repeat(4, 1fr)';
   document.getElementById('driver-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-label">${t('upcoming_missions')}</div><div class="stat-val">${upcomingMissions.length}</div></div>
-    <div class="stat-card"><div class="stat-label">${t('missions_month')}</div><div class="stat-val">${monthMissions.length}</div></div>
-    <div class="stat-card"><div class="stat-label">${t('revenue')}</div><div class="stat-val">${revenue > 0 ? revenue.toFixed(0)+' €' : '0 €'}</div></div>
-    <div class="stat-card"><div class="stat-label">${t('score')}</div><div class="stat-val">${currentProfile?.rating?.toFixed(1)||'—'} ★</div><div class="stat-sub">${currentProfile?.rating_count||0} avis</div></div>
-    <div class="stat-card"><div class="stat-label">${t('acceptance')}</div><div class="stat-val">—</div></div>
+    <div class="stat-card"><div class="stat-label">${t('upcoming_missions')}</div><div class="stat-val" style="color:var(--green);">${upcomingMissions.length}</div></div>
+    <div class="stat-card"><div class="stat-label">${t('missions_month')}</div><div class="stat-val" style="color:var(--green);">${monthMissions.length}</div></div>
+    <div class="stat-card"><div class="stat-label">${t('revenue')}</div><div class="stat-val" style="color:var(--green);">${revenue > 0 ? revenue.toFixed(0)+' €' : '0 €'}</div></div>
+    <div class="stat-card"><div class="stat-label">${t('score')}</div><div class="stat-val" style="color:var(--green);">${currentProfile?.rating?.toFixed(1)||'—'} ★</div><div class="stat-sub">${currentProfile?.rating_count||0} avis</div></div>
   `;
 
   // Update marketplace badge immediately
@@ -3080,7 +3078,120 @@ window.updateSubPriceDisplay = function(val){
   el.style.display = 'block';
 };
 
-// ── DEMO DATA ─────────────────────────────────────────
+var _subSegN = 0;
+window.addSubSegment = function(){
+  _subSegN++;
+  var n = _subSegN;
+  var container = document.getElementById('sub-mixed-segments');
+  if(!container) return;
+  var div = document.createElement('div');
+  div.className = 'mixed-segment';
+  div.id = 'sub-seg-'+n;
+  div.style.cssText = 'background:var(--sand2);border-radius:var(--r);padding:12px;margin-bottom:10px;';
+  div.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+    +'<div style="display:flex;gap:6px;">'
+    +'<button class="btn btn-secondary btn-sm seg-type-btn active" onclick="this.parentNode.querySelectorAll(\'.seg-type-btn\').forEach(function(b){b.classList.remove(\'active\');});this.classList.add(\'active\');">A&rarr;B</button>'
+    +'<button class="btn btn-secondary btn-sm seg-type-btn" onclick="this.parentNode.querySelectorAll(\'.seg-type-btn\').forEach(function(b){b.classList.remove(\'active\');});this.classList.add(\'active\');">Disposition</button>'
+    +'</div>'
+    +'<button class="btn btn-secondary btn-sm" onclick="document.getElementById(\'sub-seg-'+n+'\').remove();">&times;</button>'
+    +'</div>'
+    +'<div class="form-grid">'
+    +'<div class="input-group full"><label>D&eacute;part</label><input id="sub-sf-'+n+'" placeholder="Adresse de d&eacute;part" autocomplete="off"></div>'
+    +'<div class="input-group full"><label>Arriv&eacute;e</label><input id="sub-st-'+n+'" placeholder="Adresse d\'arriv&eacute;e" autocomplete="off"></div>'
+    +'</div>';
+  container.appendChild(div);
+};
+
+window.submitSubcontract = async function(){
+  var g = function(id){ var e=document.getElementById(id); return e?e.value.trim():''; };
+  var activeType = document.querySelector('#m-subcontract .trip-types .trip-type.active');
+  var tripType = activeType ? activeType.dataset.val : 'ab';
+  var err = document.getElementById('sub-err');
+  var btn = document.querySelector('#m-subcontract .btn-green');
+  var from, to, date, time, pax, veh, notes;
+
+  if(err){ err.textContent=''; err.classList.remove('show'); }
+
+  if(tripType === 'disposal'){
+    from  = g('sub-disp-from');
+    to    = null;
+    date  = g('sub-disp-date');
+    time  = g('sub-disp-time');
+    pax   = g('sub-disp-pax');
+    veh   = g('sub-disp-veh');
+    var dur = g('sub-disp-dur') || '2';
+    notes = (g('sub-disp-notes')||'') + (dur ? ' Dur\u00e9e:'+dur+'h' : '');
+    if(!from||!date||!time){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
+  } else if(tripType === 'mixed'){
+    var segs = []; var segEls = document.querySelectorAll('#sub-mixed-segments .mixed-segment');
+    segEls.forEach(function(seg){
+      var n = seg.id.replace('sub-seg-','');
+      var sf = g('sub-sf-'+n)||'';
+      var st = g('sub-st-'+n)||'';
+      var ab = seg.querySelector('.seg-type-btn.active');
+      var isD = ab && ab.textContent.toLowerCase().indexOf('disp') >= 0;
+      segs.push((isD?'Disposition':'A>B')+':'+sf+(st&&!isD?'>'+st:''));
+    });
+    from  = segs.length ? segs[0].replace(/^[^:]+:/,'').split('>')[0].trim() : 'Mixte';
+    to    = '';
+    date  = g('sub-mixed-date');
+    time  = '00:00';
+    pax   = g('sub-mixed-pax');
+    veh   = g('sub-mixed-veh');
+    notes = 'Mixte: '+segs.join(' | ');
+    if(!date){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
+  } else {
+    from  = g('sub-from');
+    to    = g('sub-to');
+    date  = g('sub-date');
+    time  = g('sub-time');
+    pax   = g('sub-pax');
+    veh   = g('sub-veh');
+    notes = g('sub-notes');
+    if(!from||!to||!date||!time){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
+  }
+
+  var priceVal = parseFloat(g('sub-price')) || null;
+
+  // DEMO MODE
+  if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
+    closeModal('m-subcontract');
+    showToast(t('toast_subcontract'));
+    await loadDriverDashboard();
+    return;
+  }
+
+  if(!sb||!currentUser){ if(err){ err.textContent='Non connect\u00e9'; err.classList.add('show'); } return; }
+
+  if(btn) setLoading(btn, true, t('btn_publish')+' \u2192');
+
+  var rideData = {
+    client_id:     currentUser.id,
+    trip_type:     tripType,
+    from_address:  from,
+    to_address:    to||null,
+    ride_date:     date,
+    ride_time:     time,
+    passengers:    parseInt(pax)||1,
+    vehicle_type:  veh||null,
+    notes:         notes||null,
+    status:        'waiting',
+    is_subcontract: true,
+    final_price:   priceVal
+  };
+
+  try {
+    var result = await sb.from('rides').insert(rideData);
+    if(result.error) throw result.error;
+    if(btn) setLoading(btn, false, t('btn_publish')+' \u2192');
+    closeModal('m-subcontract');
+    showToast(t('toast_subcontract'));
+    await loadDriverDashboard();
+  } catch(e){
+    if(err){ err.textContent=e.message||'Erreur'; err.classList.add('show'); }
+    if(btn) setLoading(btn, false, t('btn_publish')+' \u2192');
+  }
+};
 function getDemoRides(){
   return [
     {id:'r1', from_address:'Bruxelles Centre', to_address:'Aéroport BRU', ride_date:todayStr(), ride_time:'18:30', trip_type:'ab', status:'waiting', created_at:new Date().toISOString()},
@@ -3145,10 +3256,13 @@ window.openPaymentModal = function(offerId, driverId, amount){
   document.getElementById('payment-total').textContent = totalTvac.toFixed(2) + ' €';
   var withFees = (amount * STRIPE_FEE_MULTIPLIER).toFixed(2);
   var feePercent = ((STRIPE_FEE_MULTIPLIER - 1) * 100).toFixed(1);
-  document.getElementById('stripe-fee-label').textContent = 'Des frais peuvent s\'appliquer';
+  document.getElementById('stripe-fee-label').textContent = 'Des frais supplémentaires peuvent s\'appliquer';
 
   // Reset to step 1
   _paymentShowStep(1);
+  // Reset confirm label
+  var confirmLabel = document.getElementById('payment-confirm-label');
+  if(confirmLabel){ confirmLabel.textContent = 'Paiement sécurisé \u2022 Confirmation immédiate*'; }
   // Reset method selection visuals
   var bankEl = document.getElementById('pm-bank');
   var stripeEl = document.getElementById('pm-stripe');
@@ -3240,6 +3354,12 @@ window.paymentNextStep = function(){
     if(errEl){ showError(errEl, 'Veuillez sélectionner un mode de paiement'); } return;
   }
   if(errEl){ errEl.classList.remove('show'); errEl.textContent = ''; }
+  var confirmLabel = document.getElementById('payment-confirm-label');
+  if(confirmLabel){
+    confirmLabel.textContent = _selectedPaymentMethod === 'stripe'
+      ? 'Paiement sécurisé \u2022 Confirmation immédiate'
+      : 'Paiement sécurisé \u2022 Confirmation immédiate*';
+  }
   _paymentShowStep(_selectedPaymentMethod === 'bank_transfer' ? 'bank' : 'stripe');
 };
 
