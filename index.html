@@ -1007,7 +1007,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
     </div>
 
     <div id="page-missions" class="page">
-      <div class="card"><div class="card-hd">Mes missions</div><div id="missions-list"><div class="page-loading"><div class="page-spinner"></div></div></div></div>
+      <div class="mktabs">
+        <button class="mktab active" id="mstab-upcoming" onclick="msSwitch(this,'ms-upcoming')">Missions à venir</button>
+        <button class="mktab" id="mstab-done" onclick="msSwitch(this,'ms-done')">Missions terminées</button>
+      </div>
+      <div class="card" id="ms-upcoming"><div class="page-loading"><div class="page-spinner"></div></div></div>
+      <div class="card" id="ms-done" style="display:none;"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
 
     <!-- SHARED: PROFILE -->
@@ -2345,6 +2350,15 @@ window.mkSwitch = function(btn, target){
 };
 
 // MISSIONS
+window.msSwitch = function(btn, target){
+  document.querySelectorAll('#page-missions .mktab').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  ['ms-upcoming','ms-done'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.style.display = id===target ? 'block' : 'none';
+  });
+};
+
 async function loadMissions(){
   let missions = [];
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
@@ -2358,19 +2372,13 @@ async function loadMissions(){
   const upcoming = missions.filter(r => (r.status==='confirmed'||r.status==='active') && r.ride_date >= today);
   const done     = missions.filter(r => r.status==='done' || ((r.status==='confirmed'||r.status==='active') && r.ride_date < today));
 
-  let html = '';
-  if(upcoming.length){
-    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin:0 0 10px;">Missions à venir</div>'
-      + upcoming.map(r => renderRideItem(r)).join('');
-  }
-  if(done.length){
-    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin:'+(upcoming.length?'20px':'0')+' 0 10px;">Missions terminées</div>'
-      + done.map(r => renderRideItem(r)).join('');
-  }
-  if(!upcoming.length && !done.length){
-    html = '<div class="empty-state"><p class="empty-text">Aucune mission confirmée</p></div>';
-  }
-  document.getElementById('missions-list').innerHTML = html;
+  document.getElementById('ms-upcoming').innerHTML = upcoming.length
+    ? upcoming.map(r => renderRideItem(r)).join('')
+    : '<div class="empty-state"><p class="empty-text">Aucune mission à venir</p></div>';
+
+  document.getElementById('ms-done').innerHTML = done.length
+    ? done.map(r => renderRideItem(r)).join('')
+    : '<div class="empty-state"><p class="empty-text">Aucune mission terminée</p></div>';
 }
 
 // PROFILE
