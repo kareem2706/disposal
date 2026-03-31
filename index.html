@@ -1231,7 +1231,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
             <span style="color:var(--ink3);">Bénéficiaire</span><span style="font-weight:600;">DISPOSAL SRL</span>
             <span style="color:var(--ink3);">IBAN</span><span style="font-weight:600;font-family:monospace;" id="bank-iban">BE68 5390 0754 7034</span>
             <span style="color:var(--ink3);">BIC / SWIFT</span><span style="font-weight:600;font-family:monospace;">TRIOBEBB</span>
-            <span style="color:var(--ink3);">Communication</span><span style="font-weight:600;font-family:monospace;" id="bank-ref">DISPOSAL-—</span>
+            <span style="color:var(--ink3);">Communication</span><span style="font-weight:600;font-family:monospace;" id="bank-ref">DISPOSAL-</span>
             <span style="color:var(--ink3);">Montant</span><span style="font-weight:700;color:var(--green);" id="bank-amount">—</span>
           </div>
         </div>
@@ -3151,17 +3151,20 @@ function _paymentShowStep(step){
 }
 
 function _isStripeReady(){
-  return typeof Stripe !== 'undefined' && /^pk_(test|live)_/.test(STRIPE_PK);
+  return typeof Stripe !== 'undefined' && /^pk_(test|live)_/.test(STRIPE_PK) && !STRIPE_PK.includes('REPLACE_WITH');
 }
 
 function _mountStripeCard(){
   var container = document.getElementById('stripe-card-element');
   // Destroy old element if present
-  if(_stripeCardElement){ try{ _stripeCardElement.unmount(); }catch(e){} _stripeCardElement = null; }
+  if(_stripeCardElement){
+    try{ _stripeCardElement.unmount(); }catch(e){ /* unmount may throw if already detached — safe to ignore */ }
+    _stripeCardElement = null;
+  }
   container.innerHTML = '';
 
   if(!_isStripeReady()){
-    container.innerHTML = '<div style="padding:8px;font-size:12px;color:var(--ink3);">⚠️ Stripe non configuré — ajoutez votre clé publiable dans STRIPE_PK.</div>';
+    container.innerHTML = '<div style="padding:8px;font-size:12px;color:var(--ink3);">⚠️ Le paiement par carte n\'est pas disponible pour le moment.</div>';
     return;
   }
 
@@ -3269,9 +3272,9 @@ window.confirmStripePayment = async function(){
   var errEl = document.getElementById('payment-err-stripe');
   if(errEl){ errEl.classList.remove('show'); errEl.textContent = ''; }
 
-  // If Stripe is not configured, fall back to recording the intent without card tokenisation
+  // If Stripe is not configured, show error rather than silently falling back
   if(!_isStripeReady() || !_stripeCardElement){
-    await confirmPayment('stripe');
+    if(errEl){ showError(errEl, 'Le paiement par carte n\'est pas disponible pour le moment.'); }
     return;
   }
 
