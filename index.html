@@ -8,6 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
 <style>
 /* ═══ TOKENS ═══ */
 :root{
@@ -1187,7 +1189,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 <div class="modal-overlay" id="m-payment">
   <div class="modal">
     <div class="modal-hd">
-      <span class="modal-title">Confirmer et payer</span>
+      <span class="modal-title" id="payment-modal-title">Confirmer et payer</span>
       <button class="close-btn" onclick="closeModal('m-payment')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
     </div>
     <div class="modal-body">
@@ -1198,27 +1200,60 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
         </div>
         <div style="font-size:11px;color:var(--ink3);margin-top:4px;">Paiement sécurisé &bull; Confirmation immédiate</div>
       </div>
-      <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Choisissez votre mode de paiement</div>
-      <div id="payment-methods" style="display:flex;flex-direction:column;gap:10px;">
-        <button class="btn btn-green" style="justify-content:flex-start;gap:14px;padding:16px 20px;" onclick="confirmPayment('bank_transfer')">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h20" stroke="currentColor" stroke-width="1.8"/><path d="M6 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          <div style="text-align:left;">
-            <div style="font-weight:600;">Virement bancaire</div>
-            <div style="font-size:11px;opacity:.8;">Aucun frais supplémentaire</div>
+
+      <!-- Step 1: choose payment method -->
+      <div id="payment-step-1">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Choisissez votre mode de paiement</div>
+        <div id="payment-methods" style="display:flex;flex-direction:column;gap:10px;">
+          <div id="pm-bank" onclick="selectPaymentMethod('bank_transfer')" style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-radius:var(--r);border:2px solid var(--sand3);cursor:pointer;transition:border-color var(--t),background var(--t);background:var(--white);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h20" stroke="currentColor" stroke-width="1.8"/><path d="M6 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <div>
+              <div style="font-weight:600;">Virement bancaire</div>
+              <div style="font-size:11px;color:var(--ink3);">Aucun frais supplémentaire</div>
+            </div>
           </div>
-        </button>
-        <button class="btn" style="background:var(--sand2);color:var(--ink);border:1.5px solid var(--sand3);justify-content:flex-start;gap:14px;padding:16px 20px;" onclick="confirmPayment('stripe')">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="7" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
-          <div style="text-align:left;">
-            <div style="font-weight:600;">Carte de crédit <span style="font-size:11px;color:var(--ink3);font-weight:400;">(via Stripe)</span></div>
-            <div style="font-size:11px;color:var(--ink3);" id="stripe-fee-label">Frais de 2.9% s'appliquent</div>
+          <div id="pm-stripe" onclick="selectPaymentMethod('stripe')" style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-radius:var(--r);border:2px solid var(--sand3);cursor:pointer;transition:border-color var(--t),background var(--t);background:var(--white);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="7" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+            <div>
+              <div style="font-weight:600;">Carte de crédit <span style="font-size:11px;color:var(--ink3);font-weight:400;">(via Stripe)</span></div>
+              <div style="font-size:11px;color:var(--ink3);" id="stripe-fee-label">Frais de 2.9% s'appliquent</div>
+            </div>
           </div>
-        </button>
+        </div>
+        <div id="payment-err" class="auth-error" style="margin-top:12px;"></div>
       </div>
-      <div id="payment-err" class="auth-error"></div>
+
+      <!-- Step 2a: bank transfer details -->
+      <div id="payment-step-bank" style="display:none;">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Coordonnées bancaires</div>
+        <div style="background:var(--sand2);border-radius:var(--r);padding:16px;border:1px solid var(--sand3);font-size:13px;line-height:2;">
+          <div style="display:grid;grid-template-columns:130px 1fr;gap:4px 12px;">
+            <span style="color:var(--ink3);">Bénéficiaire</span><span style="font-weight:600;">DISPOSAL SRL</span>
+            <span style="color:var(--ink3);">IBAN</span><span style="font-weight:600;font-family:monospace;" id="bank-iban">BE68 5390 0754 7034</span>
+            <span style="color:var(--ink3);">BIC / SWIFT</span><span style="font-weight:600;font-family:monospace;">TRIOBEBB</span>
+            <span style="color:var(--ink3);">Communication</span><span style="font-weight:600;font-family:monospace;" id="bank-ref">DISPOSAL-—</span>
+            <span style="color:var(--ink3);">Montant</span><span style="font-weight:700;color:var(--green);" id="bank-amount">—</span>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:10px;">Votre réservation sera confirmée dès réception du virement.</div>
+        <div id="payment-err-bank" class="auth-error" style="margin-top:12px;"></div>
+      </div>
+
+      <!-- Step 2b: Stripe card payment -->
+      <div id="payment-step-stripe" style="display:none;">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Paiement par carte</div>
+        <div id="stripe-card-element" style="padding:12px;border:1.5px solid var(--sand3);border-radius:var(--r);background:var(--white);margin-bottom:12px;min-height:44px;"></div>
+        <div id="stripe-card-errors" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;"></div>
+        <div style="font-size:11px;color:var(--ink3);margin-bottom:12px;" id="stripe-total-label">—</div>
+        <div id="payment-err-stripe" class="auth-error"></div>
+      </div>
     </div>
-    <div class="modal-ft">
-      <button class="btn btn-close" onclick="closeModal('m-payment')">Annuler</button>
+    <div class="modal-ft" style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-close" id="payment-btn-cancel" onclick="closeModal('m-payment')">Annuler</button>
+      <button class="btn btn-secondary" id="payment-btn-back" style="display:none;" onclick="paymentGoBack()">← Retour</button>
+      <button class="btn btn-primary" id="payment-btn-next" onclick="paymentNextStep()">Suivant →</button>
+      <button class="btn btn-green" id="payment-btn-confirm-bank" style="display:none;" onclick="confirmPayment('bank_transfer')">Confirmer la réservation →</button>
+      <button class="btn btn-green" id="payment-btn-confirm-stripe" style="display:none;" onclick="confirmStripePayment()">Payer →</button>
     </div>
   </div>
 </div>
@@ -1498,6 +1533,7 @@ const SB_URL='https://tuzfoqdxmxzjjhvlxsgb.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1emZvcWR4bXh6ampodmx4c2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzIyNDcsImV4cCI6MjA5MDAwODI0N30.xJU8CmI0KGiEl-YA87Rtv8yrrFkPU8_dAlUrY85DDzs';
 const DEMO_MODE_KEY='disposal_demo';
 const STRIPE_FEE_MULTIPLIER = 1.029; // 1 + 2.9% Stripe fee
+const STRIPE_PK = 'pk_test_REPLACE_WITH_YOUR_STRIPE_PUBLISHABLE_KEY'; // Replace with your Stripe publishable key
 
 let sb=null,_entering=false;           // Supabase client
 let currentUser = null;  // auth.User
@@ -1508,6 +1544,10 @@ let currentDriverId = null;   // for payment modal
 let currentOfferAmount = 0;   // for payment modal
 var _myOffers = {};  // rideId -> {price, msg} for submitted offers
 let currentLang = localStorage.getItem('disposal_lang') || 'fr';
+var _selectedPaymentMethod = null; // for payment modal step 1
+var _stripeInstance = null;        // Stripe.js instance
+var _stripeCardElement = null;     // Stripe card element
+var _stripePaymentMethodId = null; // created Stripe PaymentMethod ID
 
 // ── I18N ──────────────────────────────────────────────
 const TX = {
@@ -2172,7 +2212,7 @@ async function loadDriverDashboard(){
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     const [m, p] = await Promise.all([
       sb.from('rides').select('*').eq('driver_id', uid).order('created_at',{ascending:false}),
-      sb.from('rides').select('*').eq('status','waiting').order('ride_date',{ascending:true}).order('ride_time',{ascending:true})
+      sb.from('rides').select('*').in('status', ['waiting', 'offers']).order('ride_date',{ascending:true}).order('ride_time',{ascending:true})
     ]);
     missions = m.data || [];
     pending  = p.data || [];
@@ -2232,8 +2272,8 @@ async function loadMarketplace(){
 
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     const [c, s] = await Promise.all([
-      sb.from('rides').select('*').eq('status','waiting').or('is_subcontract.is.null,is_subcontract.eq.false').order('ride_date',{ascending:true}).order('ride_time',{ascending:true}),
-      sb.from('rides').select('*').eq('status','waiting').eq('is_subcontract',true).order('ride_date',{ascending:true}).order('ride_time',{ascending:true})
+      sb.from('rides').select('*').in('status', ['waiting', 'offers']).or('is_subcontract.is.null,is_subcontract.eq.false').order('ride_date',{ascending:true}).order('ride_time',{ascending:true}),
+      sb.from('rides').select('*').in('status', ['waiting', 'offers']).eq('is_subcontract',true).order('ride_date',{ascending:true}).order('ride_time',{ascending:true})
     ]);
     clientRides = c.data || [];
     subRides    = s.data || [];
@@ -3061,21 +3101,112 @@ window.openPaymentModal = function(offerId, driverId, amount){
   currentOfferId = offerId;
   currentDriverId = driverId;
   currentOfferAmount = amount;
+  _selectedPaymentMethod = null;
+  _stripePaymentMethodId = null;
 
   document.getElementById('payment-amount').textContent = amount.toFixed(2) + ' €';
   var withFees = (amount * STRIPE_FEE_MULTIPLIER).toFixed(2);
   var feePercent = ((STRIPE_FEE_MULTIPLIER - 1) * 100).toFixed(1);
   document.getElementById('stripe-fee-label').textContent = 'Frais de ' + feePercent + '% → Total ' + withFees + ' €';
 
-  var errEl = document.getElementById('payment-err');
-  if(errEl){ errEl.classList.remove('show'); errEl.textContent = ''; }
+  // Reset to step 1
+  _paymentShowStep(1);
+  // Reset method selection visuals
+  var bankEl = document.getElementById('pm-bank');
+  var stripeEl = document.getElementById('pm-stripe');
+  if(bankEl){ bankEl.style.borderColor = 'var(--sand3)'; bankEl.style.background = 'var(--white)'; }
+  if(stripeEl){ stripeEl.style.borderColor = 'var(--sand3)'; stripeEl.style.background = 'var(--white)'; }
+
+  // Clear errors
+  ['payment-err','payment-err-bank','payment-err-stripe'].forEach(function(id){
+    var el = document.getElementById(id); if(el){ el.classList.remove('show'); el.textContent = ''; }
+  });
 
   closeModal('m-view-offers');
   openModal('m-payment');
 };
 
-window.confirmPayment = async function(method){
+function _paymentShowStep(step){
+  document.getElementById('payment-step-1').style.display    = step === 1 ? '' : 'none';
+  document.getElementById('payment-step-bank').style.display   = step === 'bank' ? '' : 'none';
+  document.getElementById('payment-step-stripe').style.display = step === 'stripe' ? '' : 'none';
+
+  document.getElementById('payment-btn-next').style.display         = step === 1 ? '' : 'none';
+  document.getElementById('payment-btn-back').style.display         = step !== 1 ? '' : 'none';
+  document.getElementById('payment-btn-confirm-bank').style.display   = step === 'bank' ? '' : 'none';
+  document.getElementById('payment-btn-confirm-stripe').style.display = step === 'stripe' ? '' : 'none';
+
+  if(step === 'stripe'){
+    // Update confirm button label with total
+    var total = (currentOfferAmount * STRIPE_FEE_MULTIPLIER).toFixed(2);
+    document.getElementById('payment-btn-confirm-stripe').textContent = 'Payer ' + total + ' € →';
+    document.getElementById('stripe-total-label').textContent =
+      'Total avec frais Stripe (' + ((STRIPE_FEE_MULTIPLIER - 1) * 100).toFixed(1) + '%): ' + total + ' €';
+    _mountStripeCard();
+  }
+  if(step === 'bank'){
+    document.getElementById('bank-ref').textContent = 'DISPOSAL-' + (currentRideId || '—');
+    document.getElementById('bank-amount').textContent = currentOfferAmount.toFixed(2) + ' €';
+  }
+}
+
+function _isStripeReady(){
+  return typeof Stripe !== 'undefined' && /^pk_(test|live)_/.test(STRIPE_PK);
+}
+
+function _mountStripeCard(){
+  var container = document.getElementById('stripe-card-element');
+  // Destroy old element if present
+  if(_stripeCardElement){ try{ _stripeCardElement.unmount(); }catch(e){} _stripeCardElement = null; }
+  container.innerHTML = '';
+
+  if(!_isStripeReady()){
+    container.innerHTML = '<div style="padding:8px;font-size:12px;color:var(--ink3);">⚠️ Stripe non configuré — ajoutez votre clé publiable dans STRIPE_PK.</div>';
+    return;
+  }
+
+  if(!_stripeInstance){ _stripeInstance = Stripe(STRIPE_PK); }
+  var elements = _stripeInstance.elements();
+  _stripeCardElement = elements.create('card', {
+    style:{ base:{ fontFamily:'\'DM Sans\', sans-serif', fontSize:'14px', color:'#0E0E0C', '::placeholder':{ color:'#B0B0A6' } } }
+  });
+  _stripeCardElement.mount(container);
+  _stripeCardElement.on('change', function(e){
+    var errDiv = document.getElementById('stripe-card-errors');
+    if(e.error){ errDiv.textContent = e.error.message; errDiv.style.display = 'block'; }
+    else { errDiv.textContent = ''; errDiv.style.display = 'none'; }
+  });
+}
+
+window.selectPaymentMethod = function(method){
+  _selectedPaymentMethod = method;
+  var bankEl   = document.getElementById('pm-bank');
+  var stripeEl = document.getElementById('pm-stripe');
+  if(bankEl){
+    bankEl.style.borderColor = method === 'bank_transfer' ? 'var(--green)' : 'var(--sand3)';
+    bankEl.style.background  = method === 'bank_transfer' ? 'var(--green-bg)' : 'var(--white)';
+  }
+  if(stripeEl){
+    stripeEl.style.borderColor = method === 'stripe' ? 'var(--green)' : 'var(--sand3)';
+    stripeEl.style.background  = method === 'stripe' ? 'var(--green-bg)' : 'var(--white)';
+  }
+};
+
+window.paymentNextStep = function(){
   var errEl = document.getElementById('payment-err');
+  if(!_selectedPaymentMethod){
+    if(errEl){ showError(errEl, 'Veuillez sélectionner un mode de paiement'); } return;
+  }
+  if(errEl){ errEl.classList.remove('show'); errEl.textContent = ''; }
+  _paymentShowStep(_selectedPaymentMethod === 'bank_transfer' ? 'bank' : 'stripe');
+};
+
+window.paymentGoBack = function(){
+  _paymentShowStep(1);
+};
+
+window.confirmPayment = async function(method){
+  var errEl = document.getElementById(method === 'bank_transfer' ? 'payment-err-bank' : 'payment-err');
   if(errEl){ errEl.classList.remove('show'); errEl.textContent = ''; }
 
   var totalWithFees = method === 'stripe'
@@ -3091,18 +3222,23 @@ window.confirmPayment = async function(method){
 
   if(!sb || !currentRideId || !currentOfferId){ return; }
 
+  var btn = document.getElementById(method === 'bank_transfer' ? 'payment-btn-confirm-bank' : 'payment-btn-confirm-stripe');
+  if(btn) setLoading(btn, true, 'Traitement…');
+
   var { error: acceptErr } = await sb.from('offers').update({status:'accepted'}).eq('id', currentOfferId);
   if(acceptErr){
+    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Confirmer la réservation →' : 'Payer →');
     if(errEl){ showError(errEl, acceptErr.message); }
     return;
   }
   var { error: rejectErr } = await sb.from('offers').update({status:'rejected'}).eq('ride_id', currentRideId).neq('id', currentOfferId);
   if(rejectErr){
+    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Confirmer la réservation →' : 'Payer →');
     if(errEl){ showError(errEl, rejectErr.message); }
     return;
   }
 
-  var { error } = await sb.from('rides').update({
+  var rideUpdates = {
     status: 'confirmed',
     driver_id: currentDriverId,
     final_price: currentOfferAmount,
@@ -3110,9 +3246,16 @@ window.confirmPayment = async function(method){
     payment_status: paymentStatus,
     accepted_offer_id: currentOfferId,
     total_with_fees: totalWithFees
-  }).eq('id', currentRideId);
+  };
+  if(method === 'stripe' && _stripePaymentMethodId){
+    rideUpdates.stripe_payment_method_id = _stripePaymentMethodId;
+    _stripePaymentMethodId = null;
+  }
+
+  var { error } = await sb.from('rides').update(rideUpdates).eq('id', currentRideId);
 
   if(error){
+    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Confirmer la réservation →' : 'Payer →');
     if(errEl){ showError(errEl, error.message); }
     return;
   }
@@ -3120,6 +3263,35 @@ window.confirmPayment = async function(method){
   closeModal('m-payment');
   showToast(t('toast_offer_acc'));
   await loadClientDashboard();
+};
+
+window.confirmStripePayment = async function(){
+  var errEl = document.getElementById('payment-err-stripe');
+  if(errEl){ errEl.classList.remove('show'); errEl.textContent = ''; }
+
+  // If Stripe is not configured, fall back to recording the intent without card tokenisation
+  if(!_isStripeReady() || !_stripeCardElement){
+    await confirmPayment('stripe');
+    return;
+  }
+
+  var btn = document.getElementById('payment-btn-confirm-stripe');
+  var originalLabel = btn ? btn.textContent : 'Payer →';
+  if(btn) setLoading(btn, true, 'Traitement…');
+
+  // Create a PaymentMethod via Stripe.js
+  var result = await _stripeInstance.createPaymentMethod({ type:'card', card: _stripeCardElement });
+  if(result.error){
+    if(btn) setLoading(btn, false, originalLabel);
+    var errDiv = document.getElementById('stripe-card-errors');
+    if(errDiv){ errDiv.textContent = result.error.message; errDiv.style.display = 'block'; }
+    return;
+  }
+
+  // Store the PaymentMethod ID so it can be saved with the ride record
+  _stripePaymentMethodId = result.paymentMethod.id;
+  if(btn) setLoading(btn, false, originalLabel);
+  await confirmPayment('stripe');
 };
 
 function getDemoOffers(){
