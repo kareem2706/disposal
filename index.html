@@ -896,7 +896,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
         </button>
         <button class="nav-item" data-page="marketplace" onclick="showPage('marketplace')">
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M2 6h12M3.5 2l-1.5 4v7a1 1 0 001 1h10a1 1 0 001-1V6L12.5 2H3.5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6 6v2a2 2 0 004 0V6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-          <span data-i18n="marketplace">Marketplace</span> <span class="nav-badge" id="badge-marketplace" style="display:none;"></span>
+          <span data-i18n="marketplace">Marketplace</span>
         </button>
         <button class="nav-item" data-page="missions" onclick="showPage('missions')">
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M5 8l2 2 4-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1200,7 +1200,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
           <span id="payment-amount" style="font-size:18px;font-weight:700;color:var(--green);">—</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
-          <span style="font-size:12px;color:var(--ink3);">TVA 6%</span>
+          <span style="font-size:12px;color:var(--ink3);">TVA 21%</span>
           <span id="payment-tva" style="font-size:13px;color:var(--ink3);">—</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:8px;border-top:1px solid var(--sand3);">
@@ -1285,7 +1285,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
         <div class="form-grid">
           <div class="input-group full"><label>D&eacute;part <span style="color:var(--red)">*</span></label><input id="ride-from" placeholder="Gare du Midi, Bruxelles" autocomplete="off"></div>
           <div class="input-group full"><label>Arriv&eacute;e <span style="color:var(--red)">*</span></label><input id="ride-to" placeholder="A&eacute;roport BRU" autocomplete="off"></div>
-          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="ride-date" type="date"></div>
+          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="ride-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="ride-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="ride-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="ride-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
@@ -1295,7 +1295,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
       <div id="panel-disposal" style="display:none;">
         <div class="form-grid">
           <div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="disp-from" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>
-          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="disp-date" type="date"></div>
+          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="disp-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="disp-time" type="time"></div>
           <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
           <div class="input-group"><label>Passagers</label><select id="disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
@@ -1309,8 +1309,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
           <button class="btn btn-secondary btn-sm" onclick="addMixedSegment()">+ Segment</button>
         </div>
         <div id="mixed-segments"></div>
-        <div style="margin-top:6px;font-size:11.5px;color:var(--ink3);">
-          Chaque segment a ses propres informations ci-dessus.
+        <div class="form-grid" style="margin-top:12px;">
+          <div class="input-group"><label>Date globale <span style="color:var(--red)">*</span></label><input id="mixed-date" type="date" min=""></div>
+          <div class="input-group"><label>Heure de départ</label><input id="mixed-time" type="time" value="08:00"></div>
         </div>
       </div>
       <div id="ride-err" class="auth-error"></div>
@@ -1384,7 +1385,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
         <div class="form-grid">
           <div class="input-group full"><label>D&eacute;part <span style="color:var(--red)">*</span></label><input id="sub-from" placeholder="Gare du Midi, Bruxelles" autocomplete="off"></div>
           <div class="input-group full"><label>Arriv&eacute;e <span style="color:var(--red)">*</span></label><input id="sub-to" placeholder="A&eacute;roport BRU" autocomplete="off"></div>
-          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="sub-date" type="date"></div>
+          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="sub-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="sub-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="sub-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="sub-veh"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
@@ -1395,7 +1396,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
       <div id="sub-panel-disposal" style="display:none;">
         <div class="form-grid">
           <div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="sub-disp-from" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>
-          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="sub-disp-date" type="date"></div>
+          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="sub-disp-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="sub-disp-time" type="time"></div>
           <div class="input-group"><label>Dur&eacute;e (h)</label><input id="sub-disp-dur" type="number" min="1" max="24" value="2" placeholder="2"></div>
           <div class="input-group"><label>Passagers</label><select id="sub-disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option></select></div>
@@ -1411,7 +1412,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
         </div>
         <div id="sub-mixed-segments"></div>
         <div class="form-grid" style="margin-top:12px;">
-          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="sub-mixed-date" type="date"></div>
+          <div class="input-group"><label>Date globale <span style="color:var(--red)">*</span></label><input id="sub-mixed-date" type="date" min=""></div>
+          <div class="input-group"><label>Heure de d&eacute;part</label><input id="sub-mixed-time" type="time" value="08:00"></div>
           <div class="input-group"><label>Passagers</label><select id="sub-mixed-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="sub-mixed-veh"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
         </div>
@@ -2134,15 +2136,19 @@ async function loadClientDashboard(){
     if(rideErr){ console.error('rides error:', rideErr.message, rideErr.code); }
     rides = rideData || [];
 
-    // Step 2: fetch offer counts (separate query avoids RLS join issues)
+    // Step 2: fetch offer counts and min price (separate query avoids RLS join issues)
     if(rides.length > 0){
       const ids = rides.map(r => r.id);
       const { data: ofData, error: ofErr } = await sb
-        .from('offers').select('ride_id').eq('status','pending').in('ride_id', ids);
+        .from('offers').select('ride_id, price').eq('status','pending').in('ride_id', ids);
       if(!ofErr && ofData){
         const cnt = {};
-        ofData.forEach(o => { cnt[o.ride_id] = (cnt[o.ride_id]||0)+1; });
-        rides.forEach(r => { r._offerCount = cnt[r.id]||0; });
+        const minP = {};
+        ofData.forEach(o => {
+          cnt[o.ride_id] = (cnt[o.ride_id]||0)+1;
+          if(o.price != null && (minP[o.ride_id] == null || o.price < minP[o.ride_id])) minP[o.ride_id] = o.price;
+        });
+        rides.forEach(r => { r._offerCount = cnt[r.id]||0; r._minOfferPrice = minP[r.id]||null; });
       }
     }
   } else {
@@ -2253,9 +2259,6 @@ async function loadDriverDashboard(){
   } else {
     missions = getDemoMissions();
     pending  = getDemoMarketplace();
-    // Update badge for demo
-    var badgeDemo = document.getElementById('badge-marketplace');
-    if(badgeDemo && pending.length > 0){ badgeDemo.textContent = pending.length; badgeDemo.style.display = 'block'; }
   }
 
   const now = new Date();
@@ -2271,12 +2274,9 @@ async function loadDriverDashboard(){
     <div class="stat-card"><div class="stat-label">${t('score')}</div><div class="stat-val" style="color:var(--green);">${currentProfile?.rating?.toFixed(1)||'—'} ★</div><div class="stat-sub">${currentProfile?.rating_count||0} avis</div></div>
   `;
 
-  // Update marketplace badge immediately
+  // Update marketplace badge immediately (hidden per spec)
   var badgeEl = document.getElementById('badge-marketplace');
-  if(badgeEl){
-    if(pending.length > 0){ badgeEl.textContent = pending.length; badgeEl.style.display = 'block'; }
-    else { badgeEl.style.display = 'none'; }
-  }
+  if(badgeEl){ badgeEl.style.display = 'none'; }
 
   pending.sort(function(a,b){
     var da=(a.ride_date||'')+(a.ride_time||'');
@@ -2314,10 +2314,9 @@ async function loadMarketplace(){
     clientRides = c.data || [];
     subRides    = s.data || [];
 
-    // Badge
-    const total = clientRides.length + subRides.length;
+    // Badge hidden per spec
     const badge = document.getElementById('badge-marketplace');
-    if(total > 0){ badge.textContent = total; badge.style.display = 'block'; } else { badge.style.display = 'none'; }
+    if(badge){ badge.style.display = 'none'; }
   } else {
     clientRides = getDemoMarketplace();
     clientRides.sort(function(a,b){ return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||'')); });
@@ -2365,9 +2364,23 @@ async function loadMissions(){
     missions = getDemoMissions().filter(r => MISSION_STATUSES.includes(r.status));
   }
 
-  document.getElementById('missions-list').innerHTML = missions.length
-    ? missions.map(r => renderRideItem(r)).join('')
-    : `<div class="empty-state"><p class="empty-text">Aucune mission confirmée</p></div>`;
+  const today = new Date().toISOString().slice(0,10);
+  const upcoming = missions.filter(r => (r.status==='confirmed'||r.status==='active') && r.ride_date >= today);
+  const done     = missions.filter(r => r.status==='done' || ((r.status==='confirmed'||r.status==='active') && r.ride_date < today));
+
+  let html = '';
+  if(upcoming.length){
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin:0 0 10px;">Missions à venir</div>'
+      + upcoming.map(r => renderRideItem(r)).join('');
+  }
+  if(done.length){
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin:'+(upcoming.length?'20px':'0')+' 0 10px;">Missions terminées</div>'
+      + done.map(r => renderRideItem(r)).join('');
+  }
+  if(!upcoming.length && !done.length){
+    html = '<div class="empty-state"><p class="empty-text">Aucune mission confirmée</p></div>';
+  }
+  document.getElementById('missions-list').innerHTML = html;
 }
 
 // PROFILE
@@ -2715,7 +2728,8 @@ window.openRideDetail=function(el){
       +'<button class="btn btn-secondary btn-sm" onclick="editRide(this.dataset.id)" data-id="'+rId+'">Modifier</button>'
       +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
   } else if(r.status==='offers'&&isClient){
-    ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
+    ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">Annuler la demande</button>'
+      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
       +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRide(this.dataset.r)" data-m="m-ride-detail" data-r="'+rId+'">Voir les offres &#x2192;</button>';
   } else if(r.status==='done'&&isClient){
     ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
@@ -2724,13 +2738,21 @@ window.openRideDetail=function(el){
     var safeRd=JSON.stringify(r).replace(/'/g,'&#39;');
     var isOwnSub=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
     var hasMyOffer=_myOffers&&_myOffers[rId];
-    ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
-    if(!isOwnSub){
-      if(hasMyOffer){
-        // Offer already submitted: only show Fermer
-      } else {
+    if(isOwnSub){
+      ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">Annuler</button>'
+        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+    } else {
+      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+      if(!hasMyOffer){
         ft+='<button class="btn btn-green" style="margin-left:8px;" onclick="_detailOffer(this)" data-rid="'+rId+'" data-ride=\''+safeRd+'\'>Soumettre une offre</button>';
       }
+    }
+  } else if(r.status==='offers'&&!isClient){
+    var isOwnSub2=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
+    ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+    if(isOwnSub2){
+      ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">Annuler</button>'
+        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
     }
   } else {
     ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
@@ -3248,7 +3270,7 @@ window.openPaymentModal = function(offerId, driverId, amount){
   _stripePaymentMethodId = null;
 
   document.getElementById('payment-amount').textContent = amount.toFixed(2) + ' €';
-  var tva = amount * 0.06;
+  var tva = amount * 0.21;
   var totalTvac = amount + tva;
   document.getElementById('payment-tva').textContent = tva.toFixed(2) + ' €';
   document.getElementById('payment-total').textContent = totalTvac.toFixed(2) + ' €';
@@ -3287,14 +3309,15 @@ function _paymentShowStep(step){
   document.getElementById('payment-btn-confirm-stripe').style.display = step === 'stripe' ? '' : 'none';
 
   if(step === 'stripe'){
-    // Update confirm button label with total
-    var total = (currentOfferAmount * STRIPE_FEE_MULTIPLIER).toFixed(2);
+    // Update confirm button label with total TVAC including Stripe fees
+    var totalTvac = currentOfferAmount * 1.21;
+    var total = (totalTvac * STRIPE_FEE_MULTIPLIER).toFixed(2);
     document.getElementById('payment-btn-confirm-stripe').textContent = 'Payer ' + total + ' € →';
     _mountStripeCard();
   }
   if(step === 'bank'){
     document.getElementById('bank-ref').textContent = 'DISPOSAL-' + (currentRideId || '—');
-    var bankTvac = currentOfferAmount * 1.06;
+    var bankTvac = currentOfferAmount * 1.21;
     document.getElementById('bank-amount').textContent = bankTvac.toFixed(2) + ' €';
   }
 }
@@ -3368,8 +3391,8 @@ window.confirmPayment = async function(method){
   if(errEl){ errEl.classList.remove('show'); errEl.textContent = ''; }
 
   var totalWithFees = method === 'stripe'
-    ? parseFloat((currentOfferAmount * STRIPE_FEE_MULTIPLIER).toFixed(2))
-    : currentOfferAmount;
+    ? parseFloat(((currentOfferAmount * 1.21) * STRIPE_FEE_MULTIPLIER).toFixed(2))
+    : parseFloat((currentOfferAmount * 1.21).toFixed(2));
   var paymentStatus = method === 'stripe' ? 'confirmed' : 'pending_payment';
 
   if(localStorage.getItem(DEMO_MODE_KEY) === '1'){
@@ -3702,10 +3725,13 @@ function showToast(msg){
   setTimeout(() => el.classList.remove('show'), 3200);
 }
 
-// Set today's date as default for ride form
+// Set today's date as default and minimum for ride form
 window.addEventListener('load', () => {
-  const dt = document.getElementById('ride-date');
-  if(dt) dt.value = todayStr();
+  var td = todayStr();
+  ['ride-date','disp-date','mixed-date','sub-date','sub-disp-date','sub-mixed-date'].forEach(function(id){
+    var dt = document.getElementById(id);
+    if(dt){ dt.value = td; dt.min = td; }
+  });
 });
 
 
