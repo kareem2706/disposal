@@ -1189,7 +1189,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 <div class="modal-overlay" id="m-payment">
   <div class="modal">
     <div class="modal-hd">
-      <span class="modal-title" id="payment-modal-title">Confirmer et payer</span>
+      <span class="modal-title" id="payment-modal-title">Confirmation et paiement</span>
       <button class="close-btn" onclick="closeModal('m-payment')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
     </div>
     <div class="modal-body">
@@ -1220,10 +1220,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
               <div style="font-size:11px;color:var(--ink3);">Aucun frais supplémentaire</div>
             </div>
           </div>
+          <div style="font-size:11px;color:var(--ink3);padding:4px 2px;">⚠️ Des frais peuvent s'appliquer.</div>
           <div id="pm-stripe" onclick="selectPaymentMethod('stripe')" style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-radius:var(--r);border:2px solid var(--sand3);cursor:pointer;transition:border-color var(--t),background var(--t);background:var(--white);">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="7" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z" fill="#635BFF"/></svg>
             <div>
-              <div style="font-weight:600;">Carte de crédit <span style="font-size:11px;color:var(--ink3);font-weight:400;">(via Stripe)</span></div>
+              <div style="font-weight:600;">Paiement via Stripe</div>
               <div style="font-size:11px;color:var(--ink3);" id="stripe-fee-label">Frais de 2.9% s'appliquent</div>
             </div>
           </div>
