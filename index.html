@@ -1290,8 +1290,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
         <div class="form-grid">
           <div class="input-group full"><label>D&eacute;part <span style="color:var(--red)">*</span></label><input id="ride-from" placeholder="Gare du Midi, Bruxelles" autocomplete="off"></div>
           <div class="input-group full"><label>Arriv&eacute;e <span style="color:var(--red)">*</span></label><input id="ride-to" placeholder="A&eacute;roport BRU" autocomplete="off"></div>
-          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="ride-date" type="date" min=""></div>
-          <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="ride-time" type="time"></div>
+          <div class="input-group full"><label>Date <span style="color:var(--red)">*</span></label><input id="ride-date" type="date" min=""></div>
+          <div class="input-group full"><label>Heure <span style="color:var(--red)">*</span></label><input id="ride-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="ride-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="ride-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
           <div class="input-group full"><label>Instructions</label><textarea id="ride-notes" rows="2" placeholder="Bagages, enfants, acc&egrave;s PMR&hellip;"></textarea></div>
@@ -1300,8 +1300,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
       <div id="panel-disposal" style="display:none;">
         <div class="form-grid">
           <div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="disp-from" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>
-          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="disp-date" type="date" min=""></div>
-          <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="disp-time" type="time"></div>
+          <div class="input-group full"><label>Date <span style="color:var(--red)">*</span></label><input id="disp-date" type="date" min=""></div>
+          <div class="input-group full"><label>Heure <span style="color:var(--red)">*</span></label><input id="disp-time" type="time"></div>
           <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
           <div class="input-group"><label>Passagers</label><select id="disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="disp-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
@@ -1386,8 +1386,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
         <div class="form-grid">
           <div class="input-group full"><label>D&eacute;part <span style="color:var(--red)">*</span></label><input id="sub-from" placeholder="Gare du Midi, Bruxelles" autocomplete="off"></div>
           <div class="input-group full"><label>Arriv&eacute;e <span style="color:var(--red)">*</span></label><input id="sub-to" placeholder="A&eacute;roport BRU" autocomplete="off"></div>
-          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="sub-date" type="date" min=""></div>
-          <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="sub-time" type="time"></div>
+          <div class="input-group full"><label>Date <span style="color:var(--red)">*</span></label><input id="sub-date" type="date" min=""></div>
+          <div class="input-group full"><label>Heure <span style="color:var(--red)">*</span></label><input id="sub-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="sub-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="sub-veh"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
           <div class="input-group full"><label>Instructions</label><textarea id="sub-notes" rows="2" placeholder="Bagages, enfants…"></textarea></div>
@@ -1397,8 +1397,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
       <div id="sub-panel-disposal" style="display:none;">
         <div class="form-grid">
           <div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="sub-disp-from" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>
-          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="sub-disp-date" type="date" min=""></div>
-          <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="sub-disp-time" type="time"></div>
+          <div class="input-group full"><label>Date <span style="color:var(--red)">*</span></label><input id="sub-disp-date" type="date" min=""></div>
+          <div class="input-group full"><label>Heure <span style="color:var(--red)">*</span></label><input id="sub-disp-time" type="time"></div>
           <div class="input-group"><label>Dur&eacute;e (h)</label><input id="sub-disp-dur" type="number" min="1" max="24" value="2" placeholder="2"></div>
           <div class="input-group"><label>Passagers</label><select id="sub-disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="sub-disp-veh"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
@@ -3752,8 +3752,8 @@ window.addMixedSegment=function(){
   var abFields=
     '<div class="input-group full"><label>D&eacute;part <span style="color:var(--red)">*</span></label><input id="sf-'+n+'" placeholder="Gare du Midi, Bruxelles" autocomplete="off"></div>'+
     '<div id="st-wrap-'+n+'" class="input-group full"><label>Arriv&eacute;e <span style="color:var(--red)">*</span></label><input id="st-'+n+'" placeholder="A&eacute;roport BRU" autocomplete="off"></div>'+
-    '<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="sd8-'+n+'"></div>'+
-    '<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="sh-'+n+'" value="08:00"></div>'+
+    '<div class="input-group full"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="sd8-'+n+'"></div>'+
+    '<div class="input-group full"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="sh-'+n+'" value="08:00"></div>'+
     '<div class="input-group"><label>Passagers</label><select id="spax-'+n+'">'+paxOpts+'</select></div>'+
     '<div class="input-group"><label>V&eacute;hicule</label><select id="sveh-'+n+'">'+vehOpts+'</select></div>'+
     '<div class="input-group full"><label>Instructions</label><textarea id="snotes-'+n+'" rows="2" placeholder="Bagages, enfants, acc&egrave;s PMR&hellip;"></textarea></div>';
@@ -3761,8 +3761,8 @@ window.addMixedSegment=function(){
   // Disposition fields (same as panel-disposal)
   var dispFields=
     '<div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="sf-'+n+'" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>'+
-    '<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="sd8-'+n+'"></div>'+
-    '<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="sh-'+n+'" value="08:00"></div>'+
+    '<div class="input-group full"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="sd8-'+n+'"></div>'+
+    '<div class="input-group full"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="sh-'+n+'" value="08:00"></div>'+
     '<div class="input-group"><label>Dur&eacute;e (heures)</label><input type="number" id="sdur-'+n+'" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>'+
     '<div class="input-group"><label>Passagers</label><select id="spax-'+n+'">'+paxOpts+'</select></div>'+
     '<div class="input-group"><label>V&eacute;hicule</label><select id="sveh-'+n+'">'+vehOpts+'</select></div>'+
