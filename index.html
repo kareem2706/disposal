@@ -99,6 +99,7 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 .nav-ico{width:16px;height:16px;flex-shrink:0;opacity:.65;}
 .nav-item.active .nav-ico,.nav-item:hover .nav-ico{opacity:1;}
 .nav-badge{margin-left:auto;background:var(--ink);color:white;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:20px;}
+#badge-marketplace{background:var(--green);}
 .sidebar-footer{padding:12px 10px;border-top:1px solid var(--sand3);}
 .lang-row{display:flex;gap:4px;margin-top:10px;padding:0 2px;}
 .lang-btn{flex:1;padding:5px 4px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink3);transition:all var(--t);font-family:'DM Sans',sans-serif;}
@@ -1254,7 +1255,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
         <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Paiement par carte</div>
         <div id="stripe-card-element" style="padding:12px;border:1.5px solid var(--sand3);border-radius:var(--r);background:var(--white);margin-bottom:12px;min-height:44px;"></div>
         <div id="stripe-card-errors" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;"></div>
-        <div style="font-size:11px;color:var(--ink3);margin-bottom:12px;" id="stripe-total-label">—</div>
         <div id="payment-err-stripe" class="auth-error"></div>
       </div>
     </div>
@@ -1562,10 +1562,12 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const DEMO_MODE_KEY='disposal_demo';
 const STRIPE_FEE_MULTIPLIER = 1.029; // 1 + 2.9% Stripe fee
 const STRIPE_PK = 'pk_test_REPLACE_WITH_YOUR_STRIPE_PUBLISHABLE_KEY'; // Replace with your Stripe publishable key
+const MISSION_STATUSES = ['confirmed', 'active', 'done']; // Driver mission statuses to display
 
 let sb=null,_entering=false;           // Supabase client
 let currentUser = null;  // auth.User
 let currentProfile = null; // profiles row
+let currentRole = 'client'; // active role: 'client' | 'driver'
 let currentRideId = null;  // for offer modal
 let currentOfferId = null;    // for payment modal
 let currentDriverId = null;   // for payment modal
@@ -1732,7 +1734,7 @@ async function checkSession(){
       if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!_entering){
         currentUser=session.user; await loadProfile(); enterApp();
       }
-      if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;_entering=false;showScreen('landing');}
+      if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;currentRole='client';_entering=false;showScreen('landing');}
     });
   }
 }
@@ -2024,6 +2026,7 @@ window.signOut = async function(){
   if(sb) await sb.auth.signOut();
   currentUser = null;
   currentProfile = null;
+  currentRole = 'client';
   localStorage.removeItem(DEMO_MODE_KEY);
   showToast(t('toast_signout'));
   showScreen('auth');
@@ -2051,6 +2054,7 @@ function enterApp(){
   if(_entering)return; _entering=true;
   showScreen('app');
   const role = currentProfile?.role || 'client';
+  currentRole = role;
   document.getElementById('nav-client').style.display = role === 'client' ? 'block' : 'none';
   document.getElementById('nav-driver').style.display = role === 'driver' ? 'block' : 'none';
 
@@ -2355,15 +2359,15 @@ window.mkSwitch = function(btn, target){
 async function loadMissions(){
   let missions = [];
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
-    const { data } = await sb.from('rides').select('*').eq('driver_id', currentUser.id).order('ride_date',{ascending:false});
+    const { data } = await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSION_STATUSES).order('ride_date',{ascending:false});
     missions = data || [];
   } else {
-    missions = getDemoMissions();
+    missions = getDemoMissions().filter(r => MISSION_STATUSES.includes(r.status));
   }
 
   document.getElementById('missions-list').innerHTML = missions.length
     ? missions.map(r => renderRideItem(r)).join('')
-    : `<div class="empty-state"><p class="empty-text">Aucune mission</p></div>`;
+    : `<div class="empty-state"><p class="empty-text">Aucune mission confirmée</p></div>`;
 }
 
 // PROFILE
@@ -2410,8 +2414,7 @@ window.filterRides = function(filter, btn){
 };
 
 window.openRide = async function(rideId){
-  const role = currentProfile?.role;
-  if(role === 'client'){
+  if(currentRole === 'client'){
     await openOffersModal(rideId);
   }
   // driver can't click rides they didn't make offers on
@@ -2520,14 +2523,9 @@ window.openOfferModal = function(rideId, summary, rideObj){
   document.getElementById('offer-price').value = existing ? existing.price : '';
   document.getElementById('offer-msg').value   = existing ? (existing.msg||'') : '';
   document.getElementById('offer-err').classList.remove('show');
-  // Update button label
-  var offerBtn = document.getElementById('btn-offer-submit');
-  if(offerBtn){
-    offerBtn.textContent = existing ? 'Modifier votre offre →' : 'Soumettre →';
-    offerBtn.className = existing ? 'btn btn-sm' : 'btn btn-green';
-    if(existing){ offerBtn.style.cssText='background:#E8820C;color:#fff;border:none;'; }
-    else { offerBtn.style.cssText=''; }
-  }
+  // Hide submit button if offer already submitted (submitted offers cannot be modified)
+  var offerBtnWrap = document.getElementById('offer-btn-wrap');
+  if(offerBtnWrap){ offerBtnWrap.style.display = existing ? 'none' : ''; }
   openModal('m-submit-offer');
   if(typeof resetOfferBtn==='function') resetOfferBtn();
 };
@@ -2608,7 +2606,7 @@ window._offerSubmittedClick = function(btn){
 window.openRideDetail=function(el){
   var r;
   try{ r=JSON.parse(el.dataset.ride.replace(/&#39;/g,"'")); }catch(e){return;}
-  var isClient=currentProfile&&currentProfile.role==='client';
+  var isClient=currentRole==='client';
   var isMixed=r.trip_type==='mixed',isDisp=r.trip_type==='disposal';
   var mixedSegs=isMixed?parseMixedNotes(r.notes||''):[];
   var from=r.from_address||'—',to=r.to_address||'—';
@@ -3292,8 +3290,6 @@ function _paymentShowStep(step){
     // Update confirm button label with total
     var total = (currentOfferAmount * STRIPE_FEE_MULTIPLIER).toFixed(2);
     document.getElementById('payment-btn-confirm-stripe').textContent = 'Payer ' + total + ' € →';
-    document.getElementById('stripe-total-label').textContent =
-      'Total avec frais Stripe (' + ((STRIPE_FEE_MULTIPLIER - 1) * 100).toFixed(1) + '%): ' + total + ' €';
     _mountStripeCard();
   }
   if(step === 'bank'){
@@ -3623,6 +3619,10 @@ function resetOfferBtn(){
   var bar = document.getElementById('offer-progress-bar');
   if(btn){ btn.textContent = 'Soumettre →'; btn.className = 'btn btn-green'; btn.style.width='100%'; }
   if(bar){ bar.style.width = '0%'; }
+  // Respect existing offer state: keep submit wrap hidden if offer already submitted
+  var existingOffer = _myOffers && currentRideId && _myOffers[currentRideId];
+  var wrap = document.getElementById('offer-btn-wrap');
+  if(wrap){ wrap.style.display = existingOffer ? 'none' : ''; }
 }
 
 
@@ -3875,7 +3875,7 @@ function renderRideItem(r){
   }
   var safeR=JSON.stringify(r);
   // For client rides with offers: clicking opens offers directly
-  var isClientOffers = r.status==='offers' && currentProfile && currentProfile.role==='client';
+  var isClientOffers = r.status==='offers' && currentRole === 'client';
   var cardClick = isClientOffers ? ('openRide(\'' + r.id + '\')') : 'openRideDetail(this)';
   return '<div class="ride-card" onclick="'+cardClick+'"'
     +' data-ride=\''+safeR.replace(/'/g,'&#39;')+'\'>'
