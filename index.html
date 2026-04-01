@@ -1595,7 +1595,7 @@ const TX = {
        empty_rides:'Aucune demande', empty_offers:'Aucune offre reçue',
        empty_marketplace:'Aucune demande disponible',
        total_month:'Total ce mois', rides_month:'Courses ce mois',
-       pending_offers:'En attente d\'offres', fav_drivers:'Chauffeurs favoris',
+       pending_offers:'En attente', fav_drivers:'Chauffeurs favoris',
        missions_month:'Missions ce mois', revenue:'Revenus HT', score:'Score', acceptance:'Taux acceptation',
        upcoming_missions:'Missions à venir',
        new_requests:'Nouvelles demandes', my_score:'Mon score',
@@ -3904,30 +3904,32 @@ function renderRideItem(r){
   }
 
   if(isMixed&&mixedSegs.length){
+    // Build a deduplicated chain: only show from if different from previous to
     var parts = '';
-    mixedSegs.forEach(function(s){
+    var prevTo = '';
+    mixedSegs.forEach(function(s, si){
       var isSegD = s.type.toLowerCase().indexOf('disp')>=0;
+      var showFrom = (si===0) || (s.from.trim() !== prevTo.trim());
       if(isSegD){
-        // Disposition segment: from ●green disp.(Xh) ●red
         var durStr = s.dur ? 'disp. ('+s.dur+'h)' : 'disp.';
-        parts += '<span class="ride-card-addr from-addr" title="'+s.from+'">'+s.from+'</span>'
-               + '<div class="ride-card-dot from"></div>'
+        if(showFrom){
+          parts += '<span class="ride-card-addr from-addr" title="'+s.from+'">'+s.from+'</span>';
+        }
+        parts += '<div class="ride-card-dot from"></div>'
                + '<span style="font-size:11px;color:var(--ink3);margin:0 4px;white-space:nowrap;">'+durStr+'</span>'
                + '<div class="ride-card-dot to"></div>';
+        prevTo = '';
       } else {
-        // A→B segment: from ●green → ●red destination
-        parts += '<span class="ride-card-addr from-addr" title="'+s.from+'">'+s.from+'</span>'
-               + '<div class="ride-card-dot from"></div>'
+        if(showFrom){
+          parts += '<span class="ride-card-addr from-addr" title="'+s.from+'">'+s.from+'</span>';
+        }
+        parts += '<div class="ride-card-dot from"></div>'
                + '<div class="ride-card-line"></div>'
                + '<div class="ride-card-dot to"></div>'
                + '<span class="ride-card-addr to-addr" title="'+(s.to||'')+'">'+(s.to||'')+'</span>';
+        prevTo = s.to||'';
       }
-      // Separator between segments
-      parts += '<div style="width:10px;height:1.5px;background:var(--sand3);margin:0 4px;flex-shrink:0;"></div>';
     });
-    // Remove trailing separator
-    var sepTag = '<div style="width:10px;height:1.5px;background:var(--sand3);margin:0 4px;flex-shrink:0;"></div>';
-    if(parts.slice(-sepTag.length)===sepTag) parts=parts.slice(0,-sepTag.length);
     routeHtml = '<div class="ride-card-route">'+parts+'</div>';
   } else if(isDisp){
     var dispDurMatch=(r.notes||'').match(/[Dd]ur[eé]e?:?\s*(\d+(?:\.\d+)?)/);
@@ -3941,7 +3943,7 @@ function renderRideItem(r){
   var safeR=JSON.stringify(r);
   // For client rides with offers: clicking opens offers directly
   var isClientOffers = r.status==='offers' && currentRole === 'client';
-  var cardClick = isClientOffers ? ('openRide(\'' + r.id + '\')') : 'openRideDetail(this)';
+    var cardClick = 'openRideDetail(this)';
   return '<div class="ride-card" onclick="'+cardClick+'"'
     +' data-ride=\''+safeR.replace(/'/g,'&#39;')+'\'>'
     +'<div class="ride-card-type">'+typeLabel+'</div>'
