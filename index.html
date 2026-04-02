@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>DISPOSAL — Chauffeurs Privés</title>
+<title>Bleenr — Chauffeurs Privés</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <!-- Supabase JS SDK -->
@@ -50,7 +50,7 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 
 /* ═══ AUTH CARD ═══ */
 .auth-card{background:var(--white);border-radius:var(--r-xl);padding:36px;width:100%;max-width:440px;box-shadow:var(--sh-lg);border:1px solid var(--sand3);}
-.auth-logo{font-family:'Cormorant Garamond',serif;font-size:26px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px;}
+.auth-logo{font-family:'DM Sans',sans-serif;font-size:28px;font-weight:700;letter-spacing:-.3px;color:#1a5c2a;margin-bottom:4px;}
 .auth-tagline{font-size:13px;color:var(--ink3);margin-bottom:24px;}
 .auth-tabs{display:flex;background:var(--sand2);border-radius:var(--r);padding:3px;margin-bottom:20px;}
 .auth-tab{flex:1;padding:8px;border-radius:8px;font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--ink2);transition:all var(--t);font-family:'DM Sans',sans-serif;}
@@ -87,7 +87,7 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 /* ═══ APP SIDEBAR ═══ */
 .app-sidebar{position:fixed;top:0;left:0;height:100vh;width:var(--sidebar);background:var(--white);border-right:1px solid var(--sand3);display:flex;flex-direction:column;z-index:300;transition:transform .28s var(--ease);}
 .sidebar-header{padding:20px 18px 16px;border-bottom:1px solid var(--sand3);}
-.sidebar-logo{font-family:'Cormorant Garamond',serif;font-size:19px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);margin-bottom:12px;}
+.sidebar-logo{font-family:'DM Sans',sans-serif;font-size:20px;font-weight:700;letter-spacing:-.3px;color:#1a5c2a;margin-bottom:12px;}
 .user-pill{display:flex;align-items:center;gap:9px;background:var(--sand);border-radius:40px;padding:5px 12px 5px 5px;cursor:pointer;transition:background var(--t);}
 .user-pill:hover{background:var(--sand2);}
 .user-av{width:26px;height:26px;border-radius:50%;background:var(--ink);color:white;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Cormorant Garamond',serif;overflow:hidden;}
@@ -387,10 +387,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
   border-bottom:1px solid rgba(0,0,0,.08);
 }
 .ln-logo{
-  font-family:'Cormorant Garamond',serif;
-  font-size:17px;letter-spacing:.16em;text-transform:uppercase;
-  color:#1d1d1f;
+  font-family:'DM Sans',sans-serif;
+  font-size:20px;font-weight:700;letter-spacing:-.3px;
+  color:#1a5c2a;
 }
+.bleenr-r{color:#8fbe8f;}
 .ln-links{display:flex;gap:28px;}
 .ln-link{
   font-size:12px;color:#6e6e73;cursor:pointer;
@@ -542,8 +543,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
   background:#fff;
 }
 .ln-footer-logo{
-  font-family:'Cormorant Garamond',serif;
-  font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:#6e6e73;
+  font-family:'DM Sans',sans-serif;
+  font-size:16px;font-weight:700;letter-spacing:-.3px;color:#1a5c2a;
 }
 .ln-footer-copy{font-size:12px;color:#a1a1a6;}
 
@@ -628,13 +629,13 @@ body{background:var(--bg);}
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places&language=fr&callback=initGooglePlaces" async defer></script>
 </head>
 <body>
-<div id="app-loader" style="position:fixed;inset:0;background:#fff;z-index:99999;display:flex;align-items:center;justify-content:center;"><div style="font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:.18em;text-transform:uppercase;color:#1d1d1f;opacity:.6;">Disposal</div></div>
+<div id="app-loader" style="position:fixed;inset:0;background:#fff;z-index:99999;display:flex;align-items:center;justify-content:center;"><div style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.3px;"><span style="color:#1a5c2a;">Bleen</span><span style="color:#8fbe8f;">r</span></div></div>
 
 <!-- ══ SCREEN: AUTH ═══════════════════════════════════════ -->
 <div id="screen-landing" class="screen">
 
   <nav class="ln">
-    <div class="ln-logo">Disposal</div>
+    <div class="ln-logo"><span>Bleen</span><span class="bleenr-r">r</span></div>
     <div class="ln-links">
       <button class="ln-link" onclick="document.getElementById('ln-services').scrollIntoView({behavior:'smooth'})">Services</button>
       <button class="ln-link" onclick="document.getElementById('ln-how').scrollIntoView({behavior:'smooth'})">Comment &ccedil;a marche</button>
@@ -718,7 +719,7 @@ body{background:var(--bg);}
 
   <section class="ln-bottom">
     <h2 class="ln-bottom-title">Exigez mieux.</h2>
-    <p class="ln-bottom-sub">Rejoignez Disposal. Gratuit, sans engagement.</p>
+    <p class="ln-bottom-sub">Rejoignez Bleenr. Gratuit, sans engagement.</p>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       <button class="ln-hero-pri" onclick="showLandingAuth('register')">Cr&eacute;er un compte</button>
       <button class="ln-hero-sec" onclick="showLandingAuth('login')">Se connecter</button>
@@ -726,15 +727,15 @@ body{background:var(--bg);}
   </section>
 
   <footer class="ln-footer">
-    <div class="ln-footer-logo">Disposal</div>
-    <div class="ln-footer-copy">&copy; 2026 Disposal &mdash; Belgique</div>
+    <div class="ln-footer-logo"><span>Bleen</span><span class="bleenr-r">r</span></div>
+    <div class="ln-footer-copy">&copy; 2026 Bleenr &mdash; Belgique</div>
   </footer>
 
 </div>
 
 <div id="screen-auth" class="screen">
   <div class="auth-card">
-    <div class="auth-logo">Disposal</div>
+    <div class="auth-logo"><span>Bleen</span><span class="bleenr-r">r</span></div>
     <p class="auth-tagline" data-i18n="auth_tagline">Plateforme de transport privé</p>
 
     <!-- Step 1: main form -->
@@ -926,7 +927,7 @@ body{background:var(--bg);}
   <!-- SIDEBAR -->
   <aside class="app-sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">Disposal</div>
+      <div class="sidebar-logo"><span>Bleen</span><span class="bleenr-r">r</span></div>
       <div class="user-pill" onclick="showPage('profile')">
         <div class="user-av" id="nav-avatar">?</div>
         <div>
@@ -1401,10 +1402,10 @@ body{background:var(--bg);}
         <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Coordonnées bancaires</div>
         <div style="background:var(--sand2);border-radius:var(--r);padding:16px;border:1px solid var(--sand3);font-size:13px;line-height:2;">
           <div style="display:grid;grid-template-columns:130px 1fr;gap:4px 12px;">
-            <span style="color:var(--ink3);">Bénéficiaire</span><span style="font-weight:600;">DISPOSAL SRL</span>
+            <span style="color:var(--ink3);">Bénéficiaire</span><span style="font-weight:600;">BLEENR SRL</span>
             <span style="color:var(--ink3);">IBAN</span><span style="font-weight:600;font-family:monospace;" id="bank-iban">BE68 5390 0754 7034</span>
             <span style="color:var(--ink3);">BIC / SWIFT</span><span style="font-weight:600;font-family:monospace;">TRIOBEBB</span>
-            <span style="color:var(--ink3);">Communication</span><span style="font-weight:600;font-family:monospace;" id="bank-ref">DISPOSAL-</span>
+            <span style="color:var(--ink3);">Communication</span><span style="font-weight:600;font-family:monospace;" id="bank-ref">BLEENR-</span>
             <span style="color:var(--ink3);">Montant</span><span style="font-weight:700;color:var(--green);" id="bank-amount">—</span>
           </div>
         </div>
@@ -1730,7 +1731,7 @@ window.acPick   = function(iid,lid,v){ var i=document.getElementById(iid); if(i)
 
 'use strict';
 /* ═══════════════════════════════════════════════════════
-   DISPOSAL — Full Supabase App
+   Bleenr — Full Supabase App
    All functions exposed on window for inline onclick handlers
 ═══════════════════════════════════════════════════════ */
 
@@ -3634,7 +3635,7 @@ function _paymentShowStep(step){
     _mountStripeCard();
   }
   if(step === 'bank'){
-    document.getElementById('bank-ref').textContent = 'DISPOSAL-' + (currentRideId || '—');
+    document.getElementById('bank-ref').textContent = 'BLEENR-' + (currentRideId || '—');
     var bankTvac = currentOfferAmount * 1.21;
     document.getElementById('bank-amount').textContent = bankTvac.toFixed(2) + ' €';
   }
