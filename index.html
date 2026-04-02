@@ -2308,6 +2308,7 @@ async function loadClientDashboard(){
   }
 
   // Stats
+  const now = new Date();
   const thisMonth = rides.filter(r => new Date(r.created_at).getMonth() === now.getMonth());
 
 
