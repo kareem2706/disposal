@@ -2877,138 +2877,185 @@ window.openRideDetail=function(el){
   var mixedSegs=isMixed?parseMixedNotes(r.notes||''):[];
   var from=r.from_address||'—',to=r.to_address||'—';
 
-  // Title + subtitle
+  // Modal header title
   var titleEl=document.getElementById('detail-title');
+  if(titleEl)titleEl.textContent='Détails du transport';
+
+  // ── Big title + status pill ──
   var subTitle=isMixed?t('title_mixed'):isDisp?t('title_disp'):t('title_ab');
-  // For disposal: add duration in title
-  if(titleEl)titleEl.textContent=subTitle;
+  var body='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">'
+    +'<div style="font-size:20px;font-weight:700;color:var(--ink);line-height:1.2;">'+subTitle+'</div>'
+    +getStatusPill(r.status,0)
+    +'</div>';
 
-  // Info row — for mixed only show status + price (details are per segment)
-  var infoItems=[getStatusPill(r.status,0)];
+  // ── Meta info line ──
+  var metaParts=[];
   if(!isMixed){
-    infoItems.push('<span style="font-size:12px;color:var(--ink3);">'+formatDate(r.ride_date)+' '+(r.ride_time?r.ride_time.slice(0,5):'')+'</span>');
-    if(r.passengers) infoItems.push('<span style="font-size:12px;color:var(--ink3);">'+r.passengers+' pax</span>');
-    if(r.vehicle_type) infoItems.push('<span style="font-size:12px;color:var(--ink3);">'+r.vehicle_type+'</span>');
+    var dtStr=(r.ride_date?formatDate(r.ride_date):'')+(r.ride_time?' '+r.ride_time.slice(0,5):'');
+    if(dtStr.trim())metaParts.push(dtStr.trim());
+    if(r.passengers)metaParts.push(r.passengers+' pax');
+    if(r.vehicle_type)metaParts.push(r.vehicle_type);
   }
-  if(r.final_price) infoItems.push('<span style="font-size:13px;font-weight:600;">'+r.final_price+' €</span>');
-  var body='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px;">'+infoItems.join('')+'</div>';
+  if(r.final_price)metaParts.push('<strong>'+r.final_price+' €</strong>');
+  if(metaParts.length){
+    body+='<div style="display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink3);margin-bottom:20px;">'
+      +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+      +metaParts.join(' &middot; ')
+      +'</div>';
+  } else {
+    body+='<div style="margin-bottom:16px;"></div>';
+  }
 
-  
-  // Helper: one segment row (dot + line/no-line + content)
-    function segRow(dot, label, addr, time2, withLine){
-    // Use a wrapper that stretches: left column has dot + vline, right column has text
+  // ── SVG icons for route points ──
+  var iconPin='<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="#2E6B4A"/></svg>';
+  var iconFlag='<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" fill="#B03030"/><line x1="4" y1="22" x2="4" y2="15" stroke="#B03030" stroke-width="2" stroke-linecap="round"/></svg>';
+
+  // Helper: one segment row (icon + vertical line + text)
+  function segRow(icon, label, addr, withLine){
     return '<div style="display:flex;gap:14px;">'
-      +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'
-        +'<div class="detail-seg-dot '+dot+'" style="margin-top:6px;flex-shrink:0;"></div>'
-        +(withLine?'<div style="width:2px;flex:1;background:var(--sand3);min-height:20px;"></div>':'')
+      +'<div style="display:flex;flex-direction:column;align-items:center;width:22px;flex-shrink:0;">'
+        +'<div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+icon+'</div>'
+        +(withLine?'<div style="width:2px;flex:1;min-height:18px;background:var(--sand3);margin:3px 0;"></div>':'')
       +'</div>'
-      +'<div style="flex:1;min-width:0;'+(withLine?'padding-bottom:16px':'padding-bottom:4px')+';">'
+      +'<div style="flex:1;min-width:0;'+(withLine?'padding-bottom:18px':'padding-bottom:4px')+';">'
         +'<div class="detail-seg-label">'+label+'</div>'
         +'<div class="detail-seg-addr">'+(addr||'—')+'</div>'
       +'</div>'
     +'</div>';
   }
 
-    // Route rows
+  // Wrap route rows in a styled card
+  function routeCard(innerHtml){
+    return '<div style="background:var(--sand);border:1px solid var(--sand3);border-radius:var(--r-lg);padding:16px 18px;">'+innerHtml+'</div>';
+  }
+
+  // Mixed segment card
   function segCard(s, idx, isLast){
     var isD=s.type.toLowerCase().indexOf('disp')>=0;
-    var label=t('lbl_segment')+' '+(idx+1)+' — '+(isD?t('title_disp'):t('title_ab'));
-    // Time on its own line right under label, then date/pax/veh as badges
-    // Build meta line: "26 mars 11:30 · 2 pax · lowcost" (same format as A->B/disposal)
-    var metaParts=[];
-    var dateTime=(s.date?formatDate(s.date):'')+( s.time ? ' '+s.time : '');
-    if(dateTime.trim()) metaParts.push(dateTime.trim());
-    if(s.pax)  metaParts.push(s.pax+' pax');
-    if(s.veh)  metaParts.push(s.veh);
-    var metaHtml=metaParts.length?'<div style="font-size:12px;color:var(--ink3);margin-bottom:8px;">'+metaParts.join(' &middot; ')+'</div>':'';
-    var timeHtml='';
+    var lbl=t('lbl_segment')+' '+(idx+1)+' — '+(isD?t('title_disp'):t('title_ab'));
+    var mp=[];
+    var dt=(s.date?formatDate(s.date):'')+( s.time ? ' '+s.time : '');
+    if(dt.trim()) mp.push(dt.trim());
+    if(s.pax) mp.push(s.pax+' pax');
+    if(s.veh) mp.push(s.veh);
+    var metaHtml=mp.length?'<div style="font-size:12px;color:var(--ink3);margin-bottom:8px;">'+mp.join(' &middot; ')+'</div>':'';
     var noteHtml=s.note?'<div style="font-size:12px;color:var(--ink3);margin-top:6px;font-style:italic;">'+s.note+'</div>':'';
     var rows='';
     if(isD){
-      rows+=segRow('green',t('lbl_pickup'),s.from||'—','',true);
-      if(s.dur) rows+='<div style="display:flex;gap:14px;padding:2px 0;"><div style="width:16px;flex-shrink:0;display:flex;justify-content:center;"><div class="detail-seg-vline" style="flex:1;"></div></div><div style="padding:3px 0;font-size:11.5px;color:var(--ink3);">Durée : '+s.dur+'</div></div>';
-      rows+=segRow('red',t('lbl_end_disp'),'','',false);
+      rows+=segRow(iconPin,t('lbl_pickup'),s.from||'—',true);
+      if(s.dur) rows+='<div style="display:flex;gap:14px;padding:2px 0;"><div style="width:22px;flex-shrink:0;display:flex;justify-content:center;"><div style="width:2px;flex:1;background:var(--sand3);"></div></div><div style="padding:3px 0;font-size:11.5px;color:var(--ink3);">Durée : '+s.dur+'</div></div>';
+      rows+=segRow(iconFlag,t('lbl_end_disp'),'',false);
     } else {
-      rows+=segRow('green',t('lbl_depart'),s.from||'—','',true);
-      rows+=segRow('red',t('lbl_arrivee'),s.to||'—','',false);
+      rows+=segRow(iconPin,t('lbl_depart'),s.from||'—',true);
+      rows+=segRow(iconFlag,t('lbl_arrivee'),s.to||'—',false);
     }
     var border=isLast?'':'border-bottom:1px solid var(--sand3);margin-bottom:12px;padding-bottom:12px;';
     return '<div style="'+border+'">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">'+label+'</div>'
-      +timeHtml+metaHtml+rows+noteHtml
+      +'<div style="font-size:11px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">'+lbl+'</div>'
+      +metaHtml+rows+noteHtml
       +'</div>';
   }
 
+  // ── Render route card ──
   if(isMixed&&mixedSegs.length){
-    mixedSegs.forEach(function(s,i){
-      body+=segCard(s,i,i===mixedSegs.length-1);
-    });
+    var segContent='';
+    mixedSegs.forEach(function(s,i){ segContent+=segCard(s,i,i===mixedSegs.length-1); });
+    body+=routeCard(segContent);
   } else if(isDisp){
     var dispDurHtml='';
     if(r.notes){var dispDurMatch=r.notes.match(/Durée:([^\s|,]+)/);
       if(dispDurMatch){
         dispDurHtml='<div style="display:flex;gap:14px;padding:2px 0;">'
-          +'<div style="width:16px;flex-shrink:0;display:flex;justify-content:center;"><div style="width:2px;flex:1;background:var(--sand3);"></div></div>'
+          +'<div style="width:22px;flex-shrink:0;display:flex;justify-content:center;"><div style="width:2px;flex:1;background:var(--sand3);"></div></div>'
           +'<div style="padding:3px 0;font-size:11.5px;color:var(--ink3);">'+dispDurMatch[1]+'h</div>'
           +'</div>';
       }
     }
-    body+=segRow('green',t('lbl_pickup'),from,r.ride_time?r.ride_time.slice(0,5):'',true);
-    body+=dispDurHtml;
-    body+=segRow('red',t('lbl_end_mission'),'','',false);
+    body+=routeCard(
+      segRow(iconPin,t('lbl_pickup'),from,true)
+      +dispDurHtml
+      +segRow(iconFlag,t('lbl_end_mission'),'',false)
+    );
   } else {
-    body+=segRow('green',t('lbl_depart'),from,r.ride_time?r.ride_time.slice(0,5):'',true);
-    body+=segRow('red',t('lbl_arrivee'),to,'',false);
+    body+=routeCard(
+      segRow(iconPin,t('lbl_depart'),from,true)
+      +segRow(iconFlag,t('lbl_arrivee'),to,false)
+    );
   }
 
-  // Notes / comments (strip Mixte: prefix and duration info)
+  // ── Notes / comments ──
   var rawNotes=r.notes||'';
   var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').trim();
   if(cleanNotes){
-    body+='<div style="margin-top:16px;">'
+    body+='<div style="margin-top:14px;">'
       +'<div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div>'
       +'<div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);">'+cleanNotes+'</div>'
       +'</div>';
   }
 
+  // ── Map preview (A→B and disposal) ──
+  if(!isMixed&&from!=='—'){
+    var MAPS_KEY='AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y';
+    var mapQ='?size=480x180&scale=2&maptype=roadmap'
+      +'&markers=color:0x2E6B4A%7Csize:mid%7C'+encodeURIComponent(from);
+    if(!isDisp&&to!=='—') mapQ+='&markers=color:0xB03030%7Csize:mid%7C'+encodeURIComponent(to);
+    mapQ+='&key='+MAPS_KEY;
+    var mapsHref=isDisp
+      ?'https://www.google.com/maps/search/'+encodeURIComponent(from)
+      :'https://www.google.com/maps/dir/'+encodeURIComponent(from)+'/'+encodeURIComponent(to);
+    body+='<div style="border-radius:var(--r-lg);overflow:hidden;position:relative;margin-top:14px;">'
+      +'<img src="https://maps.googleapis.com/maps/api/staticmap'+mapQ+'" '
+      +'style="width:100%;height:160px;object-fit:cover;display:block;" alt="Carte : '+from.replace(/"/g,'&quot;')+((!isDisp&&to!=='—')?' → '+to.replace(/"/g,'&quot;'):'')+'" loading="lazy">'
+      +'<a href="'+mapsHref+'" target="_blank" rel="noopener" '
+      +'style="position:absolute;bottom:10px;left:10px;background:rgba(255,255,255,.92);'
+      +'border-radius:20px;padding:5px 13px;font-size:12px;font-weight:500;color:var(--ink);'
+      +'text-decoration:none;display:inline-flex;align-items:center;gap:5px;box-shadow:0 1px 4px rgba(0,0,0,.18);">'
+      +'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
+      +'Voir sur la carte</a>'
+      +'</div>';
+  }
+
   var bodyEl=document.getElementById('detail-body');if(bodyEl)bodyEl.innerHTML=body;
 
-  // Footer
+  // ── Footer buttons ──
   var rId=r.id;
   var ft='';
+  var icTrash='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
+  var icEdit='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  var btnDel='class="btn btn-sm" style="color:var(--red);background:transparent;border:none;margin-right:auto;"';
   if(r.status==='waiting'&&isClient){
-    ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">Supprimer</button>'
-      +'<button class="btn btn-secondary btn-sm" onclick="editRide(this.dataset.id)" data-id="'+rId+'">Modifier</button>'
-      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+    ft='<button '+btnDel+' onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">'+icTrash+' Supprimer</button>'
+      +'<button class="btn btn-secondary btn-sm" onclick="editRide(this.dataset.id)" data-id="'+rId+'">'+icEdit+' Modifier</button>'
+      +'<button class="btn btn-green" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
   } else if(r.status==='offers'&&isClient){
-    ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">Annuler la demande</button>'
-      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
+    ft='<button '+btnDel+' onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">'+icTrash+' Annuler</button>'
+      +'<button class="btn btn-secondary btn-sm" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
       +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRide(this.dataset.r)" data-m="m-ride-detail" data-r="'+rId+'">Voir les offres &#x2192;</button>';
   } else if(r.status==='done'&&isClient){
-    ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
+    ft='<button class="btn btn-secondary btn-sm" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
       +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRateModal(this.dataset.r,this.dataset.f)" data-m="m-ride-detail" data-r="'+rId+'" data-f="'+from.replace(/"/g,"&quot;")+'">&#11088; Evaluer</button>';
   } else if(r.status==='waiting'&&!isClient){
     var safeRd=JSON.stringify(r).replace(/'/g,'&#39;');
     var isOwnSub=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
     var hasMyOffer=_myOffers&&_myOffers[rId];
     if(isOwnSub){
-      ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">Annuler</button>'
-        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+      ft='<button '+btnDel+' onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">'+icTrash+' Annuler</button>'
+        +'<button class="btn btn-green" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
     } else {
-      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+      ft='<button class="btn btn-secondary btn-sm" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
       if(!hasMyOffer){
         ft+='<button class="btn btn-green" style="margin-left:8px;" onclick="_detailOffer(this)" data-rid="'+rId+'" data-ride=\''+safeRd+'\'>Soumettre une offre</button>';
       }
     }
   } else if(r.status==='offers'&&!isClient){
     var isOwnSub2=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
-    ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+    ft='<button class="btn btn-secondary btn-sm" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
     if(isOwnSub2){
-      ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">Annuler</button>'
-        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+      ft='<button '+btnDel+' onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">'+icTrash+' Annuler</button>'
+        +'<button class="btn btn-secondary btn-sm" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
     }
   } else {
-    ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+    ft='<button class="btn btn-green" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
   }
   var ftEl=document.getElementById('detail-ft');if(ftEl)ftEl.innerHTML=ft;
   openModal('m-ride-detail');
