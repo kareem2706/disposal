@@ -2497,9 +2497,10 @@ var _chartMonthOffset = 0;
 
 window.chartMonthNav = function(dir){
   var now = new Date();
-  var next = new Date(now.getFullYear(), now.getMonth() + _chartMonthOffset + dir, 1);
-  if(next > now) return; // no future months
-  _chartMonthOffset += dir;
+  var nextOffset = _chartMonthOffset + dir;
+  var next = new Date(now.getFullYear(), now.getMonth() + nextOffset, 1);
+  if(next.getFullYear() > now.getFullYear() || (next.getFullYear() === now.getFullYear() && next.getMonth() > now.getMonth())) return;
+  _chartMonthOffset = nextOffset;
   renderDriverMissionsChart(null);
 };
 
