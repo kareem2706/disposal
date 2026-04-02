@@ -156,12 +156,12 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 /* ═══ PILLS ═══ */
 .pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap;}
 .pill.waiting{background:var(--amber-bg);color:var(--amber);}
-.pill.offers{background:var(--blue-bg);color:var(--blue);}
+.pill.offers{background:var(--blue-bg);color:var(--blue);min-width:90px;justify-content:center;}
 .pill.offer_submitted{background:var(--amber-bg);color:var(--amber);}
 .pill.confirmed{background:var(--green-bg);color:var(--green);}
 .pill.active{background:var(--green-bg);color:var(--green);}
 .pill.done{background:var(--sand2);color:var(--ink4);}
-.pill.cancelled{background:var(--red-bg);color:var(--red);}
+.pill.cancelled{background:var(--red-bg);color:var(--red);min-width:90px;justify-content:center;}
 .pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor;}
 
 /* ═══ TRACKING CARD ═══ */
@@ -4346,7 +4346,7 @@ function renderRideItem(r){
   var isDisposal=r.trip_type==='disposal';var isCancelled=r.status==='cancelled';
   var destCol=isDisposal?'<div></div>':'<div><div class="ride-card-col-label">Destination</div><div class="ride-card-col-val">'+(r.to_address||'—')+'</div></div>';
   var priceCol=isCancelled?'<div></div>':'<div style="text-align:right;"><div class="ride-card-col-label">Prix</div><div class="ride-card-col-val" style="font-weight:700;">'+priceStr+'</div></div>';
-  return '<div class="ride-card" onclick="'+cardClick+'" data-ride=\''+safeR.replace(/\'/g,'&#39;')+'\'>'    +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+monStr+'</div><div class="ride-card-date-day">'+dayNum+'</div></div>'    +'<div style="display:flex;align-items:center;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;background:'+tBg+';color:'+tColor+';padding:2px 7px;border-radius:20px;">'+tLabel+'</span></div>'    +'<div><div class="ride-card-col-label">Origine</div><div class="ride-card-col-val">'+(r.from_address||'—')+'</div></div>'    +destCol    +'<div><div class="ride-card-col-label">Statut</div>'+statusPill+'</div>'    +priceCol    +'<svg class="ride-card-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'  +'</div>';
+  return '<div class="ride-card" onclick="'+cardClick+'" data-ride=\''+safeR.replace(/\'/g,'&#39;')+'\'>'    +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+monStr+'</div><div class="ride-card-date-day">'+dayNum+'</div></div>'    +'<div style="display:flex;align-items:center;"><span style="font-size:10px;font-weight:700;background:'+tBg+';color:'+tColor+';padding:2px 7px;border-radius:20px;">'+tLabel+'</span></div>'    +'<div><div class="ride-card-col-label">Origine</div><div class="ride-card-col-val">'+(r.from_address||'—')+'</div></div>'    +destCol    +'<div><div class="ride-card-col-label">Statut</div>'+statusPill+'</div>'    +priceCol    +'<svg class="ride-card-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'  +'</div>';
 }
 
 
