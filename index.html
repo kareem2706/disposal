@@ -234,7 +234,15 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .form-grid .full{grid-column:1/-1;}
 .trip-types{display:flex;gap:5px;margin-bottom:4px;}
 .trip-type{flex:1;padding:8px 4px;border-radius:var(--r);border:1.5px solid var(--sand3);background:white;cursor:pointer;font-size:12px;font-weight:500;text-align:center;transition:all var(--t);color:var(--ink2);font-family:'DM Sans',sans-serif;}
-.trip-type.active{border-color:var(--ink);color:var(--ink);background:var(--sand2);}
+.trip-type.active{border-color:transparent;color:var(--ink);background:var(--sand2);}
+.trip-type[data-val="ab"].active{background:var(--green-bg);color:var(--green);}
+.trip-type[data-val="disposal"].active{background:var(--amber-bg);color:var(--amber);}
+.trip-type[data-val="mixed"].active{background:var(--blue-bg);color:var(--blue);}
+
+/* Tighter spacing in new-ride and subcontract modals */
+#m-new-ride .modal-body,#m-subcontract .modal-body{padding:12px 18px;}
+#m-new-ride .input-group,#m-subcontract .input-group{margin-bottom:8px;}
+#m-new-ride .form-grid,#m-subcontract .form-grid{gap:8px;}
 
 /* ═══ MODAL ═══ */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(14,14,12,.45);z-index:800;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
@@ -300,7 +308,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ac-item:hover{background:var(--sand);}
 .ac-item:last-child{border-bottom:none;}
 .ac-item-icon{font-size:13px;flex-shrink:0;}
-.mixed-segment{background:var(--sand2);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
+.mixed-segment{background:rgba(226,232,223,0.8);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
 .mixed-segment-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .mseg-num{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .mseg-lbl{font-size:12px;font-weight:600;color:var(--ink2);flex:1;}
@@ -347,7 +355,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ac-item:hover{background:var(--sand);}
 .ac-item:last-child{border-bottom:none;}
 .ac-item-icon{font-size:13px;flex-shrink:0;}
-.mixed-segment{background:var(--sand2);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
+.mixed-segment{background:rgba(226,232,223,0.8);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
 .mixed-segment-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .mseg-num{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .mseg-lbl{font-size:12px;font-weight:600;color:var(--ink2);flex:1;}
@@ -1106,6 +1114,7 @@ body{background:var(--bg);}
           <span class="section-title">Nouvelles demandes</span>
         </div>
         <button class="btn btn-ghost btn-sm" onclick="showPage('marketplace')">Marketplace →</button>
+        <button class="btn btn-secondary btn-sm" onclick="openSubRideModal()">+ Sous-traiter</button>
       </div>
       <div id="driver-latest-requests"><div class="page-loading"><div class="page-spinner"></div></div></div>
 
@@ -1462,8 +1471,8 @@ body{background:var(--bg);}
       <div id="panel-disposal" style="display:none;">
         <div class="form-grid">
           <div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="disp-from" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>
-          <div class="input-group full"><label>Date <span style="color:var(--red)">*</span></label><input id="disp-date" type="date" min=""></div>
-          <div class="input-group full"><label>Heure <span style="color:var(--red)">*</span></label><input id="disp-time" type="time"></div>
+          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="disp-date" type="date" min=""></div>
+          <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="disp-time" type="time"></div>
           <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
           <div class="input-group"><label>Passagers</label><select id="disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="disp-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
@@ -1559,8 +1568,8 @@ body{background:var(--bg);}
       <div id="sub-panel-disposal" style="display:none;">
         <div class="form-grid">
           <div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="sub-disp-from" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>
-          <div class="input-group full"><label>Date <span style="color:var(--red)">*</span></label><input id="sub-disp-date" type="date" min=""></div>
-          <div class="input-group full"><label>Heure <span style="color:var(--red)">*</span></label><input id="sub-disp-time" type="time"></div>
+          <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="sub-disp-date" type="date" min=""></div>
+          <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="sub-disp-time" type="time"></div>
           <div class="input-group"><label>Dur&eacute;e (h)</label><input id="sub-disp-dur" type="number" min="1" max="24" value="2" placeholder="2"></div>
           <div class="input-group"><label>Passagers</label><select id="sub-disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="sub-disp-veh"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
