@@ -308,7 +308,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ac-item:hover{background:var(--sand);}
 .ac-item:last-child{border-bottom:none;}
 .ac-item-icon{font-size:13px;flex-shrink:0;}
-.mixed-segment{background:rgba(226,232,223,0.8);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
+.mixed-segment{background:rgba(226,232,223,0.1);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
 .mixed-segment-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .mseg-num{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .mseg-lbl{font-size:12px;font-weight:600;color:var(--ink2);flex:1;}
@@ -355,7 +355,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ac-item:hover{background:var(--sand);}
 .ac-item:last-child{border-bottom:none;}
 .ac-item-icon{font-size:13px;flex-shrink:0;}
-.mixed-segment{background:rgba(226,232,223,0.8);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
+.mixed-segment{background:rgba(226,232,223,0.1);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
 .mixed-segment-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .mseg-num{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .mseg-lbl{font-size:12px;font-weight:600;color:var(--ink2);flex:1;}
@@ -4084,7 +4084,22 @@ function renderDriverStatsChart(missions){
   var maxC=0;
   missions.forEach(function(m){if(!m.ride_date)return;var d=new Date(m.ride_date+'T00:00:00');if(d.getFullYear()===_dStatsYear&&d.getMonth()===_dStatsMonth){var wIdx=Math.min(Math.floor((d.getDate()-1)/7),numWeeks-1);cnt[wIdx]++;if(cnt[wIdx]>maxC)maxC=cnt[wIdx];}});
   var td=new Date();var curWeek=Math.floor((td.getDate()-1)/7);
-  ch.innerHTML=cnt.map(function(c,i){var h=maxC>0?Math.round((c/maxC)*52):8;var isT=_dStatsMonth===td.getMonth()&&_dStatsYear===td.getFullYear()&&i===curWeek;var bg=isT?'var(--green)':(c>0?'#2E7A50':'var(--sand3)');return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;"><div style="background:'+bg+';border-radius:3px 3px 0 0;width:100%;height:'+h+'px;min-height:6px;"></div><div style="font-size:9px;color:var(--ink4);">S'+(i+1)+'</div></div>';}).join('');
+  ch.innerHTML=cnt.map(function(c,i){
+    var h=maxC>0?Math.round((c/maxC)*52):8;
+    var isT=_dStatsMonth===td.getMonth()&&_dStatsYear===td.getFullYear()&&i===curWeek;
+    var bg=c===0?'var(--sand3)':c<5?'var(--green-light)':c<10?'var(--green-mid)':'var(--green)';
+    var tip=c===0?'Aucune course':c===1?'1 course':c+' courses';
+    var borderStyle=isT?'border:2px solid var(--green);box-sizing:border-box;':'';
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative;" class="dstat-bar-wrap">'
+      +'<div class="dstat-tooltip" style="display:none;position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:10;">'+tip+'</div>'
+      +'<div style="background:'+bg+';border-radius:3px 3px 0 0;width:100%;height:'+h+'px;min-height:6px;'+borderStyle+'"></div>'
+      +'<div style="font-size:9px;color:'+(isT?'var(--green)':'var(--ink4)')+';">'+(isT?'<b>':'')+'S'+(i+1)+(isT?'</b>':'')+'</div>'
+      +'</div>';
+  }).join('');
+  ch.querySelectorAll('.dstat-bar-wrap').forEach(function(el){
+    el.addEventListener('mouseenter',function(){var t=el.querySelector('.dstat-tooltip');if(t)t.style.display='block';});
+    el.addEventListener('mouseleave',function(){var t=el.querySelector('.dstat-tooltip');if(t)t.style.display='none';});
+  });
 }
 // ── Driver calendar ──
 var _dCalY=new Date().getFullYear(),_dCalM=new Date().getMonth(),_dCalRides=[],_dCalView='month',_dCalWS=null,_dCalCache={};
