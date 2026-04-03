@@ -4073,7 +4073,7 @@ function renderDriverStatsChart(missions){
   var numWeeks=Math.ceil(daysInMonth/7);
   var cnt=[];for(var wi=0;wi<numWeeks;wi++)cnt.push(0);
   var maxC=0;
-  missions.forEach(function(m){if(!m.ride_date)return;var d=new Date(m.ride_date+'T00:00:00');if(d.getFullYear()===_dStatsYear&&d.getMonth()===_dStatsMonth){var wIdx=Math.floor((d.getDate()-1)/7);cnt[wIdx]++;if(cnt[wIdx]>maxC)maxC=cnt[wIdx];}});
+  missions.forEach(function(m){if(!m.ride_date)return;var d=new Date(m.ride_date+'T00:00:00');if(d.getFullYear()===_dStatsYear&&d.getMonth()===_dStatsMonth){var wIdx=Math.min(Math.floor((d.getDate()-1)/7),numWeeks-1);cnt[wIdx]++;if(cnt[wIdx]>maxC)maxC=cnt[wIdx];}});
   var td=new Date();var curWeek=Math.floor((td.getDate()-1)/7);
   ch.innerHTML=cnt.map(function(c,i){var h=maxC>0?Math.round((c/maxC)*52):8;var isT=_dStatsMonth===td.getMonth()&&_dStatsYear===td.getFullYear()&&i===curWeek;var bg=isT?'var(--green)':(c>0?'#2E7A50':'var(--sand3)');return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;"><div style="background:'+bg+';border-radius:3px 3px 0 0;width:100%;height:'+h+'px;min-height:6px;"></div><div style="font-size:9px;color:var(--ink4);">S'+(i+1)+'</div></div>';}).join('');
 }
