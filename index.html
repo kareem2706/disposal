@@ -1112,8 +1112,8 @@ body{background:var(--bg);}
       <!-- Bottom cards -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px;">
         <div class="card" style="padding:22px;background:linear-gradient(135deg,#1B5E3B 0%,#2E7A50 100%);color:#fff;display:flex;flex-direction:column;justify-content:center;">
-          <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg><span style="font-size:14px;font-weight:700;">Aide et support</span></div>
-          <div style="font-size:12.5px;opacity:.88;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Vous avez besoin d&apos;aide&nbsp;? Contactez-nous&nbsp;: <a href="/cdn-cgi/l/email-protection#c3aaada5ac83a1afa6a6adb1eda0acae" style="color:#fff;font-weight:600;text-decoration:underline;"><span class="__cf_email__" data-cfemail="244d4a424b64464841414a560a474b49">[email&#160;protected]</span></a></div>
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg><span style="font-size:14px;font-weight:700;">Aide &amp; support</span></div>
+          <div style="font-size:12.5px;opacity:.88;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Vous avez besoin d&apos;aide&nbsp;? Contactez-nous&nbsp;: <a href="mailto:info@bleenr.com" style="color:#fff;font-weight:600;text-decoration:underline;">info@bleenr.com</a></div>
         </div>
         <div class="card" style="padding:20px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -2880,9 +2880,11 @@ window.openRideDetail=function(el){
   }
 
   if(isMixed&&mixedSegs.length){
+    var mixedBody='';
     mixedSegs.forEach(function(s,i){
-      body+=segCard(s,i,i===mixedSegs.length-1);
+      mixedBody+=segCard(s,i,i===mixedSegs.length-1);
     });
+    body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+mixedBody+'</div>';
   } else if(isDisp){
     var dispDurHtml='';
     if(r.notes){var dispDurMatch=r.notes.match(/Durée:([^\s|,]+)/);
@@ -2894,10 +2896,10 @@ window.openRideDetail=function(el){
       }
     }
     var _routeInner=segRow('green',t('lbl_pickup'),from,'',true)+dispDurHtml+segRow('red',t('lbl_end_mission'),'','',false);
-    body+='<div style="background:#EEF9F3;border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+_routeInner+'</div>';
+    body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+_routeInner+'</div>';
   } else {
     var _routeInner2=segRow('green',t('lbl_depart'),from,'',true)+segRow('red',t('lbl_arrivee'),to,'',false);
-    body+='<div style="background:#EEF9F3;border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+_routeInner2+'</div>';
+    body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+_routeInner2+'</div>';
   }
 
   // Notes / comments (strip Mixte: prefix and duration info)
@@ -4067,10 +4069,13 @@ function renderDriverStatsChart(missions){
   var lbl=document.getElementById('d-stats-month');var ch=document.getElementById('driver-stats-chart');
   if(lbl)lbl.textContent=_MNS[_dStatsMonth]+' '+_dStatsYear;
   if(!ch)return;
-  var cnt=[0,0,0,0,0,0,0],maxC=0;
-  missions.forEach(function(m){if(!m.ride_date)return;var d=new Date(m.ride_date+'T00:00:00');if(d.getFullYear()===_dStatsYear&&d.getMonth()===_dStatsMonth){var dow=d.getDay();dow=dow===0?6:dow-1;cnt[dow]++;if(cnt[dow]>maxC)maxC=cnt[dow];}});
-  var days=['L','M','M','J','V','S','D'];var td=new Date();
-  ch.innerHTML=days.map(function(d,i){var h=maxC>0?Math.round((cnt[i]/maxC)*52):8;var isT=td.getDay()===(i===6?0:i+1)&&_dStatsMonth===td.getMonth()&&_dStatsYear===td.getFullYear();var bg=isT?'var(--green)':(cnt[i]>0?'#2E7A50':'var(--sand3)');return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;"><div style="background:'+bg+';border-radius:3px 3px 0 0;width:100%;height:'+h+'px;min-height:6px;"></div><div style="font-size:9px;color:var(--ink4);">'+d+'</div></div>';}).join('');
+  var daysInMonth=new Date(_dStatsYear,_dStatsMonth+1,0).getDate();
+  var numWeeks=Math.ceil(daysInMonth/7);
+  var cnt=[];for(var wi=0;wi<numWeeks;wi++)cnt.push(0);
+  var maxC=0;
+  missions.forEach(function(m){if(!m.ride_date)return;var d=new Date(m.ride_date+'T00:00:00');if(d.getFullYear()===_dStatsYear&&d.getMonth()===_dStatsMonth){var wIdx=Math.min(Math.floor((d.getDate()-1)/7),numWeeks-1);cnt[wIdx]++;if(cnt[wIdx]>maxC)maxC=cnt[wIdx];}});
+  var td=new Date();var curWeek=Math.floor((td.getDate()-1)/7);
+  ch.innerHTML=cnt.map(function(c,i){var h=maxC>0?Math.round((c/maxC)*52):8;var isT=_dStatsMonth===td.getMonth()&&_dStatsYear===td.getFullYear()&&i===curWeek;var bg=isT?'var(--green)':(c>0?'#2E7A50':'var(--sand3)');return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;"><div style="background:'+bg+';border-radius:3px 3px 0 0;width:100%;height:'+h+'px;min-height:6px;"></div><div style="font-size:9px;color:var(--ink4);">S'+(i+1)+'</div></div>';}).join('');
 }
 // ── Driver calendar ──
 var _dCalY=new Date().getFullYear(),_dCalM=new Date().getMonth(),_dCalRides=[],_dCalView='month',_dCalWS=null,_dCalCache={};
@@ -4184,6 +4189,8 @@ function loadProfileForm(){
   var fn=currentProfile.first_name||'',ln=currentProfile.last_name||'',co=currentProfile.company_name||currentProfile.first_name||'';
   var set=function(id,v){var el=document.getElementById(id);if(el)el.value=v;};
   set('pf-fname',fn);set('pf-lname',ln);set('pf-company',co);set('pf-phone',currentProfile.phone||'');set('pf-vat',currentProfile.vat_number||'');
+  set('pf-street',currentProfile.address_street||'');set('pf-postal',currentProfile.address_postal||'');set('pf-city',currentProfile.address_city||'');
+  var ctrySel=document.getElementById('pf-country');if(ctrySel&&currentProfile.address_country)ctrySel.value=currentProfile.address_country;
   var full=showC?(co||'\u2014'):((fn+' '+ln).trim()||'\u2014');
   var fd=document.getElementById('profile-fullname');if(fd)fd.textContent=full;
   var ed=document.getElementById('profile-email-disp');if(ed)ed.textContent=(currentUser&&(currentUser.email||currentProfile.phone))||'\u2014';
