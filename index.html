@@ -621,7 +621,9 @@ body{background:var(--bg);}
 .cal-view-btn.cal-view-active,.d-cal-vbtn.d-cal-vactive{background:var(--white)!important;color:var(--ink)!important;box-shadow:0 1px 3px rgba(0,0,0,.1);}
 .cal-view-btn:not(.cal-view-active),.d-cal-vbtn:not(.d-cal-vactive){background:transparent!important;color:var(--ink3)!important;}
 @media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:900px){.app-sidebar{transform:translateX(-100%);}.app-sidebar.open{transform:translateX(0);box-shadow:var(--sh-lg);}.app-main{margin-left:0;}.page{padding:16px;}.stats-row{grid-template-columns:1fr 1fr;gap:10px;}.ride-card{grid-template-columns:44px 1fr auto;gap:10px;}}
+.mobile-topbar{display:none;align-items:center;gap:12px;padding:0 16px;height:52px;background:var(--white);border-bottom:1px solid var(--sand3);position:sticky;top:0;z-index:200;flex-shrink:0;}
+.mobile-topbar-title{font-size:15px;font-weight:600;color:var(--ink);}
+@media(max-width:900px){.app-sidebar{transform:translateX(-100%);}.app-sidebar.open{transform:translateX(0);box-shadow:var(--sh-lg);}.app-main{margin-left:0;}.mobile-topbar{display:flex;}.page{padding:16px;}.stats-row{grid-template-columns:1fr 1fr;gap:10px;}.ride-card{grid-template-columns:44px 1fr auto;grid-template-rows:auto auto auto;gap:4px 10px;padding:12px 14px;}.ride-card>*:nth-child(1){grid-column:1;grid-row:1/4;align-self:center;}.ride-card>*:nth-child(2){grid-column:2;grid-row:1;}.ride-card>*:nth-child(3){grid-column:2/4;grid-row:2;}.ride-card>*:nth-child(4){grid-column:2/4;grid-row:3;}.ride-card>*:nth-child(5){grid-column:3;grid-row:1;}.ride-card>*:nth-child(6){display:none;}.ride-card>svg:last-child{display:none;}.ride-card .ride-card-col-label{display:none;}.ride-card .ride-card-col-val{font-size:12.5px;}}
 
 .modal-ft .btn{padding:6px 14px;font-size:12px;font-weight:500;}
 
@@ -1010,6 +1012,13 @@ body{background:var(--bg);}
 
   <!-- MAIN CONTENT -->
   <main class="app-main">
+    <!-- Mobile topbar (hamburger + page title) -->
+    <div class="mobile-topbar">
+      <button id="mob-btn" class="mob-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Menu">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+      <span id="page-title" class="mobile-topbar-title"></span>
+    </div>
     <div style="position:fixed;top:16px;right:20px;z-index:60;">
       <div id="notif-btn" class="icon-btn" onclick="toggleNotifPanel()" style="position:relative;background:var(--white);box-shadow:var(--sh);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;">
         <svg viewBox="0 0 15 15" fill="none" width="16" height="16"><path d="M7.5 2a4 4 0 014 4v2.5l1 2H3l1-2V6a4 4 0 014-4z" stroke="var(--ink)" stroke-width="1.3"/><path d="M6 11.5a1.5 1.5 0 003 0" stroke="var(--ink)" stroke-width="1.3"/></svg>
