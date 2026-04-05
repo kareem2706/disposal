@@ -2946,7 +2946,16 @@ window.openRideDetail=function(el){
         var infoEl=document.getElementById('detail-route-info');
         var textEl=document.getElementById('detail-route-info-text');
         if(infoEl&&textEl){
-          textEl.innerHTML='<span>'+el.distance.text+'</span><span style="color:var(--sand3)">|</span><span>'+el.duration.text+'</span>';
+          var distSpan=document.createElement('span');
+          distSpan.textContent=el.distance.text;
+          var sepSpan=document.createElement('span');
+          sepSpan.style.color='var(--sand3)';
+          sepSpan.textContent='|';
+          var durSpan=document.createElement('span');
+          durSpan.textContent=el.duration.text;
+          textEl.appendChild(distSpan);
+          textEl.appendChild(sepSpan);
+          textEl.appendChild(durSpan);
           infoEl.style.display='flex';
         }
       }
