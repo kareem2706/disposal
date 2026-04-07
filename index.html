@@ -2920,12 +2920,12 @@ window._offerSubmittedClick = function(btn){
 
 
 window.openRideDetail=async function(el){
-  // Debounce: prevent double-call within 300ms
-  var now=Date.now();
-  if(window._lastDetailOpen&&now-window._lastDetailOpen<300)return;
-  window._lastDetailOpen=now;
+  // Lock: prevent concurrent/double calls
+  if(window._detailLock)return;
+  window._detailLock=true;
+  try{
   var r;
-  try{ r=JSON.parse(el.dataset.ride.replace(/&#39;/g,"'")); }catch(e){return;}
+  try{ r=JSON.parse(el.dataset.ride.replace(/&#39;/g,"'")); }catch(e){window._detailLock=false;return;}
   var isClient=currentRole==='client';
   var isMixed=r.trip_type==='mixed',isDisp=r.trip_type==='disposal';
   var mixedSegs=isMixed?parseMixedNotes(r.notes||''):[];
@@ -3130,6 +3130,7 @@ window.openRideDetail=async function(el){
   }
   var ftEl=document.getElementById('detail-ft');if(ftEl)ftEl.innerHTML=ft;
   openModal('m-ride-detail');
+  }finally{window._detailLock=false;}
 };
 
 
