@@ -1095,6 +1095,7 @@ body{background:var(--bg);}
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
         <div><h1>Calendrier</h1><p>Vos missions du mois</p></div>
+        <button class="btn btn-green btn-sm" style="margin-left:auto;display:flex;align-items:center;gap:6px;" onclick="openPersonalMissionModal()"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Ajouter mission personnelle</button>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--sand3);gap:12px;">
@@ -1155,7 +1156,7 @@ body{background:var(--bg);}
     </div>
 
     <div id="page-d-calendar" class="page">
-      <div class="pg-head"><div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div><div><h1>Calendrier</h1><p>Vos missions du mois</p></div></div>
+      <div class="pg-head"><div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div><div><h1>Calendrier</h1><p>Vos missions du mois</p></div><button class="btn btn-green btn-sm" style="margin-left:auto;display:flex;align-items:center;gap:6px;" onclick="openPersonalMissionModal()"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Ajouter mission personnelle</button></div>
       <div class="card" style="padding:0;overflow:hidden;">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--sand3);gap:12px;">
           <button onclick="dCalPrev()" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--ink3);"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
@@ -1695,6 +1696,34 @@ body{background:var(--bg);}
     <div class="modal-ft">
       <button class="btn btn-secondary" onclick="closeModal('m-subcontract')">Annuler</button>
       <button class="btn btn-green" onclick="submitSubcontract()">Publier &rarr;</button>
+    </div>
+  </div>
+</div>
+
+<!-- Personal Mission Modal -->
+<div class="modal-overlay" id="m-personal-mission" onclick="if(event.target===this)closeModal('m-personal-mission')">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-hd">
+      <span class="modal-title">Ajouter une mission personnelle</span>
+      <button class="close-btn" onclick="closeModal('m-personal-mission')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="modal-body" style="padding:20px 22px;">
+      <div style="background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:var(--r);padding:10px 12px;font-size:12px;color:var(--amber);margin-bottom:16px;">
+        Cette mission est visible uniquement par votre compte fleet. Elle ne sera pas publiée sur la marketplace.
+      </div>
+      <div class="form-grid">
+        <div class="input-group full"><label>Libellé <span style="color:var(--red)">*</span></label><input id="pm-label" placeholder="Ex : Réunion privée, Congé, Indisponible…" autocomplete="off"></div>
+        <div class="input-group full"><label>Adresse de départ</label><input id="pm-from" placeholder="Lieu de départ (optionnel)" autocomplete="off"></div>
+        <div class="input-group full"><label>Adresse d'arrivée</label><input id="pm-to" placeholder="Lieu d'arrivée (optionnel)" autocomplete="off"></div>
+        <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="pm-date"></div>
+        <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="pm-time" value="08:00"></div>
+        <div class="input-group full"><label>Notes</label><textarea id="pm-notes" rows="2" placeholder="Informations complémentaires…"></textarea></div>
+      </div>
+      <div id="pm-err" class="auth-error"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeModal('m-personal-mission')">Annuler</button>
+      <button class="btn btn-green" id="btn-save-personal-mission" onclick="savePersonalMission(this)">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -4310,9 +4339,9 @@ window.showPaymentResult=function(type,title,msg){
 function _buildCalCell(ds,isT,calRides,calView){
   var day=parseInt(ds.split('-')[2]);
   var rides=calRides.filter(function(r){return r.ride_date===ds;});
-  var sc={waiting:'#F0D080',offers:'#90C4F8',confirmed:'#6FCF97',active:'#27AE60',done:'#B0C4B8',cancelled:'#FFAAAA'};
-  var sl={waiting:'Attente',offers:'Offres',confirmed:'Confirmée',active:'Active',done:'Terminée',cancelled:'Annulée'};
-  var tl=function(r){return r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';};
+  var sc={waiting:'#F0D080',offers:'#90C4F8',confirmed:'#6FCF97',active:'#27AE60',done:'#B0C4B8',cancelled:'#FFAAAA',personal:'#D8C4F0'};
+  var sl={waiting:'Attente',offers:'Offres',confirmed:'Confirmée',active:'Active',done:'Terminée',cancelled:'Annulée',personal:'Personnelle'};
+  var tl=function(r){if(r.status==='personal'){var lbl=r.notes?r.notes.split(' — ')[0]:null;return lbl||r.from_address||'Mission';}return r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';};
   var cellH=calView==='week'?'140px':'72px';
   var maxR=calView==='week'?rides.length:2;
   var p=[];
@@ -4440,6 +4469,64 @@ window.loadDriverCalendar=async function(force){
   }
   if(!_dCalWS){var d=new Date();var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_dCalWS=d;}
   if(typeof _renderCalGrid==='function')_renderCalGrid('d-cal-grid','d-cal-title',_dCalY,_dCalM,_dCalView,_dCalWS,_dCalRides);
+};
+
+// ── Personal Mission ──
+window.openPersonalMissionModal=function(){
+  var err=document.getElementById('pm-err');if(err){err.textContent='';err.classList.remove('show');}
+  ['pm-label','pm-from','pm-to','pm-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var td=todayStr();
+  var dt=document.getElementById('pm-date');if(dt){dt.value=td;dt.min=td;}
+  var tm=document.getElementById('pm-time');if(tm)tm.value='08:00';
+  openModal('m-personal-mission');
+};
+
+window.savePersonalMission=async function(btn){
+  var label=document.getElementById('pm-label')?.value.trim();
+  var from=document.getElementById('pm-from')?.value.trim();
+  var to=document.getElementById('pm-to')?.value.trim();
+  var date=document.getElementById('pm-date')?.value;
+  var time=document.getElementById('pm-time')?.value;
+  var notes=document.getElementById('pm-notes')?.value.trim();
+  var err=document.getElementById('pm-err');
+
+  if(!label||!date||!time){
+    if(err){err.textContent='Veuillez remplir les champs obligatoires.';err.classList.add('show');}
+    return;
+  }
+
+  if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
+    closeModal('m-personal-mission');
+    showToast('Mission personnelle ajoutée');
+    return;
+  }
+
+  if(!sb||!currentUser){if(err){err.textContent='Non connecté';err.classList.add('show');}return;}
+  if(btn)setLoading(btn,true,'Enregistrer');
+
+  var rideData={
+    driver_id:   currentUser.id,
+    trip_type:   'ab',
+    from_address: from||null,
+    to_address:   to||null,
+    ride_date:    date,
+    ride_time:    time,
+    notes:        [label, notes].filter(Boolean).join(' — ')||null,
+    status:       'personal'
+  };
+
+  try{
+    var res=await sb.from('rides').insert(rideData);
+    if(res.error)throw res.error;
+    if(btn)setLoading(btn,false,'Enregistrer');
+    closeModal('m-personal-mission');
+    showToast('Mission personnelle ajoutée');
+    _dCalCache={};
+    await loadDriverCalendar(true);
+  }catch(e){
+    if(err){err.textContent=e.message||'Erreur';err.classList.add('show');}
+    if(btn)setLoading(btn,false,'Enregistrer');
+  }
 };
 
 function showToast(msg){
