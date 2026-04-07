@@ -2894,6 +2894,9 @@ window.openRideDetail=function(el){
     } else {
       if(!skipFrom) rows+=segRow('green',t('lbl_depart'),s.from||'—','',true);
       rows+=segRow('red',t('lbl_arrivee'),s.to||'—','',false);
+      rows+='<div id="detail-route-info-'+idx+'" style="display:none;padding:2px 0 2px 30px;">'
+        +'<div style="font-size:11.5px;color:var(--ink3);display:flex;gap:10px;" id="detail-route-info-text-'+idx+'"></div>'
+        +'</div>';
     }
     var border=isLast?'':'border-bottom:1px solid var(--sand3);margin-bottom:12px;padding-bottom:12px;';
     return '<div style="'+border+'">'
@@ -2910,25 +2913,25 @@ window.openRideDetail=function(el){
     });
     body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+mixedBody+'</div>';
   } else if(isDisp){
-    var dispDurHtml='';
+    var dispDurHtml='', dispKmHtml='';
      if(r.notes){var dispDurMatch=r.notes.match(/Durée:([^\s|,]+)/);
       if(dispDurMatch){
         var dispDurVal=parseFloat(dispDurMatch[1])||0;
         var dispKm=Math.round(dispDurVal*20);
         dispDurHtml='<div style="display:flex;gap:14px;padding:2px 0;">'
           +'<div style="width:16px;flex-shrink:0;display:flex;justify-content:center;"><div style="width:2px;flex:1;background:var(--sand3);"></div></div>'
-          +'<div style="padding:3px 0;font-size:11.5px;color:var(--ink3);">'+dispDurMatch[1]+'h'+(dispKm>0?' &middot; '+dispKm+'km inclus':'')+'</div>'
+          +'<div style="padding:3px 0;font-size:11.5px;color:var(--ink3);">'+dispDurMatch[1]+'</div>'
           +'</div>';
+        if(dispKm>0) dispKmHtml='<div style="padding:2px 0 2px 30px;font-size:11.5px;color:var(--ink3);">'+dispKm+'km inclus</div>';
       }
     }
-    var _routeInner=segRow('green',t('lbl_pickup'),from,'',true)+dispDurHtml+segRow('red',t('lbl_end_mission'),'','',false);
+    var _routeInner=segRow('green',t('lbl_pickup'),from,'',true)+dispDurHtml+segRow('red',t('lbl_end_mission'),'','',false)+dispKmHtml;
     body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+_routeInner+'</div>';
   } else {
-    var _abInfoHtml='<div id="detail-route-info" style="display:none;gap:14px;padding:2px 0;">'
-      +'<div style="width:16px;flex-shrink:0;display:flex;justify-content:center;"><div style="width:2px;flex:1;background:var(--sand3);"></div></div>'
-      +'<div style="padding:3px 0;font-size:11.5px;color:var(--ink3);display:flex;gap:10px;" id="detail-route-info-text"></div>'
+    var _abInfoHtml='<div id="detail-route-info" style="display:none;padding:2px 0 2px 30px;">'
+      +'<div style="font-size:11.5px;color:var(--ink3);display:flex;gap:10px;" id="detail-route-info-text"></div>'
       +'</div>';
-    var _routeInner2=segRow('green',t('lbl_depart'),from,'',true)+_abInfoHtml+segRow('red',t('lbl_arrivee'),to,'',false);
+    var _routeInner2=segRow('green',t('lbl_depart'),from,'',true)+segRow('red',t('lbl_arrivee'),to,'',false)+_abInfoHtml;
     body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+_routeInner2+'</div>';
   }
 
@@ -2965,8 +2968,41 @@ window.openRideDetail=function(el){
           textEl.appendChild(distSpan);
           textEl.appendChild(sepSpan);
           textEl.appendChild(durSpan);
-          infoEl.style.display='flex';
+          infoEl.style.display='block';
         }
+      }
+    });
+  }
+
+  // ── Google Distance Matrix for mixed A→B segments ──
+  if(isMixed&&mixedSegs.length&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
+    mixedSegs.forEach(function(s,i){
+      if(s.type.toLowerCase().indexOf('disp')<0&&s.from&&s.to){
+        (function(seg,idx){
+          (new google.maps.DistanceMatrixService()).getDistanceMatrix({
+            origins:[seg.from],destinations:[seg.to],
+            travelMode:google.maps.TravelMode.DRIVING,language:'fr'
+          },function(res,st){
+            if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){
+              var el=res.rows[0].elements[0];
+              var infoEl=document.getElementById('detail-route-info-'+idx);
+              var textEl=document.getElementById('detail-route-info-text-'+idx);
+              if(infoEl&&textEl){
+                var distSpan=document.createElement('span');
+                distSpan.textContent=el.distance.text;
+                var sepSpan=document.createElement('span');
+                sepSpan.style.color='var(--sand3)';
+                sepSpan.textContent='|';
+                var durSpan=document.createElement('span');
+                durSpan.textContent=el.duration.text;
+                textEl.appendChild(distSpan);
+                textEl.appendChild(sepSpan);
+                textEl.appendChild(durSpan);
+                infoEl.style.display='block';
+              }
+            }
+          });
+        })(s,i);
       }
     });
   }
