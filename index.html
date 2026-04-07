@@ -1095,7 +1095,9 @@ body{background:var(--bg);}
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
         <div><h1>Calendrier</h1><p>Vos missions du mois</p></div>
-        <button class="btn btn-green btn-sm" style="margin-left:auto;display:flex;align-items:center;gap:6px;" onclick="openPersonalMissionModal()"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Ajouter mission personnelle</button>
+      </div>
+      <div style="margin-bottom:10px;">
+        <button class="btn btn-green btn-sm" style="display:flex;align-items:center;gap:6px;" onclick="openPersonalMissionModal()"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Ajouter mission personnelle</button>
       </div>
       <div class="card" style="padding:0;overflow:hidden;">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--sand3);gap:12px;">
@@ -1156,7 +1158,10 @@ body{background:var(--bg);}
     </div>
 
     <div id="page-d-calendar" class="page">
-      <div class="pg-head"><div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div><div><h1>Calendrier</h1><p>Vos missions du mois</p></div><button class="btn btn-green btn-sm" style="margin-left:auto;display:flex;align-items:center;gap:6px;" onclick="openPersonalMissionModal()"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Ajouter mission personnelle</button></div>
+      <div class="pg-head"><div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div><div><h1>Calendrier</h1><p>Vos missions du mois</p></div></div>
+      <div style="margin-bottom:10px;">
+        <button class="btn btn-green btn-sm" style="display:flex;align-items:center;gap:6px;" onclick="openPersonalMissionModal()"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Ajouter mission personnelle</button>
+      </div>
       <div class="card" style="padding:0;overflow:hidden;">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--sand3);gap:12px;">
           <button onclick="dCalPrev()" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--ink3);"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
@@ -1708,13 +1713,45 @@ body{background:var(--bg);}
       <button class="close-btn" onclick="closeModal('m-personal-mission')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
     </div>
     <div class="modal-body" style="padding:20px 22px;">
+      <input type="hidden" id="pm-mission-type" value="ab">
+      <!-- Type selector -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button id="pm-type-ab" onclick="pmSetType('ab')" style="flex:1;padding:10px 8px;border-radius:var(--r);border:2px solid var(--green);background:var(--green-bg);color:var(--green);font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Transfert A→B
+        </button>
+        <button id="pm-type-dispo" onclick="pmSetType('dispo')" style="flex:1;padding:10px 8px;border-radius:var(--r);border:2px solid var(--sand3);background:transparent;color:var(--ink3);font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Mise à disposition
+        </button>
+      </div>
       <div style="background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:var(--r);padding:10px 12px;font-size:12px;color:var(--amber);margin-bottom:16px;">
         Cette mission est visible uniquement par votre compte fleet. Elle ne sera pas publiée sur la marketplace.
       </div>
       <div class="form-grid">
         <div class="input-group full"><label>Libellé <span style="color:var(--red)">*</span></label><input id="pm-label" placeholder="Ex : Réunion privée, Congé, Indisponible…" autocomplete="off"></div>
-        <div class="input-group full"><label>Adresse de départ</label><input id="pm-from" placeholder="Lieu de départ (optionnel)" autocomplete="off"></div>
-        <div class="input-group full"><label>Adresse d'arrivée</label><input id="pm-to" placeholder="Lieu d'arrivée (optionnel)" autocomplete="off"></div>
+        <!-- Transfert A→B fields -->
+        <div id="pm-ab-fields" style="display:contents;">
+          <div class="input-group full"><label>Adresse de départ</label><input id="pm-from" placeholder="Lieu de départ (optionnel)" autocomplete="off"></div>
+          <div class="input-group full"><label>Adresse d'arrivée</label><input id="pm-to" placeholder="Lieu d'arrivée (optionnel)" autocomplete="off"></div>
+        </div>
+        <!-- Mise à disposition fields -->
+        <div id="pm-dispo-fields" style="display:none;grid-column:1/-1;">
+          <div class="form-grid" style="margin:0;">
+            <div class="input-group full"><label>Lieu</label><input id="pm-dispo-location" placeholder="Adresse de mise à disposition (optionnel)" autocomplete="off"></div>
+            <div class="input-group full"><label>Durée</label>
+              <select id="pm-duration">
+                <option value="">Non spécifiée</option>
+                <option value="1h">1 heure</option>
+                <option value="2h">2 heures</option>
+                <option value="3h">3 heures</option>
+                <option value="4h">4 heures</option>
+                <option value="6h">6 heures</option>
+                <option value="8h">8 heures</option>
+                <option value="10h">10 heures</option>
+                <option value="12h">12 heures</option>
+              </select>
+            </div>
+          </div>
+        </div>
         <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="pm-date"></div>
         <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="pm-time" value="08:00"></div>
         <div class="input-group full"><label>Notes</label><textarea id="pm-notes" rows="2" placeholder="Informations complémentaires…"></textarea></div>
@@ -4472,19 +4509,41 @@ window.loadDriverCalendar=async function(force){
 };
 
 // ── Personal Mission ──
+window.pmSetType=function(type){
+  var green='var(--green)',greenBg='var(--green-bg)',amber='var(--amber)',amberBg='var(--amber-bg)',sand='var(--sand3)',ink3='var(--ink3)';
+  var abBtn=document.getElementById('pm-type-ab');
+  var dispoBtn=document.getElementById('pm-type-dispo');
+  var abFields=document.getElementById('pm-ab-fields');
+  var dispoFields=document.getElementById('pm-dispo-fields');
+  if(type==='ab'){
+    if(abBtn){abBtn.style.borderColor=green;abBtn.style.background=greenBg;abBtn.style.color=green;}
+    if(dispoBtn){dispoBtn.style.borderColor=sand;dispoBtn.style.background='transparent';dispoBtn.style.color=ink3;}
+    if(abFields)abFields.style.display='contents';
+    if(dispoFields)dispoFields.style.display='none';
+  }else{
+    if(dispoBtn){dispoBtn.style.borderColor=amber;dispoBtn.style.background=amberBg;dispoBtn.style.color=amber;}
+    if(abBtn){abBtn.style.borderColor=sand;abBtn.style.background='transparent';abBtn.style.color=ink3;}
+    if(abFields)abFields.style.display='none';
+    if(dispoFields)dispoFields.style.display='block';
+  }
+  var typeInput=document.getElementById('pm-mission-type');
+  if(typeInput)typeInput.value=type;
+};
+
 window.openPersonalMissionModal=function(){
   var err=document.getElementById('pm-err');if(err){err.textContent='';err.classList.remove('show');}
-  ['pm-label','pm-from','pm-to','pm-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['pm-label','pm-from','pm-to','pm-dispo-location','pm-notes'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var dur=document.getElementById('pm-duration');if(dur)dur.value='';
   var td=todayStr();
   var dt=document.getElementById('pm-date');if(dt){dt.value=td;dt.min=td;}
   var tm=document.getElementById('pm-time');if(tm)tm.value='08:00';
+  pmSetType('ab');
   openModal('m-personal-mission');
 };
 
 window.savePersonalMission=async function(btn){
+  var missionType=document.getElementById('pm-mission-type')?.value||'ab';
   var label=document.getElementById('pm-label')?.value.trim();
-  var from=document.getElementById('pm-from')?.value.trim();
-  var to=document.getElementById('pm-to')?.value.trim();
   var date=document.getElementById('pm-date')?.value;
   var time=document.getElementById('pm-time')?.value;
   var notes=document.getElementById('pm-notes')?.value.trim();
@@ -4493,6 +4552,20 @@ window.savePersonalMission=async function(btn){
   if(!label||!date||!time){
     if(err){err.textContent='Veuillez remplir les champs obligatoires.';err.classList.add('show');}
     return;
+  }
+
+  var from,to,tripType;
+  if(missionType==='dispo'){
+    tripType='disposal';
+    from=document.getElementById('pm-dispo-location')?.value.trim()||null;
+    to=null;
+    var duration=document.getElementById('pm-duration')?.value||'';
+    notes=[label,duration?('Durée : '+duration):null,notes].filter(Boolean).join(' — ')||null;
+  }else{
+    tripType='ab';
+    from=document.getElementById('pm-from')?.value.trim()||null;
+    to=document.getElementById('pm-to')?.value.trim()||null;
+    notes=[label,notes].filter(Boolean).join(' — ')||null;
   }
 
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
@@ -4506,12 +4579,12 @@ window.savePersonalMission=async function(btn){
 
   var rideData={
     driver_id:   currentUser.id,
-    trip_type:   'ab',
+    trip_type:   tripType,
     from_address: from||null,
     to_address:   to||null,
     ride_date:    date,
     ride_time:    time,
-    notes:        [label, notes].filter(Boolean).join(' — ')||null,
+    notes:        notes||null,
     status:       'personal'
   };
 
