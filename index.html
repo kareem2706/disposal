@@ -2802,7 +2802,7 @@ window.openOfferModal = function(rideId, summary, rideObj){
           var textEl=document.getElementById('offer-dist-text');
           var e=res&&res.rows&&res.rows[0]&&res.rows[0].elements&&res.rows[0].elements[0];
           if(st==='OK'&&e&&e.status==='OK'){
-            if(infoEl){infoEl.style.color='var(--ink3)';infoEl.querySelector('svg').style.animation='none';}
+            if(infoEl){infoEl.style.color='var(--ink3)';var _svg=infoEl.querySelector('svg');if(_svg)_svg.style.animation='none';}
             if(textEl)textEl.textContent=e.distance.text+' · '+e.duration.text;
           } else {
             if(infoEl)infoEl.style.display='none';
@@ -3029,10 +3029,12 @@ window.openRideDetail=function(el){
       if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){
         var el=res.rows[0].elements[0];
         if(infoEl&&textEl){
-          textEl.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--ink3)"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
-            +'<span style="color:var(--ink3);">'+el.distance.text+'</span>'
-            +'<span style="color:var(--sand3);">|</span>'
-            +'<span style="color:var(--ink3);">'+el.duration.text+'</span>';
+          var _svgAB='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--ink3)"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
+          textEl.innerHTML=_svgAB;
+          var _dSpan=document.createElement('span');_dSpan.style.color='var(--ink3)';_dSpan.textContent=el.distance.text;
+          var _sSpan=document.createElement('span');_sSpan.style.color='var(--sand3)';_sSpan.textContent='|';
+          var _tSpan=document.createElement('span');_tSpan.style.color='var(--ink3)';_tSpan.textContent=el.duration.text;
+          textEl.appendChild(_dSpan);textEl.appendChild(_sSpan);textEl.appendChild(_tSpan);
           infoEl.style.display='block';
         }
       } else {
@@ -3057,10 +3059,12 @@ window.openRideDetail=function(el){
             if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){
               var el=res.rows[0].elements[0];
               if(infoEl&&textEl){
-                textEl.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--ink3)"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
-                  +'<span style="color:var(--ink3);">'+el.distance.text+'</span>'
-                  +'<span style="color:var(--sand3);">|</span>'
-                  +'<span style="color:var(--ink3);">'+el.duration.text+'</span>';
+                var _svgM='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--ink3)"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
+                textEl.innerHTML=_svgM;
+                var _dmSpan=document.createElement('span');_dmSpan.style.color='var(--ink3)';_dmSpan.textContent=el.distance.text;
+                var _smSpan=document.createElement('span');_smSpan.style.color='var(--sand3)';_smSpan.textContent='|';
+                var _tmSpan=document.createElement('span');_tmSpan.style.color='var(--ink3)';_tmSpan.textContent=el.duration.text;
+                textEl.appendChild(_dmSpan);textEl.appendChild(_smSpan);textEl.appendChild(_tmSpan);
                 infoEl.style.display='block';
               }
             } else {
