@@ -2920,6 +2920,10 @@ window._offerSubmittedClick = function(btn){
 
 
 window.openRideDetail=function(el){
+  // Debounce: prevent double-call within 300ms
+  var now=Date.now();
+  if(window._lastDetailOpen&&now-window._lastDetailOpen<300)return;
+  window._lastDetailOpen=now;
   var r;
   try{ r=JSON.parse(el.dataset.ride.replace(/&#39;/g,"'")); }catch(e){return;}
   var isClient=currentRole==='client';
