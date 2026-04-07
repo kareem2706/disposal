@@ -281,6 +281,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .divider{height:1px;background:var(--sand3);margin:16px 0;}
 .badge-client{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:var(--blue-bg);color:var(--blue);}
 .badge-driver{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:var(--green-bg);color:var(--green);}
+.badge-pending{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:var(--amber-bg);color:var(--amber);}
+.badge-validated{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:var(--green-bg);color:var(--green);}
 
 /* ═══ RESPONSIVE ═══ */
 @media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);}}
@@ -1584,14 +1586,15 @@ body{background:var(--bg);}
   <div class="modal" style="max-width:480px;">
     <div class="modal-hd"><span class="modal-title">Ajouter un v&eacute;hicule</span><button class="close-btn" onclick="closeModal('m-vehicle')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body" style="padding:20px 22px;">
-      <div class="form-grid"><div class="input-group"><label>Marque <span style="color:var(--red)">*</span></label><input id="veh-brand" placeholder="Mercedes"></div><div class="input-group"><label>Mod&egrave;le <span style="color:var(--red)">*</span></label><input id="veh-model" placeholder="Classe E"></div></div>
+      <div class="form-grid"><div class="input-group"><label>Marque <span style="color:var(--red)">*</span></label><select id="veh-brand" onchange="populateVehModels()"><option value="">-- Choisir --</option></select></div><div class="input-group"><label>Mod&egrave;le <span style="color:var(--red)">*</span></label><select id="veh-model"><option value="">-- Choisir une marque --</option></select></div></div>
       <div class="form-grid"><div class="input-group"><label>Ann&eacute;e</label><input id="veh-year" type="number" min="2000" max="2030" placeholder="2023"></div><div class="input-group"><label>Couleur</label><input id="veh-color" placeholder="Noir"></div></div>
-      <div class="form-grid"><div class="input-group"><label>Gamme <span style="color:var(--red)">*</span></label><select id="veh-class"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div><div class="input-group"><label>Plaque</label><input id="veh-plate" placeholder="1-ABC-123"></div></div>
+      <div class="form-grid"><div class="input-group"><label>Gamme <span style="color:var(--red)">*</span></label><select id="veh-class"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div><div class="input-group"><label>Plaque</label><input id="veh-plate" placeholder="T-ABC-123"></div></div>
       <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
         <div style="font-size:12px;font-weight:600;margin-bottom:8px;">Documents v&eacute;hicule (optionnel)</div>
         <div class="input-group"><label>Carte grise</label><input type="file" id="veh-doc-cg" accept=".pdf,.jpg,.jpeg,.png"></div>
         <div class="input-group"><label>Assurance</label><input type="file" id="veh-doc-assurance" accept=".pdf,.jpg,.jpeg,.png"></div>
         <div class="input-group"><label>Contr&ocirc;le technique</label><input type="file" id="veh-doc-ct" accept=".pdf,.jpg,.jpeg,.png"></div>
+        <div class="input-group"><label>Vignette d&rsquo;identification</label><input type="file" id="veh-doc-vignette" accept=".pdf,.jpg,.jpeg,.png"></div>
       </div>
       <div id="veh-err" class="auth-error"></div>
     </div>
@@ -4579,8 +4582,13 @@ async function loadFleetDocs(){
   if(error||!data||data.length===0){el.innerHTML='<div style="color:var(--ink4);font-size:12px;">Aucun document ajout\u00e9</div>';return;}
   var docLabels={licence_lvc:'Licence LVC',assurance_rc:'Assurance RC Pro',kbis:'Extrait Kbis/BCE',statuts:'Statuts',autre:'Autre'};
   el.innerHTML=data.map(function(d){
+    var statusBadge=d.status==='validated'
+      ?'<span class="badge-validated">Valid\u00e9</span>'
+      :'<span class="badge-pending">En cours de validation</span>';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--sand2);">'
-      +'<div><div style="font-weight:500;font-size:13px;">'+(docLabels[d.doc_type]||d.doc_type)+'</div><div style="font-size:11px;color:var(--ink4);">'+d.doc_name+'</div></div>'
+      +'<div><div style="font-weight:500;font-size:13px;">'+(docLabels[d.doc_type]||d.doc_type)+'</div>'
+      +'<div style="font-size:11px;color:var(--ink4);margin-bottom:3px;">'+d.doc_name+'</div>'
+      +statusBadge+'</div>'
       +'<div style="display:flex;gap:8px;align-items:center;">'
       +'<a href="'+d.file_url+'" target="_blank" style="font-size:11px;color:var(--blue);">Voir</a>'
       +'<button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;" onclick="deleteFleetDoc(\''+d.id+'\')">Supprimer</button>'
@@ -4597,10 +4605,10 @@ window.saveFleetDoc=async function(){
   if(!fileInput.files[0]){showError(errEl,'Veuillez s\u00e9lectionner un fichier');return;}
   try{
     var url=await _uploadFleetFile(fileInput.files[0],'company');
-    var {error}=await sb.from('fleet_documents').insert({fleet_id:currentUser.id,doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url});
+    var {error}=await sb.from('fleet_documents').insert({fleet_id:currentUser.id,doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url,status:'pending_validation'});
     if(error)throw error;
     closeModal('m-fleet-doc');fileInput.value='';
-    await loadFleetDocs();showToast('Document ajout\u00e9');
+    await loadFleetDocs();showToast('Document ajout\u00e9 \u2014 en cours de validation');
   }catch(e){showError(errEl,e.message||'Erreur');}
 };
 
@@ -4608,6 +4616,53 @@ window.deleteFleetDoc=async function(id){
   if(!confirm('Supprimer ce document ?'))return;
   await sb.from('fleet_documents').delete().eq('id',id);
   await loadFleetDocs();showToast('Document supprim\u00e9');
+};
+
+// ── Car Brands & Models ──
+var CAR_BRANDS_MODELS={
+  'Audi':['A1','A3','A4','A5','A6','A7','A8','Q2','Q3','Q5','Q7','Q8','e-tron','RS3','RS6','TT'],
+  'BMW':['S\u00e9rie 1','S\u00e9rie 2','S\u00e9rie 3','S\u00e9rie 4','S\u00e9rie 5','S\u00e9rie 7','X1','X2','X3','X4','X5','X6','X7','iX','i4','i7','M3','M5'],
+  'Mercedes-Benz':['Classe A','Classe B','Classe C','Classe E','Classe S','CLA','CLS','GLA','GLB','GLC','GLE','GLS','EQA','EQB','EQE','EQS','Vito','Classe V','Sprinter'],
+  'Volkswagen':['Golf','Passat','Arteon','Touareg','Tiguan','T-Roc','ID.3','ID.4','Multivan','Transporter'],
+  'Volvo':['S60','S90','V60','V90','XC40','XC60','XC90','C40'],
+  'Lexus':['ES','IS','LS','NX','RX','UX','LX','RZ'],
+  'Tesla':['Model 3','Model S','Model X','Model Y'],
+  'Peugeot':['208','308','408','508','3008','5008','e-208','e-2008','Rifter','Traveller'],
+  'Renault':['Clio','M\u00e9gane','Talisman','Austral','Espace','Koleos','Zoe','Kangoo'],
+  'Citro\u00ebn':['C3','C4','C5 X','C5 Aircross','SpaceTourer','Berlingo'],
+  'Toyota':['Corolla','Camry','Prius','C-HR','RAV4','Land Cruiser','Yaris','Proace'],
+  'Hyundai':['i20','i30','Elantra','Tucson','Santa Fe','IONIQ 5','IONIQ 6','Staria'],
+  'Kia':['Ceed','Stinger','EV6','Sportage','Sorento','Carnival','Niro'],
+  'Skoda':['\u00d3ctavia','Superb','Kodiaq','Karoq','Enyaq'],
+  'Seat':['Leon','Toledo','Tarraco','Ateca'],
+  'Ford':['Focus','Mondeo','Galaxy','S-Max','Kuga','Explorer','Transit Custom','Tourneo'],
+  'Opel':['Astra','Insignia','Grandland','Mokka','Vivaro','Zafira'],
+  'Jaguar':['XE','XF','XJ','F-Pace','I-Pace','F-Type'],
+  'Land Rover':['Discovery','Discovery Sport','Range Rover','Range Rover Sport','Range Rover Velar','Range Rover Evoque','Defender'],
+  'Porsche':['Panamera','Cayenne','Taycan','Macan'],
+  'Maserati':['Ghibli','Quattroporte','Levante','Grecale','GranTurismo'],
+  'Rolls-Royce':['Ghost','Phantom','Cullinan','Spectre','Silver Shadow'],
+  'Bentley':['Continental GT','Bentayga','Flying Spur','Mulsanne'],
+  'Maybach':['Classe S','GLS'],
+  'Altro':['Autre']
+};
+
+window.populateVehBrands=function(){
+  var sel=document.getElementById('veh-brand');if(!sel)return;
+  sel.innerHTML='<option value="">-- Choisir --</option>';
+  Object.keys(CAR_BRANDS_MODELS).sort().forEach(function(b){
+    var opt=document.createElement('option');opt.value=b;opt.textContent=b;sel.appendChild(opt);
+  });
+};
+
+window.populateVehModels=function(){
+  var brand=document.getElementById('veh-brand').value;
+  var sel=document.getElementById('veh-model');if(!sel)return;
+  sel.innerHTML='';
+  if(!brand){sel.innerHTML='<option value="">-- Choisir une marque --</option>';return;}
+  var models=CAR_BRANDS_MODELS[brand]||['Autre'];
+  sel.innerHTML='<option value="">-- Choisir un mod\u00e8le --</option>';
+  models.forEach(function(m){var opt=document.createElement('option');opt.value=m;opt.textContent=m;sel.appendChild(opt);});
 };
 
 // ── Fleet Vehicles ──
@@ -4618,18 +4673,25 @@ async function loadFleetVehicles(){
   if(!data||data.length===0){el.innerHTML='<div style="color:var(--ink4);font-size:12px;">Aucun v\u00e9hicule ajout\u00e9</div>';return;}
   var classLabels={lowcost:'Low-cost',business:'Business',van:'Van',luxe:'Luxe'};
   el.innerHTML=data.map(function(v){
+    var statusBadge=v.status==='validated'
+      ?'<span class="badge-validated">Valid\u00e9</span>'
+      :'<span class="badge-pending">En cours de validation</span>';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
       +'<div><div style="font-weight:500;font-size:13px;">'+v.brand+' '+v.model+(v.year?' ('+v.year+')':'')+'</div>'
-      +'<div style="font-size:11px;color:var(--ink4);">'+(v.color||'')+' \u00b7 '+(classLabels[v.vehicle_class]||v.vehicle_class)+(v.plate?' \u00b7 '+v.plate:'')+'</div></div>'
+      +'<div style="font-size:11px;color:var(--ink4);margin-bottom:3px;">'+(v.color||'')+' \u00b7 '+(classLabels[v.vehicle_class]||v.vehicle_class)+(v.plate?' \u00b7 '+v.plate:'')+'</div>'
+      +statusBadge+'</div>'
       +'<button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;" onclick="deleteVehicle(\''+v.id+'\')">Supprimer</button>'
       +'</div>';
   }).join('');
 }
 
 window.openVehicleModal=function(){
-  ['veh-brand','veh-model','veh-year','veh-color','veh-plate'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  populateVehBrands();
+  ['veh-year','veh-color','veh-plate'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  var brand=document.getElementById('veh-brand');if(brand)brand.value='';
+  populateVehModels();
   var cls=document.getElementById('veh-class');if(cls)cls.value='lowcost';
-  ['veh-doc-cg','veh-doc-assurance','veh-doc-ct'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  ['veh-doc-cg','veh-doc-assurance','veh-doc-ct','veh-doc-vignette'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
   openModal('m-vehicle');
 };
 
@@ -4643,10 +4705,10 @@ window.saveVehicle=async function(){
   var plate=(document.getElementById('veh-plate').value||'').trim();
   if(!brand||!model){showError(errEl,'Marque et mod\u00e8le sont requis');return;}
   try{
-    var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null}).select().single();
+    var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,status:'pending_validation'}).select().single();
     if(error)throw error;
     // Upload vehicle docs
-    var docTypes=[{id:'veh-doc-cg',type:'carte_grise'},{id:'veh-doc-assurance',type:'assurance'},{id:'veh-doc-ct',type:'controle_technique'}];
+    var docTypes=[{id:'veh-doc-cg',type:'carte_grise'},{id:'veh-doc-assurance',type:'assurance'},{id:'veh-doc-ct',type:'controle_technique'},{id:'veh-doc-vignette',type:'vignette_identification'}];
     for(var i=0;i<docTypes.length;i++){
       var fi=document.getElementById(docTypes[i].id);
       if(fi&&fi.files[0]){
@@ -4655,7 +4717,7 @@ window.saveVehicle=async function(){
       }
     }
     closeModal('m-vehicle');
-    await loadFleetVehicles();showToast('V\u00e9hicule ajout\u00e9');
+    await loadFleetVehicles();showToast('V\u00e9hicule ajout\u00e9 \u2014 en cours de validation');
   }catch(e){showError(errEl,e.message||'Erreur');}
 };
 
@@ -4672,9 +4734,13 @@ async function loadFleetDriversList(){
   _fleetDrivers=data||[];
   if(!data||data.length===0){el.innerHTML='<div style="color:var(--ink4);font-size:12px;">Aucun chauffeur ajout\u00e9</div>';return;}
   el.innerHTML=data.map(function(d){
+    var statusBadge=d.status==='validated'
+      ?'<span class="badge-validated">Valid\u00e9</span>'
+      :'<span class="badge-pending">En cours de validation</span>';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
       +'<div><div style="font-weight:500;font-size:13px;">'+d.first_name+' '+d.last_name+'</div>'
-      +'<div style="font-size:11px;color:var(--ink4);">'+(d.phone||'')+(d.email?' \u00b7 '+d.email:'')+'</div></div>'
+      +'<div style="font-size:11px;color:var(--ink4);margin-bottom:3px;">'+(d.phone||'')+(d.email?' \u00b7 '+d.email:'')+'</div>'
+      +statusBadge+'</div>'
       +'<button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;" onclick="deleteDriver(\''+d.id+'\')">Supprimer</button>'
       +'</div>';
   }).join('');
@@ -4694,7 +4760,7 @@ window.saveDriver=async function(){
   var email=(document.getElementById('drv-email').value||'').trim();
   if(!fname||!lname){showError(errEl,'Pr\u00e9nom et nom sont requis');return;}
   try{
-    var {data:drv,error}=await sb.from('fleet_drivers').insert({fleet_id:currentUser.id,first_name:fname,last_name:lname,phone:phone||null,email:email||null}).select().single();
+    var {data:drv,error}=await sb.from('fleet_drivers').insert({fleet_id:currentUser.id,first_name:fname,last_name:lname,phone:phone||null,email:email||null,status:'pending_validation'}).select().single();
     if(error)throw error;
     var docTypes=[{id:'drv-doc-permis',type:'permis_conduire'},{id:'drv-doc-vtc',type:'carte_vtc'}];
     for(var i=0;i<docTypes.length;i++){
@@ -4705,7 +4771,7 @@ window.saveDriver=async function(){
       }
     }
     closeModal('m-driver');
-    await loadFleetDriversList();showToast('Chauffeur ajout\u00e9');
+    await loadFleetDriversList();showToast('Chauffeur ajout\u00e9 \u2014 en cours de validation');
   }catch(e){showError(errEl,e.message||'Erreur');}
 };
 
@@ -4716,8 +4782,14 @@ window.deleteDriver=async function(id){
 };
 
 // ── Vehicle selection in offer modal ──
-// Map vehicle_class compatibility: client requests X -> fleet must offer same or higher
-var _classCompat={lowcost:['lowcost'],business:['business','luxe'],van:['van'],luxe:['luxe']};
+// Map vehicle_class compatibility: client requests X -> fleet vehicles of same or higher tier can serve
+// Tier order: 1.lowcost < 2.business < 3.van < 4.luxe
+var _classCompat={
+  lowcost:['lowcost','business','van','luxe'],
+  business:['business','van','luxe'],
+  van:['van','luxe'],
+  luxe:['luxe']
+};
 
 function populateOfferVehicles(requestedClass){
   var sel=document.getElementById('offer-vehicle-select');
