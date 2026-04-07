@@ -2921,8 +2921,6 @@ window._offerSubmittedClick = function(btn){
 
 window._detailGen=0;
 window.openRideDetail=function(el){
-  console.log('[openRideDetail] call #'+(window._detailGen+1), 'google?', typeof google!=='undefined'&&!!google.maps);
-  console.trace('[openRideDetail] stack trace');
   var r;
   try{ r=JSON.parse(el.dataset.ride.replace(/&#39;/g,"'")); }catch(e){return;}
   var gen=++window._detailGen;
