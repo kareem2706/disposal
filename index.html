@@ -2919,7 +2919,7 @@ window._offerSubmittedClick = function(btn){
 
 
 
-window.openRideDetail=function(el){
+window.openRideDetail=async function(el){
   // Debounce: prevent double-call within 300ms
   var now=Date.now();
   if(window._lastDetailOpen&&now-window._lastDetailOpen<300)return;
@@ -2930,6 +2930,46 @@ window.openRideDetail=function(el){
   var isMixed=r.trip_type==='mixed',isDisp=r.trip_type==='disposal';
   var mixedSegs=isMixed?parseMixedNotes(r.notes||''):[];
   var from=r.from_address||'—',to=r.to_address||'—';
+
+  // ── Pre-fetch distance for A→B ──
+  var _abDistText='';
+  if(!isDisp&&!isMixed&&r.from_address&&r.to_address&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
+    try{
+      var dmResult=await new Promise(function(resolve){
+        (new google.maps.DistanceMatrixService()).getDistanceMatrix({
+          origins:[r.from_address],destinations:[r.to_address],
+          travelMode:google.maps.TravelMode.DRIVING,language:'fr'
+        },function(res,st){resolve({res:res,st:st});});
+      });
+      if(dmResult.st==='OK'&&dmResult.res.rows[0]&&dmResult.res.rows[0].elements[0].status==='OK'){
+        var dmEl=dmResult.res.rows[0].elements[0];
+        _abDistText=dmEl.distance.text+' - +/- '+dmEl.duration.text;
+      }
+    }catch(e){}
+  }
+
+  // ── Pre-fetch distances for mixed A→B segments ──
+  var _mixedDistTexts={};
+  if(isMixed&&mixedSegs.length&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
+    var promises=[];
+    mixedSegs.forEach(function(s,i){
+      if(s.type.toLowerCase().indexOf('disp')<0&&s.from&&s.to){
+        promises.push(new Promise(function(resolve){
+          (new google.maps.DistanceMatrixService()).getDistanceMatrix({
+            origins:[s.from],destinations:[s.to],
+            travelMode:google.maps.TravelMode.DRIVING,language:'fr'
+          },function(res,st){
+            if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){
+              var el2=res.rows[0].elements[0];
+              _mixedDistTexts[i]=el2.distance.text+' - +/- '+el2.duration.text;
+            }
+            resolve();
+          });
+        }));
+      }
+    });
+    try{await Promise.all(promises);}catch(e){}
+  }
 
   // Title + subtitle
   var titleEl=document.getElementById('detail-title');
@@ -2976,11 +3016,11 @@ window.openRideDetail=function(el){
     } else {
       if(!skipFrom) rows+=segRow('green',t('lbl_depart'),s.from||'—','',true);
       rows+=segRow('red',t('lbl_arrivee'),s.to||'—','',false);
-      rows+='<div id="detail-route-info-'+idx+'" style="padding:4px 0 4px 30px;">'
-        +'<div style="font-size:11.5px;color:var(--ink3);display:flex;align-items:center;gap:6px;" id="detail-route-info-text-'+idx+'">'
-        +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;animation:spin .8s linear infinite;transform-origin:center"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Calcul…</span>'
-        +'</div>'
-        +'</div>';
+      if(_mixedDistTexts[idx]){
+        rows+='<div style="padding:4px 0 4px 30px;">'
+          +'<div style="font-size:11.5px;color:var(--ink2);font-weight:500;">'+_mixedDistTexts[idx]+'</div>'
+          +'</div>';
+      }
     }
     var border=isLast?'':'border-bottom:1px solid var(--sand3);margin-bottom:12px;padding-bottom:12px;';
     return '<div style="'+border+'">'
@@ -3012,11 +3052,12 @@ window.openRideDetail=function(el){
     var _routeInner=segRow('green',t('lbl_pickup'),from,'',true)+dispDurHtml+segRow('red',t('lbl_end_mission'),'','',false)+dispKmHtml;
     body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+_routeInner+'</div>';
   } else {
-    var _abInfoHtml='<div id="detail-route-info" style="padding:4px 0 4px 30px;">'
-      +'<div style="font-size:11.5px;color:var(--ink3);display:flex;align-items:center;gap:6px;" id="detail-route-info-text">'
-      +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;animation:spin .8s linear infinite;transform-origin:center"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Calcul…</span>'
-      +'</div>'
-      +'</div>';
+    var _abInfoHtml='';
+    if(_abDistText){
+      _abInfoHtml='<div style="padding:4px 0 4px 30px;">'
+        +'<div style="font-size:11.5px;color:var(--ink2);font-weight:500;">'+_abDistText+'</div>'
+        +'</div>';
+    }
     var _routeInner2=segRow('green',t('lbl_depart'),from,'',true)+segRow('red',t('lbl_arrivee'),to,'',false)+_abInfoHtml;
     body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+_routeInner2+'</div>';
   }
@@ -3032,58 +3073,6 @@ window.openRideDetail=function(el){
   }
 
   var bodyEl=document.getElementById('detail-body');if(bodyEl)bodyEl.innerHTML=body;
-
-  // ── Google Distance Matrix for A→B ──
-  if(!isDisp&&!isMixed&&r.from_address&&r.to_address&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
-    (new google.maps.DistanceMatrixService()).getDistanceMatrix({
-      origins:[r.from_address],destinations:[r.to_address],
-      travelMode:google.maps.TravelMode.DRIVING,language:'fr'
-    },function(res,st){
-      var infoEl=document.getElementById('detail-route-info');
-      var textEl=document.getElementById('detail-route-info-text');
-      if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){
-        var el=res.rows[0].elements[0];
-        if(infoEl&&textEl){
-          textEl.innerHTML='<span style="color:var(--ink2);font-weight:500;">'+el.distance.text+' - +/- '+el.duration.text+'</span>';
-        }
-      } else {
-        if(infoEl) infoEl.style.display='none';
-      }
-    });
-  } else if(!isDisp&&!isMixed) {
-    var _ri=document.getElementById('detail-route-info');if(_ri)_ri.style.display='none';
-  }
-
-  // ── Google Distance Matrix for mixed A→B segments ──
-  if(isMixed&&mixedSegs.length&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
-    mixedSegs.forEach(function(s,i){
-      if(s.type.toLowerCase().indexOf('disp')<0&&s.from&&s.to){
-        (function(seg,idx){
-          (new google.maps.DistanceMatrixService()).getDistanceMatrix({
-            origins:[seg.from],destinations:[seg.to],
-            travelMode:google.maps.TravelMode.DRIVING,language:'fr'
-          },function(res,st){
-            var infoEl=document.getElementById('detail-route-info-'+idx);
-            var textEl=document.getElementById('detail-route-info-text-'+idx);
-            if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){
-              var el=res.rows[0].elements[0];
-              if(infoEl&&textEl){
-                textEl.innerHTML='<span style="color:var(--ink2);font-weight:500;">'+el.distance.text+' - +/- '+el.duration.text+'</span>';
-              }
-            } else {
-              if(infoEl) infoEl.style.display='none';
-            }
-          });
-        })(s,i);
-      } else if(s.type.toLowerCase().indexOf('disp')<0) {
-        var _ri=document.getElementById('detail-route-info-'+i);if(_ri)_ri.style.display='none';
-      }
-    });
-  } else if(isMixed) {
-    mixedSegs.forEach(function(s,i){
-      var _ri=document.getElementById('detail-route-info-'+i);if(_ri)_ri.style.display='none';
-    });
-  }
 
   // ── Google Static Maps ──
   (function(){
