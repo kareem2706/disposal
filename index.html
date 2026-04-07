@@ -630,7 +630,7 @@ body{background:var(--bg);}
 .modal-ft .btn{padding:6px 13px;font-size:12px;}
 .ride-card>div{min-width:0;}
 </style>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places&language=fr&callback=initGooglePlaces" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places,routes&language=fr&callback=initGooglePlaces" async defer></script>
 </head>
 <body>
 <div id="app-loader" style="position:fixed;inset:0;background:#fff;z-index:99999;display:flex;align-items:center;justify-content:center;"><div style="font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:.18em;text-transform:uppercase;color:#1d1d1f;opacity:.6;">Bleenr</div></div>
@@ -2720,9 +2720,52 @@ window.openOfferModal = function(rideId, summary, rideObj){
     var dateStr = formatDate(rideObj.ride_date)+' '+(rideObj.ride_time?rideObj.ride_time.slice(0,5):'');
 
     if(isMixedOffer){
-      sumEl.innerHTML =
-        '<div style="font-size:13px;font-weight:600;margin-bottom:6px;">Course mixte</div>'
-        +'<div style="font-size:12px;color:var(--ink3);font-style:italic;">Pour le détail aller sur la demande</div>';
+      var mixedSegsOffer=parseMixedNotes(rideObj.notes||'');
+      if(mixedSegsOffer.length){
+        var mixedSumHtml='<div style="font-size:12px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Course mixte</div>';
+        mixedSegsOffer.forEach(function(s,i){
+          var isD=s.type.toLowerCase().indexOf('disp')>=0;
+          var segLabel=isD?'Disp.':'A → B';
+          var segColor=isD?'var(--amber)':'var(--green)';
+          var segBg=isD?'var(--amber-bg)':'var(--green-bg)';
+          var fromText=s.from||'—';
+          var toText=isD?(s.dur?s.dur+'h':'Disp.'):(s.to||'—');
+          mixedSumHtml+='<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">'
+            +'<span style="font-size:10px;font-weight:700;background:'+segBg+';color:'+segColor+';padding:1px 5px;border-radius:10px;flex-shrink:0;">'+segLabel+'</span>'
+            +'<span style="font-size:12px;color:var(--ink2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+fromText+' → '+toText+'</span>'
+            +(!isD?'<span id="offer-seg-dist-'+i+'" style="font-size:11.5px;color:var(--ink4);flex-shrink:0;">'
+              +'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:spin .8s linear infinite;transform-origin:center"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
+              +'</span>':'')
+            +'</div>';
+        });
+        sumEl.innerHTML=mixedSumHtml;
+        if(typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
+          mixedSegsOffer.forEach(function(s,i){
+            if(s.type.toLowerCase().indexOf('disp')<0&&s.from&&s.to){
+              (function(seg,idx){
+                (new google.maps.DistanceMatrixService()).getDistanceMatrix({
+                  origins:[seg.from],destinations:[seg.to],
+                  travelMode:google.maps.TravelMode.DRIVING,language:'fr'
+                },function(res,st){
+                  var e=res&&res.rows&&res.rows[0]&&res.rows[0].elements&&res.rows[0].elements[0];
+                  var el2=document.getElementById('offer-seg-dist-'+idx);
+                  if(st==='OK'&&e&&e.status==='OK'){
+                    if(el2)el2.innerHTML='<span style="color:var(--ink3);">'+e.distance.text+' · '+e.duration.text+'</span>';
+                  } else {
+                    if(el2)el2.textContent='';
+                  }
+                });
+              })(s,i);
+            } else if(s.type.toLowerCase().indexOf('disp')<0){
+              var el3=document.getElementById('offer-seg-dist-'+i);if(el3)el3.textContent='';
+            }
+          });
+        } else {
+          mixedSegsOffer.forEach(function(s,i){var el4=document.getElementById('offer-seg-dist-'+i);if(el4)el4.textContent='';});
+        }
+      } else {
+        sumEl.innerHTML='<div style="font-size:13px;font-weight:600;margin-bottom:6px;">Course mixte</div>'+'<div style="font-size:12px;color:var(--ink3);font-style:italic;">Pour le détail aller sur la demande</div>';
+      }
     } else {
       var durStr = '';
       if(isDispOffer && rideObj.notes){
@@ -2743,7 +2786,31 @@ window.openOfferModal = function(rideId, summary, rideObj){
             +'<div style="font-size:13px;font-weight:500;margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+from+'</div>'
             +'<div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+toLabel+'</div>'
           +'</div>'
-        +'</div>';
+        +'</div>'
+        +(!isDispOffer
+          ?'<div id="offer-dist-info" style="margin-top:8px;padding:5px 8px;background:var(--sand2);border-radius:6px;font-size:12px;color:var(--ink4);display:flex;align-items:center;gap:6px;">'
+            +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;animation:spin .8s linear infinite;transform-origin:center"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
+            +'<span id="offer-dist-text">Calcul de la distance…</span>'
+            +'</div>'
+          :'');
+      if(!isDispOffer&&rideObj.from_address&&rideObj.to_address&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
+        (new google.maps.DistanceMatrixService()).getDistanceMatrix({
+          origins:[rideObj.from_address],destinations:[rideObj.to_address],
+          travelMode:google.maps.TravelMode.DRIVING,language:'fr'
+        },function(res,st){
+          var infoEl=document.getElementById('offer-dist-info');
+          var textEl=document.getElementById('offer-dist-text');
+          var e=res&&res.rows&&res.rows[0]&&res.rows[0].elements&&res.rows[0].elements[0];
+          if(st==='OK'&&e&&e.status==='OK'){
+            if(infoEl){infoEl.style.color='var(--ink3)';infoEl.querySelector('svg').style.animation='none';}
+            if(textEl)textEl.textContent=e.distance.text+' · '+e.duration.text;
+          } else {
+            if(infoEl)infoEl.style.display='none';
+          }
+        });
+      } else if(!isDispOffer) {
+        var _odi=document.getElementById('offer-dist-info');if(_odi)_odi.style.display='none';
+      }
     }
   } else if(summary){
     sumEl.textContent = summary;
@@ -2894,8 +2961,10 @@ window.openRideDetail=function(el){
     } else {
       if(!skipFrom) rows+=segRow('green',t('lbl_depart'),s.from||'—','',true);
       rows+=segRow('red',t('lbl_arrivee'),s.to||'—','',false);
-      rows+='<div id="detail-route-info-'+idx+'" style="display:none;padding:2px 0 2px 30px;">'
-        +'<div style="font-size:11.5px;color:var(--ink3);display:flex;gap:10px;" id="detail-route-info-text-'+idx+'"></div>'
+      rows+='<div id="detail-route-info-'+idx+'" style="padding:4px 0 4px 30px;">'
+        +'<div style="font-size:11.5px;color:var(--ink4);display:flex;align-items:center;gap:6px;" id="detail-route-info-text-'+idx+'">'
+        +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;animation:spin .8s linear infinite;transform-origin:center"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Calcul…</span>'
+        +'</div>'
         +'</div>';
     }
     var border=isLast?'':'border-bottom:1px solid var(--sand3);margin-bottom:12px;padding-bottom:12px;';
@@ -2928,8 +2997,10 @@ window.openRideDetail=function(el){
     var _routeInner=segRow('green',t('lbl_pickup'),from,'',true)+dispDurHtml+segRow('red',t('lbl_end_mission'),'','',false)+dispKmHtml;
     body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+_routeInner+'</div>';
   } else {
-    var _abInfoHtml='<div id="detail-route-info" style="display:none;padding:2px 0 2px 30px;">'
-      +'<div style="font-size:11.5px;color:var(--ink3);display:flex;gap:10px;" id="detail-route-info-text"></div>'
+    var _abInfoHtml='<div id="detail-route-info" style="padding:4px 0 4px 30px;">'
+      +'<div style="font-size:11.5px;color:var(--ink4);display:flex;align-items:center;gap:6px;" id="detail-route-info-text">'
+      +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;animation:spin .8s linear infinite;transform-origin:center"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Calcul de la distance…</span>'
+      +'</div>'
       +'</div>';
     var _routeInner2=segRow('green',t('lbl_depart'),from,'',true)+segRow('red',t('lbl_arrivee'),to,'',false)+_abInfoHtml;
     body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+_routeInner2+'</div>';
@@ -2953,25 +3024,23 @@ window.openRideDetail=function(el){
       origins:[r.from_address],destinations:[r.to_address],
       travelMode:google.maps.TravelMode.DRIVING,language:'fr'
     },function(res,st){
+      var infoEl=document.getElementById('detail-route-info');
+      var textEl=document.getElementById('detail-route-info-text');
       if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){
         var el=res.rows[0].elements[0];
-        var infoEl=document.getElementById('detail-route-info');
-        var textEl=document.getElementById('detail-route-info-text');
         if(infoEl&&textEl){
-          var distSpan=document.createElement('span');
-          distSpan.textContent=el.distance.text;
-          var sepSpan=document.createElement('span');
-          sepSpan.style.color='var(--sand3)';
-          sepSpan.textContent='|';
-          var durSpan=document.createElement('span');
-          durSpan.textContent=el.duration.text;
-          textEl.appendChild(distSpan);
-          textEl.appendChild(sepSpan);
-          textEl.appendChild(durSpan);
+          textEl.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--ink3)"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
+            +'<span style="color:var(--ink3);">'+el.distance.text+'</span>'
+            +'<span style="color:var(--sand3);">|</span>'
+            +'<span style="color:var(--ink3);">'+el.duration.text+'</span>';
           infoEl.style.display='block';
         }
+      } else {
+        if(infoEl) infoEl.style.display='none';
       }
     });
+  } else if(!isDisp&&!isMixed) {
+    var _ri=document.getElementById('detail-route-info');if(_ri)_ri.style.display='none';
   }
 
   // ── Google Distance Matrix for mixed A→B segments ──
@@ -2983,27 +3052,29 @@ window.openRideDetail=function(el){
             origins:[seg.from],destinations:[seg.to],
             travelMode:google.maps.TravelMode.DRIVING,language:'fr'
           },function(res,st){
+            var infoEl=document.getElementById('detail-route-info-'+idx);
+            var textEl=document.getElementById('detail-route-info-text-'+idx);
             if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){
               var el=res.rows[0].elements[0];
-              var infoEl=document.getElementById('detail-route-info-'+idx);
-              var textEl=document.getElementById('detail-route-info-text-'+idx);
               if(infoEl&&textEl){
-                var distSpan=document.createElement('span');
-                distSpan.textContent=el.distance.text;
-                var sepSpan=document.createElement('span');
-                sepSpan.style.color='var(--sand3)';
-                sepSpan.textContent='|';
-                var durSpan=document.createElement('span');
-                durSpan.textContent=el.duration.text;
-                textEl.appendChild(distSpan);
-                textEl.appendChild(sepSpan);
-                textEl.appendChild(durSpan);
+                textEl.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--ink3)"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
+                  +'<span style="color:var(--ink3);">'+el.distance.text+'</span>'
+                  +'<span style="color:var(--sand3);">|</span>'
+                  +'<span style="color:var(--ink3);">'+el.duration.text+'</span>';
                 infoEl.style.display='block';
               }
+            } else {
+              if(infoEl) infoEl.style.display='none';
             }
           });
         })(s,i);
+      } else if(s.type.toLowerCase().indexOf('disp')<0) {
+        var _ri=document.getElementById('detail-route-info-'+i);if(_ri)_ri.style.display='none';
       }
+    });
+  } else if(isMixed) {
+    mixedSegs.forEach(function(s,i){
+      var _ri=document.getElementById('detail-route-info-'+i);if(_ri)_ri.style.display='none';
     });
   }
 
