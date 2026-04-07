@@ -2973,7 +2973,7 @@ window.openRideDetail=function(el){
       if(!skipFrom) rows+=segRow('green',t('lbl_depart'),s.from||'—','',true);
       rows+=segRow('red',t('lbl_arrivee'),s.to||'—','',false);
       rows+='<div id="detail-route-info-'+idx+'" style="padding:4px 0 4px 30px;">'
-        +'<div style="font-size:11.5px;color:var(--ink4);display:flex;align-items:center;gap:6px;" id="detail-route-info-text-'+idx+'">'
+        +'<div style="font-size:11.5px;color:var(--ink3);display:flex;align-items:center;gap:6px;" id="detail-route-info-text-'+idx+'">'
         +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;animation:spin .8s linear infinite;transform-origin:center"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Calcul…</span>'
         +'</div>'
         +'</div>';
@@ -3009,8 +3009,8 @@ window.openRideDetail=function(el){
     body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+_routeInner+'</div>';
   } else {
     var _abInfoHtml='<div id="detail-route-info" style="padding:4px 0 4px 30px;">'
-      +'<div style="font-size:11.5px;color:var(--ink4);display:flex;align-items:center;gap:6px;" id="detail-route-info-text">'
-      +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;animation:spin .8s linear infinite;transform-origin:center"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Calcul de la distance…</span>'
+      +'<div style="font-size:11.5px;color:var(--ink3);display:flex;align-items:center;gap:6px;" id="detail-route-info-text">'
+      +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;animation:spin .8s linear infinite;transform-origin:center"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Calcul…</span>'
       +'</div>'
       +'</div>';
     var _routeInner2=segRow('green',t('lbl_depart'),from,'',true)+segRow('red',t('lbl_arrivee'),to,'',false)+_abInfoHtml;
@@ -3040,13 +3040,7 @@ window.openRideDetail=function(el){
       if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){
         var el=res.rows[0].elements[0];
         if(infoEl&&textEl){
-          var _svgAB='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--ink3)"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
-          textEl.innerHTML=_svgAB;
-          var _dSpan=document.createElement('span');_dSpan.style.color='var(--ink3)';_dSpan.textContent=el.distance.text;
-          var _sSpan=document.createElement('span');_sSpan.style.color='var(--sand3)';_sSpan.textContent='|';
-          var _tSpan=document.createElement('span');_tSpan.style.color='var(--ink3)';_tSpan.textContent=el.duration.text;
-          textEl.appendChild(_dSpan);textEl.appendChild(_sSpan);textEl.appendChild(_tSpan);
-          infoEl.style.display='block';
+          textEl.innerHTML='<span style="color:var(--ink2);font-weight:500;">'+el.distance.text+' - +/- '+el.duration.text+'</span>';
         }
       } else {
         if(infoEl) infoEl.style.display='none';
@@ -3070,13 +3064,7 @@ window.openRideDetail=function(el){
             if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){
               var el=res.rows[0].elements[0];
               if(infoEl&&textEl){
-                var _svgM='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--ink3)"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
-                textEl.innerHTML=_svgM;
-                var _dmSpan=document.createElement('span');_dmSpan.style.color='var(--ink3)';_dmSpan.textContent=el.distance.text;
-                var _smSpan=document.createElement('span');_smSpan.style.color='var(--sand3)';_smSpan.textContent='|';
-                var _tmSpan=document.createElement('span');_tmSpan.style.color='var(--ink3)';_tmSpan.textContent=el.duration.text;
-                textEl.appendChild(_dmSpan);textEl.appendChild(_smSpan);textEl.appendChild(_tmSpan);
-                infoEl.style.display='block';
+                textEl.innerHTML='<span style="color:var(--ink2);font-weight:500;">'+el.distance.text+' - +/- '+el.duration.text+'</span>';
               }
             } else {
               if(infoEl) infoEl.style.display='none';
