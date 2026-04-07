@@ -4341,7 +4341,7 @@ function _buildCalCell(ds,isT,calRides,calView){
   var rides=calRides.filter(function(r){return r.ride_date===ds;});
   var sc={waiting:'#F0D080',offers:'#90C4F8',confirmed:'#6FCF97',active:'#27AE60',done:'#B0C4B8',cancelled:'#FFAAAA',personal:'#D8C4F0'};
   var sl={waiting:'Attente',offers:'Offres',confirmed:'Confirmée',active:'Active',done:'Terminée',cancelled:'Annulée',personal:'Personnelle'};
-  var tl=function(r){return r.status==='personal'?(r.from_address||'Mission'):r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';};
+  var tl=function(r){if(r.status==='personal'){var lbl=r.notes?r.notes.split(' — ')[0]:null;return lbl||r.from_address||'Mission';}return r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';};
   var cellH=calView==='week'?'140px':'72px';
   var maxR=calView==='week'?rides.length:2;
   var p=[];
@@ -4507,11 +4507,11 @@ window.savePersonalMission=async function(btn){
   var rideData={
     driver_id:   currentUser.id,
     trip_type:   'ab',
-    from_address: from||label,
+    from_address: from||null,
     to_address:   to||null,
     ride_date:    date,
     ride_time:    time,
-    notes:        notes||null,
+    notes:        [label, notes].filter(Boolean).join(' — ')||null,
     status:       'personal'
   };
 
