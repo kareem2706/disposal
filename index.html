@@ -4633,7 +4633,7 @@ var CAR_BRANDS_MODELS={
   'Toyota':['Corolla','Camry','Prius','C-HR','RAV4','Land Cruiser','Yaris','Proace'],
   'Hyundai':['i20','i30','Elantra','Tucson','Santa Fe','IONIQ 5','IONIQ 6','Staria'],
   'Kia':['Ceed','Stinger','EV6','Sportage','Sorento','Carnival','Niro'],
-  'Skoda':['\u00d3ctavia','Superb','Kodiaq','Karoq','Enyaq'],
+  'Skoda':['Octavia','Superb','Kodiaq','Karoq','Enyaq'],
   'Seat':['Leon','Toledo','Tarraco','Ateca'],
   'Ford':['Focus','Mondeo','Galaxy','S-Max','Kuga','Explorer','Transit Custom','Tourneo'],
   'Opel':['Astra','Insignia','Grandland','Mokka','Vivaro','Zafira'],
@@ -4641,7 +4641,7 @@ var CAR_BRANDS_MODELS={
   'Land Rover':['Discovery','Discovery Sport','Range Rover','Range Rover Sport','Range Rover Velar','Range Rover Evoque','Defender'],
   'Porsche':['Panamera','Cayenne','Taycan','Macan'],
   'Maserati':['Ghibli','Quattroporte','Levante','Grecale','GranTurismo'],
-  'Rolls-Royce':['Ghost','Phantom','Cullinan','Spectre','Silver Shadow'],
+  'Rolls-Royce':['Ghost','Phantom','Cullinan','Spectre','Wraith','Dawn'],
   'Bentley':['Continental GT','Bentayga','Flying Spur','Mulsanne'],
   'Maybach':['Classe S','GLS'],
   'Altro':['Autre']
@@ -4782,8 +4782,9 @@ window.deleteDriver=async function(id){
 };
 
 // ── Vehicle selection in offer modal ──
-// Map vehicle_class compatibility: client requests X -> fleet vehicles of same or higher tier can serve
-// Tier order: 1.lowcost < 2.business < 3.van < 4.luxe
+// Map vehicle_class compatibility: client requests X -> fleet vehicles of same or higher service level can serve
+// Service levels (by convention in this app): 1.lowcost < 2.business < 3.van < 4.luxe
+// A higher-level vehicle (e.g. luxe) may accept lower-level ride requests (gamme en dessous)
 var _classCompat={
   lowcost:['lowcost','business','van','luxe'],
   business:['business','van','luxe'],
