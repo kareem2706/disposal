@@ -4765,7 +4765,7 @@ window.saveFleetDoc=async function(){
   if(!fileInput.files[0]){showError(errEl,'Veuillez s\u00e9lectionner un fichier');return;}
   try{
     var url=await _uploadFleetFile(fileInput.files[0],'company');
-    var {error}=await sb.from('fleet_documents').insert({fleet_id:currentUser.id,doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url,status:'pending_validation'});
+    var {error}=await sb.from('fleet_documents').insert({fleet_id:currentUser.id,doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url});
     if(error)throw error;
     closeModal('m-fleet-doc');fileInput.value='';
     await loadFleetDocs();showToast('Document ajout\u00e9 \u2014 en cours de validation');
@@ -4865,7 +4865,7 @@ window.saveVehicle=async function(){
   var plate=(document.getElementById('veh-plate').value||'').trim();
   if(!brand||!model){showError(errEl,'Marque et mod\u00e8le sont requis');return;}
   try{
-    var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,status:'pending_validation'}).select().single();
+    var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null}).select().single();
     if(error)throw error;
     // Upload vehicle docs
     var docTypes=[{id:'veh-doc-cg',type:'carte_grise'},{id:'veh-doc-assurance',type:'assurance'},{id:'veh-doc-ct',type:'controle_technique'},{id:'veh-doc-vignette',type:'vignette_identification'}];
@@ -4920,7 +4920,7 @@ window.saveDriver=async function(){
   var email=(document.getElementById('drv-email').value||'').trim();
   if(!fname||!lname){showError(errEl,'Pr\u00e9nom et nom sont requis');return;}
   try{
-    var {data:drv,error}=await sb.from('fleet_drivers').insert({fleet_id:currentUser.id,first_name:fname,last_name:lname,phone:phone||null,email:email||null,status:'pending_validation'}).select().single();
+    var {data:drv,error}=await sb.from('fleet_drivers').insert({fleet_id:currentUser.id,first_name:fname,last_name:lname,phone:phone||null,email:email||null}).select().single();
     if(error)throw error;
     var docTypes=[{id:'drv-doc-permis',type:'permis_conduire'},{id:'drv-doc-vtc',type:'carte_vtc'}];
     for(var i=0;i<docTypes.length;i++){
