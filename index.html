@@ -4134,7 +4134,13 @@ function setLoading(btn, loading, text){
 }
 
 window.openModal  = id => document.getElementById(id)?.classList.add('open');
-window.closeModal = id => document.getElementById(id)?.classList.remove('open');
+window.closeModal = id => {
+  document.getElementById(id)?.classList.remove('open');
+  // Clear fleet modal errors on close
+  if(id==='m-fleet-doc'){var e=document.getElementById('fd-err');if(e)e.classList.remove('show');}
+  if(id==='m-vehicle'){var e=document.getElementById('veh-err');if(e)e.classList.remove('show');}
+  if(id==='m-driver'){var e=document.getElementById('drv-err');if(e)e.classList.remove('show');}
+};
 document.querySelectorAll('.modal-overlay').forEach(el =>
   el.addEventListener('click', e => { if(e.target===el) window.closeModal(el.id); })
 );
@@ -4744,9 +4750,21 @@ async function loadFleetProfile(){
 }
 
 // ── Upload helper ──
+var _bucketChecked=false;
+async function _ensureBucket(){
+  if(_bucketChecked)return;
+  try{
+    var {data}=await sb.storage.getBucket('fleet-docs');
+    if(!data){await sb.storage.createBucket('fleet-docs',{public:true,fileSizeLimit:10485760,allowedMimeTypes:['application/pdf']});}
+  }catch(e){
+    try{await sb.storage.createBucket('fleet-docs',{public:true,fileSizeLimit:10485760,allowedMimeTypes:['application/pdf']});}catch(e2){}
+  }
+  _bucketChecked=true;
+}
 async function _uploadFleetFile(file, folder){
   var ext=file.name.split('.').pop().toLowerCase();
   if(ext!=='pdf')throw new Error('Seuls les fichiers PDF sont accept\u00e9s');
+  await _ensureBucket();
   var path=currentUser.id+'/'+folder+'/'+Date.now()+'.pdf';
   var {data,error}=await sb.storage.from('fleet-docs').upload(path,file,{upsert:true,contentType:'application/pdf'});
   if(error)throw error;
@@ -4932,18 +4950,23 @@ window.saveVehicle=async function(){
       if(error)throw error;
       vehId=veh.id;
     }
-    // Upload vehicle docs
+    // Upload vehicle docs (non-blocking: vehicle is saved even if doc upload fails)
     var docTypes=[{id:'veh-doc-cg',type:'carte_grise'},{id:'veh-doc-assurance',type:'assurance'},{id:'veh-doc-ct',type:'controle_technique'},{id:'veh-doc-vignette',type:'vignette_identification'}];
+    var docErrors=[];
     for(var i=0;i<docTypes.length;i++){
       var fi=document.getElementById(docTypes[i].id);
       if(fi&&fi.files[0]){
-        var url=await _uploadFleetFile(fi.files[0],'vehicles/'+vehId);
-        await sb.from('vehicle_documents').insert({vehicle_id:vehId,doc_type:docTypes[i].type,doc_name:fi.files[0].name,file_url:url});
+        try{
+          var url=await _uploadFleetFile(fi.files[0],'vehicles/'+vehId);
+          await sb.from('vehicle_documents').insert({vehicle_id:vehId,doc_type:docTypes[i].type,doc_name:fi.files[0].name,file_url:url});
+        }catch(de){docErrors.push(docTypes[i].type);}
       }
     }
     window._editVehicleId=null;
     closeModal('m-vehicle');
-    await loadFleetVehicles();showToast(vehId?'V\u00e9hicule mis \u00e0 jour':'V\u00e9hicule ajout\u00e9');
+    await loadFleetVehicles();
+    if(docErrors.length>0){showToast('V\u00e9hicule sauv\u00e9 mais '+docErrors.length+' document(s) non upload\u00e9(s)');}
+    else{showToast(window._editVehicleId?'V\u00e9hicule mis \u00e0 jour':'V\u00e9hicule ajout\u00e9');}
   }catch(e){showError(errEl,e.message||'Erreur');}
 };
 
@@ -5031,16 +5054,21 @@ window.saveDriver=async function(){
       drvId=drv.id;
     }
     var docTypes=[{id:'drv-doc-permis',type:'permis_conduire'},{id:'drv-doc-vtc',type:'carte_vtc'}];
+    var docErrors=[];
     for(var i=0;i<docTypes.length;i++){
       var fi=document.getElementById(docTypes[i].id);
       if(fi&&fi.files[0]){
-        var url=await _uploadFleetFile(fi.files[0],'drivers/'+drvId);
-        await sb.from('driver_documents').insert({driver_id:drvId,doc_type:docTypes[i].type,doc_name:fi.files[0].name,file_url:url});
+        try{
+          var url=await _uploadFleetFile(fi.files[0],'drivers/'+drvId);
+          await sb.from('driver_documents').insert({driver_id:drvId,doc_type:docTypes[i].type,doc_name:fi.files[0].name,file_url:url});
+        }catch(de){docErrors.push(docTypes[i].type);}
       }
     }
     window._editDriverId=null;
     closeModal('m-driver');
-    await loadFleetDriversList();showToast(drvId?'Chauffeur mis \u00e0 jour':'Chauffeur ajout\u00e9');
+    await loadFleetDriversList();
+    if(docErrors.length>0){showToast('Chauffeur sauv\u00e9 mais '+docErrors.length+' document(s) non upload\u00e9(s)');}
+    else{showToast(window._editDriverId?'Chauffeur mis \u00e0 jour':'Chauffeur ajout\u00e9');}
   }catch(e){showError(errEl,e.message||'Erreur');}
 };
 
