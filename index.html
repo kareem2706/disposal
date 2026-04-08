@@ -4901,17 +4901,25 @@ async function loadFleetVehicles(){
   var {data,error}=await sb.from('fleet_vehicles').select('*').eq('fleet_id',currentUser.id).eq('active',true).order('created_at',{ascending:false});
   _fleetVehicles=data||[];
   if(!data||data.length===0){el.innerHTML='<div style="color:var(--ink4);font-size:12px;">Aucun v\u00e9hicule ajout\u00e9</div>';return;}
+  // Fetch all vehicle docs for these vehicles
+  var vehIds=data.map(function(v){return v.id;});
+  var {data:allVehDocs}=await sb.from('vehicle_documents').select('*').in('vehicle_id',vehIds);
+  var vehDocsMap={};
+  (allVehDocs||[]).forEach(function(d){if(!vehDocsMap[d.vehicle_id])vehDocsMap[d.vehicle_id]=[];vehDocsMap[d.vehicle_id].push(d);});
   var classLabels={lowcost:'Low-cost',business:'Business',van:'Van',luxe:'Luxe'};
+  var vehDocLabels={carte_grise:'Carte grise',assurance:'Assurance',controle_technique:'CT',vignette_identification:'Vignette'};
   el.innerHTML=data.map(function(v){
-    var statusBadge=v.status==='validated'
-      ?'<span class="badge-validated">Valid\u00e9</span>'
-      :'<span class="badge-pending">En cours de validation</span>';
     var safeId=v.id.replace(/'/g,'');
-    var safeR=JSON.stringify(v).replace(/'/g,'&#39;');
+    var docs=vehDocsMap[v.id]||[];
+    var docsHtml=docs.length>0
+      ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+docs.map(function(d){
+        return '<a href="'+d.file_url+'" target="_blank" style="font-size:10px;padding:2px 6px;background:var(--green-bg);color:var(--green);border-radius:4px;text-decoration:none;">'+(vehDocLabels[d.doc_type]||d.doc_type)+'</a>';
+      }).join('')+'</div>'
+      :'';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
       +'<div style="flex:1;min-width:0;"><div style="font-weight:500;font-size:13px;">'+v.brand+' '+v.model+(v.year?' ('+v.year+')':'')+'</div>'
-      +'<div style="font-size:11px;color:var(--ink4);margin-bottom:3px;">'+(v.color||'')+' \u00b7 '+(classLabels[v.vehicle_class]||v.vehicle_class)+(v.plate?' \u00b7 '+v.plate:'')+'</div>'
-      +statusBadge+'</div>'
+      +'<div style="font-size:11px;color:var(--ink4);">'+(v.color||'')+' \u00b7 '+(classLabels[v.vehicle_class]||v.vehicle_class)+(v.plate?' \u00b7 '+v.plate:'')+'</div>'
+      +docsHtml+'</div>'
       +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
       +'<button style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:2px;" title="Modifier" onclick="editVehicle(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
       +'<button style="background:none;border:none;color:var(--red);cursor:pointer;padding:2px;" title="Supprimer" onclick="deleteVehicle(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>'
@@ -5001,15 +5009,24 @@ async function loadFleetDriversList(){
   var {data,error}=await sb.from('fleet_drivers').select('*').eq('fleet_id',currentUser.id).eq('active',true).order('created_at',{ascending:false});
   _fleetDrivers=data||[];
   if(!data||data.length===0){el.innerHTML='<div style="color:var(--ink4);font-size:12px;">Aucun chauffeur ajout\u00e9</div>';return;}
+  // Fetch all driver docs
+  var drvIds=data.map(function(d){return d.id;});
+  var {data:allDrvDocs}=await sb.from('driver_documents').select('*').in('driver_id',drvIds);
+  var drvDocsMap={};
+  (allDrvDocs||[]).forEach(function(d){if(!drvDocsMap[d.driver_id])drvDocsMap[d.driver_id]=[];drvDocsMap[d.driver_id].push(d);});
+  var drvDocLabels={permis_conduire:'Permis',carte_vtc:'Carte VTC'};
   el.innerHTML=data.map(function(d){
-    var statusBadge=d.status==='validated'
-      ?'<span class="badge-validated">Valid\u00e9</span>'
-      :'<span class="badge-pending">En cours de validation</span>';
     var safeId=d.id.replace(/'/g,'');
+    var docs=drvDocsMap[d.id]||[];
+    var docsHtml=docs.length>0
+      ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+docs.map(function(dc){
+        return '<a href="'+dc.file_url+'" target="_blank" style="font-size:10px;padding:2px 6px;background:var(--blue-bg);color:var(--blue);border-radius:4px;text-decoration:none;">'+(drvDocLabels[dc.doc_type]||dc.doc_type)+'</a>';
+      }).join('')+'</div>'
+      :'';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
       +'<div style="flex:1;min-width:0;"><div style="font-weight:500;font-size:13px;">'+d.first_name+' '+d.last_name+'</div>'
-      +'<div style="font-size:11px;color:var(--ink4);margin-bottom:3px;">'+(d.phone||'')+(d.email?' \u00b7 '+d.email:'')+'</div>'
-      +statusBadge+'</div>'
+      +'<div style="font-size:11px;color:var(--ink4);">'+(d.phone||'')+(d.email?' \u00b7 '+d.email:'')+'</div>'
+      +docsHtml+'</div>'
       +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
       +'<button style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:2px;" title="Modifier" onclick="editDriver(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
       +'<button style="background:none;border:none;color:var(--red);cursor:pointer;padding:2px;" title="Supprimer" onclick="deleteDriver(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>'
