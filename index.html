@@ -4955,7 +4955,8 @@ window.saveVehicle=async function(){
     var docErrors=[];
     for(var i=0;i<docTypes.length;i++){
       var fi=document.getElementById(docTypes[i].id);
-      if(fi&&fi.files[0]){
+      console.log('[saveVehicle] doc input',docTypes[i].id,'element:',!!fi,'files:',fi?fi.files.length:0,fi&&fi.files[0]?fi.files[0].name:'(none)');
+      if(fi&&fi.files&&fi.files.length>0){
         try{
           var url=await _uploadFleetFile(fi.files[0],'vehicles/'+vehId);
           var insRes=await sb.from('vehicle_documents').insert({vehicle_id:vehId,doc_type:docTypes[i].type,doc_name:fi.files[0].name,file_url:url});
@@ -5058,7 +5059,8 @@ window.saveDriver=async function(){
     var docErrors=[];
     for(var i=0;i<docTypes.length;i++){
       var fi=document.getElementById(docTypes[i].id);
-      if(fi&&fi.files[0]){
+      console.log('[saveDriver] doc input',docTypes[i].id,'element:',!!fi,'files:',fi?fi.files.length:0,fi&&fi.files[0]?fi.files[0].name:'(none)');
+      if(fi&&fi.files&&fi.files.length>0){
         try{
           var url=await _uploadFleetFile(fi.files[0],'drivers/'+drvId);
           var insRes=await sb.from('driver_documents').insert({driver_id:drvId,doc_type:docTypes[i].type,doc_name:fi.files[0].name,file_url:url});
