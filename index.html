@@ -1580,7 +1580,7 @@ body{background:var(--bg);}
     <div class="modal-hd"><span class="modal-title">Ajouter un document soci&eacute;t&eacute;</span><button class="close-btn" onclick="closeModal('m-fleet-doc')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body" style="padding:20px 22px;">
       <div class="input-group"><label>Type de document</label><select id="fd-type"><option value="licence_lvc">Licence LVC</option><option value="assurance_rc">Assurance RC Pro</option><option value="kbis">Extrait Kbis / BCE</option><option value="statuts">Statuts</option><option value="autre">Autre</option></select></div>
-      <div class="input-group"><label>Fichier</label><input type="file" id="fd-file" accept=".pdf,.jpg,.jpeg,.png"></div>
+      <div class="input-group"><label>Fichier (PDF uniquement)</label><input type="file" id="fd-file" accept=".pdf,application/pdf"></div>
       <div id="fd-err" class="auth-error"></div>
     </div>
     <div class="modal-ft"><button class="btn btn-secondary" onclick="closeModal('m-fleet-doc')">Annuler</button><button class="btn btn-primary" onclick="saveFleetDoc()">Sauvegarder</button></div>
@@ -1597,10 +1597,10 @@ body{background:var(--bg);}
       <div class="form-grid"><div class="input-group"><label>Gamme <span style="color:var(--red)">*</span></label><select id="veh-class"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div><div class="input-group"><label>Plaque</label><input id="veh-plate" placeholder="T-ABC-123"></div></div>
       <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
         <div style="font-size:12px;font-weight:600;margin-bottom:8px;">Documents v&eacute;hicule (optionnel)</div>
-        <div class="input-group"><label>Carte grise</label><input type="file" id="veh-doc-cg" accept=".pdf,.jpg,.jpeg,.png"></div>
-        <div class="input-group"><label>Assurance</label><input type="file" id="veh-doc-assurance" accept=".pdf,.jpg,.jpeg,.png"></div>
-        <div class="input-group"><label>Contr&ocirc;le technique</label><input type="file" id="veh-doc-ct" accept=".pdf,.jpg,.jpeg,.png"></div>
-        <div class="input-group"><label>Vignette d&rsquo;identification</label><input type="file" id="veh-doc-vignette" accept=".pdf,.jpg,.jpeg,.png"></div>
+        <div class="input-group"><label>Carte grise</label><input type="file" id="veh-doc-cg" accept=".pdf,application/pdf"></div>
+        <div class="input-group"><label>Assurance</label><input type="file" id="veh-doc-assurance" accept=".pdf,application/pdf"></div>
+        <div class="input-group"><label>Contr&ocirc;le technique</label><input type="file" id="veh-doc-ct" accept=".pdf,application/pdf"></div>
+        <div class="input-group"><label>Vignette d&rsquo;identification</label><input type="file" id="veh-doc-vignette" accept=".pdf,application/pdf"></div>
       </div>
       <div id="veh-err" class="auth-error"></div>
     </div>
@@ -1617,12 +1617,30 @@ body{background:var(--bg);}
       <div class="form-grid"><div class="input-group"><label>T&eacute;l&eacute;phone</label><input id="drv-phone" type="tel" placeholder="+32 470 12 34 56"></div><div class="input-group"><label>Email</label><input id="drv-email" type="email" placeholder="jean@example.com"></div></div>
       <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
         <div style="font-size:12px;font-weight:600;margin-bottom:8px;">Documents chauffeur (optionnel)</div>
-        <div class="input-group"><label>Permis de conduire</label><input type="file" id="drv-doc-permis" accept=".pdf,.jpg,.jpeg,.png"></div>
-        <div class="input-group"><label>Carte VTC</label><input type="file" id="drv-doc-vtc" accept=".pdf,.jpg,.jpeg,.png"></div>
+        <div class="input-group"><label>Permis de conduire</label><input type="file" id="drv-doc-permis" accept=".pdf,application/pdf"></div>
+        <div class="input-group"><label>Carte VTC</label><input type="file" id="drv-doc-vtc" accept=".pdf,application/pdf"></div>
       </div>
       <div id="drv-err" class="auth-error"></div>
     </div>
     <div class="modal-ft"><button class="btn btn-secondary" onclick="closeModal('m-driver')">Annuler</button><button class="btn btn-primary" onclick="saveDriver()">Sauvegarder</button></div>
+  </div>
+</div>
+
+<!-- Fleet Confirm Delete -->
+<div class="modal-overlay" id="m-fleet-confirm" style="z-index:910;" onclick="if(event.target===this)closeModal('m-fleet-confirm')">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-hd"><span class="modal-title">Confirmation</span></div>
+    <div class="modal-body" style="text-align:center;padding:24px 22px;">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--red-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 7v5M11 15h.01" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round"/><circle cx="11" cy="11" r="9" stroke="var(--red)" stroke-width="1.6"/></svg>
+      </div>
+      <div style="font-weight:600;font-size:15px;margin-bottom:6px;" id="fleet-confirm-title">Supprimer ?</div>
+      <p style="font-size:13px;color:var(--ink3);margin-bottom:10px;" id="fleet-confirm-msg">Cette action est irr&eacute;versible.</p>
+    </div>
+    <div class="modal-ft" style="justify-content:space-between;">
+      <button class="btn btn-close" onclick="closeModal('m-fleet-confirm')">Annuler</button>
+      <button class="btn btn-danger" id="btn-fleet-confirm" onclick="window._fleetConfirmCb&&window._fleetConfirmCb()">Supprimer</button>
+    </div>
   </div>
 </div>
 
@@ -4728,8 +4746,9 @@ async function loadFleetProfile(){
 // ── Upload helper ──
 async function _uploadFleetFile(file, folder){
   var ext=file.name.split('.').pop().toLowerCase();
-  var path=currentUser.id+'/'+folder+'/'+Date.now()+'.'+ext;
-  var {data,error}=await sb.storage.from('fleet-docs').upload(path,file,{upsert:true});
+  if(ext!=='pdf')throw new Error('Seuls les fichiers PDF sont accept\u00e9s');
+  var path=currentUser.id+'/'+folder+'/'+Date.now()+'.pdf';
+  var {data,error}=await sb.storage.from('fleet-docs').upload(path,file,{upsert:true,contentType:'application/pdf'});
   if(error)throw error;
   var {data:urlData}=sb.storage.from('fleet-docs').getPublicUrl(path);
   return urlData.publicUrl;
@@ -4745,37 +4764,70 @@ async function loadFleetDocs(){
     var statusBadge=d.status==='validated'
       ?'<span class="badge-validated">Valid\u00e9</span>'
       :'<span class="badge-pending">En cours de validation</span>';
+    var safeId=d.id.replace(/'/g,'');
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--sand2);">'
-      +'<div><div style="font-weight:500;font-size:13px;">'+(docLabels[d.doc_type]||d.doc_type)+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-weight:500;font-size:13px;">'+(docLabels[d.doc_type]||d.doc_type)+'</div>'
       +'<div style="font-size:11px;color:var(--ink4);margin-bottom:3px;">'+d.doc_name+'</div>'
       +statusBadge+'</div>'
-      +'<div style="display:flex;gap:8px;align-items:center;">'
+      +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
       +'<a href="'+d.file_url+'" target="_blank" style="font-size:11px;color:var(--blue);">Voir</a>'
-      +'<button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;" onclick="deleteFleetDoc(\''+d.id+'\')">Supprimer</button>'
+      +'<button style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:2px;" title="Modifier" onclick="editFleetDoc(\''+safeId+'\',\''+d.doc_type+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+      +'<button style="background:none;border:none;color:var(--red);cursor:pointer;padding:2px;" title="Supprimer" onclick="deleteFleetDoc(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>'
       +'</div></div>';
   }).join('');
 }
 
-window.openFleetDocModal=function(){openModal('m-fleet-doc');};
+window.openFleetDocModal=function(editId,editType){
+  var titleEl=document.querySelector('#m-fleet-doc .modal-title');
+  if(editId){
+    window._editFleetDocId=editId;
+    if(titleEl)titleEl.textContent='Remplacer le document';
+    var typeEl=document.getElementById('fd-type');if(typeEl)typeEl.value=editType||'autre';
+  } else {
+    window._editFleetDocId=null;
+    if(titleEl)titleEl.textContent='Ajouter un document soci\u00e9t\u00e9';
+  }
+  var fi=document.getElementById('fd-file');if(fi)fi.value='';
+  document.getElementById('fd-err').classList.remove('show');
+  openModal('m-fleet-doc');
+};
+
+window.editFleetDoc=function(id,docType){openFleetDocModal(id,docType);};
 
 window.saveFleetDoc=async function(){
   var errEl=document.getElementById('fd-err');
   var fileInput=document.getElementById('fd-file');
   var typeEl=document.getElementById('fd-type');
-  if(!fileInput.files[0]){showError(errEl,'Veuillez s\u00e9lectionner un fichier');return;}
+  if(!fileInput.files[0]){showError(errEl,'Veuillez s\u00e9lectionner un fichier PDF');return;}
   try{
     var url=await _uploadFleetFile(fileInput.files[0],'company');
-    var {error}=await sb.from('fleet_documents').insert({fleet_id:currentUser.id,doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url});
-    if(error)throw error;
+    if(window._editFleetDocId){
+      var {error}=await sb.from('fleet_documents').update({doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url}).eq('id',window._editFleetDocId);
+      if(error)throw error;
+      showToast('Document mis \u00e0 jour');
+    } else {
+      var {error}=await sb.from('fleet_documents').insert({fleet_id:currentUser.id,doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url});
+      if(error)throw error;
+      showToast('Document ajout\u00e9');
+    }
+    window._editFleetDocId=null;
     closeModal('m-fleet-doc');fileInput.value='';
-    await loadFleetDocs();showToast('Document ajout\u00e9 \u2014 en cours de validation');
+    await loadFleetDocs();
   }catch(e){showError(errEl,e.message||'Erreur');}
 };
 
-window.deleteFleetDoc=async function(id){
-  if(!confirm('Supprimer ce document ?'))return;
-  await sb.from('fleet_documents').delete().eq('id',id);
-  await loadFleetDocs();showToast('Document supprim\u00e9');
+function _fleetConfirm(title,msg,cb){
+  var t=document.getElementById('fleet-confirm-title');if(t)t.textContent=title;
+  var m=document.getElementById('fleet-confirm-msg');if(m)m.textContent=msg;
+  window._fleetConfirmCb=async function(){closeModal('m-fleet-confirm');await cb();};
+  openModal('m-fleet-confirm');
+}
+
+window.deleteFleetDoc=function(id){
+  _fleetConfirm('Supprimer ce document ?','Le fichier sera d\u00e9finitivement supprim\u00e9.',async function(){
+    await sb.from('fleet_documents').delete().eq('id',id);
+    await loadFleetDocs();showToast('Document supprim\u00e9');
+  });
 };
 
 // ── Car Brands & Models ──
@@ -4836,16 +4888,22 @@ async function loadFleetVehicles(){
     var statusBadge=v.status==='validated'
       ?'<span class="badge-validated">Valid\u00e9</span>'
       :'<span class="badge-pending">En cours de validation</span>';
+    var safeId=v.id.replace(/'/g,'');
+    var safeR=JSON.stringify(v).replace(/'/g,'&#39;');
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
-      +'<div><div style="font-weight:500;font-size:13px;">'+v.brand+' '+v.model+(v.year?' ('+v.year+')':'')+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-weight:500;font-size:13px;">'+v.brand+' '+v.model+(v.year?' ('+v.year+')':'')+'</div>'
       +'<div style="font-size:11px;color:var(--ink4);margin-bottom:3px;">'+(v.color||'')+' \u00b7 '+(classLabels[v.vehicle_class]||v.vehicle_class)+(v.plate?' \u00b7 '+v.plate:'')+'</div>'
       +statusBadge+'</div>'
-      +'<button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;" onclick="deleteVehicle(\''+v.id+'\')">Supprimer</button>'
-      +'</div>';
+      +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
+      +'<button style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:2px;" title="Modifier" onclick="editVehicle(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+      +'<button style="background:none;border:none;color:var(--red);cursor:pointer;padding:2px;" title="Supprimer" onclick="deleteVehicle(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>'
+      +'</div></div>';
   }).join('');
 }
 
 window.openVehicleModal=function(){
+  window._editVehicleId=null;
+  var titleEl=document.querySelector('#m-vehicle .modal-title');if(titleEl)titleEl.textContent='Ajouter un v\u00e9hicule';
   populateVehBrands();
   ['veh-year','veh-color','veh-plate'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
   var brand=document.getElementById('veh-brand');if(brand)brand.value='';
@@ -4865,26 +4923,51 @@ window.saveVehicle=async function(){
   var plate=(document.getElementById('veh-plate').value||'').trim();
   if(!brand||!model){showError(errEl,'Marque et mod\u00e8le sont requis');return;}
   try{
-    var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null}).select().single();
-    if(error)throw error;
+    var vehId=window._editVehicleId;
+    if(vehId){
+      var {error}=await sb.from('fleet_vehicles').update({brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null}).eq('id',vehId);
+      if(error)throw error;
+    } else {
+      var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null}).select().single();
+      if(error)throw error;
+      vehId=veh.id;
+    }
     // Upload vehicle docs
     var docTypes=[{id:'veh-doc-cg',type:'carte_grise'},{id:'veh-doc-assurance',type:'assurance'},{id:'veh-doc-ct',type:'controle_technique'},{id:'veh-doc-vignette',type:'vignette_identification'}];
     for(var i=0;i<docTypes.length;i++){
       var fi=document.getElementById(docTypes[i].id);
       if(fi&&fi.files[0]){
-        var url=await _uploadFleetFile(fi.files[0],'vehicles/'+veh.id);
-        await sb.from('vehicle_documents').insert({vehicle_id:veh.id,doc_type:docTypes[i].type,doc_name:fi.files[0].name,file_url:url});
+        var url=await _uploadFleetFile(fi.files[0],'vehicles/'+vehId);
+        await sb.from('vehicle_documents').insert({vehicle_id:vehId,doc_type:docTypes[i].type,doc_name:fi.files[0].name,file_url:url});
       }
     }
+    window._editVehicleId=null;
     closeModal('m-vehicle');
-    await loadFleetVehicles();showToast('V\u00e9hicule ajout\u00e9 \u2014 en cours de validation');
+    await loadFleetVehicles();showToast(vehId?'V\u00e9hicule mis \u00e0 jour':'V\u00e9hicule ajout\u00e9');
   }catch(e){showError(errEl,e.message||'Erreur');}
 };
 
-window.deleteVehicle=async function(id){
-  if(!confirm('Supprimer ce v\u00e9hicule ?'))return;
-  await sb.from('fleet_vehicles').update({active:false}).eq('id',id);
-  await loadFleetVehicles();showToast('V\u00e9hicule supprim\u00e9');
+window.editVehicle=async function(id){
+  var v=_fleetVehicles.find(function(x){return x.id===id;});
+  if(!v)return;
+  populateVehBrands();
+  var brandEl=document.getElementById('veh-brand');if(brandEl)brandEl.value=v.brand;
+  populateVehModels();
+  var modelEl=document.getElementById('veh-model');if(modelEl)modelEl.value=v.model;
+  var set=function(sid,val){var e=document.getElementById(sid);if(e)e.value=val||'';};
+  set('veh-year',v.year||'');set('veh-color',v.color||'');set('veh-plate',v.plate||'');
+  var cls=document.getElementById('veh-class');if(cls)cls.value=v.vehicle_class||'lowcost';
+  ['veh-doc-cg','veh-doc-assurance','veh-doc-ct','veh-doc-vignette'].forEach(function(fid){var e=document.getElementById(fid);if(e)e.value='';});
+  window._editVehicleId=id;
+  var titleEl=document.querySelector('#m-vehicle .modal-title');if(titleEl)titleEl.textContent='Modifier le v\u00e9hicule';
+  openModal('m-vehicle');
+};
+
+window.deleteVehicle=function(id){
+  _fleetConfirm('Supprimer ce v\u00e9hicule ?','Le v\u00e9hicule sera retir\u00e9 de votre flotte.',async function(){
+    await sb.from('fleet_vehicles').update({active:false}).eq('id',id);
+    await loadFleetVehicles();showToast('V\u00e9hicule supprim\u00e9');
+  });
 };
 
 // ── Fleet Drivers ──
@@ -4897,18 +4980,36 @@ async function loadFleetDriversList(){
     var statusBadge=d.status==='validated'
       ?'<span class="badge-validated">Valid\u00e9</span>'
       :'<span class="badge-pending">En cours de validation</span>';
+    var safeId=d.id.replace(/'/g,'');
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
-      +'<div><div style="font-weight:500;font-size:13px;">'+d.first_name+' '+d.last_name+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-weight:500;font-size:13px;">'+d.first_name+' '+d.last_name+'</div>'
       +'<div style="font-size:11px;color:var(--ink4);margin-bottom:3px;">'+(d.phone||'')+(d.email?' \u00b7 '+d.email:'')+'</div>'
       +statusBadge+'</div>'
-      +'<button style="background:none;border:none;color:var(--red);cursor:pointer;font-size:11px;" onclick="deleteDriver(\''+d.id+'\')">Supprimer</button>'
-      +'</div>';
+      +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
+      +'<button style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:2px;" title="Modifier" onclick="editDriver(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+      +'<button style="background:none;border:none;color:var(--red);cursor:pointer;padding:2px;" title="Supprimer" onclick="deleteDriver(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>'
+      +'</div></div>';
   }).join('');
 }
 
 window.openDriverModal=function(){
+  window._editDriverId=null;
+  var titleEl=document.querySelector('#m-driver .modal-title');if(titleEl)titleEl.textContent='Ajouter un chauffeur';
   ['drv-fname','drv-lname','drv-phone','drv-email'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
   ['drv-doc-permis','drv-doc-vtc'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('drv-err').classList.remove('show');
+  openModal('m-driver');
+};
+
+window.editDriver=function(id){
+  var d=_fleetDrivers.find(function(x){return x.id===id;});
+  if(!d)return;
+  window._editDriverId=id;
+  var titleEl=document.querySelector('#m-driver .modal-title');if(titleEl)titleEl.textContent='Modifier le chauffeur';
+  var set=function(sid,val){var e=document.getElementById(sid);if(e)e.value=val||'';};
+  set('drv-fname',d.first_name);set('drv-lname',d.last_name);set('drv-phone',d.phone||'');set('drv-email',d.email||'');
+  ['drv-doc-permis','drv-doc-vtc'].forEach(function(fid){var e=document.getElementById(fid);if(e)e.value='';});
+  document.getElementById('drv-err').classList.remove('show');
   openModal('m-driver');
 };
 
@@ -4920,25 +5021,34 @@ window.saveDriver=async function(){
   var email=(document.getElementById('drv-email').value||'').trim();
   if(!fname||!lname){showError(errEl,'Pr\u00e9nom et nom sont requis');return;}
   try{
-    var {data:drv,error}=await sb.from('fleet_drivers').insert({fleet_id:currentUser.id,first_name:fname,last_name:lname,phone:phone||null,email:email||null}).select().single();
-    if(error)throw error;
+    var drvId=window._editDriverId;
+    if(drvId){
+      var {error}=await sb.from('fleet_drivers').update({first_name:fname,last_name:lname,phone:phone||null,email:email||null}).eq('id',drvId);
+      if(error)throw error;
+    } else {
+      var {data:drv,error}=await sb.from('fleet_drivers').insert({fleet_id:currentUser.id,first_name:fname,last_name:lname,phone:phone||null,email:email||null}).select().single();
+      if(error)throw error;
+      drvId=drv.id;
+    }
     var docTypes=[{id:'drv-doc-permis',type:'permis_conduire'},{id:'drv-doc-vtc',type:'carte_vtc'}];
     for(var i=0;i<docTypes.length;i++){
       var fi=document.getElementById(docTypes[i].id);
       if(fi&&fi.files[0]){
-        var url=await _uploadFleetFile(fi.files[0],'drivers/'+drv.id);
-        await sb.from('driver_documents').insert({driver_id:drv.id,doc_type:docTypes[i].type,doc_name:fi.files[0].name,file_url:url});
+        var url=await _uploadFleetFile(fi.files[0],'drivers/'+drvId);
+        await sb.from('driver_documents').insert({driver_id:drvId,doc_type:docTypes[i].type,doc_name:fi.files[0].name,file_url:url});
       }
     }
+    window._editDriverId=null;
     closeModal('m-driver');
-    await loadFleetDriversList();showToast('Chauffeur ajout\u00e9 \u2014 en cours de validation');
+    await loadFleetDriversList();showToast(drvId?'Chauffeur mis \u00e0 jour':'Chauffeur ajout\u00e9');
   }catch(e){showError(errEl,e.message||'Erreur');}
 };
 
-window.deleteDriver=async function(id){
-  if(!confirm('Supprimer ce chauffeur ?'))return;
-  await sb.from('fleet_drivers').update({active:false}).eq('id',id);
-  await loadFleetDriversList();showToast('Chauffeur supprim\u00e9');
+window.deleteDriver=function(id){
+  _fleetConfirm('Supprimer ce chauffeur ?','Le chauffeur sera retir\u00e9 de votre flotte.',async function(){
+    await sb.from('fleet_drivers').update({active:false}).eq('id',id);
+    await loadFleetDriversList();showToast('Chauffeur supprim\u00e9');
+  });
 };
 
 // ── Vehicle selection in offer modal ──
