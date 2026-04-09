@@ -1749,10 +1749,10 @@ body{background:var(--bg);}
       <input type="hidden" id="pm-mission-type" value="ab">
       <!-- Type selector -->
       <div style="display:flex;gap:8px;margin-bottom:16px;">
-        <button id="pm-type-ab" onclick="pmSetType('ab')" style="flex:1;padding:10px 8px;border-radius:var(--r);border:2px solid var(--green);background:var(--green-bg);color:var(--green);font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <button id="pm-type-ab" onclick="pmSetType('ab')" style="flex:1;padding:10px 8px;border-radius:var(--r);border:none;background:var(--green-bg);color:var(--green);font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'DM Sans',sans-serif;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Transfert A→B
         </button>
-        <button id="pm-type-dispo" onclick="pmSetType('dispo')" style="flex:1;padding:10px 8px;border-radius:var(--r);border:2px solid var(--sand3);background:transparent;color:var(--ink3);font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <button id="pm-type-dispo" onclick="pmSetType('dispo')" style="flex:1;padding:10px 8px;border-radius:var(--r);border:none;background:var(--sand2);color:var(--ink3);font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'DM Sans',sans-serif;">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Mise à disposition
         </button>
       </div>
@@ -1865,7 +1865,7 @@ function initGooglePlaces(){
 }
 
 function _attachGoogleAC(){
-  var ids = ['ride-from','ride-to','disp-from','sub-from','sub-to','sub-disp-from'];
+  var ids = ['ride-from','ride-to','disp-from','sub-from','sub-to','sub-disp-from','pm-from','pm-to','pm-dispo-location'];
   ids.forEach(function(id){
     var el = document.getElementById(id);
     if(el && !el._gp){
@@ -2660,7 +2660,8 @@ async function loadDriverDashboard(){
       sb.from('rides').select('*').in('status', ['waiting', 'offers']).order('ride_date',{ascending:true}).order('ride_time',{ascending:true})
     ]);
     missions = m.data || [];
-    pending  = p.data || [];
+    // Exclude own subcontracts from pending (they show in "Mes sous-traitances" only)
+    pending  = (p.data || []).filter(function(r){return !(r.is_subcontract && r.client_id === uid);});
   } else {
     missions = getDemoMissions();
     pending  = getDemoMarketplace();
@@ -4596,19 +4597,19 @@ window.loadDriverCalendar=async function(force){
 
 // ── Personal Mission ──
 window.pmSetType=function(type){
-  var green='var(--green)',greenBg='var(--green-bg)',amber='var(--amber)',amberBg='var(--amber-bg)',sand='var(--sand3)',ink3='var(--ink3)';
+  var green='var(--green)',greenBg='var(--green-bg)',amber='var(--amber)',amberBg='var(--amber-bg)',sand2='var(--sand2)',ink3='var(--ink3)';
   var abBtn=document.getElementById('pm-type-ab');
   var dispoBtn=document.getElementById('pm-type-dispo');
   var abFields=document.getElementById('pm-ab-fields');
   var dispoFields=document.getElementById('pm-dispo-fields');
   if(type==='ab'){
-    if(abBtn){abBtn.style.borderColor=green;abBtn.style.background=greenBg;abBtn.style.color=green;}
-    if(dispoBtn){dispoBtn.style.borderColor=sand;dispoBtn.style.background='transparent';dispoBtn.style.color=ink3;}
+    if(abBtn){abBtn.style.border='none';abBtn.style.background=greenBg;abBtn.style.color=green;}
+    if(dispoBtn){dispoBtn.style.border='none';dispoBtn.style.background=sand2;dispoBtn.style.color=ink3;}
     if(abFields)abFields.style.display='contents';
     if(dispoFields)dispoFields.style.display='none';
   }else{
-    if(dispoBtn){dispoBtn.style.borderColor=amber;dispoBtn.style.background=amberBg;dispoBtn.style.color=amber;}
-    if(abBtn){abBtn.style.borderColor=sand;abBtn.style.background='transparent';abBtn.style.color=ink3;}
+    if(dispoBtn){dispoBtn.style.border='none';dispoBtn.style.background=amberBg;dispoBtn.style.color=amber;}
+    if(abBtn){abBtn.style.border='none';abBtn.style.background=sand2;abBtn.style.color=ink3;}
     if(abFields)abFields.style.display='none';
     if(dispoFields)dispoFields.style.display='';
   }
@@ -4625,6 +4626,7 @@ window.openPersonalMissionModal=function(){
   var tm=document.getElementById('pm-time');if(tm)tm.value='08:00';
   pmSetType('ab');
   openModal('m-personal-mission');
+  setTimeout(function(){if(typeof _attachGoogleAC==='function')_attachGoogleAC();},100);
 };
 
 window.savePersonalMission=async function(btn){
