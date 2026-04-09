@@ -1352,6 +1352,54 @@ body{background:var(--bg);}
           </div>
         </div>
       </div>
+
+      <!-- DRIVER ONLY CARDS -->
+      <div id="pf-driver-section" style="display:none;margin-top:20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+
+          <!-- Documents société -->
+          <div class="card" style="padding:22px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <div style="font-size:14px;font-weight:700;color:var(--ink);">Documents société</div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
+            </div>
+            <div id="pf-docs-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--sand2);border-radius:var(--r);padding:9px 12px;font-size:12px;color:var(--ink3);border:1.5px dashed var(--sand3);transition:all .2s;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Ajouter un document
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="uploadDriverDoc(this)">
+            </label>
+            <div style="font-size:11px;color:var(--ink4);margin-top:8px;">Kbis, assurance, autorisation LVC…</div>
+          </div>
+
+          <!-- Véhicules -->
+          <div class="card" style="padding:22px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <div style="font-size:14px;font-weight:700;color:var(--ink);">Véhicules</div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round"><path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v5h-2"/><circle cx="17" cy="17" r="2"/><circle cx="7" cy="17" r="2"/><path d="M7 15H3M17 15h2M5 9h14"/></svg>
+            </div>
+            <div id="pf-vehicles-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+            <button class="btn btn-secondary btn-sm btn-full" onclick="openAddVehicleModal()" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v6M5 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Ajouter un véhicule
+            </button>
+          </div>
+
+          <!-- Chauffeurs -->
+          <div class="card" style="padding:22px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <div style="font-size:14px;font-weight:700;color:var(--ink);">Chauffeurs</div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <div id="pf-drivers-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;"></div>
+            <button class="btn btn-secondary btn-sm btn-full" onclick="openAddDriverModal()" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v6M5 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              Ajouter un chauffeur
+            </button>
+          </div>
+
+        </div>
+      </div>
     </div>
     </main>
 </div>
@@ -4094,6 +4142,85 @@ window.loadDriverCalendar=async function(force){
   if(typeof _renderCalGrid==='function')_renderCalGrid('d-cal-grid','d-cal-title',_dCalY,_dCalM,_dCalView,_dCalWS,_dCalRides);
 };
 
+
+// ── Driver profile: Documents, Véhicules, Chauffeurs ──
+window.uploadDriverDoc = async function(input){
+  if(!input.files||!input.files[0]) return;
+  var file=input.files[0];
+  if(!sb||!currentUser){showToast('Non connecté');return;}
+  var path=currentUser.id+'/'+Date.now()+'_'+file.name;
+  var {error}=await sb.storage.from('driver-docs').upload(path,file,{upsert:true});
+  if(error){showToast('Erreur upload: '+error.message);return;}
+  // Save reference in profile_docs table or profile metadata
+  var {error:e2}=await sb.from('driver_documents').insert({driver_id:currentUser.id,file_name:file.name,file_path:path,status:'pending'});
+  if(!e2){showToast('✅ Document envoyé, en attente de validation');loadDriverDocs();}
+  else{showToast('✅ Document uploadé');}
+  input.value='';
+};
+
+async function loadDriverDocs(){
+  var list=document.getElementById('pf-docs-list');if(!list)return;
+  if(!sb||!currentUser){list.innerHTML='';return;}
+  var {data}=await sb.from('driver_documents').select('*').eq('driver_id',currentUser.id).order('created_at',{ascending:false});
+  if(!data||!data.length){list.innerHTML='<div style="font-size:12px;color:var(--ink4);">Aucun document</div>';return;}
+  var statusColor={pending:'var(--amber)',validated:'var(--green)',rejected:'var(--red)'};
+  var statusLabel={pending:'En attente',validated:'Validé',rejected:'Refusé'};
+  list.innerHTML=data.map(function(d){
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand3);">'      +'<div style="font-size:12px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">'+d.file_name+'</div>'      +'<span style="font-size:10px;font-weight:600;color:'+(statusColor[d.status]||'var(--ink3)')+';">'+(statusLabel[d.status]||d.status)+'</span>'    +'</div>';
+  }).join('');
+}
+
+window.openAddVehicleModal = function(){
+  var modal=document.getElementById('m-add-vehicle');
+  if(modal){openModal('m-add-vehicle');}
+  else{
+    // Simple inline prompt fallback
+    var brand=prompt('Marque et modèle (ex: Mercedes Classe E)');if(!brand)return;
+    var plate=prompt("Plaque d'immatriculation");if(!plate)return;
+    var year=prompt('Année');
+    if(sb&&currentUser){
+      sb.from('driver_vehicles').insert({driver_id:currentUser.id,brand:brand,plate:plate,year:year||null}).then(function(r){
+        if(!r.error){showToast('✅ Véhicule ajouté');loadDriverVehicles();}
+        else showToast('Erreur: '+r.error.message);
+      });
+    }
+  }
+};
+
+async function loadDriverVehicles(){
+  var list=document.getElementById('pf-vehicles-list');if(!list)return;
+  if(!sb||!currentUser){list.innerHTML='';return;}
+  var {data}=await sb.from('driver_vehicles').select('*').eq('driver_id',currentUser.id);
+  if(!data||!data.length){list.innerHTML='<div style="font-size:12px;color:var(--ink4);">Aucun véhicule</div>';return;}
+  list.innerHTML=data.map(function(v){
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand3);">'      +'<div>'        +'<div style="font-size:12px;font-weight:500;color:var(--ink);">'+v.brand+'</div>'        +'<div style="font-size:11px;color:var(--ink3);">'+(v.plate||'')+(v.year?' · '+v.year:'')+'</div>'      +'</div>'      +'<button onclick="deleteVehicle(\"'+v.id+'\")" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:18px;line-height:1;">&times;</button>'
+    +'</div>';
+  }).join('');
+}
+
+window.deleteVehicle=async function(id){if(!sb)return;await sb.from('driver_vehicles').delete().eq('id',id);loadDriverVehicles();};
+
+window.openAddDriverModal = function(){
+  var name=prompt('Prénom et nom du chauffeur');if(!name)return;
+  var email=prompt('Email');if(!email)return;
+  if(sb&&currentUser){
+    sb.from('fleet_drivers').insert({fleet_id:currentUser.id,full_name:name,email:email,status:'pending'}).then(function(r){
+      if(!r.error){showToast('✅ Chauffeur ajouté');loadFleetDrivers();}
+      else showToast('Erreur: '+r.error.message);
+    });
+  }
+};
+
+async function loadFleetDrivers(){
+  var list=document.getElementById('pf-drivers-list');if(!list)return;
+  if(!sb||!currentUser){list.innerHTML='';return;}
+  var {data}=await sb.from('fleet_drivers').select('*').eq('fleet_id',currentUser.id);
+  if(!data||!data.length){list.innerHTML='<div style="font-size:12px;color:var(--ink4);">Aucun chauffeur</div>';return;}
+  list.innerHTML=data.map(function(d){
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand3);">'      +'<div>'        +'<div style="font-size:12px;font-weight:500;color:var(--ink);">'+d.full_name+'</div>'        +'<div style="font-size:11px;color:var(--ink3);">'+d.email+'</div>'      +'</div>'      +'<span style="font-size:10px;font-weight:600;color:'+(d.status==='active'?'var(--green)':'var(--amber)')+';">'+(d.status==='active'?'Actif':'En attente')+'</span>'    +'</div>';
+  }).join('');
+}
+
 function showToast(msg){
   const el = document.getElementById('toast');
   el.textContent = msg; el.classList.add('show');
@@ -4187,6 +4314,9 @@ function loadProfileForm(){
   var show=function(id,v){var el=document.getElementById(id);if(el)el.style.display=v;};
   show('pf-names-grid',isP?'grid':'none');show('pf-company-wrap',showC?'block':'none');show('pf-vat-wrap',showC?'block':'none');
   show('pf-addr-wrap','block');
+  var drvSec=document.getElementById('pf-driver-section');if(drvSec)drvSec.style.display=role==='driver'?'block':'none';
+  if(role==='driver'&&typeof loadDriverDocs==='function'){loadDriverDocs();loadDriverVehicles();loadFleetDrivers();}
+  if(role==='driver'){loadDriverDocs();loadDriverVehicles();loadFleetDrivers();}
   var fn=currentProfile.first_name||'',ln=currentProfile.last_name||'',co=currentProfile.company_name||currentProfile.first_name||'';
   var set=function(id,v){var el=document.getElementById(id);if(el)el.value=v;};
   set('pf-fname',fn);set('pf-lname',ln);set('pf-company',co);set('pf-phone',currentProfile.phone||'');set('pf-vat',currentProfile.vat_number||'');
@@ -4307,3 +4437,4 @@ function renderRideItem(r){
       <div id="payment-result-icon" style="font-size:56px;margin-bottom:16px;"></div>
       <div id="payment-result-title" style="font-size:20px;font-weight:600;margin-bottom:8px;"></div>
       <div id="payment-result-msg" style="font-size:14px;color:var(--ink3);line-height:1.6;"
+</html>
