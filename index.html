@@ -2834,13 +2834,21 @@ async function loadMissions(){
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     const { data } = await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSION_STATUSES).order('ride_date',{ascending:false});
     missions = data || [];
+
+    // Auto-complete overdue confirmed rides
+    var confirmedMissions=missions.filter(function(r){return r.status==='confirmed';});
+    if(confirmedMissions.length>0){
+      await _autoCompleteOverdueRides(confirmedMissions);
+      // Re-fetch after auto-complete
+      var refreshed=await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSION_STATUSES).order('ride_date',{ascending:false});
+      missions=refreshed.data||[];
+    }
   } else {
     missions = getDemoMissions().filter(r => MISSION_STATUSES.includes(r.status));
   }
 
-  const today = new Date().toISOString().slice(0,10);
-  const upcoming = missions.filter(r => (r.status==='confirmed'||r.status==='active') && r.ride_date >= today);
-  const done     = missions.filter(r => r.status==='done' || ((r.status==='confirmed'||r.status==='active') && r.ride_date < today));
+  const upcoming = missions.filter(function(r){return r.status==='confirmed'||r.status==='active';});
+  const done     = missions.filter(function(r){return r.status==='done';});
 
   document.getElementById('ms-upcoming').innerHTML = upcoming.length
     ? upcoming.map(r => renderRideItem(r)).join('')
@@ -3382,7 +3390,7 @@ window.openRideDetail=function(el){
     if(isOwnSub){
       ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
     } else if(hasMyOffer){
-      ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre 00e0 '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'
+      ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre à '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'
         +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
     } else {
       ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
@@ -3392,7 +3400,7 @@ window.openRideDetail=function(el){
     var isOwnSub2=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
     var hasMyOffer2=_myOffers&&_myOffers[rId];
     if(hasMyOffer2&&!isOwnSub2){
-      ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre 00e0 '+parseFloat(hasMyOffer2.price).toFixed(0)+'\u20ac</div>'
+      ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre à '+parseFloat(hasMyOffer2.price).toFixed(0)+'\u20ac</div>'
         +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
     } else {
       ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
