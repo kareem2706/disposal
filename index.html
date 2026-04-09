@@ -1562,7 +1562,7 @@ body{background:var(--bg);}
   <div class="modal">
     <div class="modal-hd"><span class="modal-title">Soumettre une offre</span><button class="close-btn" onclick="closeModal('m-submit-offer')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body">
-      <div id="offer-ride-summary" style="background:var(--sand2);border-radius:var(--r);padding:13px;margin-bottom:16px;border:1px solid var(--sand3);"></div>
+      <div id="offer-ride-summary" style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:16px;"></div>
       <div id="offer-vehicle-wrap" style="display:none;margin-bottom:14px;">
         <div class="input-group"><label>V&eacute;hicule &agrave; assigner <span style="color:var(--red)">*</span></label><select id="offer-vehicle-select"><option value="">-- Choisir un v&eacute;hicule --</option></select></div>
         <div id="offer-vehicle-err" style="font-size:12px;color:var(--red);display:none;margin-top:4px;">Aucun v&eacute;hicule de cette gamme. Ajoutez-en un dans votre profil.</div>
@@ -1603,11 +1603,11 @@ body{background:var(--bg);}
       <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
         <div style="font-size:12px;font-weight:600;margin-bottom:10px;">&Eacute;quipements</div>
         <div style="display:flex;flex-wrap:wrap;gap:10px 18px;">
-          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-electric" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>100% &eacute;lectrique</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-hybrid" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1"/><circle cx="12" cy="12" r="4"/></svg>Hybride</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-wifi" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0114 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.94 0"/><circle cx="12" cy="20" r="1" fill="var(--ink3)"/></svg>Wifi</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-water" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>Eau</label>
-          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-snacks" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>Snacks</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-electric" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>100% &eacute;lectrique</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-hybrid" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><path d="M7 17.01l.01-.011M12 17.01l.01-.011M17 17.01l.01-.011M7 12.01l.01-.011M12 12.01l.01-.011M17 12.01l.01-.011"/><path d="M2 5v14a2 2 0 002 2h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2z"/></svg>Hybride</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-wifi" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0114 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.94 0"/><circle cx="12" cy="20" r="1" fill="var(--ink3)"/></svg>Wi-Fi</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-water" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>Eau</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-snacks" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>Snacks</label>
         </div>
       </div>
       <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
@@ -2970,23 +2970,32 @@ window.openOfferModal = function(rideId, summary, rideObj){
       }
       var metaLine = dateStr+(durStr?' · '+durStr:'')+(rideObj.passengers?' · '+rideObj.passengers+' pax':'')+(rideObj.vehicle_type?' · '+rideObj.vehicle_type:'');
       var toLabel = isDispOffer ? ('Mise à disposition'+(durStr?' ('+durStr+')':'')) : to;
+      var iconGreen='<svg width="14" height="18" viewBox="0 0 24 30" fill="#1B5E3B"><path d="M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>';
+      var iconRed='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
       sumEl.innerHTML =
-        '<div style="font-size:11px;color:var(--ink3);margin-bottom:8px;">'+metaLine+'</div>'
-        +'<div style="display:flex;gap:10px;align-items:stretch;">'
-          +'<div style="display:flex;flex-direction:column;align-items:center;width:14px;flex-shrink:0;">'
-            +'<div style="width:9px;height:9px;border-radius:50%;background:#2E6B4A;margin-top:4px;flex-shrink:0;"></div>'
-            +'<div style="width:2px;flex:1;background:var(--sand3);min-height:14px;"></div>'
-            +'<div style="width:9px;height:9px;border-radius:50%;background:#B03030;flex-shrink:0;"></div>'
+        '<div style="font-size:12px;color:var(--ink3);margin-bottom:10px;display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>'+metaLine+'</div>'
+        +'<div style="display:flex;gap:14px;">'
+          +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'
+            +'<div style="margin-top:3px;flex-shrink:0;">'+iconGreen+'</div>'
+            +'<div style="width:2px;flex:1;background:var(--sand3);min-height:14px;margin-top:2px;"></div>'
           +'</div>'
-          +'<div style="flex:1;min-width:0;">'
-            +'<div style="font-size:13px;font-weight:500;margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+from+'</div>'
-            +'<div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+toLabel+'</div>'
+          +'<div style="flex:1;min-width:0;padding-bottom:10px;">'
+            +'<div class="detail-seg-label">D\u00c9PART</div>'
+            +'<div class="detail-seg-addr">'+from+'</div>'
+          +'</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:14px;">'
+          +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'
+            +'<div style="margin-top:3px;flex-shrink:0;">'+iconRed+'</div>'
+          +'</div>'
+          +'<div style="flex:1;min-width:0;padding-bottom:2px;">'
+            +'<div class="detail-seg-label">'+(isDispOffer?'MISE \u00c0 DISPOSITION':'ARRIV\u00c9E')+'</div>'
+            +'<div class="detail-seg-addr">'+toLabel+'</div>'
           +'</div>'
         +'</div>'
         +(!isDispOffer
-          ?'<div id="offer-dist-info" style="margin-top:8px;padding:5px 8px;background:var(--sand2);border-radius:6px;font-size:12px;color:var(--ink4);display:flex;align-items:center;gap:6px;">'
-            +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;animation:spin .8s linear infinite;transform-origin:center"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
-            +'<span id="offer-dist-text">Calcul de la distance…</span>'
+          ?'<div id="offer-dist-info" style="padding:4px 0 4px 30px;display:none;">'
+            +'<div style="font-size:11.5px;color:var(--ink2);font-weight:500;" id="offer-dist-text"></div>'
             +'</div>'
           :'');
       if(!isDispOffer&&rideObj.from_address&&rideObj.to_address&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
@@ -2998,8 +3007,8 @@ window.openOfferModal = function(rideId, summary, rideObj){
           var textEl=document.getElementById('offer-dist-text');
           var e=res&&res.rows&&res.rows[0]&&res.rows[0].elements&&res.rows[0].elements[0];
           if(st==='OK'&&e&&e.status==='OK'){
-            if(infoEl){infoEl.style.color='var(--ink3)';var _svg=infoEl.querySelector('svg');if(_svg)_svg.style.animation='none';}
-            if(textEl)textEl.textContent=e.distance.text+' · '+e.duration.text;
+            if(infoEl)infoEl.style.display='block';
+            if(textEl)textEl.textContent=e.distance.text+' - +/- '+e.duration.text;
           } else {
             if(infoEl)infoEl.style.display='none';
           }
@@ -3312,7 +3321,7 @@ window.openRideDetail=function(el){
     if(isOwnSub){
       ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
     } else if(hasMyOffer){
-      ft='<div style="margin-right:auto;font-size:12px;color:#E8820C;font-weight:500;display:flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Vous avez soumis une offre de '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'
+      ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre 00e0 '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'
         +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
     } else {
       ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
@@ -3322,7 +3331,7 @@ window.openRideDetail=function(el){
     var isOwnSub2=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
     var hasMyOffer2=_myOffers&&_myOffers[rId];
     if(hasMyOffer2&&!isOwnSub2){
-      ft='<div style="margin-right:auto;font-size:12px;color:#E8820C;font-weight:500;display:flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Vous avez soumis une offre de '+parseFloat(hasMyOffer2.price).toFixed(0)+'\u20ac</div>'
+      ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre 00e0 '+parseFloat(hasMyOffer2.price).toFixed(0)+'\u20ac</div>'
         +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
     } else {
       ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
@@ -5037,12 +5046,18 @@ async function loadFleetVehicles(){
         return '<a href="'+d.file_url+'" target="_blank" style="font-size:10px;padding:2px 6px;background:var(--green-bg);color:var(--green);border-radius:4px;text-decoration:none;">'+(vehDocLabels[d.doc_type]||d.doc_type)+'</a>';
       }).join('')+'</div>'
       :'';
-    var amenIcons={electric:'\u26a1',hybrid:'\u2600\ufe0f',wifi:'\ud83d\udcf6',water:'\ud83d\udca7',snacks:'\u2615'};
-    var amenLabels={electric:'100% \u00e9lectrique',hybrid:'Hybride',wifi:'Wifi',water:'Eau',snacks:'Snacks'};
+    var amenIcons={
+      electric:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+      hybrid:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17.01l.01-.011M12 17.01l.01-.011M17 17.01l.01-.011M7 12.01l.01-.011M12 12.01l.01-.011M17 12.01l.01-.011"/><path d="M2 5v14a2 2 0 002 2h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2z"/></svg>',
+      wifi:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0114 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.94 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>',
+      water:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>',
+      snacks:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>'
+    };
+    var amenLabels={electric:'100% \u00e9lectrique',hybrid:'Hybride',wifi:'Wi-Fi',water:'Eau',snacks:'Snacks'};
     var vAmen=v.amenities||[];
     var amenHtml=vAmen.length>0
       ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+vAmen.map(function(a){
-        return '<span style="font-size:10px;padding:2px 6px;background:var(--sand2);color:var(--ink2);border-radius:4px;">'+(amenIcons[a]||'')+' '+(amenLabels[a]||a)+'</span>';
+        return '<span style="font-size:10px;padding:2px 6px;background:var(--sand2);color:var(--ink2);border-radius:4px;display:inline-flex;align-items:center;gap:3px;">'+(amenIcons[a]||'')+' '+(amenLabels[a]||a)+'</span>';
       }).join('')+'</div>'
       :'';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
