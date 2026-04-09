@@ -3360,6 +3360,14 @@ window.openRideDetail=function(el){
       +'</div>';
   }
 
+  // Show requested price for subcontract rides
+  if(r.is_subcontract&&r.final_price){
+    body+='<div style="margin-top:14px;padding:10px 14px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;">'
+      +'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>'
+      +'<span style="font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9 : '+parseFloat(r.final_price).toFixed(0)+'\u20ac</span>'
+      +'</div>';
+  }
+
   var bodyEl=document.getElementById('detail-body');if(bodyEl)bodyEl.innerHTML=body;
 
   // ── Google Distance Matrix for A→B (gen-protected) ──
@@ -3765,6 +3773,8 @@ window.submitRide = async function(){
     cancelRideModal();
     showToast(t('toast_ride'));
     await loadClientDashboard();
+    var ridesPage=document.getElementById('page-rides');
+    if(ridesPage&&ridesPage.classList.contains('active')&&typeof loadRides==='function')await loadRides();
   } catch(e){
     if(err){ err.textContent=e.message||'Erreur'; err.classList.add('show'); }
     if(btn) setLoading(btn, false, t('btn_publish')+' \u2192');
@@ -4002,6 +4012,7 @@ window.submitSubcontract = async function(){
     closeModal('m-subcontract');
     showToast(t('toast_subcontract'));
     await loadDriverDashboard();
+    if(typeof loadMarketplace==='function')await loadMarketplace();
   } catch(e){
     if(err){ err.textContent=e.message||'Erreur'; err.classList.add('show'); }
     if(btn) setLoading(btn, false, t('btn_publish')+' \u2192');
