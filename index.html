@@ -2652,18 +2652,19 @@ async function loadInvoices(){
 // DRIVER DASHBOARD
 // ── Auto-complete overdue confirmed rides ──
 function _getRideEndTime(r){
-  if(!r.ride_date||!r.ride_time)return null;
-  var start=new Date(r.ride_date+'T'+r.ride_time+':00');
+  if(!r.ride_date)return null;
+  var timeStr=r.ride_time||'00:00';
+  // Ensure time format is HH:MM or HH:MM:SS
+  if(timeStr.length===5)timeStr+=':00';
+  var start=new Date(r.ride_date+'T'+timeStr);
   if(isNaN(start))return null;
   var isMixed=r.trip_type==='mixed';
   var isDisp=r.trip_type==='disposal';
   if(isDisp){
-    // Disposition: start + duration from notes
     var dm=r.notes?r.notes.match(/Dur\u00e9e:([^\s|,]+)/):null;
     var hours=dm?parseFloat(dm[1]):2;
     return new Date(start.getTime()+hours*3600000);
   } else if(isMixed){
-    // Mixed: find last segment end time
     var segs=parseMixedNotes(r.notes||'');
     if(segs.length===0)return new Date(start.getTime()+3600000);
     var lastSeg=segs[segs.length-1];
@@ -2674,11 +2675,9 @@ function _getRideEndTime(r){
       var dur=parseFloat(lastSeg.dur)||2;
       return new Date(lastStart.getTime()+dur*3600000);
     } else {
-      // A->B: estimate 30min
       return new Date(lastStart.getTime()+1800000);
     }
   } else {
-    // A->B: estimate 30min from start
     return new Date(start.getTime()+1800000);
   }
 }
@@ -2686,15 +2685,24 @@ function _getRideEndTime(r){
 async function _autoCompleteOverdueRides(confirmedRides){
   if(!sb||!confirmedRides||confirmedRides.length===0)return;
   var now=new Date();
+  var updated=0;
   for(var i=0;i<confirmedRides.length;i++){
     var r=confirmedRides[i];
     var endTime=_getRideEndTime(r);
+    // Fallback: if no end time calculable but ride_date is in the past, mark as done
+    if(!endTime&&r.ride_date){
+      var rideDay=new Date(r.ride_date+'T23:59:59');
+      if(now>rideDay)endTime=rideDay;
+    }
     if(endTime&&now>endTime){
       try{
-        await sb.from('rides').update({status:'done'}).eq('id',r.id).eq('status','confirmed');
+        var res=await sb.from('rides').update({status:'done'}).eq('id',r.id).eq('status','confirmed');
+        if(!res.error)updated++;
+        console.log('[auto-complete] ride',r.id,'end:',endTime,'now:',now,'result:',res.error?res.error.message:'OK');
       }catch(e){console.error('auto-complete error:',e);}
     }
   }
+  if(updated>0)console.log('[auto-complete]',updated,'ride(s) marked as done');
 }
 
 async function loadDriverDashboard(){
