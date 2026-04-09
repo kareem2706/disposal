@@ -1163,10 +1163,6 @@ body{background:var(--bg);}
       </div>
       <div id="mk-client"><div class="page-loading"><div class="page-spinner"></div></div></div>
       <div class="card" id="mk-sub" style="display:none;"><div class="page-loading"><div class="page-spinner"></div></div></div>
-      <div id="mk-mine-hd" style="display:none;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <span style="font-size:14px;font-weight:600;color:var(--ink);">Mes sous-traitances</span>
-        <button class="btn btn-primary btn-sm" onclick="openModal('m-subcontract')" style="display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="white" stroke-width="1.5"/><path d="M8 5v6M5 8h6" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>Sous-traiter</button>
-      </div>
       <div class="card" id="mk-mine" style="display:none;"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
 
@@ -2556,8 +2552,6 @@ window.mkSwitch = function(btn, target){
   ['mk-client','mk-sub','mk-mine'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.style.display=id===target?'block':'none';
   });
-  var hd=document.getElementById('mk-mine-hd');
-  if(hd) hd.style.display=target==='mk-mine'?'flex':'none';
 };
 
 // MISSIONS
