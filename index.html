@@ -310,7 +310,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ac-item:hover{background:var(--sand);}
 .ac-item:last-child{border-bottom:none;}
 .ac-item-icon{font-size:13px;flex-shrink:0;}
-.mixed-segment{background:rgba(226,232,223,0.8);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
+.mixed-segment{background:rgba(27,94,59,0.06);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
 .mixed-segment-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .mseg-num{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .mseg-lbl{font-size:12px;font-weight:600;color:var(--ink2);flex:1;}
@@ -357,7 +357,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ac-item:hover{background:var(--sand);}
 .ac-item:last-child{border-bottom:none;}
 .ac-item-icon{font-size:13px;flex-shrink:0;}
-.mixed-segment{background:rgba(226,232,223,0.8);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
+.mixed-segment{background:rgba(27,94,59,0.06);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
 .mixed-segment-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .mseg-num{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .mseg-lbl{font-size:12px;font-weight:600;color:var(--ink2);flex:1;}
@@ -1600,6 +1600,16 @@ body{background:var(--bg);}
       <div class="form-grid"><div class="input-group"><label>Marque <span style="color:var(--red)">*</span></label><select id="veh-brand" onchange="populateVehModels()"><option value="">-- Choisir --</option></select></div><div class="input-group"><label>Mod&egrave;le <span style="color:var(--red)">*</span></label><select id="veh-model"><option value="">-- Choisir une marque --</option></select></div></div>
       <div class="form-grid"><div class="input-group"><label>Ann&eacute;e</label><input id="veh-year" type="number" min="2000" max="2030" placeholder="2023"></div><div class="input-group"><label>Couleur</label><input id="veh-color" placeholder="Noir"></div></div>
       <div class="form-grid"><div class="input-group"><label>Gamme <span style="color:var(--red)">*</span></label><select id="veh-class"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div><div class="input-group"><label>Plaque</label><input id="veh-plate" placeholder="T-ABC-123"></div></div>
+      <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
+        <div style="font-size:12px;font-weight:600;margin-bottom:10px;">&Eacute;quipements</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px 18px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-electric" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>100% &eacute;lectrique</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-hybrid" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6l2.1 2.1M5.6 18.4l2.1-2.1m8.6-8.6l2.1-2.1"/><circle cx="12" cy="12" r="4"/></svg>Hybride</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-wifi" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0114 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.94 0"/><circle cx="12" cy="20" r="1" fill="var(--ink3)"/></svg>Wifi</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-water" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>Eau</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;margin:0;"><input type="checkbox" id="veh-amen-snacks" style="width:auto;accent-color:var(--green);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>Snacks</label>
+        </div>
+      </div>
       <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
         <div style="font-size:12px;font-weight:600;margin-bottom:8px;">Documents v&eacute;hicule (optionnel)</div>
         <div class="input-group"><label>Carte grise</label><input type="file" id="veh-doc-cg" accept=".pdf,application/pdf"></div>
@@ -5025,10 +5035,18 @@ async function loadFleetVehicles(){
         return '<a href="'+d.file_url+'" target="_blank" style="font-size:10px;padding:2px 6px;background:var(--green-bg);color:var(--green);border-radius:4px;text-decoration:none;">'+(vehDocLabels[d.doc_type]||d.doc_type)+'</a>';
       }).join('')+'</div>'
       :'';
+    var amenIcons={electric:'\u26a1',hybrid:'\u2600\ufe0f',wifi:'\ud83d\udcf6',water:'\ud83d\udca7',snacks:'\u2615'};
+    var amenLabels={electric:'100% \u00e9lectrique',hybrid:'Hybride',wifi:'Wifi',water:'Eau',snacks:'Snacks'};
+    var vAmen=v.amenities||[];
+    var amenHtml=vAmen.length>0
+      ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+vAmen.map(function(a){
+        return '<span style="font-size:10px;padding:2px 6px;background:var(--sand2);color:var(--ink2);border-radius:4px;">'+(amenIcons[a]||'')+' '+(amenLabels[a]||a)+'</span>';
+      }).join('')+'</div>'
+      :'';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
       +'<div style="flex:1;min-width:0;"><div style="font-weight:500;font-size:13px;">'+v.brand+' '+v.model+(v.year?' ('+v.year+')':'')+'</div>'
       +'<div style="font-size:11px;color:var(--ink4);">'+(v.color||'')+' \u00b7 '+(classLabels[v.vehicle_class]||v.vehicle_class)+(v.plate?' \u00b7 '+v.plate:'')+'</div>'
-      +docsHtml+'</div>'
+      +amenHtml+docsHtml+'</div>'
       +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
       +'<button style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:2px;" title="Modifier" onclick="editVehicle(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
       +'<button style="background:none;border:none;color:var(--red);cursor:pointer;padding:2px;" title="Supprimer" onclick="deleteVehicle(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>'
@@ -5048,6 +5066,7 @@ window.openVehicleModal=function(){
     var e=document.getElementById(id);if(e){e.value='';e.style.display='';}
     if(e){var wrap=e.closest('.input-group');if(wrap){var tag=wrap.querySelector('.doc-exists-tag');if(tag)tag.remove();}}
   });
+  ['electric','hybrid','wifi','water','snacks'].forEach(function(a){var cb=document.getElementById('veh-amen-'+a);if(cb)cb.checked=false;});
   openModal('m-vehicle');
 };
 
@@ -5060,13 +5079,19 @@ window.saveVehicle=async function(){
   var vclass=document.getElementById('veh-class').value;
   var plate=(document.getElementById('veh-plate').value||'').trim();
   if(!brand||!model){showError(errEl,'Marque et mod\u00e8le sont requis');return;}
+  // Read amenities checkboxes
+  var amenities=[];
+  ['electric','hybrid','wifi','water','snacks'].forEach(function(a){
+    var cb=document.getElementById('veh-amen-'+a);
+    if(cb&&cb.checked)amenities.push(a);
+  });
   try{
     var vehId=window._editVehicleId;
     if(vehId){
-      var {error}=await sb.from('fleet_vehicles').update({brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null}).eq('id',vehId);
+      var {error}=await sb.from('fleet_vehicles').update({brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities}).eq('id',vehId);
       if(error)throw error;
     } else {
-      var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null}).select().single();
+      var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities}).select().single();
       if(error)throw error;
       vehId=veh.id;
     }
@@ -5102,6 +5127,9 @@ window.editVehicle=async function(id){
   var set=function(sid,val){var e=document.getElementById(sid);if(e)e.value=val||'';};
   set('veh-year',v.year||'');set('veh-color',v.color||'');set('veh-plate',v.plate||'');
   var cls=document.getElementById('veh-class');if(cls)cls.value=v.vehicle_class||'lowcost';
+  // Restore amenities
+  var vAmen=v.amenities||[];
+  ['electric','hybrid','wifi','water','snacks'].forEach(function(a){var cb=document.getElementById('veh-amen-'+a);if(cb)cb.checked=vAmen.indexOf(a)>=0;});
   // Load existing docs and show which are already uploaded
   var vehDocMap={carte_grise:'veh-doc-cg',assurance:'veh-doc-assurance',controle_technique:'veh-doc-ct',vignette_identification:'veh-doc-vignette'};
   var {data:existDocs}=await sb.from('vehicle_documents').select('*').eq('vehicle_id',id);
@@ -5311,10 +5339,12 @@ function populateOfferVehicles(requestedClass){
   }
   if(errDiv)errDiv.style.display='none';
   var classLabels={lowcost:'Low-cost',business:'Business',van:'Van',luxe:'Luxe'};
+  var amenShort={electric:'\u26a1',hybrid:'\u2600',wifi:'WiFi',water:'\ud83d\udca7',snacks:'\u2615'};
   matching.forEach(function(v){
     var opt=document.createElement('option');
     opt.value=v.id;
-    opt.textContent=v.brand+' '+v.model+(v.year?' ('+v.year+')':'')+' \u2014 '+(classLabels[v.vehicle_class]||v.vehicle_class);
+    var amenStr=(v.amenities&&v.amenities.length>0)?' ['+v.amenities.map(function(a){return amenShort[a]||a;}).join(' ')+']':'';
+    opt.textContent=v.brand+' '+v.model+(v.year?' ('+v.year+')':'')+' \u2014 '+(classLabels[v.vehicle_class]||v.vehicle_class)+amenStr;
     sel.appendChild(opt);
   });
   if(matching.length===1)sel.value=matching[0].id;
