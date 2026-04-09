@@ -2738,14 +2738,14 @@ async function loadDriverDashboard(){
     var d=new Date(r.ride_date||r.created_at);
     return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
   });
-  const revenueHTVA = monthMissions.reduce(function(a,r){var p=r.final_price||0;return a+p/1.21;},0);
+  const revenueNet = monthMissions.reduce(function(a,r){var p=r.final_price||0;return a+p*0.9;},0);
   const upcomingMissions = missions.filter(function(r){return r.status==='confirmed';});
 
     var dI=function(s,bg){return '<div class="stat-card-icon" style="background:'+bg+'">'+s+'</div>';};
   document.getElementById('driver-stats').innerHTML=
     '<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>','var(--green-bg)')+'<div class="stat-label">Missions \u00e0 venir</div><div class="stat-val">'+upcomingMissions.length+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>','var(--blue-bg)')+'<div class="stat-label">Ce mois</div><div class="stat-val">'+monthMissions.length+'</div></div>'
-    +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>','#E8F5EE')+'<div class="stat-label">Revenus HTVA</div><div class="stat-val">'+(revenueHTVA>0?revenueHTVA.toFixed(0)+' \u20ac':'0 \u20ac')+'</div></div>'
+    +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>','#E8F5EE')+'<div class="stat-label">Revenus</div><div class="stat-val">'+(revenueNet>0?revenueNet.toFixed(0)+' \u20ac':'0 \u20ac')+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>','#FFF3DC')+'<div class="stat-label">Score</div><div class="stat-val">'+((currentProfile&&currentProfile.rating)?currentProfile.rating.toFixed(1)+' \u2605':'\u2014')+'</div></div>';
 
   // Update marketplace badge immediately (hidden per spec)
@@ -3115,7 +3115,9 @@ window.openOfferModal = function(rideId, summary, rideObj){
   if(offerBtnWrap){ offerBtnWrap.style.display = existing ? 'none' : ''; }
   // Populate vehicle selector based on requested vehicle class
   var reqClass=(rideObj&&rideObj.vehicle_type)||'lowcost';
-  if(!existing&&currentRole==='driver'){
+  if(currentRole==='driver'&&!existing){
+    // Always show vehicle selector for drivers
+    var vwrap=document.getElementById('offer-vehicle-wrap');if(vwrap)vwrap.style.display='block';
     // Ensure vehicles are loaded
     if(_fleetVehicles.length===0&&sb&&currentUser){
       sb.from('fleet_vehicles').select('*').eq('fleet_id',currentUser.id).eq('active',true).then(function(res){
