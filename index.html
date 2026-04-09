@@ -974,10 +974,6 @@ body{background:var(--bg);}
 
       <!-- DRIVER nav -->
       <div id="nav-cta-driver" style="padding:8px 10px 4px;display:none;">
-        <button class="sidebar-cta" onclick="openSubRideModal()">
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="white" stroke-width="1.5"/><path d="M8 5v6M5 8h6" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Sous-traiter
-        </button>
       </div>
       <div id="nav-driver" style="display:none;">
         <button class="nav-item active" data-page="d-dashboard" onclick="showPage('d-dashboard')">
@@ -1177,9 +1173,15 @@ body{background:var(--bg);}
     </div>
 
         <div id="page-marketplace" class="page">
-      <div class="pg-head">
-        <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18M5.25 3l-2.25 6v10.5a1.5 1.5 0 001.5 1.5h15a1.5 1.5 0 001.5-1.5V9L18.75 3H5.25z"/><path d="M9 9v3a3 3 0 006 0V9"/></svg></div>
-        <div><h1>Marketplace</h1><p>Demandes disponibles</p></div>
+      <div class="pg-head" style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18M5.25 3l-2.25 6v10.5a1.5 1.5 0 001.5 1.5h15a1.5 1.5 0 001.5-1.5V9L18.75 3H5.25z"/><path d="M9 9v3a3 3 0 006 0V9"/></svg></div>
+          <div><h1>Marketplace</h1><p>Demandes disponibles</p></div>
+        </div>
+        <button class="btn btn-green" style="display:flex;align-items:center;gap:6px;flex-shrink:0;" onclick="openSubRideModal()">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="white" stroke-width="1.5"/><path d="M8 5v6M5 8h6" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Sous-traiter
+        </button>
       </div>
       <div class="mktabs">
         <button class="mktab active" id="mktab-client" onclick="mkSwitch(this,'mk-client')">Clients</button>
@@ -1579,7 +1581,8 @@ body{background:var(--bg);}
   <div class="modal" style="max-width:440px;">
     <div class="modal-hd"><span class="modal-title">Ajouter un document soci&eacute;t&eacute;</span><button class="close-btn" onclick="closeModal('m-fleet-doc')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body" style="padding:20px 22px;">
-      <div class="input-group"><label>Type de document</label><select id="fd-type"><option value="licence_lvc">Licence LVC</option><option value="assurance_rc">Assurance RC Pro</option><option value="kbis">Extrait Kbis / BCE</option><option value="statuts">Statuts</option><option value="autre">Autre</option></select></div>
+      <div class="input-group"><label>Type de document</label><select id="fd-type" onchange="checkFleetDocTypeStatus()"><option value="licence_lvc">Licence LVC</option><option value="assurance_rc">Assurance RC Pro</option><option value="kbis">Extrait Kbis / BCE</option><option value="statuts">Statuts</option><option value="autre">Autre</option></select></div>
+      <div id="fd-type-status" style="display:none;padding:6px 10px;border-radius:var(--r);font-size:12px;margin-bottom:10px;"></div>
       <div class="input-group"><label>Fichier (PDF uniquement)</label><input type="file" id="fd-file" accept=".pdf,application/pdf"></div>
       <div id="fd-err" class="auth-error"></div>
     </div>
@@ -4866,25 +4869,37 @@ window.openFleetDocModal=function(editId,editType){
   if(editId){
     window._editFleetDocId=editId;
     if(titleEl)titleEl.textContent='Remplacer le document';
-    if(typeEl){typeEl.value=editType||'autre';typeEl.disabled=true;}
+    if(typeEl){typeEl.value=editType||'autre';typeEl.disabled=false;}
   } else {
     window._editFleetDocId=null;
     if(titleEl)titleEl.textContent='Ajouter un document soci\u00e9t\u00e9';
-    // Disable types already uploaded
-    if(typeEl){
-      typeEl.disabled=false;
-      var existingTypes=_fleetDocsData.map(function(d){return d.doc_type;});
-      Array.from(typeEl.options).forEach(function(opt){
-        opt.disabled=existingTypes.indexOf(opt.value)>=0;
-      });
-      // Select first available type
-      var firstAvail=Array.from(typeEl.options).find(function(o){return !o.disabled;});
-      if(firstAvail)typeEl.value=firstAvail.value;
-    }
+    if(typeEl){typeEl.disabled=false;typeEl.selectedIndex=0;}
   }
   var fi=document.getElementById('fd-file');if(fi)fi.value='';
   document.getElementById('fd-err').classList.remove('show');
+  checkFleetDocTypeStatus();
   openModal('m-fleet-doc');
+};
+
+window.checkFleetDocTypeStatus=function(){
+  var typeEl=document.getElementById('fd-type');
+  var statusDiv=document.getElementById('fd-type-status');
+  if(!typeEl||!statusDiv)return;
+  var selectedType=typeEl.value;
+  var existing=_fleetDocsData.find(function(d){return d.doc_type===selectedType;});
+  if(existing){
+    statusDiv.style.display='block';
+    statusDiv.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;">'
+      +'<span style="display:flex;align-items:center;gap:6px;">'
+      +'<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5L13 4" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      +'<span style="font-weight:500;color:var(--green);">Document d\u00e9j\u00e0 ajout\u00e9</span></span>'
+      +'<a href="'+existing.file_url+'" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none;">Voir le PDF</a>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--ink4);margin-top:2px;">Un nouveau fichier remplacera le document existant.</div>';
+    statusDiv.style.background='var(--green-bg)';
+  } else {
+    statusDiv.style.display='none';
+  }
 };
 
 window.editFleetDoc=function(id,docType){openFleetDocModal(id,docType);};
@@ -4896,10 +4911,17 @@ window.saveFleetDoc=async function(){
   if(!fileInput.files[0]){showError(errEl,'Veuillez s\u00e9lectionner un fichier PDF');return;}
   try{
     var url=await _uploadFleetFile(fileInput.files[0],'company');
-    if(window._editFleetDocId){
-      var {error}=await sb.from('fleet_documents').update({doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url}).eq('id',window._editFleetDocId);
+    // Check if editing existing or if this type already has a doc (auto-replace)
+    var existingDoc=window._editFleetDocId
+      ? _fleetDocsData.find(function(d){return d.id===window._editFleetDocId;})
+      : _fleetDocsData.find(function(d){return d.doc_type===typeEl.value;});
+    if(existingDoc){
+      // Delete old file from storage
+      var oldPath=_storagePathFromUrl(existingDoc.file_url);
+      if(oldPath){try{await sb.storage.from('fleet-docs').remove([oldPath]);}catch(e){}}
+      var {error}=await sb.from('fleet_documents').update({doc_name:fileInput.files[0].name,file_url:url}).eq('id',existingDoc.id);
       if(error)throw error;
-      showToast('Document mis \u00e0 jour');
+      showToast('Document remplac\u00e9');
     } else {
       var {error}=await sb.from('fleet_documents').insert({fleet_id:currentUser.id,doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url});
       if(error)throw error;
