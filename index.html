@@ -3044,8 +3044,7 @@ function renderMkItem(r,isSub,isMine){
   } else if(!isSub && !isMine){
     var myOffer = _myOffers && _myOffers[r.id];
     if(myOffer){
-      // 1. Same size as "Soumettre une offre" button, orange outlined pill
-      offerBtn='<button class="btn btn-offer-submitted" style="min-width:160px;justify-content:center;" onclick="event.stopPropagation();_offerSubmittedClick(this)">Offre soumise</button>';
+      offerBtn='';
     } else {
       offerBtn='<button class="btn btn-green" style="min-width:160px;justify-content:center;" onclick="event.stopPropagation();_mkOffer(this)">'+t('btn_offer')+'</button>';
     }
@@ -3296,18 +3295,25 @@ window.openRideDetail=function(el){
     var hasMyOffer=_myOffers&&_myOffers[rId];
     if(isOwnSub){
       ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+    } else if(hasMyOffer){
+      ft='<div style="margin-right:auto;font-size:12px;color:#E8820C;font-weight:500;display:flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Vous avez soumis une offre de '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'
+        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
     } else {
       ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
-      if(!hasMyOffer){
-        ft+='<button class="btn btn-green" style="margin-left:8px;" onclick="_detailOffer(this)" data-rid="'+rId+'" data-ride=\''+safeRd+'\'>Soumettre une offre</button>';
-      }
+      ft+='<button class="btn btn-green" style="margin-left:8px;" onclick="_detailOffer(this)" data-rid="'+rId+'" data-ride=\''+safeRd+'\'>Soumettre une offre</button>';
     }
   } else if(r.status==='offers'&&!isClient){
     var isOwnSub2=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
-    ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
-    if(isOwnSub2){
-      ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">Annuler</button>'
+    var hasMyOffer2=_myOffers&&_myOffers[rId];
+    if(hasMyOffer2&&!isOwnSub2){
+      ft='<div style="margin-right:auto;font-size:12px;color:#E8820C;font-weight:500;display:flex;align-items:center;gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Vous avez soumis une offre de '+parseFloat(hasMyOffer2.price).toFixed(0)+'\u20ac</div>'
         +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+    } else {
+      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+      if(isOwnSub2){
+        ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">Annuler</button>'
+          +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+      }
     }
   } else {
     ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
@@ -4856,13 +4862,25 @@ async function loadFleetDocs(){
 
 window.openFleetDocModal=function(editId,editType){
   var titleEl=document.querySelector('#m-fleet-doc .modal-title');
+  var typeEl=document.getElementById('fd-type');
   if(editId){
     window._editFleetDocId=editId;
     if(titleEl)titleEl.textContent='Remplacer le document';
-    var typeEl=document.getElementById('fd-type');if(typeEl)typeEl.value=editType||'autre';
+    if(typeEl){typeEl.value=editType||'autre';typeEl.disabled=true;}
   } else {
     window._editFleetDocId=null;
     if(titleEl)titleEl.textContent='Ajouter un document soci\u00e9t\u00e9';
+    // Disable types already uploaded
+    if(typeEl){
+      typeEl.disabled=false;
+      var existingTypes=_fleetDocsData.map(function(d){return d.doc_type;});
+      Array.from(typeEl.options).forEach(function(opt){
+        opt.disabled=existingTypes.indexOf(opt.value)>=0;
+      });
+      // Select first available type
+      var firstAvail=Array.from(typeEl.options).find(function(o){return !o.disabled;});
+      if(firstAvail)typeEl.value=firstAvail.value;
+    }
   }
   var fi=document.getElementById('fd-file');if(fi)fi.value='';
   document.getElementById('fd-err').classList.remove('show');
@@ -5002,7 +5020,10 @@ window.openVehicleModal=function(){
   var brand=document.getElementById('veh-brand');if(brand)brand.value='';
   populateVehModels();
   var cls=document.getElementById('veh-class');if(cls)cls.value='lowcost';
-  ['veh-doc-cg','veh-doc-assurance','veh-doc-ct','veh-doc-vignette'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  ['veh-doc-cg','veh-doc-assurance','veh-doc-ct','veh-doc-vignette'].forEach(function(id){
+    var e=document.getElementById(id);if(e){e.value='';e.style.display='';}
+    if(e){var wrap=e.closest('.input-group');if(wrap){var tag=wrap.querySelector('.doc-exists-tag');if(tag)tag.remove();}}
+  });
   openModal('m-vehicle');
 };
 
@@ -5057,7 +5078,34 @@ window.editVehicle=async function(id){
   var set=function(sid,val){var e=document.getElementById(sid);if(e)e.value=val||'';};
   set('veh-year',v.year||'');set('veh-color',v.color||'');set('veh-plate',v.plate||'');
   var cls=document.getElementById('veh-class');if(cls)cls.value=v.vehicle_class||'lowcost';
-  ['veh-doc-cg','veh-doc-assurance','veh-doc-ct','veh-doc-vignette'].forEach(function(fid){var e=document.getElementById(fid);if(e)e.value='';});
+  // Load existing docs and show which are already uploaded
+  var vehDocMap={carte_grise:'veh-doc-cg',assurance:'veh-doc-assurance',controle_technique:'veh-doc-ct',vignette_identification:'veh-doc-vignette'};
+  var {data:existDocs}=await sb.from('vehicle_documents').select('*').eq('vehicle_id',id);
+  var uploadedTypes={};
+  (existDocs||[]).forEach(function(d){uploadedTypes[d.doc_type]=d;});
+  Object.keys(vehDocMap).forEach(function(dtype){
+    var inputId=vehDocMap[dtype];
+    var fi=document.getElementById(inputId);
+    if(!fi)return;
+    var wrap=fi.closest('.input-group');
+    if(!wrap)return;
+    if(uploadedTypes[dtype]){
+      fi.style.display='none';
+      var existTag=wrap.querySelector('.doc-exists-tag');
+      if(existTag)existTag.remove();
+      var tag=document.createElement('a');
+      tag.className='doc-exists-tag';
+      tag.href=uploadedTypes[dtype].file_url;
+      tag.target='_blank';
+      tag.style.cssText='display:inline-block;font-size:10px;padding:2px 8px;background:var(--green-bg);color:var(--green);border-radius:4px;text-decoration:none;font-weight:500;';
+      tag.textContent='\u2713 D\u00e9j\u00e0 ajout\u00e9';
+      wrap.appendChild(tag);
+    } else {
+      fi.style.display='';fi.value='';
+      var existTag=wrap.querySelector('.doc-exists-tag');
+      if(existTag)existTag.remove();
+    }
+  });
   window._editVehicleId=id;
   var titleEl=document.querySelector('#m-vehicle .modal-title');if(titleEl)titleEl.textContent='Modifier le v\u00e9hicule';
   openModal('m-vehicle');
@@ -5114,19 +5162,49 @@ window.openDriverModal=function(){
   window._editDriverId=null;
   var titleEl=document.querySelector('#m-driver .modal-title');if(titleEl)titleEl.textContent='Ajouter un chauffeur';
   ['drv-fname','drv-lname','drv-phone','drv-email'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
-  ['drv-doc-permis','drv-doc-vtc'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  ['drv-doc-permis','drv-doc-vtc'].forEach(function(id){
+    var e=document.getElementById(id);if(e){e.value='';e.style.display='';}
+    if(e){var wrap=e.closest('.input-group');if(wrap){var tag=wrap.querySelector('.doc-exists-tag');if(tag)tag.remove();}}
+  });
   document.getElementById('drv-err').classList.remove('show');
   openModal('m-driver');
 };
 
-window.editDriver=function(id){
+window.editDriver=async function(id){
   var d=_fleetDrivers.find(function(x){return x.id===id;});
   if(!d)return;
   window._editDriverId=id;
   var titleEl=document.querySelector('#m-driver .modal-title');if(titleEl)titleEl.textContent='Modifier le chauffeur';
   var set=function(sid,val){var e=document.getElementById(sid);if(e)e.value=val||'';};
   set('drv-fname',d.first_name);set('drv-lname',d.last_name);set('drv-phone',d.phone||'');set('drv-email',d.email||'');
-  ['drv-doc-permis','drv-doc-vtc'].forEach(function(fid){var e=document.getElementById(fid);if(e)e.value='';});
+  // Load existing docs
+  var drvDocMap={permis_conduire:'drv-doc-permis',carte_vtc:'drv-doc-vtc'};
+  var {data:existDocs}=await sb.from('driver_documents').select('*').eq('driver_id',id);
+  var uploadedTypes={};
+  (existDocs||[]).forEach(function(dc){uploadedTypes[dc.doc_type]=dc;});
+  Object.keys(drvDocMap).forEach(function(dtype){
+    var inputId=drvDocMap[dtype];
+    var fi=document.getElementById(inputId);
+    if(!fi)return;
+    var wrap=fi.closest('.input-group');
+    if(!wrap)return;
+    if(uploadedTypes[dtype]){
+      fi.style.display='none';
+      var existTag=wrap.querySelector('.doc-exists-tag');
+      if(existTag)existTag.remove();
+      var tag=document.createElement('a');
+      tag.className='doc-exists-tag';
+      tag.href=uploadedTypes[dtype].file_url;
+      tag.target='_blank';
+      tag.style.cssText='display:inline-block;font-size:10px;padding:2px 8px;background:var(--green-bg);color:var(--green);border-radius:4px;text-decoration:none;font-weight:500;';
+      tag.textContent='\u2713 D\u00e9j\u00e0 ajout\u00e9';
+      wrap.appendChild(tag);
+    } else {
+      fi.style.display='';fi.value='';
+      var existTag=wrap.querySelector('.doc-exists-tag');
+      if(existTag)existTag.remove();
+    }
+  });
   document.getElementById('drv-err').classList.remove('show');
   openModal('m-driver');
 };
@@ -5202,7 +5280,7 @@ function populateOfferVehicles(requestedClass){
   wrap.style.display='block';
   sel.innerHTML='<option value="">-- Choisir un v\u00e9hicule --</option>';
   var allowed=_classCompat[requestedClass]||[requestedClass];
-  var matching=_fleetVehicles.filter(function(v){return allowed.indexOf(v.vehicle_class)>=0;});
+  var matching=_fleetVehicles.filter(function(v){return allowed.indexOf(v.vehicle_class)>=0 && v.status==='validated';});
   if(matching.length===0){
     if(errDiv){errDiv.style.display='block';errDiv.textContent='Aucun v\u00e9hicule de gamme '+requestedClass+'. Ajoutez-en un dans votre profil.';}
     return;
