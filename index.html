@@ -1770,18 +1770,12 @@ body{background:var(--bg);}
         <div id="pm-dispo-fields" style="display:none;grid-column:1/-1;">
           <div class="form-grid" style="margin:0;">
             <div class="input-group full"><label>Lieu</label><input id="pm-dispo-location" placeholder="Adresse de mise à disposition (optionnel)" autocomplete="off"></div>
-            <div class="input-group full"><label>Durée</label>
-              <select id="pm-duration">
-                <option value="">Non spécifiée</option>
-                <option value="1h">1 heure</option>
-                <option value="2h">2 heures</option>
-                <option value="3h">3 heures</option>
-                <option value="4h">4 heures</option>
-                <option value="6h">6 heures</option>
-                <option value="8h">8 heures</option>
-                <option value="10h">10 heures</option>
-                <option value="12h">12 heures</option>
-              </select>
+            <div class="input-group full"><label>Dur&eacute;e (heures)</label>
+              <div style="display:flex;align-items:center;gap:0;">
+                <button type="button" onclick="var e=document.getElementById('pm-duration');e.value=Math.max(1,parseInt(e.value||2)-1);" style="width:40px;height:40px;border:1.5px solid var(--sand3);border-right:none;border-radius:var(--r) 0 0 var(--r);background:var(--sand);color:var(--ink);font-size:18px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">−</button>
+                <input type="number" id="pm-duration" value="2" min="1" max="24" style="width:60px;text-align:center;border-radius:0;border-left:none;border-right:none;font-size:16px;font-weight:600;-moz-appearance:textfield;" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))">
+                <button type="button" onclick="var e=document.getElementById('pm-duration');e.value=Math.min(24,parseInt(e.value||2)+1);" style="width:40px;height:40px;border:1.5px solid var(--sand3);border-left:none;border-radius:0 var(--r) var(--r) 0;background:var(--sand);color:var(--ink);font-size:18px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">+</button>
+              </div>
             </div>
           </div>
         </div>
@@ -4817,7 +4811,8 @@ window.savePersonalMission=async function(btn){
     from=document.getElementById('pm-dispo-location')?.value.trim()||null;
     to=null;
     var duration=document.getElementById('pm-duration')?.value||'';
-    notes=[label,duration?('Durée : '+duration):null,notes].filter(Boolean).join(' — ')||null;
+    var durHours=parseInt(duration)||0;
+    notes=[label,durHours>0?('Durée:'+durHours+'h'):null,notes].filter(Boolean).join(' — ')||null;
   }else{
     tripType='ab';
     from=document.getElementById('pm-from')?.value.trim()||null;
@@ -4835,8 +4830,9 @@ window.savePersonalMission=async function(btn){
   if(btn)setLoading(btn,true,'Enregistrer');
 
   var rideData={
-    driver_id:   currentUser.id,
-    trip_type:   tripType,
+    client_id:    currentUser.id,
+    driver_id:    currentUser.id,
+    trip_type:    tripType,
     from_address: from||null,
     to_address:   to||null,
     ride_date:    date,
