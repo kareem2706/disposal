@@ -2534,6 +2534,23 @@ async function loadClientDashboard(){
     if(rideErr){ console.error('rides error:', rideErr.message, rideErr.code); }
     rides = rideData || [];
 
+    // Auto-cancel overdue pending rides (waiting/offers past start time)
+    var pendingToCancel=rides.filter(function(r){return r.status==='waiting'||r.status==='offers';});
+    if(pendingToCancel.length>0){
+      await _autoCancelOverdueRides(pendingToCancel);
+      // Re-fetch rides
+      var rr=await sb.from('rides').select('*').eq('client_id', uid).order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
+      rides=rr.data||[];
+    }
+
+    // Auto-complete overdue confirmed rides
+    var confirmedToComplete=rides.filter(function(r){return r.status==='confirmed';});
+    if(confirmedToComplete.length>0){
+      await _autoCompleteOverdueRides(confirmedToComplete);
+      var rr2=await sb.from('rides').select('*').eq('client_id', uid).order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
+      rides=rr2.data||[];
+    }
+
     // Step 2: fetch offer counts and min price (separate query avoids RLS join issues)
     if(rides.length > 0){
       const ids = rides.map(r => r.id);
@@ -2698,11 +2715,32 @@ async function _autoCompleteOverdueRides(confirmedRides){
       try{
         var res=await sb.from('rides').update({status:'done'}).eq('id',r.id).eq('status','confirmed');
         if(!res.error)updated++;
-        console.log('[auto-complete] ride',r.id,'end:',endTime,'now:',now,'result:',res.error?res.error.message:'OK');
       }catch(e){console.error('auto-complete error:',e);}
     }
   }
   if(updated>0)console.log('[auto-complete]',updated,'ride(s) marked as done');
+}
+
+// Auto-cancel overdue rides still in waiting/offers (not confirmed/paid)
+async function _autoCancelOverdueRides(pendingRides){
+  if(!sb||!pendingRides||pendingRides.length===0)return;
+  var now=new Date();
+  var cancelled=0;
+  for(var i=0;i<pendingRides.length;i++){
+    var r=pendingRides[i];
+    if(!r.ride_date)continue;
+    var timeStr=r.ride_time||'00:00';
+    if(timeStr.length===5)timeStr+=':00';
+    var rideStart=new Date(r.ride_date+'T'+timeStr);
+    if(isNaN(rideStart))continue;
+    if(now>rideStart){
+      try{
+        var res=await sb.from('rides').update({status:'cancelled'}).eq('id',r.id).in('status',['waiting','offers']);
+        if(!res.error)cancelled++;
+      }catch(e){}
+    }
+  }
+  if(cancelled>0)console.log('[auto-cancel]',cancelled,'overdue pending ride(s) cancelled');
 }
 
 async function loadDriverDashboard(){
@@ -2715,8 +2753,17 @@ async function loadDriverDashboard(){
       sb.from('rides').select('*').in('status', ['waiting', 'offers']).order('ride_date',{ascending:true}).order('ride_time',{ascending:true})
     ]);
     missions = m.data || [];
+    var allPending = p.data || [];
+
+    // Auto-cancel overdue pending rides (waiting/offers past their start time)
+    await _autoCancelOverdueRides(allPending);
+
+    // Re-fetch pending after auto-cancel
+    var pRefresh = await sb.from('rides').select('*').in('status', ['waiting', 'offers']).order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
+    allPending = pRefresh.data || [];
+
     // Exclude own subcontracts from pending (they show in "Mes sous-traitances" only)
-    pending  = (p.data || []).filter(function(r){return !(r.is_subcontract && r.client_id === uid);});
+    pending = allPending.filter(function(r){return !(r.is_subcontract && r.client_id === uid);});
   } else {
     missions = getDemoMissions();
     pending  = getDemoMarketplace();
@@ -4331,10 +4378,9 @@ window.submitOffer = async function(){
 
   // Vehicle selection required for fleet
   var vehSel=document.getElementById('offer-vehicle-select');
-  var vehWrap=document.getElementById('offer-vehicle-wrap');
   var selectedVehicleId=null;
-  if(vehWrap&&vehWrap.style.display!=='none'&&vehSel){
-    selectedVehicleId=vehSel.value;
+  if(currentRole==='driver'){
+    selectedVehicleId=vehSel?vehSel.value:'';
     if(!selectedVehicleId){showError(err,'Veuillez s\u00e9lectionner un v\u00e9hicule');return;}
   }
 
