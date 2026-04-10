@@ -2249,7 +2249,14 @@ async function checkSession(){
     });
   }
   try {
-    const { data: { session } } = await sb.auth.getSession();
+    console.log('[checkSession] getting session...');
+    // Race getSession against a 4s timeout
+    var sessionResult = await Promise.race([
+      sb.auth.getSession(),
+      new Promise(function(_,reject){setTimeout(function(){reject(new Error('getSession timeout'));},4000);})
+    ]);
+    console.log('[checkSession] got session result');
+    var session = sessionResult?.data?.session;
     // Skip enterApp if password recovery flow is active
     if(_passwordRecoveryActive) return;
     if(session){
@@ -2262,6 +2269,8 @@ async function checkSession(){
     }
   } catch(e) {
     console.error('checkSession error:', e);
+    // Clear possibly corrupted session
+    try{localStorage.removeItem('disposal-auth');localStorage.removeItem('sb-tuzfoqdxmxzjjhvlxsgb-auth-token');}catch(ex){}
     var _l2=document.getElementById('app-loader');if(_l2)_l2.style.display='none';
     showScreen('landing');
   }
