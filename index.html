@@ -632,6 +632,7 @@ body{background:var(--bg);}
 .modal-ft .btn{padding:6px 13px;font-size:12px;}
 .ride-card>div{min-width:0;}
 </style>
+<script>window.initGooglePlaces=window.initGooglePlaces||function(){if(window._gpReady)window._gpReady();};window._gpReady=null;</script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places,routes&language=fr&callback=initGooglePlaces" async defer></script>
 </head>
 <body>
@@ -1936,11 +1937,15 @@ body{background:var(--bg);}
 // ── Google Places — widget natif ──
 var _gpInited = false;
 
-function initGooglePlaces(){
+window.initGooglePlaces=function(){
   if(_gpInited) return;
   _gpInited = true;
   _attachGoogleAC();
-}
+};
+// If Google Maps already loaded before this script, run now
+if(window.google&&window.google.maps&&window.google.maps.places){initGooglePlaces();}
+// Register for late callback
+window._gpReady=initGooglePlaces;
 
 function _attachGoogleAC(){
   var ids = ['ride-from','ride-to','disp-from','sub-from','sub-to','sub-disp-from','pm-from','pm-to','pm-dispo-location'];
