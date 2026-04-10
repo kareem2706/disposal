@@ -1670,7 +1670,7 @@ body{background:var(--bg);}
       <div style="font-weight:600;font-size:15px;margin-bottom:4px;">Course terminée</div>
       <div id="rate-ride-info" class="text-xs mb-16">—</div>
       <div style="font-size:12px;font-weight:500;margin-bottom:10px;">Comment était votre expérience ?</div>
-      <div style="font-size:28px;color:var(--amber);letter-spacing:4px;cursor:pointer;margin-bottom:14px;" id="stars-display" onclick="rateClick(event)">☆☆☆☆☆</div>
+      <div style="font-size:32px;letter-spacing:6px;cursor:pointer;margin-bottom:14px;user-select:none;" id="stars-display"><span onclick="rateSet(1)" style="color:#CCC;">&#9733;</span><span onclick="rateSet(2)" style="color:#CCC;">&#9733;</span><span onclick="rateSet(3)" style="color:#CCC;">&#9733;</span><span onclick="rateSet(4)" style="color:#CCC;">&#9733;</span><span onclick="rateSet(5)" style="color:#CCC;">&#9733;</span></div>
       <input type="hidden" id="rate-score" value="0">
       <textarea id="rate-comment" rows="2" placeholder="Un commentaire ? (optionnel)"></textarea>
       <div id="rate-ride-id" style="display:none;"></div>
@@ -2577,7 +2577,7 @@ async function loadClientDashboard(){
   var _s1='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>';
   var _s2='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
   var _s3='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
-  var _s4='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>';
+  var _s4='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>';
   var confirmed=rides.filter(function(r){return r.status==='confirmed'||r.status==='active'||r.status==='done';}).length;
   var pending=rides.filter(function(r){return r.status==='waiting';}).length;
   var withOffer=rides.filter(function(r){return r.status==='offers';}).length;
@@ -2586,7 +2586,7 @@ async function loadClientDashboard(){
     '<div class="stat-card">'+_mkI(_s1,'var(--green-bg)')+'<div class="stat-label">Confirmées</div><div class="stat-val">'+confirmed+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s2,'#FFF3DC')+'<div class="stat-label">En attente</div><div class="stat-val">'+pending+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s3,'var(--blue-bg)')+'<div class="stat-label">Offres reçues</div><div class="stat-val">'+withOffer+'</div></div>'
-    +'<div class="stat-card">'+_mkI(_s4,'#E8F5EE')+'<div class="stat-label">Total payé</div><div class="stat-val">'+(total>0?total.toFixed(0)+' €':'0 €')+'</div></div>';
+    +'<div class="stat-card">'+_mkI(_s4,'var(--red-bg)')+'<div class="stat-label">Total pay\u00e9</div><div class="stat-val">'+(total>0?total.toFixed(0)+' \u20ac':'0 \u20ac')+'</div></div>';
 
   // Active ride
   const active = rides.find(r => r.status==='active');
@@ -2791,7 +2791,7 @@ async function loadDriverDashboard(){
   document.getElementById('driver-stats').innerHTML=
     '<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>','var(--green-bg)')+'<div class="stat-label">Missions \u00e0 venir</div><div class="stat-val">'+upcomingMissions.length+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>','var(--blue-bg)')+'<div class="stat-label">Ce mois</div><div class="stat-val">'+monthMissions.length+'</div></div>'
-    +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>','#E8F5EE')+'<div class="stat-label">Revenus</div><div class="stat-val">'+(revenueNet>0?revenueNet.toFixed(0)+' \u20ac':'0 \u20ac')+'</div></div>'
+    +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>','var(--red-bg)')+'<div class="stat-label">Revenus</div><div class="stat-val">'+(revenueNet>0?revenueNet.toFixed(0)+' \u20ac':'0 \u20ac')+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>','#FFF3DC')+'<div class="stat-label">Score</div><div class="stat-val">'+((currentProfile&&currentProfile.rating)?currentProfile.rating.toFixed(1)+' \u2605':'\u2014')+'</div></div>';
 
   // Update marketplace badge immediately (hidden per spec)
@@ -3446,14 +3446,20 @@ window.openRideDetail=function(el){
   } else if(r.status==='offers'&&isClient){
     ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler la demande</button>'      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'      +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRide(this.dataset.r)" data-m="m-ride-detail" data-r="'+rId+'">Voir les offres &#x2192;</button>';
   } else if(r.status==='done'&&isClient){
-    ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
-      +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRateModal(this.dataset.r,this.dataset.f)" data-m="m-ride-detail" data-r="'+rId+'" data-f="'+from.replace(/"/g,"&quot;")+'">&#11088; Evaluer</button>';
+    if(r.rated){
+      ft='<div style="margin-right:auto;font-size:13px;color:var(--green);font-weight:500;">\u2b50 Course \u00e9valu\u00e9e</div>'
+        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+    } else {
+      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
+        +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRateModal(this.dataset.r,this.dataset.f)" data-m="m-ride-detail" data-r="'+rId+'" data-f="'+from.replace(/"/g,"&quot;")+'">&#11088; Evaluer</button>';
+    }
   } else if(r.status==='waiting'&&!isClient){
     var safeRd=JSON.stringify(r).replace(/'/g,'&#39;');
     var isOwnSub=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
     var hasMyOffer=_myOffers&&_myOffers[rId];
     if(isOwnSub){
-      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+      ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler la sous-traitance</button>'
+        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
     } else if(hasMyOffer){
       ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre à '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'
         +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
@@ -4651,7 +4657,7 @@ function _buildCalCell(ds,isT,calRides,calView){
   p.push('<span style="font-size:12px;font-weight:'+(isT?'700':'500')+';color:'+(isT?'var(--green)':'var(--ink)')+';">'+day+'</span>');
   if(rides.length>2&&calView==='month')p.push('<span class="cal-mb" data-ds="'+ds+'" style="font-size:9px;color:var(--blue);cursor:pointer;font-weight:600;">+'+rides.length+' sem.</span>');
   p.push('</div>');
-  rides.slice(0,maxR).forEach(function(r){var enc=encodeURIComponent(JSON.stringify(r));p.push('<div class="cal-rp" data-enc="'+enc+'" style="background:'+(sc[r.status]||'#EEE')+';border-radius:4px;padding:2px 5px;font-size:9.5px;font-weight:600;color:#1A2E1A;margin-bottom:2px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+tl(r)+' • '+(sl[r.status]||r.status)+'</div>');});
+  rides.slice(0,maxR).forEach(function(r){var enc=encodeURIComponent(JSON.stringify(r));var timeStr=r.ride_time?r.ride_time.slice(0,5)+' ':'';p.push('<div class="cal-rp" data-enc="'+enc+'" style="background:'+(sc[r.status]||'#EEE')+';border-radius:4px;padding:2px 5px;font-size:9.5px;font-weight:600;color:#1A2E1A;margin-bottom:2px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+timeStr+tl(r)+' \u2022 '+(sl[r.status]||r.status)+'</div>');});
   if(rides.length>2&&calView==='month')p.push('<div class="cal-mb" data-ds="'+ds+'" style="font-size:9px;color:var(--blue);cursor:pointer;">Voir tout →</div>');
   p.push('</div>');return p.join('');
 }
@@ -4986,29 +4992,21 @@ window.savePersonalMission=async function(btn){
 // ── Rating functions ──
 window.openRateModal=function(rideId,fromAddr){
   var scoreEl=document.getElementById('rate-score');if(scoreEl)scoreEl.value='0';
-  var starsEl=document.getElementById('stars-display');if(starsEl)starsEl.innerHTML='\u2606\u2606\u2606\u2606\u2606';
   var commentEl=document.getElementById('rate-comment');if(commentEl)commentEl.value='';
   var idEl=document.getElementById('rate-ride-id');if(idEl)idEl.textContent=rideId;
   var infoEl=document.getElementById('rate-ride-info');if(infoEl)infoEl.textContent=fromAddr||'\u2014';
+  rateSet(0);
   openModal('m-rate');
 };
 
-window.rateClick=function(e){
+window.rateSet=function(score){
+  document.getElementById('rate-score').value=score;
   var el=document.getElementById('stars-display');
   if(!el)return;
-  var rect=el.getBoundingClientRect();
-  var x=e.clientX-rect.left;
-  var starW=rect.width/5;
-  var score=Math.min(5,Math.max(1,Math.ceil(x/starW)));
-  document.getElementById('rate-score').value=score;
-  var filled='\u2605',empty='\u2606';
-  el.innerHTML='';
-  for(var i=1;i<=5;i++){
-    var span=document.createElement('span');
-    span.textContent=i<=score?filled:empty;
-    span.style.cursor='pointer';
-    el.appendChild(span);
-  }
+  var spans=el.querySelectorAll('span');
+  spans.forEach(function(s,i){
+    s.style.color=i<score?'#F5B100':'#CCC';
+  });
 };
 
 window.submitRating=async function(){
