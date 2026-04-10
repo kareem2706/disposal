@@ -2581,7 +2581,7 @@ async function loadClientDashboard(){
   var confirmed=rides.filter(function(r){return r.status==='confirmed'||r.status==='active'||r.status==='done';}).length;
   var pending=rides.filter(function(r){return r.status==='waiting';}).length;
   var withOffer=rides.filter(function(r){return r.status==='offers';}).length;
-  var total=rides.filter(function(r){return r.status==='done'||r.status==='confirmed';}).reduce(function(s,r){return s+(r.final_price?parseFloat((parseFloat(r.final_price)*1.21).toFixed(2)):0);},0);
+  var total=rides.filter(function(r){return r.status==='done'||r.status==='confirmed';}).reduce(function(s,r){return s+(r.final_price?parseFloat(r.final_price):0);},0);
   document.getElementById('client-stats').innerHTML=
     '<div class="stat-card">'+_mkI(_s1,'var(--green-bg)')+'<div class="stat-label">Confirmées</div><div class="stat-val">'+confirmed+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s2,'#FFF3DC')+'<div class="stat-label">En attente</div><div class="stat-val">'+pending+'</div></div>'
@@ -3780,6 +3780,9 @@ window.submitRide = async function(){
     await loadClientDashboard();
     var ridesPage=document.getElementById('page-rides');
     if(ridesPage&&ridesPage.classList.contains('active')&&typeof loadRides==='function')await loadRides();
+    // Refresh client calendar
+    _calCache={};
+    if(typeof loadCalendar==='function'){try{await loadCalendar(true);}catch(e){}}
   } catch(e){
     if(err){ err.textContent=e.message||'Erreur'; err.classList.add('show'); }
     if(btn) setLoading(btn, false, t('btn_publish')+' \u2192');
@@ -4699,7 +4702,7 @@ window.loadCalendar=async function(force){
     _calRides=_calCache[ck];
   }
   if(!_calWS){var d=new Date();var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_calWS=d;}
-  _renderCalGrid('cal-grid','cal-title',_calY,_calM,_calView,_calWS,_calRides);
+  _renderCalGrid('cal-grid','cal-title',_calY,_calM,_calView,_calWS,_calRides,calPrevMonth,calNextMonth,calSetView);
 };
 
 // DRIVER CALENDAR
@@ -4978,6 +4981,64 @@ window.savePersonalMission=async function(btn){
     if(err){err.textContent=e.message||'Erreur';err.classList.add('show');}
     if(btn)setLoading(btn,false,'Enregistrer');
   }
+};
+
+// ── Rating functions ──
+window.openRateModal=function(rideId,fromAddr){
+  var scoreEl=document.getElementById('rate-score');if(scoreEl)scoreEl.value='0';
+  var starsEl=document.getElementById('stars-display');if(starsEl)starsEl.innerHTML='\u2606\u2606\u2606\u2606\u2606';
+  var commentEl=document.getElementById('rate-comment');if(commentEl)commentEl.value='';
+  var idEl=document.getElementById('rate-ride-id');if(idEl)idEl.textContent=rideId;
+  var infoEl=document.getElementById('rate-ride-info');if(infoEl)infoEl.textContent=fromAddr||'\u2014';
+  openModal('m-rate');
+};
+
+window.rateClick=function(e){
+  var el=document.getElementById('stars-display');
+  if(!el)return;
+  var rect=el.getBoundingClientRect();
+  var x=e.clientX-rect.left;
+  var starW=rect.width/5;
+  var score=Math.min(5,Math.max(1,Math.ceil(x/starW)));
+  document.getElementById('rate-score').value=score;
+  var filled='\u2605',empty='\u2606';
+  el.innerHTML='';
+  for(var i=1;i<=5;i++){
+    var span=document.createElement('span');
+    span.textContent=i<=score?filled:empty;
+    span.style.cursor='pointer';
+    el.appendChild(span);
+  }
+};
+
+window.submitRating=async function(){
+  var rideId=document.getElementById('rate-ride-id')?.textContent;
+  var score=parseInt(document.getElementById('rate-score')?.value)||0;
+  var comment=(document.getElementById('rate-comment')?.value||'').trim();
+  if(!score||score<1){showToast('Veuillez s\u00e9lectionner une note');return;}
+  if(!rideId){showToast('Erreur: course introuvable');return;}
+  if(sb&&!localStorage.getItem(DEMO_MODE_KEY)){
+    try{
+      // Get the driver_id for this ride
+      var {data:ride}=await sb.from('rides').select('driver_id').eq('id',rideId).single();
+      if(ride&&ride.driver_id){
+        // Insert rating
+        var {error}=await sb.from('ratings').insert({ride_id:rideId,driver_id:ride.driver_id,client_id:currentUser.id,score:score,comment:comment||null});
+        if(error&&error.code!=='23505')throw error; // ignore duplicate
+        // Update driver avg rating
+        var {data:ratings}=await sb.from('ratings').select('score').eq('driver_id',ride.driver_id);
+        if(ratings&&ratings.length>0){
+          var avg=ratings.reduce(function(s,r){return s+r.score;},0)/ratings.length;
+          await sb.from('profiles').update({rating:Math.round(avg*10)/10,rating_count:ratings.length}).eq('id',ride.driver_id);
+        }
+      }
+      // Mark ride as rated
+      await sb.from('rides').update({rated:true}).eq('id',rideId);
+    }catch(e){console.error('rating error:',e);}
+  }
+  closeModal('m-rate');
+  showToast('\u2b50 Merci pour votre \u00e9valuation !');
+  if(typeof loadClientDashboard==='function')loadClientDashboard();
 };
 
 function showToast(msg){
