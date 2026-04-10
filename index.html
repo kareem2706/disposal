@@ -589,7 +589,7 @@ body{background:var(--bg);}
 .stat-val{font-family:'DM Sans',sans-serif;font-size:34px;font-weight:700;line-height:1;color:var(--ink);letter-spacing:-.5px;}
 .stat-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
 .card{background:var(--white);border:none;border-radius:var(--r-lg);box-shadow:var(--sh);overflow:hidden;}
-.ride-card{background:var(--white);border:none;border-radius:var(--r-lg);padding:14px 20px;margin-bottom:6px;cursor:pointer;transition:all var(--t);position:relative;box-shadow:var(--sh);display:grid;grid-template-columns:52px 72px 1.1fr 1.1fr 130px 110px 24px;align-items:center;gap:16px;}
+.ride-card{background:#FCFCFC;border:none;border-radius:var(--r-lg);padding:14px 20px;margin-bottom:6px;cursor:pointer;transition:all var(--t);position:relative;box-shadow:var(--sh);display:grid;grid-template-columns:52px 72px 1.1fr 1.1fr 130px 110px 24px;align-items:center;gap:16px;}
 .ride-card:hover{box-shadow:var(--sh-lg);transform:translateY(-1px);}
 .ride-card-date-col{text-align:center;}
 .ride-card-date-month{font-size:10px;text-transform:uppercase;color:var(--ink4);font-weight:600;letter-spacing:.06em;}
@@ -997,17 +997,13 @@ body{background:var(--bg);}
       <!-- ADMIN nav -->
       <div id="nav-admin" style="display:none;">
         <div class="nav-sect">Administration</div>
-        <button class="nav-item" data-page="admin-docs" onclick="showPage('admin-docs')">
-          <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="3" y="1.5" width="10" height="13" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 5h5M5.5 7.5h5M5.5 10h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-          Documents soci&eacute;t&eacute;
-        </button>
-        <button class="nav-item" data-page="admin-vehicles" onclick="showPage('admin-vehicles')">
+        <button class="nav-item" data-page="admin-fleets" onclick="showPage('admin-fleets')">
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="1" y="5" width="14" height="7" rx="2" stroke="currentColor" stroke-width="1.3"/><circle cx="4.5" cy="12" r="1.5" stroke="currentColor" stroke-width="1.2"/><circle cx="11.5" cy="12" r="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 5V4a2 2 0 012-2h6a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.3"/></svg>
-          Documents voitures
+          Fleets
         </button>
-        <button class="nav-item" data-page="admin-drivers" onclick="showPage('admin-drivers')">
+        <button class="nav-item" data-page="admin-clients" onclick="showPage('admin-clients')">
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-          Documents chauffeurs
+          Clients
         </button>
       </div>
     </nav>
@@ -1089,7 +1085,7 @@ body{background:var(--bg);}
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
         <div><h1>Calendrier</h1><p>Vos demandes du mois</p></div>
       </div>
-      <div class="card" style="padding:0;overflow:hidden;">
+      <div class="card" style="padding:0;overflow:hidden;background:#FCFCFC;">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--sand3);gap:12px;">
           <button onclick="calPrevMonth()" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--r);color:var(--ink3);flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
           <span id="cal-title" style="font-size:15px;font-weight:700;color:var(--ink);flex:1;text-align:center;"></span>
@@ -1112,7 +1108,7 @@ body{background:var(--bg);}
       <div style="margin-bottom:10px;">
         <button class="btn btn-sm" style="display:flex;align-items:center;gap:6px;background:#E8DEF8;color:#6750A4;border:none;font-weight:600;" onclick="openPersonalMissionModal()"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Ajouter mission personnelle</button>
       </div>
-      <div class="card" style="padding:0;overflow:hidden;">
+      <div class="card" style="padding:0;overflow:hidden;background:#FCFCFC;">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--sand3);gap:12px;">
           <button onclick="dCalPrev()" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--r);color:var(--ink3);flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
           <span id="d-cal-title" style="font-size:15px;font-weight:700;color:var(--ink);flex:1;text-align:center;"></span>
@@ -1175,7 +1171,7 @@ body{background:var(--bg);}
       <div style="margin-bottom:10px;">
         <button class="btn btn-sm" style="display:flex;align-items:center;gap:6px;background:#E8DEF8;color:#6750A4;border:none;font-weight:600;" onclick="openPersonalMissionModal()"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Ajouter mission personnelle</button>
       </div>
-      <div class="card" style="padding:0;overflow:hidden;">
+      <div class="card" style="padding:0;overflow:hidden;background:#FCFCFC;">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--sand3);gap:12px;">
           <button onclick="dCalPrev()" style="background:none;border:none;cursor:pointer;padding:6px;color:var(--ink3);"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
           <span id="d-cal-title" style="font-size:15px;font-weight:700;color:var(--ink);flex:1;text-align:center;"></span>
@@ -1428,31 +1424,37 @@ body{background:var(--bg);}
     </div>
 
     <!-- ═══ ADMIN PAGES ═══ -->
-    <!-- Admin: Documents société -->
-    <div id="page-admin-docs" class="page">
-      <div class="pg-head">
-        <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M9 7h6M9 11h6M9 15h4"/></svg></div>
-        <div><h1>Validation — Documents soci&eacute;t&eacute;</h1><p>G&eacute;rer les documents soci&eacute;t&eacute; de tous les chauffeurs</p></div>
-      </div>
-      <div id="admin-docs-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
-    </div>
-
-    <!-- Admin: Documents voitures -->
-    <div id="page-admin-vehicles" class="page">
+    <!-- Admin: Fleets -->
+    <div id="page-admin-fleets" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="10" rx="3"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M5 7V6a3 3 0 013-3h8a3 3 0 013 3v1"/></svg></div>
-        <div><h1>Validation — Documents voitures</h1><p>G&eacute;rer les documents v&eacute;hicules de tous les chauffeurs</p></div>
+        <div><h1>Fleets</h1><p>Toutes les fleets inscrites dans l&apos;application</p></div>
       </div>
-      <div id="admin-vehicles-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="admin-fleets-filters">
+        <button class="btn btn-primary btn-sm" onclick="filterAdminFleets('all',this)">Toutes</button>
+        <button class="btn btn-secondary btn-sm" onclick="filterAdminFleets('active',this)">Actif</button>
+        <button class="btn btn-secondary btn-sm" onclick="filterAdminFleets('pending',this)">En cours de validation</button>
+        <button class="btn btn-secondary btn-sm" onclick="filterAdminFleets('validated',this)">V&eacute;rifi&eacute;</button>
+      </div>
+      <div id="admin-fleets-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
+      <!-- Fleet detail panel (hidden by default) -->
+      <div id="admin-fleet-detail" style="display:none;">
+        <button class="btn btn-secondary btn-sm" onclick="hideFleetDetail()" style="margin-bottom:14px;">&larr; Retour &agrave; la liste</button>
+        <div id="admin-fleet-detail-content"></div>
+      </div>
     </div>
 
-    <!-- Admin: Documents chauffeurs -->
-    <div id="page-admin-drivers" class="page">
+    <!-- Admin: Clients -->
+    <div id="page-admin-clients" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
-        <div><h1>Validation — Documents chauffeurs</h1><p>G&eacute;rer les documents chauffeurs de tous les conducteurs</p></div>
+        <div><h1>Clients</h1><p>Tous les clients inscrits dans l&apos;application</p></div>
       </div>
-      <div id="admin-drivers-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
+      <div style="display:flex;gap:0;margin-bottom:16px;background:var(--sand2);border-radius:var(--r);padding:3px;width:fit-content;">
+        <button class="btn btn-sm admin-client-tab active" data-tab="pro" onclick="switchAdminClientTab('pro',this)" style="border:none;padding:7px 18px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);">Clients professionnels</button>
+        <button class="btn btn-sm admin-client-tab" data-tab="perso" onclick="switchAdminClientTab('perso',this)" style="border:none;padding:7px 18px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;background:transparent;color:var(--ink3);">Clients particuliers</button>
+      </div>
+      <div id="admin-clients-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
 
     </main>
@@ -2523,9 +2525,9 @@ function enterApp(){
     avEl.textContent = (fn[0] || '?').toUpperCase();
   }
 
-  // Admin goes to admin-docs by default
+  // Admin goes to admin-fleets by default
   if(isAdmin){
-    showPage('admin-docs');
+    showPage('admin-fleets');
   } else if(role === 'driver' && sb && !localStorage.getItem(DEMO_MODE_KEY)){
     loadMyOffers().then(function(){
       showPage('d-dashboard');
@@ -2550,7 +2552,7 @@ window.showPage = function(pageId){
 
   const pageNames = { dashboard:t('dashboard'), rides:t('rides'), calendar:'Calendrier', 'd-calendar':'Calendrier', invoices:t('invoices'),
     profile:t('profile'), 'd-dashboard':t('d-dashboard'), marketplace:t('marketplace'), missions:t('missions'),
-    'admin-docs':'Validation \u2014 Documents soci\u00e9t\u00e9', 'admin-vehicles':'Validation \u2014 Documents voitures', 'admin-drivers':'Validation \u2014 Documents chauffeurs' };
+    'admin-fleets':'Fleets', 'admin-clients':'Clients' };
   var ptEl=document.getElementById('page-title');if(ptEl)ptEl.textContent=pageNames[pageId]||'';
 
   // Mark nav item active
@@ -2574,9 +2576,8 @@ async function loadPageData(pageId){
     case 'calendar':    loadCalendar(); break;
     case 'd-calendar':  loadDriverCalendar(); break;
     case 'profile':       loadProfileForm(); break;
-    case 'admin-docs':    await loadAdminDocs(); break;
-    case 'admin-vehicles': await loadAdminVehicles(); break;
-    case 'admin-drivers': await loadAdminDrivers(); break;
+    case 'admin-fleets':   await loadAdminFleets(); break;
+    case 'admin-clients':  await loadAdminClients(); break;
   }
 }
 
@@ -5868,11 +5869,11 @@ function renderRideItem(r){
 
 
 // ═══════════════════════════════════════════════════════════════
-// ADMIN: Validation pages
+// ADMIN: Fleets & Clients pages
 // ═══════════════════════════════════════════════════════════════
 
 function _adminStatusBadge(status){
-  if(status==='validated') return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--green-bg);color:var(--green);font-size:10px;font-weight:600;">Valid\u00e9</span>';
+  if(status==='validated') return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--green-bg);color:var(--green);font-size:10px;font-weight:600;">V\u00e9rifi\u00e9</span>';
   if(status==='rejected') return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--red-bg);color:var(--red);font-size:10px;font-weight:600;">Rejet\u00e9</span>';
   return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-size:10px;font-weight:600;">En attente</span>';
 }
@@ -5896,78 +5897,304 @@ window.adminSetStatus=async function(table, id, newStatus){
   try{
     var {error}=await sb.from(table).update({status:newStatus}).eq('id',id);
     if(error) throw error;
-    showToast(newStatus==='validated'?'Valid\u00e9 !':newStatus==='rejected'?'Rejet\u00e9':'Statut mis \u00e0 jour');
-    // Reload the current admin page
-    if(table==='fleet_documents') await loadAdminDocs();
-    else if(table==='fleet_vehicles') await loadAdminVehicles();
-    else if(table==='fleet_drivers') await loadAdminDrivers();
+    showToast(newStatus==='validated'?'V\u00e9rifi\u00e9 !':newStatus==='rejected'?'Rejet\u00e9':'Statut mis \u00e0 jour');
+    // Reload the current detail if viewing a fleet, otherwise reload the list
+    if(_adminFleetDetailId){
+      await showFleetDetail(_adminFleetDetailId);
+    } else {
+      await loadAdminFleets();
+    }
   }catch(e){showToast('Erreur: '+(e.message||e));}
 };
 
-// ── Admin: Load all fleet documents ──
-async function loadAdminDocs(){
-  var el=document.getElementById('admin-docs-list');if(!el||!sb)return;
+// ── Admin: Set fleet global verified status ──
+window.adminSetFleetVerified=async function(fleetId, newStatus){
+  if(!sb) return;
   try{
-    var {data,error}=await sb.from('fleet_documents').select('*').order('uploaded_at',{ascending:false});
+    var {error}=await sb.from('profiles').update({fleet_verified:newStatus}).eq('id',fleetId);
     if(error) throw error;
-    if(!data||data.length===0){el.innerHTML='<div class="card" style="padding:24px;text-align:center;color:var(--ink4);font-size:13px;">Aucun document soci\u00e9t\u00e9 soumis</div>';return;}
+    showToast(newStatus==='validated'?'Fleet v\u00e9rifi\u00e9e !':'Statut mis \u00e0 jour');
+    if(_adminFleetDetailId){
+      await showFleetDetail(_adminFleetDetailId);
+    } else {
+      await loadAdminFleets();
+    }
+  }catch(e){showToast('Erreur: '+(e.message||e));}
+};
+
+// ── Admin: Fleets ──
+var _adminFleetsData=[];
+var _adminFleetsFilter='all';
+var _adminFleetDetailId=null;
+
+window.filterAdminFleets=function(filter,btn){
+  _adminFleetsFilter=filter;
+  document.querySelectorAll('#admin-fleets-filters .btn').forEach(function(b){b.className='btn btn-secondary btn-sm';});
+  if(btn) btn.className='btn btn-primary btn-sm';
+  renderAdminFleets();
+};
+
+function _computeFleetStatus(fleet, docs, vehicles, drivers){
+  var allItems=[].concat(docs||[],vehicles||[],drivers||[]);
+  if(fleet.fleet_verified==='validated') return 'validated';
+  if(allItems.length===0) return 'active';
+  var allValidated=allItems.every(function(i){return i.status==='validated';});
+  if(allValidated && allItems.length>0) return 'validated';
+  var hasPending=allItems.some(function(i){return i.status==='pending';});
+  if(hasPending) return 'pending';
+  return 'active';
+}
+
+async function loadAdminFleets(){
+  var el=document.getElementById('admin-fleets-list');if(!el||!sb)return;
+  _adminFleetDetailId=null;
+  document.getElementById('admin-fleet-detail').style.display='none';
+  el.style.display='block';
+  try{
+    // Get all fleet profiles (drivers)
+    var {data:fleets,error}=await sb.from('profiles').select('*').eq('role','driver').order('created_at',{ascending:false});
+    if(error) throw error;
+    if(!fleets) fleets=[];
+    // Get all fleet documents, vehicles, drivers for status computation
+    var {data:allDocs}=await sb.from('fleet_documents').select('fleet_id,status');
+    var {data:allVehicles}=await sb.from('fleet_vehicles').select('fleet_id,status');
+    var {data:allDrivers}=await sb.from('fleet_drivers').select('fleet_id,status');
+    // Group by fleet_id
+    var docsMap={},vehMap={},drvMap={};
+    (allDocs||[]).forEach(function(d){if(!docsMap[d.fleet_id])docsMap[d.fleet_id]=[];docsMap[d.fleet_id].push(d);});
+    (allVehicles||[]).forEach(function(v){if(!vehMap[v.fleet_id])vehMap[v.fleet_id]=[];vehMap[v.fleet_id].push(v);});
+    (allDrivers||[]).forEach(function(d){if(!drvMap[d.fleet_id])drvMap[d.fleet_id]=[];drvMap[d.fleet_id].push(d);});
+    // Compute status for each fleet
+    _adminFleetsData=fleets.map(function(f){
+      var s=_computeFleetStatus(f,docsMap[f.id],vehMap[f.id],drvMap[f.id]);
+      return Object.assign({},f,{_computed_status:s,_docs:docsMap[f.id]||[],_vehicles:vehMap[f.id]||[],_drivers:drvMap[f.id]||[]});
+    });
+    renderAdminFleets();
+  }catch(e){el.innerHTML='<div class="card" style="padding:24px;color:var(--red);font-size:13px;">Erreur: '+(e.message||e)+'</div>';}
+}
+
+function renderAdminFleets(){
+  var el=document.getElementById('admin-fleets-list');if(!el)return;
+  var filtered=_adminFleetsData;
+  if(_adminFleetsFilter==='active') filtered=filtered.filter(function(f){return f._computed_status==='active';});
+  else if(_adminFleetsFilter==='pending') filtered=filtered.filter(function(f){return f._computed_status==='pending';});
+  else if(_adminFleetsFilter==='validated') filtered=filtered.filter(function(f){return f._computed_status==='validated';});
+
+  if(filtered.length===0){el.innerHTML='<div class="card" style="padding:24px;text-align:center;color:var(--ink4);font-size:13px;">Aucune fleet trouv\u00e9e</div>';return;}
+
+  var statusLabel=function(s){
+    if(s==='validated') return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--green-bg);color:var(--green);font-size:10px;font-weight:600;">V\u00e9rifi\u00e9</span>';
+    if(s==='pending') return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-size:10px;font-weight:600;">En cours de validation</span>';
+    return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--blue-bg);color:var(--blue);font-size:10px;font-weight:600;">Actif</span>';
+  };
+
+  el.innerHTML='<div class="card" style="overflow:hidden;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--sand2);text-align:left;">'
+    +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Nom / Soci\u00e9t\u00e9</th>'
+    +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Email</th>'
+    +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">T\u00e9l\u00e9phone</th>'
+    +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Documents</th>'
+    +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Statut</th>'
+    +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Actions</th>'
+    +'</tr></thead><tbody>'
+    +filtered.map(function(f){
+      var name=f.company_name||((f.first_name||'')+' '+(f.last_name||'')).trim()||'\u2014';
+      var totalDocs=f._docs.length+f._vehicles.length+f._drivers.length;
+      var pendingDocs=f._docs.concat(f._vehicles,f._drivers).filter(function(d){return d.status==='pending';}).length;
+      var docsInfo=totalDocs>0?(pendingDocs>0?pendingDocs+' en attente / '+totalDocs:totalDocs+' valid\u00e9(s)'):'Aucun';
+      var clickable=f._computed_status==='pending'||totalDocs>0;
+      return '<tr style="border-bottom:1px solid var(--sand2);'+(clickable?'cursor:pointer;':'')
+        +'" '+(clickable?'onclick="showFleetDetail(\''+f.id+'\')"':'')+'>'
+        +'<td style="padding:10px 14px;font-weight:500;">'+name+'</td>'
+        +'<td style="padding:10px 14px;font-size:12px;color:var(--ink3);">'+(f.email||'\u2014')+'</td>'
+        +'<td style="padding:10px 14px;font-size:12px;">'+(f.phone||'\u2014')+'</td>'
+        +'<td style="padding:10px 14px;font-size:12px;">'+docsInfo+'</td>'
+        +'<td style="padding:10px 14px;">'+statusLabel(f._computed_status)+'</td>'
+        +'<td style="padding:10px 14px;"><button class="btn btn-secondary btn-sm" style="font-size:11px;padding:4px 10px;" onclick="event.stopPropagation();showFleetDetail(\''+f.id+'\')">Voir</button></td>'
+        +'</tr>';
+    }).join('')
+    +'</tbody></table></div></div>';
+}
+
+window.showFleetDetail=async function(fleetId){
+  if(!sb) return;
+  _adminFleetDetailId=fleetId;
+  document.getElementById('admin-fleets-list').style.display='none';
+  document.getElementById('admin-fleets-filters').style.display='none';
+  var detailEl=document.getElementById('admin-fleet-detail');
+  detailEl.style.display='block';
+  var contentEl=document.getElementById('admin-fleet-detail-content');
+  contentEl.innerHTML='<div class="page-loading"><div class="page-spinner"></div></div>';
+  try{
+    // Get fleet profile
+    var {data:fleet,error:fe}=await sb.from('profiles').select('*').eq('id',fleetId).single();
+    if(fe) throw fe;
+    // Get docs, vehicles, drivers
+    var {data:docs}=await sb.from('fleet_documents').select('*').eq('fleet_id',fleetId).order('uploaded_at',{ascending:false});
+    var {data:vehicles}=await sb.from('fleet_vehicles').select('*').eq('fleet_id',fleetId).order('created_at',{ascending:false});
+    var {data:drivers}=await sb.from('fleet_drivers').select('*').eq('fleet_id',fleetId).order('created_at',{ascending:false});
+    docs=docs||[];vehicles=vehicles||[];drivers=drivers||[];
+
+    var name=fleet.company_name||((fleet.first_name||'')+' '+(fleet.last_name||'')).trim()||'\u2014';
+    var allItems=[].concat(docs,vehicles,drivers);
+    var globalStatus=fleet.fleet_verified||'pending';
+    var globalStatusBadge=globalStatus==='validated'
+      ?'<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:10px;background:var(--green-bg);color:var(--green);font-size:12px;font-weight:600;">V\u00e9rifi\u00e9</span>'
+      :'<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-size:12px;font-weight:600;">Non v\u00e9rifi\u00e9</span>';
+
+    var globalBtn='';
+    if(globalStatus!=='validated'){
+      globalBtn='<button class="btn btn-primary btn-sm" style="font-size:12px;padding:5px 14px;margin-left:12px;" onclick="adminSetFleetVerified(\''+fleetId+'\',\'validated\')">Marquer V\u00e9rifi\u00e9</button>';
+    } else {
+      globalBtn='<button class="btn btn-secondary btn-sm" style="font-size:12px;padding:5px 14px;margin-left:12px;" onclick="adminSetFleetVerified(\''+fleetId+'\',\'pending\')">Retirer la v\u00e9rification</button>';
+    }
+
+    var html='<div class="card" style="padding:22px;margin-bottom:16px;">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">'
+      +'<div><div style="font-size:18px;font-weight:700;color:var(--ink);">'+name+'</div>'
+      +'<div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+(fleet.email||'\u2014')+' &middot; '+(fleet.phone||'\u2014')+'</div></div>'
+      +'<div style="display:flex;align-items:center;">'+globalStatusBadge+globalBtn+'</div>'
+      +'</div></div>';
+
     var docLabels={licence_lvc:'Licence LVC',assurance_rc:'Assurance RC Pro',kbis:'Extrait Kbis/BCE',statuts:'Statuts',autre:'Autre'};
-    el.innerHTML='<div class="card" style="overflow:hidden;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--sand2);text-align:left;"><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Fleet ID</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Type</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Fichier</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Statut</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Actions</th></tr></thead><tbody>'
-      +data.map(function(d){
-        return '<tr style="border-bottom:1px solid var(--sand2);">'
-          +'<td style="padding:10px 14px;font-size:12px;color:var(--ink3);max-width:120px;overflow:hidden;text-overflow:ellipsis;">'+((d.fleet_id||'').substring(0,8)+'...')+'</td>'
-          +'<td style="padding:10px 14px;"><span style="font-size:11px;padding:2px 8px;background:var(--blue-bg);color:var(--blue);border-radius:5px;font-weight:500;">'+(docLabels[d.doc_type]||d.doc_type)+'</span></td>'
-          +'<td style="padding:10px 14px;"><a href="'+d.file_url+'" target="_blank" style="font-size:12px;color:var(--blue);text-decoration:none;">'+(d.doc_name||'Voir PDF')+'</a></td>'
-          +'<td style="padding:10px 14px;">'+_adminStatusBadge(d.status)+'</td>'
-          +'<td style="padding:10px 14px;">'+_adminActionBtns('fleet_documents',d.id,d.status)+'</td>'
-          +'</tr>';
-      }).join('')
-      +'</tbody></table></div></div>';
+
+    // Documents société
+    html+='<div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--ink);">Documents soci\u00e9t\u00e9 <span style="font-size:11px;color:var(--ink3);font-weight:400;">('+docs.length+')</span></div>';
+    if(docs.length===0){
+      html+='<div class="card" style="padding:18px;text-align:center;color:var(--ink4);font-size:13px;margin-bottom:16px;">Aucun document soumis</div>';
+    } else {
+      html+='<div class="card" style="overflow:hidden;margin-bottom:16px;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--sand2);text-align:left;">'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Type</th>'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Fichier</th>'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Statut</th>'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Actions</th>'
+        +'</tr></thead><tbody>'
+        +docs.map(function(d){
+          return '<tr style="border-bottom:1px solid var(--sand2);">'
+            +'<td style="padding:10px 14px;"><span style="font-size:11px;padding:2px 8px;background:var(--blue-bg);color:var(--blue);border-radius:5px;font-weight:500;">'+(docLabels[d.doc_type]||d.doc_type)+'</span></td>'
+            +'<td style="padding:10px 14px;"><a href="'+d.file_url+'" target="_blank" style="font-size:12px;color:var(--blue);text-decoration:none;">'+(d.doc_name||'Voir PDF')+'</a></td>'
+            +'<td style="padding:10px 14px;">'+_adminStatusBadge(d.status)+'</td>'
+            +'<td style="padding:10px 14px;">'+_adminActionBtns('fleet_documents',d.id,d.status)+'</td>'
+            +'</tr>';
+        }).join('')
+        +'</tbody></table></div></div>';
+    }
+
+    // Véhicules
+    html+='<div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--ink);">V\u00e9hicules <span style="font-size:11px;color:var(--ink3);font-weight:400;">('+vehicles.length+')</span></div>';
+    if(vehicles.length===0){
+      html+='<div class="card" style="padding:18px;text-align:center;color:var(--ink4);font-size:13px;margin-bottom:16px;">Aucun v\u00e9hicule soumis</div>';
+    } else {
+      html+='<div class="card" style="overflow:hidden;margin-bottom:16px;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--sand2);text-align:left;">'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">V\u00e9hicule</th>'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Classe</th>'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Plaque</th>'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Statut</th>'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Actions</th>'
+        +'</tr></thead><tbody>'
+        +vehicles.map(function(v){
+          return '<tr style="border-bottom:1px solid var(--sand2);">'
+            +'<td style="padding:10px 14px;font-weight:500;">'+(v.brand||'')+' '+(v.model||'')+' '+(v.year||'')+'</td>'
+            +'<td style="padding:10px 14px;font-size:12px;">'+(v.vehicle_class||'\u2014')+'</td>'
+            +'<td style="padding:10px 14px;font-size:12px;">'+(v.plate||'\u2014')+'</td>'
+            +'<td style="padding:10px 14px;">'+_adminStatusBadge(v.status)+'</td>'
+            +'<td style="padding:10px 14px;">'+_adminActionBtns('fleet_vehicles',v.id,v.status)+'</td>'
+            +'</tr>';
+        }).join('')
+        +'</tbody></table></div></div>';
+    }
+
+    // Chauffeurs
+    html+='<div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--ink);">Chauffeurs <span style="font-size:11px;color:var(--ink3);font-weight:400;">('+drivers.length+')</span></div>';
+    if(drivers.length===0){
+      html+='<div class="card" style="padding:18px;text-align:center;color:var(--ink4);font-size:13px;margin-bottom:16px;">Aucun chauffeur soumis</div>';
+    } else {
+      html+='<div class="card" style="overflow:hidden;margin-bottom:16px;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--sand2);text-align:left;">'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Nom</th>'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">T\u00e9l\u00e9phone</th>'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Email</th>'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Statut</th>'
+        +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Actions</th>'
+        +'</tr></thead><tbody>'
+        +drivers.map(function(d){
+          return '<tr style="border-bottom:1px solid var(--sand2);">'
+            +'<td style="padding:10px 14px;font-weight:500;">'+(d.first_name||'')+' '+(d.last_name||'')+'</td>'
+            +'<td style="padding:10px 14px;font-size:12px;">'+(d.phone||'\u2014')+'</td>'
+            +'<td style="padding:10px 14px;font-size:12px;">'+(d.email||'\u2014')+'</td>'
+            +'<td style="padding:10px 14px;">'+_adminStatusBadge(d.status)+'</td>'
+            +'<td style="padding:10px 14px;">'+_adminActionBtns('fleet_drivers',d.id,d.status)+'</td>'
+            +'</tr>';
+        }).join('')
+        +'</tbody></table></div></div>';
+    }
+
+    contentEl.innerHTML=html;
+  }catch(e){contentEl.innerHTML='<div class="card" style="padding:24px;color:var(--red);font-size:13px;">Erreur: '+(e.message||e)+'</div>';}
+};
+
+window.hideFleetDetail=function(){
+  _adminFleetDetailId=null;
+  document.getElementById('admin-fleet-detail').style.display='none';
+  document.getElementById('admin-fleets-list').style.display='block';
+  document.getElementById('admin-fleets-filters').style.display='flex';
+};
+
+// ── Admin: Clients ──
+var _adminClientsData=[];
+var _adminClientTab='pro';
+
+window.switchAdminClientTab=function(tab,btn){
+  _adminClientTab=tab;
+  document.querySelectorAll('.admin-client-tab').forEach(function(b){
+    b.style.background='transparent';b.style.color='var(--ink3)';b.style.boxShadow='none';
+  });
+  if(btn){btn.style.background='var(--white)';btn.style.color='var(--ink)';btn.style.boxShadow='0 1px 4px rgba(14,14,12,.1)';}
+  renderAdminClients();
+};
+
+async function loadAdminClients(){
+  var el=document.getElementById('admin-clients-list');if(!el||!sb)return;
+  try{
+    var {data,error}=await sb.from('profiles').select('*').eq('role','client').order('created_at',{ascending:false});
+    if(error) throw error;
+    _adminClientsData=data||[];
+    renderAdminClients();
   }catch(e){el.innerHTML='<div class="card" style="padding:24px;color:var(--red);font-size:13px;">Erreur: '+(e.message||e)+'</div>';}
 }
 
-// ── Admin: Load all fleet vehicles ──
-async function loadAdminVehicles(){
-  var el=document.getElementById('admin-vehicles-list');if(!el||!sb)return;
-  try{
-    var {data,error}=await sb.from('fleet_vehicles').select('*').order('created_at',{ascending:false});
-    if(error) throw error;
-    if(!data||data.length===0){el.innerHTML='<div class="card" style="padding:24px;text-align:center;color:var(--ink4);font-size:13px;">Aucun v\u00e9hicule soumis</div>';return;}
-    el.innerHTML='<div class="card" style="overflow:hidden;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--sand2);text-align:left;"><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Fleet ID</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">V\u00e9hicule</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Classe</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Plaque</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Statut</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Actions</th></tr></thead><tbody>'
-      +data.map(function(v){
-        return '<tr style="border-bottom:1px solid var(--sand2);">'
-          +'<td style="padding:10px 14px;font-size:12px;color:var(--ink3);max-width:120px;overflow:hidden;text-overflow:ellipsis;">'+((v.fleet_id||'').substring(0,8)+'...')+'</td>'
-          +'<td style="padding:10px 14px;font-weight:500;">'+(v.brand||'')+' '+(v.model||'')+' '+(v.year||'')+'</td>'
-          +'<td style="padding:10px 14px;font-size:12px;">'+(v.vehicle_class||'—')+'</td>'
-          +'<td style="padding:10px 14px;font-size:12px;">'+(v.plate||'—')+'</td>'
-          +'<td style="padding:10px 14px;">'+_adminStatusBadge(v.status)+'</td>'
-          +'<td style="padding:10px 14px;">'+_adminActionBtns('fleet_vehicles',v.id,v.status)+'</td>'
-          +'</tr>';
-      }).join('')
-      +'</tbody></table></div></div>';
-  }catch(e){el.innerHTML='<div class="card" style="padding:24px;color:var(--red);font-size:13px;">Erreur: '+(e.message||e)+'</div>';}
-}
+function renderAdminClients(){
+  var el=document.getElementById('admin-clients-list');if(!el)return;
+  var filtered=_adminClientsData.filter(function(c){
+    return _adminClientTab==='pro'?(c.client_type==='pro'):(c.client_type!=='pro');
+  });
 
-// ── Admin: Load all fleet drivers ──
-async function loadAdminDrivers(){
-  var el=document.getElementById('admin-drivers-list');if(!el||!sb)return;
-  try{
-    var {data,error}=await sb.from('fleet_drivers').select('*').order('created_at',{ascending:false});
-    if(error) throw error;
-    if(!data||data.length===0){el.innerHTML='<div class="card" style="padding:24px;text-align:center;color:var(--ink4);font-size:13px;">Aucun chauffeur soumis</div>';return;}
-    el.innerHTML='<div class="card" style="overflow:hidden;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--sand2);text-align:left;"><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Fleet ID</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Nom</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">T\u00e9l\u00e9phone</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Email</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Statut</th><th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Actions</th></tr></thead><tbody>'
-      +data.map(function(d){
-        return '<tr style="border-bottom:1px solid var(--sand2);">'
-          +'<td style="padding:10px 14px;font-size:12px;color:var(--ink3);max-width:120px;overflow:hidden;text-overflow:ellipsis;">'+((d.fleet_id||'').substring(0,8)+'...')+'</td>'
-          +'<td style="padding:10px 14px;font-weight:500;">'+(d.first_name||'')+' '+(d.last_name||'')+'</td>'
-          +'<td style="padding:10px 14px;font-size:12px;">'+(d.phone||'\u2014')+'</td>'
-          +'<td style="padding:10px 14px;font-size:12px;">'+(d.email||'\u2014')+'</td>'
-          +'<td style="padding:10px 14px;">'+_adminStatusBadge(d.status)+'</td>'
-          +'<td style="padding:10px 14px;">'+_adminActionBtns('fleet_drivers',d.id,d.status)+'</td>'
-          +'</tr>';
-      }).join('')
-      +'</tbody></table></div></div>';
-  }catch(e){el.innerHTML='<div class="card" style="padding:24px;color:var(--red);font-size:13px;">Erreur: '+(e.message||e)+'</div>';}
+  if(filtered.length===0){
+    el.innerHTML='<div class="card" style="padding:24px;text-align:center;color:var(--ink4);font-size:13px;">Aucun client '+(_adminClientTab==='pro'?'professionnel':'particulier')+' trouv\u00e9</div>';
+    return;
+  }
+
+  var isPro=_adminClientTab==='pro';
+
+  el.innerHTML='<div class="card" style="overflow:hidden;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--sand2);text-align:left;">'
+    +(isPro?'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Soci\u00e9t\u00e9</th>':'')
+    +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">'+(isPro?'Contact':'Nom')+'</th>'
+    +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Email</th>'
+    +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">T\u00e9l\u00e9phone</th>'
+    +(isPro?'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">TVA</th>':'')
+    +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Inscription</th>'
+    +'</tr></thead><tbody>'
+    +filtered.map(function(c){
+      var fullName=((c.first_name||'')+' '+(c.last_name||'')).trim()||'\u2014';
+      var dateStr=c.created_at?new Date(c.created_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'\u2014';
+      return '<tr style="border-bottom:1px solid var(--sand2);">'
+        +(isPro?'<td style="padding:10px 14px;font-weight:500;">'+(c.company_name||'\u2014')+'</td>':'')
+        +'<td style="padding:10px 14px;'+(isPro?'font-size:12px;color:var(--ink3);':'font-weight:500;')+'">'+fullName+'</td>'
+        +'<td style="padding:10px 14px;font-size:12px;color:var(--ink3);">'+(c.email||'\u2014')+'</td>'
+        +'<td style="padding:10px 14px;font-size:12px;">'+(c.phone||'\u2014')+'</td>'
+        +(isPro?'<td style="padding:10px 14px;font-size:12px;">'+(c.vat_number||'\u2014')+'</td>':'')
+        +'<td style="padding:10px 14px;font-size:12px;color:var(--ink3);">'+dateStr+'</td>'
+        +'</tr>';
+    }).join('')
+    +'</tbody></table></div></div>';
 }
 
 
