@@ -2181,29 +2181,59 @@ document.addEventListener('DOMContentLoaded', async () => {
   if(_feeEl){ _feeEl.textContent = 'Des frais supplémentaires peuvent s\'appliquer'; }
 
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){initDemoMode();return;}
-  // Safety timeout: if loader is still visible after 4s, force-show landing
+
+  // Clear any corrupted Supabase auth tokens before init
+  try{
+    var authKey='sb-tuzfoqdxmxzjjhvlxsgb-auth-token';
+    var stored=localStorage.getItem(authKey)||localStorage.getItem('disposal-auth');
+    if(stored){
+      var parsed=JSON.parse(stored);
+      // If token is expired (exp < now), clear it to prevent getSession from hanging
+      if(parsed&&parsed.expires_at&&parsed.expires_at*1000<Date.now()){
+        console.log('[init] clearing expired token');
+        localStorage.removeItem(authKey);
+        localStorage.removeItem('disposal-auth');
+      }
+    }
+  }catch(ex){
+    // If we can't parse it, it's corrupted — clear it
+    console.log('[init] clearing corrupted auth storage');
+    Object.keys(localStorage).forEach(function(k){
+      if(k.indexOf('sb-')>=0||k==='disposal-auth')localStorage.removeItem(k);
+    });
+  }
+
   var _safetyTimer = setTimeout(function(){
     var _ls=document.getElementById('app-loader');
     if(_ls && _ls.style.display!=='none'){
       console.warn('Safety timeout: forcing landing screen');
       _ls.style.display='none';
+      // Nuclear clear of all auth storage
+      Object.keys(localStorage).forEach(function(k){
+        if(k.indexOf('sb-')>=0||k==='disposal-auth'||k.indexOf('supabase')>=0)localStorage.removeItem(k);
+      });
+      _entering=false;
       showScreen('landing');
     }
-  }, 4000);
+  }, 3000);
   try {
     console.log('[init] starting...');
     initSupabase(SB_URL,SB_KEY);
     console.log('[init] supabase ready, checking session...');
-    // Race checkSession against a 5s timeout
     await Promise.race([
       checkSession(),
-      new Promise(function(_,reject){setTimeout(function(){reject(new Error('checkSession timeout'));},5000);})
+      new Promise(function(_,reject){setTimeout(function(){reject(new Error('checkSession timeout'));},4000);})
     ]);
     console.log('[init] session checked');
     clearTimeout(_safetyTimer);
   } catch(e) {
     clearTimeout(_safetyTimer);
     console.error('Init error:', e);
+    _entering=false;
+    // Nuclear clear
+    Object.keys(localStorage).forEach(function(k){
+      if(k.indexOf('sb-')>=0||k==='disposal-auth'||k.indexOf('supabase')>=0)localStorage.removeItem(k);
+    });
     var _lErr=document.getElementById('app-loader');if(_lErr)_lErr.style.display='none';
     showScreen('landing');
   }
@@ -2268,10 +2298,8 @@ async function checkSession(){
   } catch(e) {
     console.error('checkSession error:', e);
     _entering=false;
-    // Force sign out and clear all auth storage to break the loop
-    try{
-      await sb.auth.signOut();
-    }catch(ex){}
+    // Don't await signOut - it can also hang
+    try{sb.auth.signOut().catch(function(){});}catch(ex){}
     try{
       Object.keys(localStorage).forEach(function(k){
         if(k.indexOf('supabase')>=0||k.indexOf('sb-')>=0||k==='disposal-auth')localStorage.removeItem(k);
