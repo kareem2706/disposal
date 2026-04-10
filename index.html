@@ -2245,6 +2245,12 @@ async function loadProfile(){
       updates.phone = currentUser.phone;
       currentProfile.phone = currentUser.phone;
     }
+    // Sync role from auth metadata if profile role is missing
+    var metaRole = currentUser.user_metadata?.role;
+    if(!data.role && metaRole){
+      updates.role = metaRole;
+      currentProfile.role = metaRole;
+    }
     if(Object.keys(updates).length > 0){
       sb.from('profiles').update(updates).eq('id', currentUser.id).then(function(){},function(e){console.warn('Profile sync failed',e);});
     }
@@ -2616,20 +2622,22 @@ function enterApp(){
   if(_entering)return; _entering=true;
   var _l=document.getElementById('app-loader');if(_l)_l.style.display='none';
   showScreen('app');
-  const role = currentProfile?.role || 'client';
+  const metaRole = currentUser?.user_metadata?.role;
+  const role = currentProfile?.role || metaRole || 'client';
   const isAdmin = currentUser?.email === ADMIN_EMAIL;
+  const isAdminDriver = isAdmin && role === 'driver';
   currentRole = isAdmin ? 'admin' : role;
   document.getElementById('nav-client').style.display = (!isAdmin && role === 'client') ? 'block' : 'none';
-  document.getElementById('nav-driver').style.display = (!isAdmin && role === 'driver') ? 'block' : 'none';
+  document.getElementById('nav-driver').style.display = (isAdminDriver || (!isAdmin && role === 'driver')) ? 'block' : 'none';
   var adminNav=document.getElementById('nav-admin');if(adminNav)adminNav.style.display=isAdmin?'block':'none';
   var cCta=document.getElementById('nav-cta-client');if(cCta)cCta.style.display=(!isAdmin && role==='client')?'block':'none';
-  var dCta=document.getElementById('nav-cta-driver');if(dCta)dCta.style.display=(!isAdmin && role==='driver')?'block':'none';
+  var dCta=document.getElementById('nav-cta-driver');if(dCta)dCta.style.display=(isAdminDriver || (!isAdmin && role==='driver'))?'block':'none';
 
   // Update nav user pill
   const fn = currentProfile?.first_name || '';
   const ln = currentProfile?.last_name || '';
   document.getElementById('nav-name').textContent = (fn + ' ' + ln).trim() || currentUser?.email?.split('@')[0] || '—';
-  document.getElementById('nav-role').textContent = isAdmin ? 'Admin' : t(role);
+  document.getElementById('nav-role').textContent = isAdmin ? (isAdminDriver ? 'Admin / Fleet' : 'Admin') : t(role);
   const avEl = document.getElementById('nav-avatar');
   if(currentProfile?.avatar_url){
     avEl.innerHTML = `<img src="${currentProfile.avatar_url}" alt="">`;
@@ -3337,7 +3345,7 @@ window.openOfferModal = function(rideId, summary, rideObj){
   if(offerBtnWrap){ offerBtnWrap.style.display = existing ? 'none' : ''; }
   // Populate vehicle selector based on requested vehicle class
   var reqClass=(rideObj&&rideObj.vehicle_type)||'lowcost';
-  if(currentRole==='driver'&&!existing){
+  if((currentRole==='driver'||currentProfile?.role==='driver')&&!existing){
     // Always show vehicle selector for drivers
     var vwrap=document.getElementById('offer-vehicle-wrap');if(vwrap)vwrap.style.display='block';
     // Ensure vehicles are loaded
@@ -4580,7 +4588,7 @@ window.submitOffer = async function(){
   // Vehicle selection required for fleet
   var vehSel=document.getElementById('offer-vehicle-select');
   var selectedVehicleId=null;
-  if(currentRole==='driver'){
+  if(currentRole==='driver'||currentProfile?.role==='driver'){
     selectedVehicleId=vehSel?vehSel.value:'';
     if(!selectedVehicleId){showError(err,'Veuillez s\u00e9lectionner un v\u00e9hicule');return;}
   }
