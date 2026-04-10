@@ -834,6 +834,7 @@ body{background:var(--bg);}
         <!-- Always visible -->
         <div class="input-group"><label data-i18n="auth_email_label">Adresse email</label><input id="inp-email" type="email" placeholder="marie@example.com" autocomplete="email"></div>
         <div class="input-group"><label data-i18n="auth_pwd_label">Mot de passe</label><input id="inp-pwd" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitEmail()"></div>
+        <div id="forgot-pwd-link" style="text-align:right;margin:-4px 0 8px;"><a href="#" onclick="forgotPassword();return false;" style="font-size:12px;color:var(--green);text-decoration:none;" data-i18n="auth_forgot_pwd">Mot de passe oubli&eacute; ?</a></div>
         <div id="inp-pwd2-wrap" class="input-group mb-20" style="display:none;"><label data-i18n="auth_pwd2_label">Confirmer le mot de passe</label><input id="inp-pwd2" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitEmail()"></div>
         <div id="reg-vat" class="input-group mb-20" style="display:none;"><label data-i18n="auth_vat">N&deg; de TVA (optionnel)</label><input id="inp-vat" placeholder="BE 0000.000.000"></div>
         <div id="auth-err-email" class="auth-error"></div>
@@ -916,6 +917,38 @@ body{background:var(--bg);}
       <div class="sso-redirect-spinner"></div>
       <div style="font-weight:500;font-size:14px;" id="sso-msg">Redirection…</div>
       <p class="text-xs" style="margin-top:4px;">Authentification sécurisée</p>
+    </div>
+
+    <!-- Password reset request -->
+    <div id="auth-reset-request" style="display:none;">
+      <div style="text-align:center;margin-bottom:22px;">
+        <div style="width:50px;height:50px;background:var(--sand2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="10" rx="2" stroke="var(--ink)" stroke-width="1.6"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:4px;" data-i18n="auth_reset_title">R&eacute;initialiser le mot de passe</div>
+        <p class="text-xs" data-i18n="auth_reset_desc">Entrez votre adresse email pour recevoir un lien de r&eacute;initialisation.</p>
+      </div>
+      <div class="input-group" style="margin-bottom:12px;"><label data-i18n="auth_email_label">Adresse email</label><input id="inp-reset-email" type="email" placeholder="marie@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')submitResetRequest()"></div>
+      <div id="auth-err-reset" class="auth-error"></div>
+      <button class="btn btn-primary btn-full" id="btn-reset-submit" onclick="submitResetRequest()">Envoyer le lien &rarr;</button>
+      <div style="text-align:center;margin-top:10px;">
+        <button class="btn btn-ghost btn-sm" onclick="backToAuthMain()">&larr; Retour</button>
+      </div>
+    </div>
+
+    <!-- New password form (after clicking reset link) -->
+    <div id="auth-new-pwd" style="display:none;">
+      <div style="text-align:center;margin-bottom:22px;">
+        <div style="width:50px;height:50px;background:var(--sand2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="10" rx="2" stroke="var(--ink)" stroke-width="1.6"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="var(--ink)"/></svg>
+        </div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:4px;" data-i18n="auth_new_pwd_title">Nouveau mot de passe</div>
+        <p class="text-xs" data-i18n="auth_new_pwd_desc">Choisissez un nouveau mot de passe pour votre compte.</p>
+      </div>
+      <div class="input-group" style="margin-bottom:8px;"><label data-i18n="auth_new_pwd_label">Nouveau mot de passe</label><input id="inp-new-pwd" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitNewPassword()"></div>
+      <div class="input-group" style="margin-bottom:12px;"><label data-i18n="auth_new_pwd2_label">Confirmer le mot de passe</label><input id="inp-new-pwd2" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitNewPassword()"></div>
+      <div id="auth-err-new-pwd" class="auth-error"></div>
+      <button class="btn btn-primary btn-full" id="btn-new-pwd-submit" onclick="submitNewPassword()">Confirmer &rarr;</button>
     </div>
 
     <div style="display:flex;justify-content:center;margin-top:18px;">
@@ -2043,7 +2076,7 @@ const TX = {
        recent_rides:'Demandes récentes', see_all:'Voir tout →',
        btn_offer:'Soumettre une offre', btn_accept:'Accepter', btn_choose:'Choisir',
        invoice_vat:'TVA', download_pdf:'PDF ↓',
-       auth_login:'Connexion', auth_register:'Inscription', auth_you_are:'Vous êtes', auth_client_desc:'Je réserve des courses', auth_fleet_desc:'Je propose mes services', auth_or:'ou', auth_email:'Email', auth_phone:'Téléphone', auth_continue_google:'Continuer avec Google', auth_continue_apple:'Continuer avec Apple', auth_continue_ms:'Continuer avec Microsoft', auth_email_label:'Adresse email', auth_pwd_label:'Mot de passe', auth_pwd2_label:'Confirmer le mot de passe', err_pwd_match:'Les mots de passe ne correspondent pas', err_pwd_short:'Mot de passe trop court (min. 6 caractères)', auth_pro_client:'Client professionnel', auth_fname:'Prénom', auth_lname:'Nom', auth_company:'Nom de société', auth_phone_label:'Numéro de téléphone', auth_create:'Créer le compte →', auth_continue:'Continuer →', auth_send_code:'Envoyer le code →', auth_signin:'S\'inscrire →', auth_tagline:'Plateforme de transport privé', auth_vat:'N° de TVA (optionnel)',
+       auth_login:'Connexion', auth_register:'Inscription', auth_you_are:'Vous êtes', auth_client_desc:'Je réserve des courses', auth_fleet_desc:'Je propose mes services', auth_or:'ou', auth_email:'Email', auth_phone:'Téléphone', auth_continue_google:'Continuer avec Google', auth_continue_apple:'Continuer avec Apple', auth_continue_ms:'Continuer avec Microsoft', auth_email_label:'Adresse email', auth_pwd_label:'Mot de passe', auth_pwd2_label:'Confirmer le mot de passe', err_pwd_match:'Les mots de passe ne correspondent pas', err_pwd_short:'Mot de passe trop court (min. 6 caractères)', auth_pro_client:'Client professionnel', auth_fname:'Prénom', auth_lname:'Nom', auth_company:'Nom de société', auth_phone_label:'Numéro de téléphone', auth_create:'Créer le compte →', auth_continue:'Continuer →', auth_send_code:'Envoyer le code →', auth_signin:'S\'inscrire →', auth_tagline:'Plateforme de transport privé', auth_vat:'N° de TVA (optionnel)', auth_forgot_pwd:'Mot de passe oublié ?', auth_reset_title:'Réinitialiser le mot de passe', auth_reset_desc:'Entrez votre adresse email pour recevoir un lien de réinitialisation.', auth_new_pwd_title:'Nouveau mot de passe', auth_new_pwd_desc:'Choisissez un nouveau mot de passe pour votre compte.', auth_new_pwd_label:'Nouveau mot de passe', auth_new_pwd2_label:'Confirmer le mot de passe',
        active_ride:'Course en cours', eta:'Arrivée estimée',
        new_ride_title:'Nouvelle demande', edit_ride_title:'Modifier la demande',
        btn_publish:'Publier', btn_save:'Enregistrer',
@@ -2077,7 +2110,7 @@ const TX = {
        recent_rides:'Recent requests', see_all:'See all →',
        btn_offer:'Submit offer', btn_accept:'Accept', btn_choose:'Choose',
        invoice_vat:'VAT', download_pdf:'PDF ↓',
-       auth_login:'Log in', auth_register:'Sign up', auth_you_are:'You are', auth_client_desc:'I book rides', auth_fleet_desc:'I offer my services', auth_or:'or', auth_email:'Email', auth_phone:'Phone', auth_continue_google:'Continue with Google', auth_continue_apple:'Continue with Apple', auth_continue_ms:'Continue with Microsoft', auth_email_label:'Email address', auth_pwd_label:'Password', auth_pwd2_label:'Confirm password', err_pwd_match:'Passwords do not match', err_pwd_short:'Password too short (min. 6 characters)', auth_pro_client:'Business client', auth_fname:'First name', auth_lname:'Last name', auth_company:'Company name', auth_phone_label:'Phone number', auth_create:'Create account →', auth_continue:'Continue →', auth_send_code:'Send code →', auth_signin:'Sign up →', auth_tagline:'Private transport platform', auth_vat:'VAT number (optional)',
+       auth_login:'Log in', auth_register:'Sign up', auth_you_are:'You are', auth_client_desc:'I book rides', auth_fleet_desc:'I offer my services', auth_or:'or', auth_email:'Email', auth_phone:'Phone', auth_continue_google:'Continue with Google', auth_continue_apple:'Continue with Apple', auth_continue_ms:'Continue with Microsoft', auth_email_label:'Email address', auth_pwd_label:'Password', auth_pwd2_label:'Confirm password', err_pwd_match:'Passwords do not match', err_pwd_short:'Password too short (min. 6 characters)', auth_pro_client:'Business client', auth_fname:'First name', auth_lname:'Last name', auth_company:'Company name', auth_phone_label:'Phone number', auth_create:'Create account →', auth_continue:'Continue →', auth_send_code:'Send code →', auth_signin:'Sign up →', auth_tagline:'Private transport platform', auth_vat:'VAT number (optional)', auth_forgot_pwd:'Forgot password?', auth_reset_title:'Reset password', auth_reset_desc:'Enter your email address to receive a reset link.', auth_new_pwd_title:'New password', auth_new_pwd_desc:'Choose a new password for your account.', auth_new_pwd_label:'New password', auth_new_pwd2_label:'Confirm password',
        active_ride:'Ride in progress', eta:'Estimated arrival',
        new_ride_title:'New request', edit_ride_title:'Edit request',
        btn_publish:'Publish', btn_save:'Save',
@@ -2111,7 +2144,7 @@ const TX = {
        recent_rides:'Solicitudes recientes', see_all:'Ver todo →',
        btn_offer:'Enviar oferta', btn_accept:'Aceptar', btn_choose:'Elegir',
        invoice_vat:'IVA', download_pdf:'PDF ↓',
-         auth_login:'Iniciar sesión', auth_register:'Registrarse', auth_you_are:'Eres', auth_client_desc:'Reservo trayectos', auth_fleet_desc:'Ofrezco mis servicios', auth_or:'o', auth_email:'Email', auth_phone:'Teléfono', auth_continue_google:'Continuar con Google', auth_continue_apple:'Continuar con Apple', auth_continue_ms:'Continuar con Microsoft', auth_email_label:'Dirección de email', auth_pwd_label:'Contraseña', auth_pwd2_label:'Confirmar contraseña', err_pwd_match:'Las contraseñas no coinciden', err_pwd_short:'Contraseña demasiado corta (mín. 6 caracteres)', auth_pro_client:'Cliente profesional', auth_fname:'Nombre', auth_lname:'Apellido', auth_company:'Nombre de empresa', auth_phone_label:'Número de teléfono', auth_create:'Crear cuenta →', auth_continue:'Continuar →', auth_send_code:'Enviar código →', auth_signin:'Registrarse →', auth_tagline:'Plataforma de transporte privado', auth_vat:'Número de IVA (opcional)',
+         auth_login:'Iniciar sesión', auth_register:'Registrarse', auth_you_are:'Eres', auth_client_desc:'Reservo trayectos', auth_fleet_desc:'Ofrezco mis servicios', auth_or:'o', auth_email:'Email', auth_phone:'Teléfono', auth_continue_google:'Continuar con Google', auth_continue_apple:'Continuar con Apple', auth_continue_ms:'Continuar con Microsoft', auth_email_label:'Dirección de email', auth_pwd_label:'Contraseña', auth_pwd2_label:'Confirmar contraseña', err_pwd_match:'Las contraseñas no coinciden', err_pwd_short:'Contraseña demasiado corta (mín. 6 caracteres)', auth_pro_client:'Cliente profesional', auth_fname:'Nombre', auth_lname:'Apellido', auth_company:'Nombre de empresa', auth_phone_label:'Número de teléfono', auth_create:'Crear cuenta →', auth_continue:'Continuar →', auth_send_code:'Enviar código →', auth_signin:'Registrarse →', auth_tagline:'Plataforma de transporte privado', auth_vat:'Número de IVA (opcional)', auth_forgot_pwd:'¿Contraseña olvidada?', auth_reset_title:'Restablecer contraseña', auth_reset_desc:'Introduzca su dirección de email para recibir un enlace de restablecimiento.', auth_new_pwd_title:'Nueva contraseña', auth_new_pwd_desc:'Elija una nueva contraseña para su cuenta.', auth_new_pwd_label:'Nueva contraseña', auth_new_pwd2_label:'Confirmar contraseña',
      active_ride:'Trayecto en curso', eta:'Llegada estimada',
   }
 };
@@ -2161,6 +2194,22 @@ function initSupabase(u,k){
 
 async function checkSession(){
   if(!sb)initSupabase();
+  // Always listen for auth state changes (SSO redirect, password recovery)
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if(event==='PASSWORD_RECOVERY'&&session){
+      _entering=false;
+      currentUser=session.user;
+      var _l3=document.getElementById('app-loader');if(_l3)_l3.style.display='none';
+      showScreen('auth');
+      document.getElementById('auth-main').style.display='none';
+      document.getElementById('auth-new-pwd').style.display='block';
+      return;
+    }
+    if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!_entering){
+      currentUser=session.user; await loadProfile(); enterApp();
+    }
+    if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;currentRole='client';_entering=false;showScreen('landing');}
+  });
   const { data: { session } } = await sb.auth.getSession();
   if(session){
     currentUser = session.user;
@@ -2170,13 +2219,6 @@ async function checkSession(){
     var _l2=document.getElementById('app-loader');if(_l2)_l2.style.display='none';
     var _l2=document.getElementById('app-loader');if(_l2)_l2.style.display='none';
     showScreen('landing');
-    // Listen for auth changes (SSO redirect)
-    sb.auth.onAuthStateChange(async (event, session) => {
-      if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!_entering){
-        currentUser=session.user; await loadProfile(); enterApp();
-      }
-      if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;currentRole='client';_entering=false;showScreen('landing');}
-    });
   }
 }
 
@@ -2240,6 +2282,7 @@ window.authMode = function(mode){
   document.getElementById('tab-login').classList.toggle('active', mode==='login');
   document.getElementById('tab-register').classList.toggle('active', mode==='register');
   document.getElementById('role-selector').style.display = mode==='register' ? 'block' : 'none';
+  var forgotLink=document.getElementById('forgot-pwd-link');if(forgotLink)forgotLink.style.display=mode==='login'?'block':'none';
   var vatEl=document.getElementById('reg-vat');
   if(vatEl) vatEl.style.display=(mode==='register' && _authSelectedRole==='driver')?'block':'none';
   var btnE=document.getElementById('btn-email-submit');
@@ -2477,7 +2520,61 @@ window.resendOTP = async function(){
 window.backToAuthMain = function(){
   document.getElementById('auth-otp').style.display = 'none';
   document.getElementById('auth-sso').style.display = 'none';
+  document.getElementById('auth-reset-request').style.display = 'none';
+  document.getElementById('auth-new-pwd').style.display = 'none';
   document.getElementById('auth-main').style.display = 'block';
+};
+
+window.forgotPassword = function(){
+  document.getElementById('auth-main').style.display = 'none';
+  document.getElementById('auth-reset-request').style.display = 'block';
+  var emailVal = document.getElementById('inp-email')?.value?.trim() || '';
+  if(emailVal) document.getElementById('inp-reset-email').value = emailVal;
+  document.getElementById('inp-reset-email').focus();
+};
+
+window.submitResetRequest = async function(){
+  var email = document.getElementById('inp-reset-email').value.trim();
+  var err   = document.getElementById('auth-err-reset');
+  var btn   = document.getElementById('btn-reset-submit');
+  if(!email){ showError(err, t('err_required')||'Champ requis'); return; }
+  if(!sb){ showError(err, 'Supabase non configuré'); return; }
+  setLoading(btn, true, 'Envoi…');
+  err.classList.remove('show');
+  try {
+    var { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+    if(error) throw error;
+    setLoading(btn, false, 'Envoyer le lien →');
+    showToast('📧 Un lien de réinitialisation a été envoyé à ' + email);
+    backToAuthMain();
+  } catch(e){
+    showError(err, e.message || 'Erreur lors de l\'envoi');
+    setLoading(btn, false, 'Envoyer le lien →');
+  }
+};
+
+window.submitNewPassword = async function(){
+  var pwd  = document.getElementById('inp-new-pwd').value;
+  var pwd2 = document.getElementById('inp-new-pwd2').value;
+  var err  = document.getElementById('auth-err-new-pwd');
+  var btn  = document.getElementById('btn-new-pwd-submit');
+  if(!pwd || !pwd2){ showError(err, t('err_required')||'Champ requis'); return; }
+  if(pwd !== pwd2){ showError(err, t('err_pwd_match')||'Les mots de passe ne correspondent pas'); return; }
+  if(pwd.length < 6){ showError(err, t('err_pwd_short')||'Le mot de passe doit contenir au moins 6 caractères'); return; }
+  if(!sb){ showError(err, 'Supabase non configuré'); return; }
+  setLoading(btn, true, 'Mise à jour…');
+  err.classList.remove('show');
+  try {
+    var { error } = await sb.auth.updateUser({ password: pwd });
+    if(error) throw error;
+    setLoading(btn, false, 'Confirmer →');
+    showToast('✅ Mot de passe mis à jour avec succès');
+    document.getElementById('auth-new-pwd').style.display = 'none';
+    await checkSession();
+  } catch(e){
+    showError(err, e.message || 'Erreur lors de la mise à jour');
+    setLoading(btn, false, 'Confirmer →');
+  }
 };
 
 window.signOut = async function(){
