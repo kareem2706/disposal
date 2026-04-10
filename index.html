@@ -2197,6 +2197,7 @@ function initSupabase(u,k){
 }
 
 let _authListenerRegistered = false;
+let _passwordRecoveryActive = false;
 async function checkSession(){
   if(!sb)initSupabase();
   // Always listen for auth state changes (SSO redirect, password recovery)
@@ -2205,6 +2206,7 @@ async function checkSession(){
     sb.auth.onAuthStateChange(async (event, session) => {
       if(event==='PASSWORD_RECOVERY'&&session){
         _entering=false;
+        _passwordRecoveryActive=true;
         currentUser=session.user;
         var _l3=document.getElementById('app-loader');if(_l3)_l3.style.display='none';
         showScreen('auth');
@@ -2212,19 +2214,20 @@ async function checkSession(){
         document.getElementById('auth-new-pwd').style.display='block';
         return;
       }
-      if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!_entering){
+      if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!_entering&&!_passwordRecoveryActive){
         currentUser=session.user; await loadProfile(); enterApp();
       }
-      if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;currentRole='client';_entering=false;showScreen('landing');}
+      if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;currentRole='client';_entering=false;_passwordRecoveryActive=false;showScreen('landing');}
     });
   }
   const { data: { session } } = await sb.auth.getSession();
+  // Skip enterApp if password recovery flow is active
+  if(_passwordRecoveryActive) return;
   if(session){
     currentUser = session.user;
     await loadProfile();
     enterApp();
   } else {
-    var _l2=document.getElementById('app-loader');if(_l2)_l2.style.display='none';
     var _l2=document.getElementById('app-loader');if(_l2)_l2.style.display='none';
     showScreen('landing');
   }
@@ -2248,7 +2251,7 @@ async function loadProfile(){
     }
     // Sync role from auth metadata if profile role is missing
     var metaRole = currentUser.user_metadata?.role;
-    if(data.role == null && metaRole){
+    if(!data.role && metaRole){
       updates.role = metaRole;
       currentProfile.role = metaRole;
     }
@@ -2584,6 +2587,7 @@ window.submitNewPassword = async function(){
     setLoading(btn, false, 'Confirmer →');
     showToast(t('toast_pwd_updated')||'✅ Mot de passe mis à jour avec succès');
     document.getElementById('auth-new-pwd').style.display = 'none';
+    _passwordRecoveryActive = false;
     await checkSession();
   } catch(e){
     showError(err, e.message || 'Erreur lors de la mise à jour');
@@ -2596,9 +2600,11 @@ window.signOut = async function(){
   currentUser = null;
   currentProfile = null;
   currentRole = 'client';
+  _entering = false;
+  _passwordRecoveryActive = false;
   localStorage.removeItem(DEMO_MODE_KEY);
   showToast(t('toast_signout'));
-  showScreen('auth');
+  showScreen('landing');
 };
 
 // ── ENTER APP ─────────────────────────────────────────
@@ -5312,7 +5318,7 @@ window.removeSeg=function(n){var el=document.getElementById('seg-'+n);if(el)el.r
 
 function loadProfileForm(){
   if(!currentProfile)return;
-  var role=currentProfile.role||'client',ct=currentProfile.client_type||'perso';
+  var role=currentProfile.role||currentUser?.user_metadata?.role||'client',ct=currentProfile.client_type||'perso';
   var isP=(role==='client'&&ct==='perso'),showC=(role==='driver'||(role==='client'&&ct==='pro'));
   var show=function(id,v){var el=document.getElementById(id);if(el)el.style.display=v;};
   show('pf-names-grid',isP?'grid':'none');show('pf-company-wrap',showC?'block':'none');show('pf-vat-wrap',showC?'block':'none');
