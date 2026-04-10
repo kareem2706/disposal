@@ -2039,6 +2039,7 @@ let sb=null,_entering=false;           // Supabase client
 let currentUser = null;  // auth.User
 let currentProfile = null; // profiles row
 let currentRole = 'client'; // active role: 'client' | 'driver'
+function isDriverRole(){ return currentRole==='driver'||currentProfile?.role==='driver'; }
 let currentRideId = null;  // for offer modal
 let currentOfferId = null;    // for payment modal
 let currentDriverId = null;   // for payment modal
@@ -2247,7 +2248,7 @@ async function loadProfile(){
     }
     // Sync role from auth metadata if profile role is missing
     var metaRole = currentUser.user_metadata?.role;
-    if(!data.role && metaRole){
+    if(data.role == null && metaRole){
       updates.role = metaRole;
       currentProfile.role = metaRole;
     }
@@ -3345,7 +3346,7 @@ window.openOfferModal = function(rideId, summary, rideObj){
   if(offerBtnWrap){ offerBtnWrap.style.display = existing ? 'none' : ''; }
   // Populate vehicle selector based on requested vehicle class
   var reqClass=(rideObj&&rideObj.vehicle_type)||'lowcost';
-  if((currentRole==='driver'||currentProfile?.role==='driver')&&!existing){
+  if(isDriverRole()&&!existing){
     // Always show vehicle selector for drivers
     var vwrap=document.getElementById('offer-vehicle-wrap');if(vwrap)vwrap.style.display='block';
     // Ensure vehicles are loaded
@@ -4588,7 +4589,7 @@ window.submitOffer = async function(){
   // Vehicle selection required for fleet
   var vehSel=document.getElementById('offer-vehicle-select');
   var selectedVehicleId=null;
-  if(currentRole==='driver'||currentProfile?.role==='driver'){
+  if(isDriverRole()){
     selectedVehicleId=vehSel?vehSel.value:'';
     if(!selectedVehicleId){showError(err,'Veuillez s\u00e9lectionner un v\u00e9hicule');return;}
   }
