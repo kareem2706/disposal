@@ -633,7 +633,7 @@ body{background:var(--bg);}
 .ride-card>div{min-width:0;}
 </style>
 <script>window.initGooglePlaces=window.initGooglePlaces||function(){if(window._gpReady)window._gpReady();};window._gpReady=null;</script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places,routes&language=fr&callback=initGooglePlaces" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places,routes&language=fr&loading=async&callback=initGooglePlaces" async defer></script>
 </head>
 <body>
 <div id="app-loader" style="position:fixed;inset:0;background:#fff;z-index:99999;display:flex;align-items:center;justify-content:center;"><div style="font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:.18em;text-transform:uppercase;color:#1d1d1f;opacity:.6;">Bleenr</div></div>
@@ -2181,7 +2181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if(_feeEl){ _feeEl.textContent = 'Des frais supplémentaires peuvent s\'appliquer'; }
 
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){initDemoMode();return;}
-  // Safety timeout: if loader is still visible after 8s, force-show landing
+  // Safety timeout: if loader is still visible after 4s, force-show landing
   var _safetyTimer = setTimeout(function(){
     var _ls=document.getElementById('app-loader');
     if(_ls && _ls.style.display!=='none'){
@@ -2189,10 +2189,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       _ls.style.display='none';
       showScreen('landing');
     }
-  }, 8000);
+  }, 4000);
   try {
+    console.log('[init] starting...');
     initSupabase(SB_URL,SB_KEY);
-    await checkSession();
+    console.log('[init] supabase ready, checking session...');
+    // Race checkSession against a 5s timeout
+    await Promise.race([
+      checkSession(),
+      new Promise(function(_,reject){setTimeout(function(){reject(new Error('checkSession timeout'));},5000);})
+    ]);
+    console.log('[init] session checked');
     clearTimeout(_safetyTimer);
   } catch(e) {
     clearTimeout(_safetyTimer);
