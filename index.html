@@ -2187,7 +2187,7 @@ async function loadProfile(){
     currentProfile = data;
     // Sync email from auth to profiles so it appears in admin lists
     if(currentUser.email && data.email !== currentUser.email){
-      sb.from('profiles').update({email: currentUser.email}).eq('id', currentUser.id).then(function(){});
+      sb.from('profiles').update({email: currentUser.email}).eq('id', currentUser.id).then(function(){},function(e){console.warn('Email sync failed',e);});
       currentProfile.email = currentUser.email;
     }
   }
