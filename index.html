@@ -2267,6 +2267,7 @@ async function checkSession(){
     }
   } catch(e) {
     console.error('checkSession error:', e);
+    _entering=false;
     // Force sign out and clear all auth storage to break the loop
     try{
       await sb.auth.signOut();
@@ -2473,10 +2474,13 @@ window.submitEmail = async function(){
     } else {
       const { data, error } = await sb.auth.signInWithPassword({ email, password: pwd });
       if(error) throw error;
+      console.log('[login] signIn OK, loading profile...');
       currentUser = data.user;
       await loadProfile();
+      console.log('[login] profile loaded, entering app...');
       setLoading(btn, false, t('auth_continue')||'Continuer →');
       enterApp();
+      console.log('[login] enterApp called');
     }
   } catch(e){
     const msg = e.message?.includes('Invalid login') ? t('err_auth') :
@@ -2674,6 +2678,7 @@ async function loadMyOffers(){
 }
 
 function enterApp(){
+  console.log('[enterApp] called, _entering=',_entering);
   if(_entering)return; _entering=true;
   var _l=document.getElementById('app-loader');if(_l)_l.style.display='none';
   showScreen('app');
