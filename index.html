@@ -13,7 +13,7 @@
 <style>
 /* ═══ TOKENS ═══ */
 :root{
-  --bg:#FAFAFA;--bg2:#F0F0F0;
+  --bg:#FFFFFF;--bg2:#F0F0F0;
   --ink:#1A2E1A;--ink2:#2D452D;--ink3:#5A7A5A;--ink4:#9EB0A3;
   --white:#FFFFFF;--sand:#FAFAFA;--sand2:#EEEEEE;--sand3:#DDDDDD;
   --green:#1B5E3B;--green-mid:#2E7A50;--green-light:#3D9E68;
@@ -31,12 +31,12 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
-body{font-family:'DM Sans',sans-serif;background:var(--sand);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden;}
 
 /* ═══ SCREENS ═══ */
 .screen{display:none!important;}
 .screen.active{display:flex!important;}
-#screen-auth{flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:var(--sand);}
+#screen-auth{flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:var(--bg);}
 #screen-app{flex-direction:row;min-height:100vh;width:100%;}
 
 /* ═══ CONFIG SCREEN ═══ */
