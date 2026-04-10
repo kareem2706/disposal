@@ -2062,6 +2062,7 @@ const TX = {
        toast_offer_acc:'🎉 Chauffeur confirmé !', toast_saved:'✅ Sauvegardé',
        toast_rated:'⭐ Merci pour votre évaluation !', toast_subcontract:'✅ Mission publiée',
        toast_signout:'À bientôt !', toast_copy:'📋 Lien copié',
+       toast_reset_sent:'📧 Un lien de réinitialisation a été envoyé à {email}', toast_pwd_updated:'✅ Mot de passe mis à jour avec succès',
        err_required:'Veuillez remplir les champs obligatoires',
        err_auth:'Email ou mot de passe incorrect',
        err_exists:'Un compte existe déjà avec cet email',
@@ -2096,6 +2097,7 @@ const TX = {
        toast_offer_acc:'🎉 Driver confirmed!', toast_saved:'✅ Saved',
        toast_rated:'⭐ Thank you for your review!', toast_subcontract:'✅ Mission published',
        toast_signout:'Goodbye!', toast_copy:'📋 Link copied',
+       toast_reset_sent:'📧 A reset link has been sent to {email}', toast_pwd_updated:'✅ Password updated successfully',
        err_required:'Please fill in required fields',
        err_auth:'Incorrect email or password',
        err_exists:'An account already exists with this email',
@@ -2130,6 +2132,7 @@ const TX = {
        toast_offer_acc:'🎉 ¡Chófer confirmado!', toast_saved:'✅ Guardado',
        toast_rated:'⭐ ¡Gracias por tu valoración!', toast_subcontract:'✅ Misión publicada',
        toast_signout:'¡Hasta luego!', toast_copy:'📋 Enlace copiado',
+       toast_reset_sent:'📧 Se ha enviado un enlace de restablecimiento a {email}', toast_pwd_updated:'✅ Contraseña actualizada con éxito',
        err_required:'Por favor rellena los campos obligatorios',
        err_auth:'Email o contraseña incorrectos',
        err_exists:'Ya existe una cuenta con este email',
@@ -2192,24 +2195,28 @@ function initSupabase(u,k){
   sb=window.supabase.createClient(u||SB_URL,k||SB_KEY,{auth:{storageKey:'disposal-auth',autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
 }
 
+let _authListenerRegistered = false;
 async function checkSession(){
   if(!sb)initSupabase();
   // Always listen for auth state changes (SSO redirect, password recovery)
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if(event==='PASSWORD_RECOVERY'&&session){
-      _entering=false;
-      currentUser=session.user;
-      var _l3=document.getElementById('app-loader');if(_l3)_l3.style.display='none';
-      showScreen('auth');
-      document.getElementById('auth-main').style.display='none';
-      document.getElementById('auth-new-pwd').style.display='block';
-      return;
-    }
-    if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!_entering){
-      currentUser=session.user; await loadProfile(); enterApp();
-    }
-    if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;currentRole='client';_entering=false;showScreen('landing');}
-  });
+  if(!_authListenerRegistered){
+    _authListenerRegistered = true;
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if(event==='PASSWORD_RECOVERY'&&session){
+        _entering=false;
+        currentUser=session.user;
+        var _l3=document.getElementById('app-loader');if(_l3)_l3.style.display='none';
+        showScreen('auth');
+        document.getElementById('auth-main').style.display='none';
+        document.getElementById('auth-new-pwd').style.display='block';
+        return;
+      }
+      if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!_entering){
+        currentUser=session.user; await loadProfile(); enterApp();
+      }
+      if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;currentRole='client';_entering=false;showScreen('landing');}
+    });
+  }
   const { data: { session } } = await sb.auth.getSession();
   if(session){
     currentUser = session.user;
@@ -2545,7 +2552,7 @@ window.submitResetRequest = async function(){
     var { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
     if(error) throw error;
     setLoading(btn, false, 'Envoyer le lien →');
-    showToast('📧 Un lien de réinitialisation a été envoyé à ' + email);
+    showToast((t('toast_reset_sent')||'📧 Un lien de réinitialisation a été envoyé à {email}').replace('{email}', email));
     backToAuthMain();
   } catch(e){
     showError(err, e.message || 'Erreur lors de l\'envoi');
@@ -2568,7 +2575,7 @@ window.submitNewPassword = async function(){
     var { error } = await sb.auth.updateUser({ password: pwd });
     if(error) throw error;
     setLoading(btn, false, 'Confirmer →');
-    showToast('✅ Mot de passe mis à jour avec succès');
+    showToast(t('toast_pwd_updated')||'✅ Mot de passe mis à jour avec succès');
     document.getElementById('auth-new-pwd').style.display = 'none';
     await checkSession();
   } catch(e){
