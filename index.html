@@ -4713,7 +4713,7 @@ window.loadDriverCalendar=async function(force){
     if(_dCalView==='week'&&_dCalWS){var we=new Date(_dCalWS);we.setDate(we.getDate()+6);s=_dCalWS.toISOString().split('T')[0];e=we.toISOString().split('T')[0];}
     else{var fd2=new Date(_dCalY,_dCalM,1).getDay();fd2=fd2===0?6:fd2-1;var sD=new Date(_dCalY,_dCalM,1-fd2);var eD=new Date(_dCalY,_dCalM+1,14);s=sD.toISOString().split('T')[0];e=eD.toISOString().split('T')[0];}
     var ck=s+'_'+e;
-    if(force||!_dCalCache[ck]){var res=await sb.from('rides').select('*').eq('driver_id',currentUser.id).gte('ride_date',s).lte('ride_date',e);_dCalCache[ck]=res.data||[];}
+    if(force||!_dCalCache[ck]){var res=await sb.from('rides').select('*').eq('driver_id',currentUser.id).neq('status','cancelled').gte('ride_date',s).lte('ride_date',e);_dCalCache[ck]=res.data||[];}
     _dCalRides=_dCalCache[ck];
   }
   if(!_dCalWS){var d=new Date();var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_dCalWS=d;}
@@ -4763,7 +4763,7 @@ window.loadDriverCalendar=async function(force){
     var s,e;if(_dCalView==='week'&&_dCalWS){var we=new Date(_dCalWS);we.setDate(we.getDate()+6);s=_dCalWS.toISOString().split('T')[0];e=we.toISOString().split('T')[0];}
     else{var fd2=new Date(_dCalY,_dCalM,1).getDay();fd2=fd2===0?6:fd2-1;var sD=new Date(_dCalY,_dCalM,1-fd2);var eD=new Date(_dCalY,_dCalM+1,14);s=sD.toISOString().split('T')[0];e=eD.toISOString().split('T')[0];}
     var ck=s+'_'+e;
-    if(force||!_dCalCache[ck]){var res=await sb.from('rides').select('*').eq('driver_id',currentUser.id).gte('ride_date',s).lte('ride_date',e);_dCalCache[ck]=res.data||[];}_dCalRides=_dCalCache[ck];
+    if(force||!_dCalCache[ck]){var res=await sb.from('rides').select('*').eq('driver_id',currentUser.id).neq('status','cancelled').gte('ride_date',s).lte('ride_date',e);_dCalCache[ck]=res.data||[];}_dCalRides=_dCalCache[ck];
   }
   if(!_dCalWS){var d=new Date();var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_dCalWS=d;}
   if(typeof _renderCalGrid==='function')_renderCalGrid('d-cal-grid','d-cal-title',_dCalY,_dCalM,_dCalView,_dCalWS,_dCalRides);
@@ -4810,7 +4810,14 @@ window.openPersonalMissionModal=function(editRide){
     pmSetType(isD?'dispo':'ab');
     var notesParts=(editRide.notes||'').split(' \u2014 ');
     var lbl=document.getElementById('pm-label');if(lbl)lbl.value=notesParts[0]||'';
-    var notesRest=notesParts.slice(1).filter(function(p){return p.indexOf('Dur\u00e9e:')<0;}).join(' \u2014 ');
+    // Extract plate from notes
+    var plateFromNotes='';
+    var notesRest=notesParts.slice(1).filter(function(p){
+      if(p.indexOf('Dur\u00e9e:')>=0)return false;
+      var pm2=p.match(/^Plaque:(.+)$/);
+      if(pm2){plateFromNotes=pm2[1];return false;}
+      return true;
+    }).join(' \u2014 ');
     var notesEl=document.getElementById('pm-notes');if(notesEl)notesEl.value=notesRest||'';
     if(isD){
       var loc=document.getElementById('pm-dispo-location');if(loc)loc.value=editRide.from_address||'';
@@ -4823,7 +4830,7 @@ window.openPersonalMissionModal=function(editRide){
     if(dt)dt.value=editRide.ride_date||td;
     if(tm)tm.value=editRide.ride_time?editRide.ride_time.slice(0,5):'08:00';
     var veh=document.getElementById('pm-vehicle');if(veh)veh.value=editRide.vehicle_type||'';
-    var pl=document.getElementById('pm-plate');if(pl)pl.value=editRide.plate||'';
+    var pl=document.getElementById('pm-plate');if(pl)pl.value=plateFromNotes||'';
     if(footerEl)footerEl.innerHTML=
       '<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deletePersonalMission(\''+editRide.id+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Supprimer</button>'
       +'<button class="btn btn-secondary" onclick="closeModal(\'m-personal-mission\')">Annuler</button>'
@@ -4849,10 +4856,11 @@ window._editPersonalFromDetail=function(){
 
 window.deletePersonalMission=function(id){
   _fleetConfirm('Supprimer cette mission ?','La mission personnelle sera d\u00e9finitivement supprim\u00e9e.',async function(){
-    await sb.from('rides').delete().eq('id',id).eq('status','personal');
+    // Use update to cancelled (DELETE may be blocked by RLS)
+    var res=await sb.from('rides').update({status:'cancelled'}).eq('id',id);
+    if(res.error)console.error('delete personal mission error:',res.error);
     closeModal('m-personal-mission');
     showToast('Mission supprim\u00e9e');
-    // Force full calendar cache clear and reload
     _dCalCache={};_dCalRides=[];
     if(typeof loadDriverCalendar==='function'){
       try{await loadDriverCalendar(true);}catch(e){}
@@ -4889,12 +4897,18 @@ window.savePersonalMission=async function(btn){
     to=null;
     var duration=document.getElementById('pm-duration')?.value||'';
     var durHours=parseInt(duration)||0;
-    notes=[label,durHours>0?('Dur\u00e9e:'+durHours+'h'):null,notes].filter(Boolean).join(' \u2014 ')||null;
+    var noteParts=[label,durHours>0?('Dur\u00e9e:'+durHours+'h'):null];
+    if(plate)noteParts.push('Plaque:'+plate);
+    if(notes)noteParts.push(notes);
+    notes=noteParts.filter(Boolean).join(' \u2014 ')||null;
   }else{
     tripType='ab';
     from=document.getElementById('pm-from')?.value.trim()||null;
     to=document.getElementById('pm-to')?.value.trim()||null;
-    notes=[label,notes].filter(Boolean).join(' \u2014 ')||null;
+    var noteParts2=[label];
+    if(plate)noteParts2.push('Plaque:'+plate);
+    if(notes)noteParts2.push(notes);
+    notes=noteParts2.filter(Boolean).join(' \u2014 ')||null;
   }
 
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
