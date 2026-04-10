@@ -2037,7 +2037,7 @@ const DEMO_MODE_KEY='disposal_demo';
 const STRIPE_FEE_MULTIPLIER = 1.029; // 1 + 2.9% Stripe fee
 const STRIPE_PK = 'pk_test_REPLACE_WITH_YOUR_STRIPE_PUBLISHABLE_KEY'; // Replace with your Stripe publishable key
 const MISSION_STATUSES = ['confirmed', 'active', 'done']; // Driver mission statuses to display
-const ADMIN_EMAIL = 'kb@bleenr.com'; // Admin email with full validation access
+const ADMIN_EMAIL = ''; // No admin configured
 
 let sb=null,_entering=false;           // Supabase client
 let currentUser = null;  // auth.User
@@ -2250,14 +2250,12 @@ async function checkSession(){
   }
   try {
     console.log('[checkSession] getting session...');
-    // Race getSession against a 4s timeout
     var sessionResult = await Promise.race([
       sb.auth.getSession(),
-      new Promise(function(_,reject){setTimeout(function(){reject(new Error('getSession timeout'));},4000);})
+      new Promise(function(_,reject){setTimeout(function(){reject(new Error('getSession timeout'));},6000);})
     ]);
     console.log('[checkSession] got session result');
     var session = sessionResult?.data?.session;
-    // Skip enterApp if password recovery flow is active
     if(_passwordRecoveryActive) return;
     if(session){
       currentUser = session.user;
@@ -2269,8 +2267,15 @@ async function checkSession(){
     }
   } catch(e) {
     console.error('checkSession error:', e);
-    // Clear possibly corrupted session
-    try{localStorage.removeItem('disposal-auth');localStorage.removeItem('sb-tuzfoqdxmxzjjhvlxsgb-auth-token');}catch(ex){}
+    // Force sign out and clear all auth storage to break the loop
+    try{
+      await sb.auth.signOut();
+    }catch(ex){}
+    try{
+      Object.keys(localStorage).forEach(function(k){
+        if(k.indexOf('supabase')>=0||k.indexOf('sb-')>=0||k==='disposal-auth')localStorage.removeItem(k);
+      });
+    }catch(ex){}
     var _l2=document.getElementById('app-loader');if(_l2)_l2.style.display='none';
     showScreen('landing');
   }
