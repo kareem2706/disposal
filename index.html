@@ -1783,7 +1783,7 @@ body{background:var(--bg);}
         <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="pm-date"></div>
         <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="pm-time" value="08:00"></div>
         <div class="form-grid" style="grid-column:1/-1;">
-          <div class="input-group"><label>V&eacute;hicule</label><input id="pm-vehicle" placeholder="Ex : Mercedes Classe E"></div>
+          <div class="input-group"><label>V&eacute;hicule</label><select id="pm-vehicle"><option value="">-- Aucun --</option><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
           <div class="input-group"><label>Plaque</label><input id="pm-plate" placeholder="1-ABC-123"></div>
         </div>
         <div class="input-group full"><label>Notes</label><textarea id="pm-notes" rows="2" placeholder="Informations complémentaires…"></textarea></div>
@@ -4852,9 +4852,17 @@ window.deletePersonalMission=function(id){
     await sb.from('rides').delete().eq('id',id).eq('status','personal');
     closeModal('m-personal-mission');
     showToast('Mission supprim\u00e9e');
-    _dCalCache={};
-    if(typeof loadDriverCalendar==='function')await loadDriverCalendar(true);
-    if(typeof loadMissions==='function')await loadMissions();
+    // Force full calendar cache clear and reload
+    _dCalCache={};_dCalRides=[];
+    if(typeof loadDriverCalendar==='function'){
+      try{await loadDriverCalendar(true);}catch(e){}
+    }
+    if(typeof loadMissions==='function'){
+      try{await loadMissions();}catch(e){}
+    }
+    if(typeof loadDriverDashboard==='function'){
+      try{await loadDriverDashboard();}catch(e){}
+    }
   });
 };
 
@@ -4922,9 +4930,9 @@ window.savePersonalMission=async function(btn){
     if(btn)setLoading(btn,false,'Enregistrer');
     closeModal('m-personal-mission');
     showToast(editId?'Mission modifi\u00e9e':'Mission personnelle ajout\u00e9e');
-    _dCalCache={};
-    await loadDriverCalendar(true);
-    if(typeof loadMissions==='function')await loadMissions();
+    _dCalCache={};_dCalRides=[];
+    try{await loadDriverCalendar(true);}catch(e){}
+    if(typeof loadMissions==='function'){try{await loadMissions();}catch(e){}}
   }catch(e){
     if(err){err.textContent=e.message||'Erreur';err.classList.add('show');}
     if(btn)setLoading(btn,false,'Enregistrer');
