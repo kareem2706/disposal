@@ -4730,22 +4730,49 @@ function renderDriverStatsChart(missions){
   var lbl=document.getElementById('d-stats-month');var ch=document.getElementById('driver-stats-chart');
   if(lbl)lbl.textContent=_MNS[_dStatsMonth]+' '+_dStatsYear;
   if(!ch)return;
-  var daysInMonth=new Date(_dStatsYear,_dStatsMonth+1,0).getDate();
-  var numWeeks=Math.ceil(daysInMonth/7);
-  var cnt=[];for(var wi=0;wi<numWeeks;wi++)cnt.push(0);
+
+  // Build real calendar weeks (Mon-Sun) for the selected month
+  var firstDay=new Date(_dStatsYear,_dStatsMonth,1);
+  var lastDay=new Date(_dStatsYear,_dStatsMonth+1,0);
+  var weeks=[];
+  // Find the Monday of the week containing the 1st
+  var d=new Date(firstDay);
+  var dow=d.getDay();dow=dow===0?6:dow-1;
+  d.setDate(d.getDate()-dow);
+  while(d<=lastDay||weeks.length===0){
+    var wStart=new Date(d);
+    var wEnd=new Date(d);wEnd.setDate(wEnd.getDate()+6);
+    weeks.push({start:new Date(wStart),end:new Date(wEnd),count:0});
+    d.setDate(d.getDate()+7);
+  }
+
+  // Count only 'done' missions per week
   var maxC=0;
-  missions.forEach(function(m){if(!m.ride_date)return;var d=new Date(m.ride_date+'T00:00:00');if(d.getFullYear()===_dStatsYear&&d.getMonth()===_dStatsMonth){var wIdx=Math.min(Math.floor((d.getDate()-1)/7),numWeeks-1);cnt[wIdx]++;if(cnt[wIdx]>maxC)maxC=cnt[wIdx];}});
-  var td=new Date();var curWeek=Math.floor((td.getDate()-1)/7);
-  ch.innerHTML=cnt.map(function(c,i){
+  missions.forEach(function(m){
+    if(m.status!=='done'||!m.ride_date)return;
+    var rd=new Date(m.ride_date+'T00:00:00');
+    for(var wi=0;wi<weeks.length;wi++){
+      if(rd>=weeks[wi].start&&rd<=weeks[wi].end){
+        weeks[wi].count++;
+        if(weeks[wi].count>maxC)maxC=weeks[wi].count;
+        break;
+      }
+    }
+  });
+
+  var td=new Date();
+  var pad=function(n){return n<10?'0'+n:''+n;};
+  ch.innerHTML=weeks.map(function(w,i){
+    var c=w.count;
     var h=maxC>0?Math.round((c/maxC)*52):8;
-    var isT=_dStatsMonth===td.getMonth()&&_dStatsYear===td.getFullYear()&&i===curWeek;
+    var isT=td>=w.start&&td<=w.end;
     var bg=c===0?'var(--sand3)':c<5?'var(--green-bg2)':c<10?'var(--green-light)':'var(--green)';
     var tip=c===0?'Aucune course':c===1?'1 course':c+' courses';
-    var borderStyle='';
+    var wLabel=pad(w.start.getDate())+'/'+pad(w.start.getMonth()+1)+'-'+pad(w.end.getDate())+'/'+pad(w.end.getMonth()+1);
     return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative;" class="dstat-bar-wrap">'
       +'<div class="dstat-tooltip" style="display:none;position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:10;">'+tip+'</div>'
-      +'<div style="background:'+bg+';border-radius:3px 3px 0 0;width:100%;height:'+h+'px;min-height:6px;'+borderStyle+'"></div>'
-      +'<div style="font-size:9px;color:'+(isT?'var(--green)':'var(--ink4)')+';">'+(isT?'<b>':'')+'S'+(i+1)+(isT?'</b>':'')+'</div>'
+      +'<div style="background:'+bg+';border-radius:3px 3px 0 0;width:100%;height:'+h+'px;min-height:6px;"></div>'
+      +'<div style="font-size:8px;color:'+(isT?'var(--green)':'var(--ink4)')+';white-space:nowrap;">'+(isT?'<b>':'')+ wLabel+(isT?'</b>':'')+'</div>'
       +'</div>';
   }).join('');
   ch.querySelectorAll('.dstat-bar-wrap').forEach(function(el){
