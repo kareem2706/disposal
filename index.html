@@ -636,7 +636,6 @@ body{background:var(--bg);}
 </head>
 <body>
 <div id="app-loader" style="position:fixed;inset:0;background:#fff;z-index:99999;display:flex;align-items:center;justify-content:center;"><div style="font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:.18em;text-transform:uppercase;color:#1d1d1f;opacity:.6;">Bleenr</div></div>
-</div>
 
 <!-- ══ SCREEN: AUTH ═══════════════════════════════════════ -->
 <div id="screen-landing" class="screen">
@@ -1911,7 +1910,7 @@ body{background:var(--bg);}
 
 
 <div class="toast" id="toast"></div>
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 (function(){
   var params=new URLSearchParams(window.location.search);
   var payStatus=params.get('payment'),pRide=params.get('ride'),pOffer=params.get('offer');
@@ -2177,8 +2176,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   if(_feeEl){ _feeEl.textContent = 'Des frais supplémentaires peuvent s\'appliquer'; }
 
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){initDemoMode();return;}
-  initSupabase(SB_URL,SB_KEY);
-  await checkSession();
+  // Safety timeout: if loader is still visible after 8s, force-show landing
+  var _safetyTimer = setTimeout(function(){
+    var _ls=document.getElementById('app-loader');
+    if(_ls && _ls.style.display!=='none'){
+      console.warn('Safety timeout: forcing landing screen');
+      _ls.style.display='none';
+      showScreen('landing');
+    }
+  }, 8000);
+  try {
+    initSupabase(SB_URL,SB_KEY);
+    await checkSession();
+    clearTimeout(_safetyTimer);
+  } catch(e) {
+    clearTimeout(_safetyTimer);
+    console.error('Init error:', e);
+    var _lErr=document.getElementById('app-loader');if(_lErr)_lErr.style.display='none';
+    showScreen('landing');
+  }
   document.addEventListener('click', e => {
     const panel = document.getElementById('notif-panel');
     const btn = document.getElementById('notif-btn');
@@ -2220,14 +2236,20 @@ async function checkSession(){
       if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;currentRole='client';_entering=false;_passwordRecoveryActive=false;showScreen('landing');}
     });
   }
-  const { data: { session } } = await sb.auth.getSession();
-  // Skip enterApp if password recovery flow is active
-  if(_passwordRecoveryActive) return;
-  if(session){
-    currentUser = session.user;
-    await loadProfile();
-    enterApp();
-  } else {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    // Skip enterApp if password recovery flow is active
+    if(_passwordRecoveryActive) return;
+    if(session){
+      currentUser = session.user;
+      await loadProfile();
+      enterApp();
+    } else {
+      var _l2=document.getElementById('app-loader');if(_l2)_l2.style.display='none';
+      showScreen('landing');
+    }
+  } catch(e) {
+    console.error('checkSession error:', e);
     var _l2=document.getElementById('app-loader');if(_l2)_l2.style.display='none';
     showScreen('landing');
   }
