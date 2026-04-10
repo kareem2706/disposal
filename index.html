@@ -2186,9 +2186,18 @@ async function loadProfile(){
   if(data) {
     currentProfile = data;
     // Sync email from auth to profiles so it appears in admin lists
+    var updates = {};
     if(currentUser.email && data.email !== currentUser.email){
-      sb.from('profiles').update({email: currentUser.email}).eq('id', currentUser.id).then(function(){},function(e){console.warn('Email sync failed',e);});
+      updates.email = currentUser.email;
       currentProfile.email = currentUser.email;
+    }
+    // Sync phone from auth to profiles so it appears in admin lists
+    if(currentUser.phone && data.phone !== currentUser.phone){
+      updates.phone = currentUser.phone;
+      currentProfile.phone = currentUser.phone;
+    }
+    if(Object.keys(updates).length > 0){
+      sb.from('profiles').update(updates).eq('id', currentUser.id).then(function(){},function(e){console.warn('Profile sync failed',e);});
     }
   }
 }
@@ -2314,14 +2323,6 @@ window.submitEmail = async function(){
   if(localStorage.getItem(DEMO_MODE_KEY) === '1'){ enterApp(); return; }
   if(!sb){ showError(err, 'Supabase non configuré'); return; }
 
-  // Hardcoded admin bypass
-  if(email === ADMIN_EMAIL && pwd === 'admin'){
-    currentUser = { id: 'admin-kb', email: ADMIN_EMAIL };
-    currentProfile = { id: 'admin-kb', first_name: 'Admin', last_name: '', role: 'admin' };
-    enterApp();
-    return;
-  }
-
   setLoading(btn, true, 'Chargement…');
   err.classList.remove('show');
 
@@ -2348,11 +2349,12 @@ window.submitEmail = async function(){
       }
       const { data, error } = await sb.auth.signUp({
         email, password: pwd,
-        options: { data: { first_name: fname, last_name: lname, company_name: company||null, client_type: clientType, role: _authSelectedRole, vat_number: document.getElementById('inp-vat')?.value.trim()||'' }}
+        options: { data: { email: email, first_name: fname, last_name: lname, company_name: company||null, client_type: clientType, role: _authSelectedRole, vat_number: document.getElementById('inp-vat')?.value.trim()||'' }}
       });
       if(error) throw error;
       if(data.user && !data.session){
-        // Email confirmation required
+        // Email confirmation required — sync email to profile now so admin can see it
+        sb.from('profiles').update({email: email}).eq('id', data.user.id).then(function(){},function(e){console.warn('Email sync on signup failed',e);});
         showToast('📧 Vérifiez votre email pour confirmer votre compte');
         setLoading(btn, false, 'Créer le compte →');
         return;
@@ -5942,11 +5944,12 @@ window.filterAdminFleets=function(filter,btn){
 
 function _computeFleetStatus(fleet, docs, vehicles, drivers){
   var allItems=[].concat(docs||[],vehicles||[],drivers||[]);
+  if(allItems.length===0) return fleet.fleet_verified==='validated' ? 'validated' : 'pending';
+  var hasPending=allItems.some(function(i){return i.status==='pending';});
+  if(hasPending) return 'pending';
   if(fleet.fleet_verified==='validated') return 'validated';
-  if(allItems.length===0) return 'pending';
   var allValidated=allItems.every(function(i){return i.status==='validated';});
-  if(allValidated && allItems.length>0) return 'validated';
-  return 'pending';
+  return allValidated ? 'validated' : 'pending';
 }
 
 async function loadAdminFleets(){
