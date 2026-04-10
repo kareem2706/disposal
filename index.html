@@ -2182,58 +2182,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){initDemoMode();return;}
 
-  // Clear any corrupted Supabase auth tokens before init
-  try{
-    var authKey='sb-tuzfoqdxmxzjjhvlxsgb-auth-token';
-    var stored=localStorage.getItem(authKey)||localStorage.getItem('disposal-auth');
-    if(stored){
-      var parsed=JSON.parse(stored);
-      // If token is expired (exp < now), clear it to prevent getSession from hanging
-      if(parsed&&parsed.expires_at&&parsed.expires_at*1000<Date.now()){
-        console.log('[init] clearing expired token');
-        localStorage.removeItem(authKey);
-        localStorage.removeItem('disposal-auth');
-      }
-    }
-  }catch(ex){
-    // If we can't parse it, it's corrupted — clear it
-    console.log('[init] clearing corrupted auth storage');
-    Object.keys(localStorage).forEach(function(k){
-      if(k.indexOf('sb-')>=0||k==='disposal-auth')localStorage.removeItem(k);
-    });
-  }
-
   var _safetyTimer = setTimeout(function(){
     var _ls=document.getElementById('app-loader');
     if(_ls && _ls.style.display!=='none'){
       console.warn('Safety timeout: forcing landing screen');
       _ls.style.display='none';
-      // Nuclear clear of all auth storage
-      Object.keys(localStorage).forEach(function(k){
-        if(k.indexOf('sb-')>=0||k==='disposal-auth'||k.indexOf('supabase')>=0)localStorage.removeItem(k);
-      });
       _entering=false;
       showScreen('landing');
     }
-  }, 3000);
+  }, 5000);
   try {
     console.log('[init] starting...');
     initSupabase(SB_URL,SB_KEY);
     console.log('[init] supabase ready, checking session...');
-    await Promise.race([
-      checkSession(),
-      new Promise(function(_,reject){setTimeout(function(){reject(new Error('checkSession timeout'));},4000);})
-    ]);
+    await checkSession();
     console.log('[init] session checked');
     clearTimeout(_safetyTimer);
   } catch(e) {
     clearTimeout(_safetyTimer);
     console.error('Init error:', e);
     _entering=false;
-    // Nuclear clear
-    Object.keys(localStorage).forEach(function(k){
-      if(k.indexOf('sb-')>=0||k==='disposal-auth'||k.indexOf('supabase')>=0)localStorage.removeItem(k);
-    });
     var _lErr=document.getElementById('app-loader');if(_lErr)_lErr.style.display='none';
     showScreen('landing');
   }
@@ -2256,12 +2224,14 @@ function initSupabase(u,k){
 
 let _authListenerRegistered = false;
 let _passwordRecoveryActive = false;
+let _initialCheckDone = false;
 async function checkSession(){
   if(!sb)initSupabase();
   // Always listen for auth state changes (SSO redirect, password recovery)
   if(!_authListenerRegistered){
     _authListenerRegistered = true;
     sb.auth.onAuthStateChange(async (event, session) => {
+      console.log('[auth event]', event, 'initialDone:', _initialCheckDone);
       if(event==='PASSWORD_RECOVERY'&&session){
         _entering=false;
         _passwordRecoveryActive=true;
@@ -2272,6 +2242,8 @@ async function checkSession(){
         document.getElementById('auth-new-pwd').style.display='block';
         return;
       }
+      // Skip SIGNED_IN during initial check — checkSession handles it directly
+      if(!_initialCheckDone) return;
       if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!_entering&&!_passwordRecoveryActive){
         currentUser=session.user; await loadProfile(); enterApp();
       }
@@ -2280,12 +2252,9 @@ async function checkSession(){
   }
   try {
     console.log('[checkSession] getting session...');
-    var sessionResult = await Promise.race([
-      sb.auth.getSession(),
-      new Promise(function(_,reject){setTimeout(function(){reject(new Error('getSession timeout'));},6000);})
-    ]);
-    console.log('[checkSession] got session result');
-    var session = sessionResult?.data?.session;
+    const { data: { session } } = await sb.auth.getSession();
+    console.log('[checkSession] got session:', !!session);
+    _initialCheckDone = true;
     if(_passwordRecoveryActive) return;
     if(session){
       currentUser = session.user;
@@ -2297,14 +2266,8 @@ async function checkSession(){
     }
   } catch(e) {
     console.error('checkSession error:', e);
+    _initialCheckDone = true;
     _entering=false;
-    // Don't await signOut - it can also hang
-    try{sb.auth.signOut().catch(function(){});}catch(ex){}
-    try{
-      Object.keys(localStorage).forEach(function(k){
-        if(k.indexOf('supabase')>=0||k.indexOf('sb-')>=0||k==='disposal-auth')localStorage.removeItem(k);
-      });
-    }catch(ex){}
     var _l2=document.getElementById('app-loader');if(_l2)_l2.style.display='none';
     showScreen('landing');
   }
