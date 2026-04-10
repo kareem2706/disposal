@@ -2197,7 +2197,7 @@ function initSupabase(u,k){
 }
 
 let _authListenerRegistered = false;
-var _passwordRecoveryActive = false;
+let _passwordRecoveryActive = false;
 async function checkSession(){
   if(!sb)initSupabase();
   // Always listen for auth state changes (SSO redirect, password recovery)
