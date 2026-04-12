@@ -242,6 +242,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 
 /* Tighter spacing in new-ride and subcontract modals */
 #m-new-ride .modal-body,#m-subcontract .modal-body{padding:12px 18px;}
+/* Payment modal: sticky footer so buttons stay visible */
+#m-payment .modal{display:flex;flex-direction:column;max-height:88vh;}
+#m-payment .modal-body{flex:1;overflow-y:auto;}
+#m-payment .modal-ft{flex-shrink:0;}
 #m-new-ride .input-group,#m-subcontract .input-group{margin-bottom:8px;}
 #m-new-ride .form-grid,#m-subcontract .form-grid{gap:8px;}
 
@@ -2838,9 +2842,9 @@ async function loadClientDashboard(){
   const wrap = document.getElementById('active-ride-wrap');
   if(wrap) wrap.style.display = active ? 'block' : 'none';
 
-  // Non-terminated rides sorted by ride_date desc for dashboard
+  // Non-terminated rides sorted by ride_date asc for dashboard (oldest first)
   const recent = rides.filter(function(r){ return r.status !== 'done' && r.status !== 'cancelled'; }).slice().sort(function(a,b){
-    return ((b.ride_date||'')+(b.ride_time||'')).localeCompare((a.ride_date||'')+(a.ride_time||''));
+    return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||''));
   });
 
   document.getElementById('recent-rides-list').innerHTML = recent.length
@@ -4543,6 +4547,10 @@ function _paymentShowStep(step){
   document.getElementById('payment-step-1').style.display    = step === 1 ? '' : 'none';
   document.getElementById('payment-step-bank').style.display   = step === 'bank' ? '' : 'none';
   document.getElementById('payment-step-stripe').style.display = step === 'stripe' ? '' : 'none';
+
+  // Compact summary margin on bank step to save vertical space
+  var summaryEl = document.getElementById('payment-summary');
+  if(summaryEl) summaryEl.style.marginBottom = step === 'bank' ? '10px' : '20px';
 
   document.getElementById('payment-btn-next').style.display = step === 1 ? '' : 'none';
   var cancelBtn = document.getElementById('payment-btn-cancel');
