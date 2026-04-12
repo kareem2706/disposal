@@ -1553,7 +1553,7 @@ body{background:var(--bg);}
             <span style="color:var(--ink3);">Bénéficiaire</span><span style="font-weight:600;">DISPOSAL SRL</span>
             <span style="color:var(--ink3);">IBAN</span><span style="font-weight:600;font-family:monospace;" id="bank-iban">BE68 5390 0754 7034</span>
             <span style="color:var(--ink3);">BIC / SWIFT</span><span style="font-weight:600;font-family:monospace;">TRIOBEBB</span>
-            <span style="color:var(--ink3);">Communication</span><span style="font-weight:600;font-family:monospace;" id="bank-ref">DISPOSAL-</span>
+            <span style="color:var(--ink3);">Communication</span><span style="font-weight:600;font-family:monospace;" id="bank-ref">BLEENR</span>
             <span style="color:var(--ink3);">Montant</span><span style="font-weight:700;color:var(--green);" id="bank-amount">—</span>
           </div>
         </div>
@@ -2993,7 +2993,7 @@ async function loadDriverDashboard(){
 
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     const [m, p] = await Promise.all([
-      sb.from('rides').select('*').eq('driver_id', uid).order('created_at',{ascending:false}),
+      sb.from('rides').select('*').eq('driver_id', uid).order('ride_date',{ascending:true}).order('ride_time',{ascending:true}),
       sb.from('rides').select('*').in('status', ['waiting', 'offers']).order('ride_date',{ascending:true}).order('ride_time',{ascending:true})
     ]);
     missions = m.data || [];
@@ -3032,7 +3032,7 @@ async function loadDriverDashboard(){
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     await _autoCompleteOverdueRides(missions.filter(function(r){return r.status==='confirmed';}));
     // Re-fetch after auto-complete
-    var refreshed = await sb.from('rides').select('*').eq('driver_id', uid).order('created_at',{ascending:false});
+    var refreshed = await sb.from('rides').select('*').eq('driver_id', uid).order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
     missions = refreshed.data || [];
   }
 
@@ -3142,7 +3142,7 @@ window.msSwitch = function(btn, target){
 async function loadMissions(){
   let missions = [];
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
-    const { data } = await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSION_STATUSES).order('ride_date',{ascending:false});
+    const { data } = await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSION_STATUSES).order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
     missions = data || [];
 
     // Also find rides via accepted offers (in case driver_id wasn't set on ride)
@@ -3162,7 +3162,7 @@ async function loadMissions(){
     if(confirmedMissions.length>0){
       await _autoCompleteOverdueRides(confirmedMissions);
       // Re-fetch after auto-complete
-      var refreshed=await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSION_STATUSES).order('ride_date',{ascending:false});
+      var refreshed=await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSION_STATUSES).order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
       missions=refreshed.data||[];
     }
   } else {
@@ -4562,7 +4562,7 @@ function _paymentShowStep(step){
     _mountStripeCard();
   }
   if(step === 'bank'){
-    document.getElementById('bank-ref').textContent = 'DISPOSAL-' + (currentRideId || '—');
+    document.getElementById('bank-ref').textContent = 'BLEENR';
     var bankTvac = currentOfferAmount * (1 + TVA_RATE);
     document.getElementById('bank-amount').textContent = bankTvac.toFixed(2) + ' €';
     var confirmBankBtn2 = document.getElementById('payment-btn-confirm-bank');
