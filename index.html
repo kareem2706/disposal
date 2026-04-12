@@ -248,6 +248,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(14,14,12,.45);z-index:800;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
 .modal-overlay.open{display:flex;animation:fadeIn .15s ease;}
 .modal{background:white;border-radius:var(--r-xl);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-lg);animation:scaleIn .2s var(--ease);}
+#m-view-offers .modal{max-width:680px;}
 @keyframes scaleIn{from{opacity:0;transform:scale(.96) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
 .modal-hd{padding:18px 22px;border-bottom:1px solid var(--sand3);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:1;}
 .modal-title{font-size:15px;font-weight:600;}
@@ -1180,7 +1181,7 @@ body{background:var(--bg);}
       <div id="driver-latest-requests"><div class="page-loading"><div class="page-spinner"></div></div></div>
 
       <!-- Bottom cards -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px;position:sticky;bottom:0;background:var(--bg,#FAF9F7);padding:12px 0 4px;z-index:10;">
         <div class="card" style="padding:22px;background:linear-gradient(135deg,#1B5E3B 0%,#2E7A50 100%);color:#fff;display:flex;flex-direction:column;justify-content:center;">
           <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg><span style="font-size:14px;font-weight:700;">Aide &amp; support</span></div>
           <div style="font-size:12.5px;opacity:.88;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Vous avez besoin d&apos;aide&nbsp;? Contactez-nous&nbsp;: <a href="mailto:info@bleenr.com" style="color:#fff;font-weight:600;text-decoration:underline;">info@bleenr.com</a></div>
@@ -3053,13 +3054,12 @@ async function loadDriverDashboard(){
   var badgeEl = document.getElementById('badge-marketplace');
   if(badgeEl){ badgeEl.style.display = 'none'; }
 
-  pending.sort(function(a,b){
-    var da=(a.ride_date||'')+(a.ride_time||'');
-    var db=(b.ride_date||'')+(b.ride_time||'');
-    return da.localeCompare(db);
+
+  var latestPending = pending.slice().sort(function(a,b){
+    return (b.created_at||'').localeCompare(a.created_at||'');
   });
-  document.getElementById('driver-latest-requests').innerHTML = pending.length
-    ? pending.slice(0,3).map(function(r){ var isMine=r.is_subcontract&&currentUser&&r.client_id===currentUser.id; return renderMkItem(r, r.is_subcontract, isMine); }).join('')
+  document.getElementById('driver-latest-requests').innerHTML = latestPending.length
+    ? latestPending.slice(0,4).map(function(r){ var isMine=r.is_subcontract&&currentUser&&r.client_id===currentUser.id; return renderMkItem(r, r.is_subcontract, isMine); }).join('')
     : `<div class="empty-state"><p class="empty-text">${t('empty_marketplace')}</p></div>`;
   if(typeof renderDriverStatsChart==='function') renderDriverStatsChart(missions);
 }
