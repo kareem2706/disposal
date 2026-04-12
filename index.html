@@ -1570,10 +1570,7 @@ body{background:var(--bg);}
     </div>
     <div class="modal-ft" style="display:flex;gap:8px;justify-content:flex-end;">
       <button class="btn btn-close" id="payment-btn-cancel" onclick="closeModal('m-payment')">Annuler</button>
-      <button class="btn btn-secondary" id="payment-btn-back" style="display:none;" onclick="paymentGoBack()">← Retour</button>
-      <button class="btn btn-green" id="payment-btn-next" onclick="paymentNextStep()">Suivant →</button>
-      <button class="btn btn-green" id="payment-btn-confirm-bank" style="display:none;" onclick="confirmPayment('bank_transfer')">Confirmer la réservation →</button>
-      <button class="btn btn-green" id="payment-btn-confirm-stripe" style="display:none;" onclick="confirmStripePayment()">Payer →</button>
+      <button class="btn btn-green" id="payment-btn-next" style="min-width:200px;">Suivant &rarr;</button>
     </div>
   </div>
 </div>
@@ -4523,6 +4520,12 @@ window.openPaymentModal = function(offerId, driverId, amount){
   if(bankEl){ bankEl.style.borderColor = 'var(--sand3)'; bankEl.style.background = 'var(--white)'; }
   if(stripeEl){ stripeEl.style.borderColor = 'var(--sand3)'; stripeEl.style.background = 'var(--white)'; }
 
+  // Reset main action button
+  var nextBtn=document.getElementById('payment-btn-next');
+  if(nextBtn){nextBtn.textContent='Suivant \u2192';nextBtn.onclick=function(){
+    if(!_selectedPaymentMethod){var e=document.getElementById('payment-err');if(e)showError(e,'Veuillez s\u00e9lectionner un mode de paiement');return;}
+  };}
+
   // Clear errors
   ['payment-err','payment-err-bank','payment-err-stripe'].forEach(function(id){
     var el = document.getElementById(id); if(el){ el.classList.remove('show'); el.textContent = ''; }
@@ -4598,6 +4601,55 @@ window.selectPaymentMethod = function(method){
   if(stripeEl){
     stripeEl.style.borderColor = method === 'stripe' ? 'var(--green)' : 'var(--sand3)';
     stripeEl.style.background  = method === 'stripe' ? 'var(--green-bg)' : 'var(--white)';
+  }
+  // Update the main button based on selection
+  var nextBtn=document.getElementById('payment-btn-next');
+  if(nextBtn){
+    if(method==='stripe'){
+      var totalStripe=((currentOfferAmount*1.21)*STRIPE_FEE_MULTIPLIER).toFixed(2).replace('.',',');
+      nextBtn.textContent='Payer '+totalStripe+' \u20ac via Stripe \u2192';
+      nextBtn.onclick=function(){confirmStripeCheckout();};
+    } else {
+      nextBtn.textContent='Confirmer la r\u00e9servation \u2192';
+      nextBtn.onclick=function(){confirmPayment('bank_transfer');};
+    }
+  }
+};
+
+window.confirmStripeCheckout=async function(){
+  var btn=document.getElementById('payment-btn-next');
+  var errEl=document.getElementById('payment-err');
+  if(!sb||!currentRideId||!currentOfferId)return;
+  if(btn)setLoading(btn,true,'Redirection vers Stripe...');
+
+  // Accept offer and update ride first
+  var driverId=currentDriverId;
+  if(!driverId&&currentOfferId){
+    var {data:ofData}=await sb.from('offers').select('driver_id').eq('id',currentOfferId).single();
+    if(ofData)driverId=ofData.driver_id;
+  }
+  await sb.from('offers').update({status:'accepted'}).eq('id',currentOfferId);
+  await sb.from('offers').update({status:'rejected'}).eq('ride_id',currentRideId).neq('id',currentOfferId);
+  await sb.from('rides').update({status:'confirmed',driver_id:driverId,final_price:currentOfferAmount,payment_method:'stripe'}).eq('id',currentRideId);
+
+  // Redirect to Stripe Checkout
+  try{
+    var totalTvac=(currentOfferAmount*1.21).toFixed(2);
+    var resp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+((await sb.auth.getSession()).data.session?.access_token||'')},
+      body:JSON.stringify({amount:Math.round(parseFloat(totalTvac)*100),ride_id:currentRideId,offer_id:currentOfferId,success_url:window.location.origin+window.location.pathname+'?payment=success&ride='+currentRideId+'&offer='+currentOfferId,cancel_url:window.location.origin+window.location.pathname+'?payment=cancel'})
+    });
+    var result=await resp.json();
+    if(result.url){
+      sessionStorage.setItem('stripe_pending_tvac',totalTvac);
+      window.location.href=result.url;
+    }else{
+      throw new Error(result.error||'Erreur Stripe');
+    }
+  }catch(e){
+    if(errEl){showError(errEl,e.message||'Erreur de redirection Stripe');}
+    if(btn)setLoading(btn,false,'Payer via Stripe \u2192');
   }
 };
 
