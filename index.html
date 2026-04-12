@@ -6726,7 +6726,7 @@ window.refreshAdminDashboard = async function() {
     var periodCA = filteredRides.reduce(function(s,r){ return s + (r.final_price ? parseFloat(r.final_price) : 0); }, 0);
     var periodProfit = periodCA * 0.10;
 
-    set('admin-sum-ca',      periodCA > 0 ? periodCA.toFixed(0)+' €' : '0 €');
+    set('admin-sum-ca',      periodCA > 0 ? periodCA.toFixed(2).replace('.',',')+' €' : '0,00 €');
     set('admin-sum-profit',  periodProfit > 0 ? periodProfit.toFixed(2).replace('.',',')+' €' : '0,00 €');
     set('admin-sum-clients', totalClients);
     set('admin-sum-fleets',  totalFleets);
