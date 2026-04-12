@@ -2995,6 +2995,18 @@ async function loadDriverDashboard(){
       sb.from('rides').select('*').in('status', ['waiting', 'offers']).order('ride_date',{ascending:true}).order('ride_time',{ascending:true})
     ]);
     missions = m.data || [];
+
+    // Also find confirmed rides via accepted offers (in case driver_id wasn't set)
+    var {data:acceptedOffers}=await sb.from('offers').select('ride_id').eq('driver_id',uid).eq('status','accepted');
+    if(acceptedOffers&&acceptedOffers.length>0){
+      var acceptedRideIds=acceptedOffers.map(function(o){return o.ride_id;});
+      var existingIds=missions.map(function(r){return r.id;});
+      var missingIds=acceptedRideIds.filter(function(id){return existingIds.indexOf(id)<0;});
+      if(missingIds.length>0){
+        var {data:extraRides}=await sb.from('rides').select('*').in('id',missingIds);
+        if(extraRides)missions=missions.concat(extraRides);
+      }
+    }
     var allPending = p.data || [];
 
     // Auto-cancel overdue pending rides (waiting/offers past their start time)
@@ -3131,6 +3143,18 @@ async function loadMissions(){
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     const { data } = await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSION_STATUSES).order('ride_date',{ascending:false});
     missions = data || [];
+
+    // Also find rides via accepted offers (in case driver_id wasn't set on ride)
+    var {data:acceptedOffers}=await sb.from('offers').select('ride_id').eq('driver_id',currentUser.id).eq('status','accepted');
+    if(acceptedOffers&&acceptedOffers.length>0){
+      var acceptedRideIds=acceptedOffers.map(function(o){return o.ride_id;});
+      var existingIds=missions.map(function(r){return r.id;});
+      var missingIds=acceptedRideIds.filter(function(id){return existingIds.indexOf(id)<0;});
+      if(missingIds.length>0){
+        var {data:extraRides}=await sb.from('rides').select('*').in('id',missingIds).in('status',MISSION_STATUSES);
+        if(extraRides)missions=missions.concat(extraRides);
+      }
+    }
 
     // Auto-complete overdue confirmed rides
     var confirmedMissions=missions.filter(function(r){return r.status==='confirmed';});
@@ -4635,6 +4659,12 @@ window.confirmPayment = async function(method){
     final_price: currentOfferAmount,
     payment_method: method
   };
+  console.log('[confirmPayment] updating ride', currentRideId, 'driver_id:', currentDriverId, 'price:', currentOfferAmount);
+  // If driver_id is missing, fetch it from the accepted offer
+  if(!currentDriverId && currentOfferId){
+    var {data:ofData}=await sb.from('offers').select('driver_id').eq('id',currentOfferId).single();
+    if(ofData&&ofData.driver_id){rideUpdates.driver_id=ofData.driver_id;console.log('[confirmPayment] fetched driver_id from offer:',ofData.driver_id);}
+  }
   var { error } = await sb.from('rides').update(rideUpdates).eq('id', currentRideId);
 
   if(error){
