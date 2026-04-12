@@ -291,7 +291,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .badge-validated{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:var(--green-bg);color:var(--green);}
 
 /* ═══ RESPONSIVE ═══ */
-@media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);}.admin-summary-grid{grid-template-columns:1fr!important;}}
 @media(max-width:900px){
   .two-col,.form-grid{grid-template-columns:1fr;}
   .app-sidebar{transform:translateX(-100%);}
@@ -301,6 +301,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
   .page{padding:16px;}
   .card{overflow:visible;}
   .stats-row{grid-template-columns:repeat(2,1fr);}
+  .admin-summary-grid{grid-template-columns:1fr!important;}
 }
 @media(max-width:480px){
   .stats-row{grid-template-columns:1fr 1fr;}
@@ -1036,6 +1037,10 @@ body{background:var(--bg);}
       <!-- ADMIN nav -->
       <div id="nav-admin" style="display:none;">
         <div class="nav-sect">Administration</div>
+        <button class="nav-item" data-page="admin-dashboard" onclick="showPage('admin-dashboard')">
+          <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/></svg>
+          Tableau de bord
+        </button>
         <button class="nav-item" data-page="admin-fleets" onclick="showPage('admin-fleets')">
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="1" y="5" width="14" height="7" rx="2" stroke="currentColor" stroke-width="1.3"/><circle cx="4.5" cy="12" r="1.5" stroke="currentColor" stroke-width="1.2"/><circle cx="11.5" cy="12" r="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 5V4a2 2 0 012-2h6a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.3"/></svg>
           Fleets
@@ -1464,6 +1469,72 @@ body{background:var(--bg);}
 
     <!-- ═══ ADMIN PAGES ═══ -->
     <!-- Admin: Fleets -->
+    <!-- Admin: Tableau de bord -->
+    <div id="page-admin-dashboard" class="page">
+      <div class="pg-head">
+        <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+        <div><h1>Tableau de bord</h1><p>Aperçu de vos activités</p></div>
+      </div>
+      <!-- Top 4 stat cards -->
+      <div class="stats-row" id="admin-top-stats">
+        <div class="stat-card">
+          <div style="margin-bottom:14px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+          <div class="stat-label">Nombre de clients</div>
+          <div class="stat-val" id="admin-stat-clients">—</div>
+        </div>
+        <div class="stat-card">
+          <div style="margin-bottom:14px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg></div>
+          <div class="stat-label">Nombre de fleets</div>
+          <div class="stat-val" id="admin-stat-fleets">—</div>
+        </div>
+        <div class="stat-card">
+          <div style="margin-bottom:14px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+          <div class="stat-label">Nombre de courses</div>
+          <div class="stat-val" id="admin-stat-rides">—</div>
+        </div>
+        <div class="stat-card">
+          <div style="margin-bottom:14px;color:var(--red);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M12 12v4M10 14h4"/></svg></div>
+          <div class="stat-label">CA total</div>
+          <div class="stat-val" id="admin-stat-ca" style="font-size:28px;">—</div>
+        </div>
+      </div>
+      <!-- Period filter -->
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+        <span style="font-size:15px;font-weight:600;color:var(--ink);">Sélection</span>
+        <div style="display:flex;gap:0;background:var(--sand2);border-radius:var(--r);padding:3px;">
+          <button id="admin-period-all" onclick="setAdminPeriod('all')" style="padding:6px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);">Tout</button>
+          <button id="admin-period-custom" onclick="setAdminPeriod('custom')" style="padding:6px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink3);">Autre période</button>
+        </div>
+        <div id="admin-period-dates" style="display:none;gap:8px;align-items:center;">
+          <input type="date" id="admin-date-from" onchange="refreshAdminDashboard()" style="padding:6px 10px;border-radius:var(--r);border:1px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--white);">
+          <span style="color:var(--ink3);font-size:13px;">→</span>
+          <input type="date" id="admin-date-to" onchange="refreshAdminDashboard()" style="padding:6px 10px;border-radius:var(--r);border:1px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:var(--white);">
+        </div>
+      </div>
+      <!-- 3 summary cards -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;" class="admin-summary-grid" id="admin-summary-cards">
+        <div class="card" style="padding:0;">
+          <div class="card-hd">Finances</div>
+          <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:14.5px;font-weight:500;">CA : <span id="admin-sum-ca">—</span></div>
+            <div style="font-size:14.5px;font-weight:500;">Bénéfice : <span id="admin-sum-profit">—</span></div>
+          </div>
+        </div>
+        <div class="card" style="padding:0;">
+          <div class="card-hd" style="font-weight:700;">Clients</div>
+          <div style="padding:18px 20px;">
+            <div style="font-size:14.5px;font-weight:700;">Inscrits : <span id="admin-sum-clients">—</span></div>
+          </div>
+        </div>
+        <div class="card" style="padding:0;">
+          <div class="card-hd" style="font-weight:700;">Fleets</div>
+          <div style="padding:18px 20px;">
+            <div style="font-size:14.5px;font-weight:700;">Inscrits : <span id="admin-sum-fleets">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="page-admin-fleets" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="10" rx="3"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M5 7V6a3 3 0 013-3h8a3 3 0 013 3v1"/></svg></div>
@@ -2710,9 +2781,9 @@ function enterApp(){
     avEl.textContent = (fn[0] || '?').toUpperCase();
   }
 
-  // Admin goes to admin-fleets by default
+  // Admin goes to admin-dashboard by default
   if(isAdmin){
-    showPage('admin-fleets');
+    showPage('admin-dashboard');
   } else if(role === 'driver' && sb && !localStorage.getItem(DEMO_MODE_KEY)){
     loadMyOffers().then(function(){
       showPage('d-dashboard');
@@ -2737,7 +2808,7 @@ window.showPage = function(pageId){
 
   const pageNames = { dashboard:t('dashboard'), rides:t('rides'), calendar:'Calendrier', 'd-calendar':'Calendrier', invoices:t('invoices'),
     profile:t('profile'), 'd-dashboard':t('d-dashboard'), marketplace:t('marketplace'), missions:t('missions'),
-    'admin-fleets':'Fleets', 'admin-clients':'Clients' };
+    'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord' };
   var ptEl=document.getElementById('page-title');if(ptEl)ptEl.textContent=pageNames[pageId]||'';
 
   // Mark nav item active
@@ -2763,6 +2834,7 @@ async function loadPageData(pageId){
     case 'profile':       loadProfileForm(); break;
     case 'admin-fleets':   await loadAdminFleets(); break;
     case 'admin-clients':  await loadAdminClients(); break;
+    case 'admin-dashboard': await loadAdminDashboard(); break;
   }
 }
 
@@ -6584,6 +6656,87 @@ function renderAdminClients(){
         +'</tr>';
     }).join('')
     +'</tbody></table></div></div>';
+}
+
+
+
+// ── Admin: Dashboard ──
+var _adminDashPeriod = 'all';
+
+window.setAdminPeriod = function(mode) {
+  _adminDashPeriod = mode;
+  var allBtn = document.getElementById('admin-period-all');
+  var customBtn = document.getElementById('admin-period-custom');
+  var datesEl = document.getElementById('admin-period-dates');
+  if(allBtn && customBtn && datesEl) {
+    if(mode === 'all') {
+      allBtn.style.cssText = 'padding:6px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);';
+      customBtn.style.cssText = 'padding:6px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink3);';
+      datesEl.style.display = 'none';
+    } else {
+      customBtn.style.cssText = 'padding:6px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);';
+      allBtn.style.cssText = 'padding:6px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink3);';
+      datesEl.style.display = 'flex';
+    }
+  }
+  refreshAdminDashboard();
+};
+
+window.refreshAdminDashboard = async function() {
+  if(!sb) return;
+  try {
+    var fromDate = null, toDate = null;
+    if(_adminDashPeriod === 'custom') {
+      fromDate = document.getElementById('admin-date-from')?.value || null;
+      toDate   = document.getElementById('admin-date-to')?.value   || null;
+    }
+
+    // Query clients and fleets (all time for top stats)
+    var [clientsRes, fleetsRes, ridesRes] = await Promise.all([
+      sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','client'),
+      sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','driver'),
+      sb.from('rides').select('id,final_price,ride_date,status')
+    ]);
+
+    var totalClients = clientsRes.count || 0;
+    var totalFleets  = fleetsRes.count  || 0;
+    var allRides     = ridesRes.data    || [];
+
+    // All-time totals for top stat cards
+    var totalRides = allRides.length;
+    var totalCA    = allRides.reduce(function(s,r){ return s + (r.final_price ? parseFloat(r.final_price) : 0); }, 0);
+
+    // Set top stat cards
+    var set = function(id,val){ var el=document.getElementById(id); if(el) el.textContent=val; };
+    set('admin-stat-clients', totalClients);
+    set('admin-stat-fleets',  totalFleets);
+    set('admin-stat-rides',   totalRides);
+    set('admin-stat-ca',      totalCA > 0 ? totalCA.toFixed(2).replace('.',',')+' €' : '0,00 €');
+
+    // Filtered rides for summary cards
+    var filteredRides = allRides.filter(function(r) {
+      if(!fromDate && !toDate) return true;
+      var d = r.ride_date;
+      if(!d) return false;
+      if(fromDate && d < fromDate) return false;
+      if(toDate   && d > toDate)   return false;
+      return true;
+    });
+
+    var periodCA = filteredRides.reduce(function(s,r){ return s + (r.final_price ? parseFloat(r.final_price) : 0); }, 0);
+    var periodProfit = periodCA * 0.10;
+
+    set('admin-sum-ca',      periodCA > 0 ? periodCA.toFixed(2).replace('.',',')+' €' : '0,00 €');
+    set('admin-sum-profit',  periodProfit > 0 ? periodProfit.toFixed(2).replace('.',',')+' €' : '0,00 €');
+    set('admin-sum-clients', totalClients);
+    set('admin-sum-fleets',  totalFleets);
+  } catch(e) {
+    console.error('loadAdminDashboard error', e);
+  }
+};
+
+async function loadAdminDashboard() {
+  await refreshAdminDashboard();
 }
 
 
