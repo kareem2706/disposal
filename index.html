@@ -3061,7 +3061,7 @@ async function loadDriverDashboard(){
 
 
   var latestPending = pending.slice().sort(function(a,b){
-    return (b.created_at||'').localeCompare(a.created_at||'');
+    return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||''));
   });
   document.getElementById('driver-latest-requests').innerHTML = latestPending.length
     ? latestPending.slice(0,4).map(function(r){ var isMine=r.is_subcontract&&currentUser&&r.client_id===currentUser.id; return renderMkItem(r, r.is_subcontract, isMine); }).join('')
@@ -4641,16 +4641,7 @@ window.confirmStripeCheckout=async function(){
   if(!sb||!currentRideId||!currentOfferId)return;
   if(btn)setLoading(btn,true,'Redirection vers Stripe...');
 
-  // Accept offer and update ride first
-  var driverId=currentDriverId;
-  if(!driverId&&currentOfferId){
-    var {data:ofData}=await sb.from('offers').select('driver_id').eq('id',currentOfferId).single();
-    if(ofData)driverId=ofData.driver_id;
-  }
-  await sb.from('offers').update({status:'accepted'}).eq('id',currentOfferId);
-  await sb.from('offers').update({status:'rejected'}).eq('ride_id',currentRideId).neq('id',currentOfferId);
-
-  // Redirect to Stripe Checkout
+  // Redirect to Stripe Checkout (offer acceptance handled by success callback)
   try{
     var totalTvac=(currentOfferAmount*(1+TVA_RATE)).toFixed(2);
     var session=await sb.auth.getSession();
