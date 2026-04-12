@@ -4540,16 +4540,19 @@ function _paymentShowStep(step){
   document.getElementById('payment-step-bank').style.display   = step === 'bank' ? '' : 'none';
   document.getElementById('payment-step-stripe').style.display = step === 'stripe' ? '' : 'none';
 
-  document.getElementById('payment-btn-next').style.display         = step === 1 ? '' : 'none';
-  document.getElementById('payment-btn-back').style.display         = step !== 1 ? '' : 'none';
-  document.getElementById('payment-btn-confirm-bank').style.display   = step === 'bank' ? '' : 'none';
-  document.getElementById('payment-btn-confirm-stripe').style.display = step === 'stripe' ? '' : 'none';
+  document.getElementById('payment-btn-next').style.display = step === 1 ? '' : 'none';
+  var backBtn = document.getElementById('payment-btn-back');
+  if(backBtn) backBtn.style.display = step !== 1 ? '' : 'none';
+  var confirmBankBtn = document.getElementById('payment-btn-confirm-bank');
+  if(confirmBankBtn) confirmBankBtn.style.display = step === 'bank' ? '' : 'none';
+  var confirmStripeBtn = document.getElementById('payment-btn-confirm-stripe');
+  if(confirmStripeBtn) confirmStripeBtn.style.display = step === 'stripe' ? '' : 'none';
 
   if(step === 'stripe'){
     // Update confirm button label with total TVAC including Stripe fees
     var totalTvac = currentOfferAmount * 1.21;
     var total = (totalTvac * STRIPE_FEE_MULTIPLIER).toFixed(2);
-    document.getElementById('payment-btn-confirm-stripe').textContent = 'Payer ' + total + ' € →';
+    if(confirmStripeBtn) confirmStripeBtn.textContent = 'Payer ' + total + ' € →';
     _mountStripeCard();
   }
   if(step === 'bank'){
