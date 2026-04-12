@@ -1510,7 +1510,7 @@ body{background:var(--bg);}
           <span id="payment-amount" style="font-size:18px;font-weight:700;color:var(--green);">—</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
-          <span style="font-size:12px;color:var(--ink3);">TVA 21%</span>
+          <span style="font-size:12px;color:var(--ink3);" id="payment-tva-label">TVA 6%</span>
           <span id="payment-tva" style="font-size:13px;color:var(--ink3);">—</span>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:8px;border-top:1px solid var(--sand3);">
@@ -1570,7 +1570,9 @@ body{background:var(--bg);}
     </div>
     <div class="modal-ft" style="display:flex;gap:8px;justify-content:flex-end;">
       <button class="btn btn-close" id="payment-btn-cancel" onclick="closeModal('m-payment')">Annuler</button>
+      <button class="btn btn-close" id="payment-btn-back" style="display:none;" onclick="paymentGoBack()">&#8592; Retour</button>
       <button class="btn btn-green" id="payment-btn-next" style="min-width:200px;">Suivant &rarr;</button>
+      <button class="btn btn-green" id="payment-btn-confirm-bank" style="display:none;min-width:200px;" onclick="confirmPayment('bank_transfer')">Faire le paiement &rarr;</button>
     </div>
   </div>
 </div>
@@ -2035,6 +2037,7 @@ const SB_URL='https://tuzfoqdxmxzjjhvlxsgb.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1emZvcWR4bXh6ampodmx4c2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzIyNDcsImV4cCI6MjA5MDAwODI0N30.xJU8CmI0KGiEl-YA87Rtv8yrrFkPU8_dAlUrY85DDzs';
 const DEMO_MODE_KEY='disposal_demo';
 const STRIPE_FEE_MULTIPLIER = 1.029; // 1 + 2.9% Stripe fee
+const TVA_RATE = 0.06; // TVA rate applied to payments
 const STRIPE_PK = 'pk_test_REPLACE_WITH_YOUR_STRIPE_PUBLISHABLE_KEY'; // Replace with your Stripe publishable key
 const MISSION_STATUSES = ['confirmed', 'active', 'done']; // Driver mission statuses to display
 const ADMIN_EMAIL = 'kb@bleenr.com';
@@ -4435,7 +4438,7 @@ window.openPaymentModal = function(offerId, driverId, amount){
   _stripePaymentMethodId = null;
 
   document.getElementById('payment-amount').textContent = amount.toFixed(2) + ' €';
-  var tva = amount * 0.21;
+  var tva = amount * TVA_RATE;
   var totalTvac = amount + tva;
   document.getElementById('payment-tva').textContent = tva.toFixed(2) + ' €';
   document.getElementById('payment-total').textContent = totalTvac.toFixed(2) + ' €';
@@ -4550,15 +4553,17 @@ function _paymentShowStep(step){
 
   if(step === 'stripe'){
     // Update confirm button label with total TVAC including Stripe fees
-    var totalTvac = currentOfferAmount * 1.21;
+    var totalTvac = currentOfferAmount * (1 + TVA_RATE);
     var total = (totalTvac * STRIPE_FEE_MULTIPLIER).toFixed(2);
     if(confirmStripeBtn) confirmStripeBtn.textContent = 'Payer ' + total + ' € →';
     _mountStripeCard();
   }
   if(step === 'bank'){
     document.getElementById('bank-ref').textContent = 'DISPOSAL-' + (currentRideId || '—');
-    var bankTvac = currentOfferAmount * 1.21;
+    var bankTvac = currentOfferAmount * (1 + TVA_RATE);
     document.getElementById('bank-amount').textContent = bankTvac.toFixed(2) + ' €';
+    var confirmBankBtn2 = document.getElementById('payment-btn-confirm-bank');
+    if(confirmBankBtn2) confirmBankBtn2.textContent = 'Faire le paiement ' + bankTvac.toFixed(2) + ' \u20ac \u2192';
   }
 }
 
@@ -4609,12 +4614,12 @@ window.selectPaymentMethod = function(method){
   var nextBtn=document.getElementById('payment-btn-next');
   if(nextBtn){
     if(method==='stripe'){
-      var totalStripe=((currentOfferAmount*1.21)*STRIPE_FEE_MULTIPLIER).toFixed(2).replace('.',',');
+      var totalStripe=((currentOfferAmount*(1+TVA_RATE))*STRIPE_FEE_MULTIPLIER).toFixed(2).replace('.',',');
       nextBtn.textContent='Payer '+totalStripe+' \u20ac via Stripe \u2192';
       nextBtn.onclick=function(){confirmStripeCheckout();};
     } else {
-      nextBtn.textContent='Confirmer la r\u00e9servation \u2192';
-      nextBtn.onclick=function(){confirmPayment('bank_transfer');};
+      // Immediately show bank transfer details
+      _paymentShowStep('bank');
     }
   }
 };
@@ -4637,10 +4642,10 @@ window.confirmStripeCheckout=async function(){
 
   // Redirect to Stripe Checkout
   try{
-    var totalTvac=(currentOfferAmount*1.21).toFixed(2);
+    var totalTvac=(currentOfferAmount*(1+TVA_RATE)).toFixed(2);
     var resp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+((await sb.auth.getSession()).data.session?.access_token||'')},
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+((await sb.auth.getSession()).data.session?.access_token||''),'apikey':SB_KEY},
       body:JSON.stringify({amount:Math.round(parseFloat(totalTvac)*100),ride_id:currentRideId,offer_id:currentOfferId,success_url:window.location.origin+window.location.pathname+'?payment=success&ride='+currentRideId+'&offer='+currentOfferId,cancel_url:window.location.origin+window.location.pathname+'?payment=cancel'})
     });
     var result=await resp.json();
@@ -4680,8 +4685,8 @@ window.confirmPayment = async function(method){
   if(errEl){ errEl.classList.remove('show'); errEl.textContent = ''; }
 
   var totalWithFees = method === 'stripe'
-    ? parseFloat(((currentOfferAmount * 1.21) * STRIPE_FEE_MULTIPLIER).toFixed(2))
-    : parseFloat((currentOfferAmount * 1.21).toFixed(2));
+    ? parseFloat(((currentOfferAmount * (1 + TVA_RATE)) * STRIPE_FEE_MULTIPLIER).toFixed(2))
+    : parseFloat((currentOfferAmount * (1 + TVA_RATE)).toFixed(2));
   var paymentStatus = method === 'stripe' ? 'confirmed' : 'pending_payment';
 
   if(localStorage.getItem(DEMO_MODE_KEY) === '1'){
@@ -4697,13 +4702,13 @@ window.confirmPayment = async function(method){
 
   var { error: acceptErr } = await sb.from('offers').update({status:'accepted'}).eq('id', currentOfferId);
   if(acceptErr){
-    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Confirmer la réservation →' : 'Payer →');
+    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Faire le paiement \u2192' : 'Payer \u2192');
     if(errEl){ showError(errEl, acceptErr.message); }
     return;
   }
   var { error: rejectErr } = await sb.from('offers').update({status:'rejected'}).eq('ride_id', currentRideId).neq('id', currentOfferId);
   if(rejectErr){
-    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Confirmer la réservation →' : 'Payer →');
+    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Faire le paiement \u2192' : 'Payer \u2192');
     if(errEl){ showError(errEl, rejectErr.message); }
     return;
   }
@@ -4723,7 +4728,7 @@ window.confirmPayment = async function(method){
   var { error } = await sb.from('rides').update(rideUpdates).eq('id', currentRideId);
 
   if(error){
-    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Confirmer la réservation →' : 'Payer →');
+    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Faire le paiement \u2192' : 'Payer \u2192');
     if(errEl){ showError(errEl, error.message); }
     return;
   }
@@ -4737,7 +4742,7 @@ window.confirmStripePayment=async function(){
   var errEl=document.getElementById('payment-err-stripe');if(errEl){errEl.classList.remove('show');errEl.textContent='';}
   var btn=document.getElementById('payment-btn-confirm-stripe');if(btn)setLoading(btn,true,'Redirection…');
   try{
-    sessionStorage.setItem('stripe_pending_tvac',(currentOfferAmount*1.21).toFixed(2));
+    sessionStorage.setItem('stripe_pending_tvac',(currentOfferAmount*(1+TVA_RATE)).toFixed(2));
     var efResp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
       body:JSON.stringify({amount:currentOfferAmount,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
