@@ -2225,13 +2225,13 @@ function initSupabase(u,k){
 let _authListenerRegistered = false;
 let _passwordRecoveryActive = false;
 let _initialCheckDone = false;
+let _loginInProgress = false;
 async function checkSession(){
   if(!sb)initSupabase();
-  // Always listen for auth state changes (SSO redirect, password recovery)
   if(!_authListenerRegistered){
     _authListenerRegistered = true;
     sb.auth.onAuthStateChange(async (event, session) => {
-      console.log('[auth event]', event, 'initialDone:', _initialCheckDone);
+      console.log('[auth event]', event, 'initialDone:', _initialCheckDone, 'loginInProgress:', _loginInProgress);
       if(event==='PASSWORD_RECOVERY'&&session){
         _entering=false;
         _passwordRecoveryActive=true;
@@ -2242,8 +2242,8 @@ async function checkSession(){
         document.getElementById('auth-new-pwd').style.display='block';
         return;
       }
-      // Skip SIGNED_IN during initial check — checkSession handles it directly
-      if(!_initialCheckDone) return;
+      // Skip during initial check or active login — those flows call enterApp themselves
+      if(!_initialCheckDone || _loginInProgress) return;
       if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!_entering&&!_passwordRecoveryActive){
         currentUser=session.user; await loadProfile(); enterApp();
       }
@@ -2296,7 +2296,7 @@ async function loadProfile(){
       currentProfile.role = metaRole;
     }
     if(Object.keys(updates).length > 0){
-      sb.from('profiles').update(updates).eq('id', currentUser.id).then(function(){},function(e){console.warn('Profile sync failed',e);});
+      try{sb.from('profiles').update(updates).eq('id', currentUser.id).then(function(){},function(){});}catch(ex){}
     }
   }
 }
@@ -2463,6 +2463,8 @@ window.submitEmail = async function(){
       await loadProfile();
       enterApp();
     } else {
+      _loginInProgress = true;
+      _entering = false;
       const { data, error } = await sb.auth.signInWithPassword({ email, password: pwd });
       if(error) throw error;
       console.log('[login] signIn OK, loading profile...');
@@ -2471,9 +2473,11 @@ window.submitEmail = async function(){
       console.log('[login] profile loaded, entering app...');
       setLoading(btn, false, t('auth_continue')||'Continuer →');
       enterApp();
+      _loginInProgress = false;
       console.log('[login] enterApp called');
     }
   } catch(e){
+    _loginInProgress = false;
     const msg = e.message?.includes('Invalid login') ? t('err_auth') :
                 e.message?.includes('already registered') ? t('err_exists') :
                 e.message || 'Erreur inconnue';
