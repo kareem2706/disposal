@@ -5522,11 +5522,11 @@ window.saveFleetDoc=async function(){
       // Delete old file from storage
       var oldPath=_storagePathFromUrl(existingDoc.file_url);
       if(oldPath){try{await sb.storage.from('fleet-docs').remove([oldPath]);}catch(e){}}
-      var {error}=await sb.from('fleet_documents').update({doc_name:fileInput.files[0].name,file_url:url}).eq('id',existingDoc.id);
+      var {error}=await sb.from('fleet_documents').update({doc_name:fileInput.files[0].name,file_url:url,status:'pending'}).eq('id',existingDoc.id);
       if(error)throw error;
       showToast('Document remplac\u00e9');
     } else {
-      var {error}=await sb.from('fleet_documents').insert({fleet_id:currentUser.id,doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url});
+      var {error}=await sb.from('fleet_documents').insert({fleet_id:currentUser.id,doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url,status:'pending'});
       if(error)throw error;
       showToast('Document ajout\u00e9');
     }
@@ -5688,7 +5688,7 @@ window.saveVehicle=async function(){
       var {error}=await sb.from('fleet_vehicles').update({brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities}).eq('id',vehId);
       if(error)throw error;
     } else {
-      var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities}).select().single();
+      var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities,status:'pending'}).select().single();
       if(error)throw error;
       vehId=veh.id;
     }
@@ -5871,7 +5871,7 @@ window.saveDriver=async function(){
       var {error}=await sb.from('fleet_drivers').update({first_name:fname,last_name:lname,phone:phone||null,email:email||null}).eq('id',drvId);
       if(error)throw error;
     } else {
-      var {data:drv,error}=await sb.from('fleet_drivers').insert({fleet_id:currentUser.id,first_name:fname,last_name:lname,phone:phone||null,email:email||null}).select().single();
+      var {data:drv,error}=await sb.from('fleet_drivers').insert({fleet_id:currentUser.id,first_name:fname,last_name:lname,phone:phone||null,email:email||null,status:'pending'}).select().single();
       if(error)throw error;
       drvId=drv.id;
     }
@@ -6113,7 +6113,7 @@ window.filterAdminFleets=function(filter,btn){
 function _computeFleetStatus(fleet, docs, vehicles, drivers){
   var allItems=[].concat(docs||[],vehicles||[],drivers||[]);
   if(allItems.length===0) return fleet.fleet_verified==='validated' ? 'validated' : 'pending';
-  var hasPending=allItems.some(function(i){return i.status==='pending';});
+  var hasPending=allItems.some(function(i){return i.status==='pending'||i.status===null;});
   if(hasPending) return 'pending';
   if(fleet.fleet_verified==='validated') return 'validated';
   var allValidated=allItems.every(function(i){return i.status==='validated';});
@@ -6130,6 +6130,12 @@ async function loadAdminFleets(){
     var {data:fleets,error}=await sb.from('profiles').select('*').eq('role','driver').order('created_at',{ascending:false});
     if(error) throw error;
     if(!fleets) fleets=[];
+    // Enrich with auth emails via RPC (requires DB function admin_get_profile_emails)
+    var {data:emailData}=await sb.rpc('admin_get_profile_emails',{p_role:'driver'});
+    if(emailData&&emailData.length){
+      var emailMap={};emailData.forEach(function(e){emailMap[e.id]=e.email;});
+      fleets=fleets.map(function(f){return f.email?f:Object.assign({},f,{email:emailMap[f.id]||null});});
+    }
     // Get all fleet documents, vehicles, drivers for status computation
     var {data:allDocs}=await sb.from('fleet_documents').select('fleet_id,status');
     var {data:allVehicles}=await sb.from('fleet_vehicles').select('fleet_id,status');
@@ -6172,7 +6178,7 @@ function renderAdminFleets(){
     +filtered.map(function(f){
       var name=f.company_name||((f.first_name||'')+' '+(f.last_name||'')).trim()||'\u2014';
       var totalDocs=f._docs.length+f._vehicles.length+f._drivers.length;
-      var pendingDocs=f._docs.concat(f._vehicles,f._drivers).filter(function(d){return d.status==='pending';}).length;
+      var pendingDocs=f._docs.concat(f._vehicles,f._drivers).filter(function(d){return d.status==='pending'||d.status===null;}).length;
       var docsInfo=totalDocs>0?(pendingDocs>0?pendingDocs+' en attente / '+totalDocs:totalDocs+' valid\u00e9(s)'):'Aucun';
       var clickable=f._computed_status==='pending'||totalDocs>0;
       return '<tr style="border-bottom:1px solid var(--sand2);'+(clickable?'cursor:pointer;':'')
@@ -6201,6 +6207,14 @@ window.showFleetDetail=async function(fleetId){
     // Get fleet profile
     var {data:fleet,error:fe}=await sb.from('profiles').select('*').eq('id',fleetId).single();
     if(fe) throw fe;
+    // Enrich fleet email via RPC if not already set
+    if(!fleet.email){
+      var {data:emailData}=await sb.rpc('admin_get_profile_emails',{p_role:'driver'});
+      if(emailData&&emailData.length){
+        var found=emailData.find(function(e){return e.id===fleetId;});
+        if(found) fleet=Object.assign({},fleet,{email:found.email});
+      }
+    }
     // Get docs, vehicles, drivers
     var {data:docs}=await sb.from('fleet_documents').select('*').eq('fleet_id',fleetId).order('uploaded_at',{ascending:false});
     var {data:vehicles}=await sb.from('fleet_vehicles').select('*').eq('fleet_id',fleetId).order('created_at',{ascending:false});
@@ -6329,7 +6343,14 @@ async function loadAdminClients(){
   try{
     var {data,error}=await sb.from('profiles').select('*').eq('role','client').order('created_at',{ascending:false});
     if(error) throw error;
-    _adminClientsData=data||[];
+    var clients=data||[];
+    // Enrich with auth emails via RPC (requires DB function admin_get_profile_emails)
+    var {data:emailData}=await sb.rpc('admin_get_profile_emails',{p_role:'client'});
+    if(emailData&&emailData.length){
+      var emailMap={};emailData.forEach(function(e){emailMap[e.id]=e.email;});
+      clients=clients.map(function(c){return c.email?c:Object.assign({},c,{email:emailMap[c.id]||null});});
+    }
+    _adminClientsData=clients;
     renderAdminClients();
   }catch(e){el.innerHTML='<div class="card" style="padding:24px;color:var(--red);font-size:13px;">Erreur: '+(e.message||e)+'</div>';}
 }
