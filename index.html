@@ -4545,6 +4545,8 @@ function _paymentShowStep(step){
   document.getElementById('payment-step-stripe').style.display = step === 'stripe' ? '' : 'none';
 
   document.getElementById('payment-btn-next').style.display = step === 1 ? '' : 'none';
+  var cancelBtn = document.getElementById('payment-btn-cancel');
+  if(cancelBtn) cancelBtn.style.display = step === 'bank' ? 'none' : '';
   var backBtn = document.getElementById('payment-btn-back');
   if(backBtn) backBtn.style.display = step !== 1 ? '' : 'none';
   var confirmBankBtn = document.getElementById('payment-btn-confirm-bank');
@@ -4643,17 +4645,21 @@ window.confirmStripeCheckout=async function(){
   // Redirect to Stripe Checkout
   try{
     var totalTvac=(currentOfferAmount*(1+TVA_RATE)).toFixed(2);
+    var session=await sb.auth.getSession();
+    var token=session.data?.session?.access_token||'';
     var resp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+((await sb.auth.getSession()).data.session?.access_token||''),'apikey':SB_KEY},
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SB_KEY},
       body:JSON.stringify({amount:Math.round(parseFloat(totalTvac)*100),ride_id:currentRideId,offer_id:currentOfferId,success_url:window.location.origin+window.location.pathname+'?payment=success&ride='+currentRideId+'&offer='+currentOfferId,cancel_url:window.location.origin+window.location.pathname+'?payment=cancel'})
     });
-    var result=await resp.json();
+    var rawText=await resp.text();
+    var result; try{ result=JSON.parse(rawText); }catch(e){ result={}; }
+    if(!resp.ok){ throw new Error(result.error||'Erreur serveur ('+resp.status+')'); }
     if(result.url){
       sessionStorage.setItem('stripe_pending_tvac',totalTvac);
       window.location.href=result.url;
     }else{
-      throw new Error(result.error||'Erreur Stripe');
+      throw new Error(result.error||'Lien de paiement manquant');
     }
   }catch(e){
     if(errEl){showError(errEl,e.message||'Erreur de redirection Stripe');}
@@ -4716,7 +4722,7 @@ window.confirmPayment = async function(method){
   var rideUpdates = {
     status: 'confirmed',
     driver_id: currentDriverId,
-    final_price: currentOfferAmount,
+    final_price: totalWithFees,
     payment_method: method
   };
   console.log('[confirmPayment] updating ride', currentRideId, 'driver_id:', currentDriverId, 'price:', currentOfferAmount);
