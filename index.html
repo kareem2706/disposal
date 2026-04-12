@@ -1921,10 +1921,13 @@ body{background:var(--bg);}
     setTimeout(async function(){
       if(payStatus==='success'&&pRide&&pOffer&&sb){
         try{var tvac=parseFloat(sessionStorage.getItem('stripe_pending_tvac')||'0');sessionStorage.removeItem('stripe_pending_tvac');
+          // Get driver_id from the accepted offer
+          var offerRes=await sb.from('offers').select('driver_id').eq('id',pOffer).single();
+          var payDriverId=offerRes.data?offerRes.data.driver_id:null;
           await sb.from('offers').update({status:'accepted'}).eq('id',pOffer);
           await sb.from('offers').update({status:'rejected'}).eq('ride_id',pRide).neq('id',pOffer);
-          await sb.from('rides').update({status:'confirmed',payment_method:'stripe',payment_status:'paid',final_price:tvac||null}).eq('id',pRide);
-          if(typeof showPaymentResult==='function')showPaymentResult('success','Paiement réussi !','Votre course est confirmée.');
+          await sb.from('rides').update({status:'confirmed',payment_method:'stripe',payment_status:'paid',final_price:tvac||null,driver_id:payDriverId}).eq('id',pRide);
+          if(typeof showPaymentResult==='function')showPaymentResult('success','Paiement r\u00e9ussi !','Votre course est confirm\u00e9e.');
           if(typeof loadClientDashboard==='function')await loadClientDashboard();
         }catch(e){console.error(e);}
       }else if(payStatus==='cancel'){
@@ -2826,7 +2829,7 @@ async function loadClientDashboard(){
     '<div class="stat-card">'+_mkI(_s1,'var(--green-bg)')+'<div class="stat-label">Confirmées</div><div class="stat-val">'+confirmed+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s2,'#FFF3DC')+'<div class="stat-label">En attente</div><div class="stat-val">'+pending+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s3,'var(--blue-bg)')+'<div class="stat-label">Offres reçues</div><div class="stat-val">'+withOffer+'</div></div>'
-    +'<div class="stat-card">'+_mkI(_s4,'var(--red-bg)')+'<div class="stat-label">Total pay\u00e9</div><div class="stat-val">'+(total>0?total.toFixed(0)+' \u20ac':'0 \u20ac')+'</div></div>';
+    +'<div class="stat-card">'+_mkI(_s4,'var(--red-bg)')+'<div class="stat-label">Total pay\u00e9</div><div class="stat-val">'+(total>0?total.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>';
 
   // Active ride
   const active = rides.find(r => r.status==='active');
@@ -4630,16 +4633,8 @@ window.confirmPayment = async function(method){
     status: 'confirmed',
     driver_id: currentDriverId,
     final_price: currentOfferAmount,
-    payment_method: method,
-    payment_status: paymentStatus,
-    accepted_offer_id: currentOfferId,
-    total_with_fees: totalWithFees
+    payment_method: method
   };
-  if(method === 'stripe' && _stripePaymentMethodId){
-    rideUpdates.stripe_payment_method_id = _stripePaymentMethodId;
-    _stripePaymentMethodId = null;
-  }
-
   var { error } = await sb.from('rides').update(rideUpdates).eq('id', currentRideId);
 
   if(error){
