@@ -5890,7 +5890,7 @@ async function loadFleetVehicles(){
         ?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:8px;">Rejet\u00e9</span>'
         :'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-weight:600;margin-left:8px;">En attente</span>';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
-      +'<div style="flex:1;min-width:0;"><div style="font-weight:500;font-size:13px;display:flex;align-items:center;">'+v.brand+' '+v.model+(v.year?' ('+v.year+')':'')+vStatusBadge+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-weight:500;font-size:13px;display:flex;align-items:center;">'+v.brand+' '+v.model+vStatusBadge+'</div>'
       +'<div style="font-size:11px;color:var(--ink4);">'+(v.color||'')+' \u00b7 '+(classLabels[v.vehicle_class]||v.vehicle_class)+(v.plate?' \u00b7 '+v.plate:'')+'</div>'
       +amenHtml+docsHtml+'</div>'
       +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
@@ -6196,7 +6196,7 @@ function populateOfferVehicles(requestedClass){
     var opt=document.createElement('option');
     opt.value=v.id;
     var amenStr=(v.amenities&&v.amenities.length>0)?' ['+v.amenities.map(function(a){return amenShort[a]||a;}).join(' ')+']':'';
-    opt.textContent=v.brand+' '+v.model+(v.year?' ('+v.year+')':'')+' \u2014 '+(classLabels[v.vehicle_class]||v.vehicle_class)+amenStr;
+    opt.textContent=v.brand+' '+v.model;
     sel.appendChild(opt);
   });
   if(matching.length===1)sel.value=matching[0].id;
