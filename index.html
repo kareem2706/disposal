@@ -3257,9 +3257,27 @@ async function openOffersModal(rideId){
     offers = getDemoOffers();
   }
 
-  document.getElementById('offers-modal-title').innerHTML = '<div style="font-size:18px;font-weight:700;">Offres disponibles</div><div style="font-size:12px;color:var(--ink3);font-weight:400;margin-top:2px;">' + offers.length + ' chauffeur'+(offers.length>1?'s':'')+' certifié'+(offers.length>1?'s':'')+' pour votre trajet</div>';
+  document.getElementById('offers-modal-title').innerHTML = '<div style="font-size:18px;font-weight:700;">Offres disponibles</div><div style="font-size:12px;color:var(--ink3);font-weight:400;margin-top:2px;">' + offers.length + ' chauffeur'+(offers.length>1?'s':'')+' certifi\u00e9'+(offers.length>1?'s':'')+' pour votre trajet</div>';
+
+  _offersData=offers;
+  _offersFilter='all';
+  _offersSort='asc';
+
+  // Render filter/sort bar + offers
+  var filtersHtml='<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">'
+    +'<div style="display:flex;gap:6px;">'
+      +'<button class="offers-filter-btn" style="padding:5px 12px;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;background:var(--green);color:#fff;" onclick="_offersSetFilter(\'all\',this)">Tous</button>'
+      +'<button class="offers-filter-btn" style="padding:5px 12px;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;background:var(--sand2);color:var(--ink3);" onclick="_offersSetFilter(\'electric\',this)">\u26a1 \u00c9lectrique</button>'
+      +'<button class="offers-filter-btn" style="padding:5px 12px;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;background:var(--sand2);color:var(--ink3);" onclick="_offersSetFilter(\'hybrid\',this)">\u2600 Hybride</button>'
+    +'</div>'
+    +'<div style="display:flex;gap:6px;">'
+      +'<button class="offers-sort-btn" style="padding:5px 12px;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;background:var(--green);color:#fff;" onclick="_offersSetSort(\'asc\',this)">Prix \u2191</button>'
+      +'<button class="offers-sort-btn" style="padding:5px 12px;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;background:var(--sand2);color:var(--ink3);" onclick="_offersSetSort(\'desc\',this)">Prix \u2193</button>'
+    +'</div>'
+  +'</div>';
+
   document.getElementById('offers-list').innerHTML = offers.length
-    ? offers.map(o => renderOfferCard(o)).join('')
+    ? filtersHtml + '<div id="offers-cards">' + offers.sort(function(a,b){return (a.price||0)-(b.price||0);}).map(function(o){return renderOfferCard(o);}).join('') + '</div>'
     : '<div class="empty-state"><p class="empty-text">'+t('empty_offers')+'</p></div>';
 }
 window.acceptOffer = async function(offerId, driverId, price){
@@ -4310,27 +4328,23 @@ function getDemoMarketplace(){
   ];
 }
 
+var _offersData=[];
+var _offersFilter='all'; // all, electric, hybrid
+var _offersSort='asc'; // asc, desc
+
 function renderOfferCard(o){
-  var p = o.profiles || {};
   var v = o.vehicle || null;
-  var driverName = ((p.first_name||'')[0]||'?').toUpperCase()+'.';
-  if(p.last_name) driverName = (p.first_name||'')+' '+p.last_name[0]+'.';
-  var companyName = p.company_name || driverName;
-  var rating = p.rating ? p.rating.toFixed(1) : null;
-  var ratingCount = p.rating_count || 0;
   var price = o.price ? parseFloat(o.price).toFixed(2) + ' \u20ac' : '\u2014';
   var safeId = String(o.id).replace(/'/g,'');
   var safeDrv = String(o.driver_id||'').replace(/'/g,'');
   var safePrice = parseFloat(o.price||0);
 
-  // Vehicle info
-  var vehName = v ? (v.brand||'')+' '+(v.model||'')+' '+(v.year||'') : '';
+  var vehName = v ? (v.brand||'')+' '+(v.model||'')+' '+(v.year||'') : 'V\u00e9hicule non sp\u00e9cifi\u00e9';
   var classLabels={lowcost:'ECO',business:'BUSINESS',van:'VAN',luxe:'LUXE'};
   var classColors={lowcost:'#6B8E23',business:'#1B5E3B',van:'#2E6B4A',luxe:'#8B0000'};
   var vehClass = v ? (v.vehicle_class||'') : '';
-  var classBadge = vehClass ? '<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:'+(classColors[vehClass]||'var(--ink3)')+';color:#fff;font-size:9px;font-weight:700;letter-spacing:.04em;">'+(classLabels[vehClass]||vehClass.toUpperCase())+'</span>' : '';
+  var classBadge = vehClass ? '<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:'+(classColors[vehClass]||'var(--ink3)')+';color:#fff;font-size:9px;font-weight:700;letter-spacing:.04em;vertical-align:middle;margin-right:8px;">'+(classLabels[vehClass]||vehClass.toUpperCase())+'</span>' : '';
 
-  // Amenities
   var amenLabels={electric:'100% \u00c9lectrique',hybrid:'Hybride',wifi:'Wi-Fi',water:'Eau incluse',snacks:'Snacks'};
   var amenIcons={
     electric:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
@@ -4345,39 +4359,45 @@ function renderOfferCard(o){
       }).join('')+'</div>'
     : '';
 
-  // Avatar
-  var initials = ((p.first_name||'?')[0]+(p.last_name||'')[0]).toUpperCase();
-  var avatar = '<div style="width:48px;height:48px;border-radius:50%;background:var(--sand2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:var(--ink3);flex-shrink:0;">'+initials+'</div>';
-
-  // Rating stars
-  var ratingHtml = rating
-    ? '<div style="font-size:12px;color:var(--ink3);margin-top:2px;">\u2605 '+rating+' <span style="color:var(--ink4);">('+ratingCount+')</span></div>'
-    : '<div style="font-size:12px;color:var(--ink4);margin-top:2px;">Nouveau</div>';
-
-  var msg = o.message ? '<div style="font-size:12px;color:var(--ink3);margin-top:10px;padding:8px 10px;background:var(--sand2);border-radius:var(--r);font-style:italic;">\u00ab'+o.message+'\u00bb</div>' : '';
-
-  return '<div class="offer-card" style="padding:18px 20px;">'
-    +'<div style="display:flex;gap:14px;align-items:flex-start;">'
-      // Left: avatar + rating
-      +'<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">'
-        +avatar
-      +'</div>'
-      // Center: driver name, vehicle, amenities
+  return '<div class="offer-card" style="padding:16px 20px;">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;">'
       +'<div style="flex:1;min-width:0;">'
-        +'<div style="font-weight:600;font-size:14px;color:var(--ink);">'+companyName+'</div>'
-        +ratingHtml
-        +(vehName?'<div style="display:flex;align-items:center;gap:8px;margin-top:8px;">'+classBadge+'<span style="font-weight:600;font-size:13px;">'+vehName+'</span></div>':'')
+        +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;"><span style="font-weight:700;font-size:15px;">'+classBadge+vehName+'</span></div>'
         +amenities
-        +msg
       +'</div>'
-      // Right: price + button
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">'
-        +'<div style="text-align:right;"><div style="font-size:10px;text-transform:uppercase;color:var(--ink4);font-weight:500;">Total Price</div><div style="font-size:22px;font-weight:700;color:var(--ink);">'+price+'</div></div>'
+        +'<div style="text-align:right;"><div style="font-size:10px;text-transform:uppercase;color:var(--ink4);font-weight:500;">Total Price</div><div style="font-size:20px;font-weight:700;color:var(--ink);">'+price+'</div></div>'
         +'<button class="btn btn-green" style="white-space:nowrap;padding:8px 16px;font-size:12px;" data-oid="'+safeId+'" data-did="'+safeDrv+'" data-price="'+safePrice+'" onclick="_pickOffer(this)">Choisir cette offre</button>'
       +'</div>'
     +'</div>'
   +'</div>';
 }
+
+function _renderOffersFiltered(){
+  var filtered=_offersData.slice();
+  if(_offersFilter==='electric') filtered=filtered.filter(function(o){return o.vehicle&&o.vehicle.amenities&&o.vehicle.amenities.indexOf('electric')>=0;});
+  if(_offersFilter==='hybrid') filtered=filtered.filter(function(o){return o.vehicle&&o.vehicle.amenities&&o.vehicle.amenities.indexOf('hybrid')>=0;});
+  if(_offersSort==='asc') filtered.sort(function(a,b){return (a.price||0)-(b.price||0);});
+  else filtered.sort(function(a,b){return (b.price||0)-(a.price||0);});
+  var cardsEl=document.getElementById('offers-cards');
+  if(!cardsEl)return;
+  cardsEl.innerHTML=filtered.length
+    ? filtered.map(function(o){return renderOfferCard(o);}).join('')
+    : '<div class="empty-state"><p class="empty-text">Aucune offre ne correspond au filtre</p></div>';
+}
+
+window._offersSetFilter=function(f,btn){
+  _offersFilter=f;
+  document.querySelectorAll('.offers-filter-btn').forEach(function(b){b.style.background='var(--sand2)';b.style.color='var(--ink3)';});
+  if(btn){btn.style.background='var(--green)';btn.style.color='#fff';}
+  _renderOffersFiltered();
+};
+window._offersSetSort=function(dir,btn){
+  _offersSort=dir;
+  document.querySelectorAll('.offers-sort-btn').forEach(function(b){b.style.background='var(--sand2)';b.style.color='var(--ink3)';});
+  if(btn){btn.style.background='var(--green)';btn.style.color='#fff';}
+  _renderOffersFiltered();
+};
 
 window._pickOffer = function(btn){
   openPaymentModal(btn.dataset.oid, btn.dataset.did, parseFloat(btn.dataset.price));
