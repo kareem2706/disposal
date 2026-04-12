@@ -5522,11 +5522,11 @@ window.saveFleetDoc=async function(){
       // Delete old file from storage
       var oldPath=_storagePathFromUrl(existingDoc.file_url);
       if(oldPath){try{await sb.storage.from('fleet-docs').remove([oldPath]);}catch(e){}}
-      var {error}=await sb.from('fleet_documents').update({doc_name:fileInput.files[0].name,file_url:url,status:'pending'}).eq('id',existingDoc.id);
+      var {error}=await sb.from('fleet_documents').update({doc_name:fileInput.files[0].name,file_url:url}).eq('id',existingDoc.id);
       if(error)throw error;
       showToast('Document remplac\u00e9');
     } else {
-      var {error}=await sb.from('fleet_documents').insert({fleet_id:currentUser.id,doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url,status:'pending'});
+      var {error}=await sb.from('fleet_documents').insert({fleet_id:currentUser.id,doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url});
       if(error)throw error;
       showToast('Document ajout\u00e9');
     }
@@ -5688,7 +5688,7 @@ window.saveVehicle=async function(){
       var {error}=await sb.from('fleet_vehicles').update({brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities}).eq('id',vehId);
       if(error)throw error;
     } else {
-      var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities,status:'pending'}).select().single();
+      var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities}).select().single();
       if(error)throw error;
       vehId=veh.id;
     }
@@ -5871,7 +5871,7 @@ window.saveDriver=async function(){
       var {error}=await sb.from('fleet_drivers').update({first_name:fname,last_name:lname,phone:phone||null,email:email||null}).eq('id',drvId);
       if(error)throw error;
     } else {
-      var {data:drv,error}=await sb.from('fleet_drivers').insert({fleet_id:currentUser.id,first_name:fname,last_name:lname,phone:phone||null,email:email||null,status:'pending'}).select().single();
+      var {data:drv,error}=await sb.from('fleet_drivers').insert({fleet_id:currentUser.id,first_name:fname,last_name:lname,phone:phone||null,email:email||null}).select().single();
       if(error)throw error;
       drvId=drv.id;
     }
@@ -6113,7 +6113,7 @@ window.filterAdminFleets=function(filter,btn){
 function _computeFleetStatus(fleet, docs, vehicles, drivers){
   var allItems=[].concat(docs||[],vehicles||[],drivers||[]);
   if(allItems.length===0) return fleet.fleet_verified==='validated' ? 'validated' : 'pending';
-  var hasPending=allItems.some(function(i){return i.status==='pending'||i.status===null;});
+  var hasPending=allItems.some(function(i){return i.status==='pending';});
   if(hasPending) return 'pending';
   if(fleet.fleet_verified==='validated') return 'validated';
   var allValidated=allItems.every(function(i){return i.status==='validated';});
@@ -6130,12 +6130,6 @@ async function loadAdminFleets(){
     var {data:fleets,error}=await sb.from('profiles').select('*').eq('role','driver').order('created_at',{ascending:false});
     if(error) throw error;
     if(!fleets) fleets=[];
-    // Enrich with auth emails via RPC (requires DB function admin_get_profile_emails)
-    var {data:emailData}=await sb.rpc('admin_get_profile_emails',{p_role:'driver'});
-    if(emailData&&emailData.length){
-      var emailMap={};emailData.forEach(function(e){emailMap[e.id]=e.email;});
-      fleets=fleets.map(function(f){return f.email?f:Object.assign({},f,{email:emailMap[f.id]||null});});
-    }
     // Get all fleet documents, vehicles, drivers for status computation
     var {data:allDocs}=await sb.from('fleet_documents').select('fleet_id,status');
     var {data:allVehicles}=await sb.from('fleet_vehicles').select('fleet_id,status');
@@ -6178,7 +6172,7 @@ function renderAdminFleets(){
     +filtered.map(function(f){
       var name=f.company_name||((f.first_name||'')+' '+(f.last_name||'')).trim()||'\u2014';
       var totalDocs=f._docs.length+f._vehicles.length+f._drivers.length;
-      var pendingDocs=f._docs.concat(f._vehicles,f._drivers).filter(function(d){return d.status==='pending'||d.status===null;}).length;
+      var pendingDocs=f._docs.concat(f._vehicles,f._drivers).filter(function(d){return d.status==='pending';}).length;
       var docsInfo=totalDocs>0?(pendingDocs>0?pendingDocs+' en attente / '+totalDocs:totalDocs+' valid\u00e9(s)'):'Aucun';
       var clickable=f._computed_status==='pending'||totalDocs>0;
       return '<tr style="border-bottom:1px solid var(--sand2);'+(clickable?'cursor:pointer;':'')
@@ -6207,19 +6201,26 @@ window.showFleetDetail=async function(fleetId){
     // Get fleet profile
     var {data:fleet,error:fe}=await sb.from('profiles').select('*').eq('id',fleetId).single();
     if(fe) throw fe;
-    // Enrich fleet email via RPC if not already set
-    if(!fleet.email){
-      var {data:emailData}=await sb.rpc('admin_get_profile_emails',{p_role:'driver'});
-      if(emailData&&emailData.length){
-        var found=emailData.find(function(e){return e.id===fleetId;});
-        if(found) fleet=Object.assign({},fleet,{email:found.email});
-      }
-    }
     // Get docs, vehicles, drivers
     var {data:docs}=await sb.from('fleet_documents').select('*').eq('fleet_id',fleetId).order('uploaded_at',{ascending:false});
     var {data:vehicles}=await sb.from('fleet_vehicles').select('*').eq('fleet_id',fleetId).order('created_at',{ascending:false});
     var {data:drivers}=await sb.from('fleet_drivers').select('*').eq('fleet_id',fleetId).order('created_at',{ascending:false});
     docs=docs||[];vehicles=vehicles||[];drivers=drivers||[];
+
+    // Load vehicle documents
+    var vehDocMap={};
+    if(vehicles.length>0){
+      var vIds=vehicles.map(function(v){return v.id;});
+      var {data:vehDocs}=await sb.from('vehicle_documents').select('*').in('vehicle_id',vIds);
+      (vehDocs||[]).forEach(function(d){if(!vehDocMap[d.vehicle_id])vehDocMap[d.vehicle_id]=[];vehDocMap[d.vehicle_id].push(d);});
+    }
+    // Load driver documents
+    var drvDocMap={};
+    if(drivers.length>0){
+      var dIds=drivers.map(function(d){return d.id;});
+      var {data:drvDocs}=await sb.from('driver_documents').select('*').in('driver_id',dIds);
+      (drvDocs||[]).forEach(function(d){if(!drvDocMap[d.driver_id])drvDocMap[d.driver_id]=[];drvDocMap[d.driver_id].push(d);});
+    }
 
     var name=fleet.company_name||((fleet.first_name||'')+' '+(fleet.last_name||'')).trim()||'\u2014';
     var allItems=[].concat(docs,vehicles,drivers);
@@ -6279,8 +6280,17 @@ window.showFleetDetail=async function(fleetId){
         +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Actions</th>'
         +'</tr></thead><tbody>'
         +vehicles.map(function(v){
+          var vDocs=vehDocMap[v.id]||[];
+          var vDocLabels={carte_grise:'Carte grise',assurance:'Assurance',controle_technique:'CT',vignette_identification:'Vignette'};
+          var vDocsHtml=vDocs.length>0
+            ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+vDocs.map(function(d){
+              return '<a href="'+d.file_url+'" target="_blank" style="font-size:10px;padding:2px 8px;background:var(--blue-bg);color:var(--blue);border-radius:4px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;">'
+                +'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 1h5l4 4v9a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z"/><path d="M9 1v4h4"/></svg>'
+                +(vDocLabels[d.doc_type]||d.doc_type)+'</a>';
+            }).join('')+'</div>'
+            :'';
           return '<tr style="border-bottom:1px solid var(--sand2);">'
-            +'<td style="padding:10px 14px;font-weight:500;">'+(v.brand||'')+' '+(v.model||'')+' '+(v.year||'')+'</td>'
+            +'<td style="padding:10px 14px;font-weight:500;">'+(v.brand||'')+' '+(v.model||'')+' '+(v.year||'')+vDocsHtml+'</td>'
             +'<td style="padding:10px 14px;font-size:12px;">'+(v.vehicle_class||'\u2014')+'</td>'
             +'<td style="padding:10px 14px;font-size:12px;">'+(v.plate||'\u2014')+'</td>'
             +'<td style="padding:10px 14px;">'+_adminStatusBadge(v.status)+'</td>'
@@ -6303,8 +6313,17 @@ window.showFleetDetail=async function(fleetId){
         +'<th style="padding:10px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;">Actions</th>'
         +'</tr></thead><tbody>'
         +drivers.map(function(d){
+          var dDocs=drvDocMap[d.id]||[];
+          var dDocLabels={permis_conduire:'Permis',carte_vtc:'Carte VTC'};
+          var dDocsHtml=dDocs.length>0
+            ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+dDocs.map(function(doc){
+              return '<a href="'+doc.file_url+'" target="_blank" style="font-size:10px;padding:2px 8px;background:var(--blue-bg);color:var(--blue);border-radius:4px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;">'
+                +'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 1h5l4 4v9a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z"/><path d="M9 1v4h4"/></svg>'
+                +(dDocLabels[doc.doc_type]||doc.doc_type)+'</a>';
+            }).join('')+'</div>'
+            :'';
           return '<tr style="border-bottom:1px solid var(--sand2);">'
-            +'<td style="padding:10px 14px;font-weight:500;">'+(d.first_name||'')+' '+(d.last_name||'')+'</td>'
+            +'<td style="padding:10px 14px;font-weight:500;">'+(d.first_name||'')+' '+(d.last_name||'')+dDocsHtml+'</td>'
             +'<td style="padding:10px 14px;font-size:12px;">'+(d.phone||'\u2014')+'</td>'
             +'<td style="padding:10px 14px;font-size:12px;">'+(d.email||'\u2014')+'</td>'
             +'<td style="padding:10px 14px;">'+_adminStatusBadge(d.status)+'</td>'
@@ -6343,14 +6362,7 @@ async function loadAdminClients(){
   try{
     var {data,error}=await sb.from('profiles').select('*').eq('role','client').order('created_at',{ascending:false});
     if(error) throw error;
-    var clients=data||[];
-    // Enrich with auth emails via RPC (requires DB function admin_get_profile_emails)
-    var {data:emailData}=await sb.rpc('admin_get_profile_emails',{p_role:'client'});
-    if(emailData&&emailData.length){
-      var emailMap={};emailData.forEach(function(e){emailMap[e.id]=e.email;});
-      clients=clients.map(function(c){return c.email?c:Object.assign({},c,{email:emailMap[c.id]||null});});
-    }
-    _adminClientsData=clients;
+    _adminClientsData=data||[];
     renderAdminClients();
   }catch(e){el.innerHTML='<div class="card" style="padding:24px;color:var(--red);font-size:13px;">Erreur: '+(e.message||e)+'</div>';}
 }
