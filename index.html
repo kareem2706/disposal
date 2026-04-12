@@ -2037,7 +2037,7 @@ const DEMO_MODE_KEY='disposal_demo';
 const STRIPE_FEE_MULTIPLIER = 1.029; // 1 + 2.9% Stripe fee
 const STRIPE_PK = 'pk_test_REPLACE_WITH_YOUR_STRIPE_PUBLISHABLE_KEY'; // Replace with your Stripe publishable key
 const MISSION_STATUSES = ['confirmed', 'active', 'done']; // Driver mission statuses to display
-const ADMIN_EMAIL = ''; // No admin configured
+const ADMIN_EMAIL = 'kb@bleenr.com';
 
 let sb=null,_entering=false;           // Supabase client
 let currentUser = null;  // auth.User
@@ -2676,6 +2676,7 @@ function enterApp(){
   const metaRole = currentUser?.user_metadata?.role;
   const role = currentProfile?.role || metaRole || 'client';
   const isAdmin = currentUser?.email === ADMIN_EMAIL;
+  console.log('[enterApp] email:', currentUser?.email, 'ADMIN_EMAIL:', ADMIN_EMAIL, 'isAdmin:', isAdmin, 'role:', role);
   const isAdminDriver = isAdmin && role === 'driver';
   currentRole = isAdmin ? 'admin' : role;
   document.getElementById('nav-client').style.display = (!isAdmin && role === 'client') ? 'block' : 'none';
