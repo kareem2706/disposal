@@ -3220,7 +3220,7 @@ async function openOffersModal(rideId){
 
     // Query offers by ride_id only - no status filter, no join
     const { data, error } = await sb.from('offers')
-      .select('id, ride_id, driver_id, price, message, status, created_at')
+      .select('id, ride_id, driver_id, price, message, status, created_at, vehicle_id')
       .eq('ride_id', rideId)
       .neq('status', 'rejected');
     if(error){ console.error('offers error:', error.message, error.code); }
@@ -3231,12 +3231,24 @@ async function openOffersModal(rideId){
       const ids = [...new Set(offers.map(o => o.driver_id).filter(Boolean))];
       if(ids.length > 0){
         const { data: pData } = await sb.from('profiles')
-          .select('id, first_name, last_name, rating, rating_count')
+          .select('id, first_name, last_name, company_name, rating, rating_count')
           .in('id', ids);
         if(pData){
           const pm = {};
           pData.forEach(p => { pm[p.id] = p; });
           offers.forEach(o => { o.profiles = pm[o.driver_id] || {}; });
+        }
+      }
+      // Fetch vehicles for offers
+      const vehIds = [...new Set(offers.map(o => o.vehicle_id).filter(Boolean))];
+      if(vehIds.length > 0){
+        const { data: vData } = await sb.from('fleet_vehicles')
+          .select('id, brand, model, year, vehicle_class, amenities')
+          .in('id', vehIds);
+        if(vData){
+          const vm = {};
+          vData.forEach(v => { vm[v.id] = v; });
+          offers.forEach(o => { o.vehicle = vm[o.vehicle_id] || null; });
         }
       }
     }
@@ -3245,7 +3257,7 @@ async function openOffersModal(rideId){
     offers = getDemoOffers();
   }
 
-  document.getElementById('offers-modal-title').textContent = 'Offres reçues (' + offers.length + ')';
+  document.getElementById('offers-modal-title').innerHTML = '<div style="font-size:18px;font-weight:700;">Offres disponibles</div><div style="font-size:12px;color:var(--ink3);font-weight:400;margin-top:2px;">' + offers.length + ' chauffeur'+(offers.length>1?'s':'')+' certifié'+(offers.length>1?'s':'')+' pour votre trajet</div>';
   document.getElementById('offers-list').innerHTML = offers.length
     ? offers.map(o => renderOfferCard(o)).join('')
     : '<div class="empty-state"><p class="empty-text">'+t('empty_offers')+'</p></div>';
@@ -4300,22 +4312,71 @@ function getDemoMarketplace(){
 
 function renderOfferCard(o){
   var p = o.profiles || {};
-  var stars = p.rating ? p.rating.toFixed(1) + ' ★' : '—';
-  var ratingCount = p.rating_count ? '(' + p.rating_count + ' avis)' : '';
-  var price = o.price ? parseFloat(o.price).toFixed(0) + ' €' : '—';
-  var msg = o.message ? '<div style="font-size:12px;color:var(--ink3);margin-top:6px;font-style:italic;">«' + o.message + '»</div>' : '';
+  var v = o.vehicle || null;
+  var driverName = ((p.first_name||'')[0]||'?').toUpperCase()+'.';
+  if(p.last_name) driverName = (p.first_name||'')+' '+p.last_name[0]+'.';
+  var companyName = p.company_name || driverName;
+  var rating = p.rating ? p.rating.toFixed(1) : null;
+  var ratingCount = p.rating_count || 0;
+  var price = o.price ? parseFloat(o.price).toFixed(2) + ' \u20ac' : '\u2014';
   var safeId = String(o.id).replace(/'/g,'');
   var safeDrv = String(o.driver_id||'').replace(/'/g,'');
   var safePrice = parseFloat(o.price||0);
-  return '<div class="offer-card">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'
-      + '<div style="font-weight:600;font-size:14px;">Une entreprise a soumis une offre</div>'
-      + '<div style="font-size:20px;font-weight:700;color:var(--green);">' + price + ' <span style="font-size:11px;font-weight:400;color:var(--ink3);">HTVA</span></div>'
-    + '</div>'
-    + '<div style="font-size:12px;color:var(--ink3);margin-bottom:8px;">' + stars + ' ' + ratingCount + '</div>'
-    + msg
-    + '<button class="btn btn-green" style="margin-top:12px;width:100%;" data-oid="' + safeId + '" data-did="' + safeDrv + '" data-price="' + safePrice + '" onclick="_pickOffer(this)">Choisir ce chauffeur →</button>'
-    + '</div>';
+
+  // Vehicle info
+  var vehName = v ? (v.brand||'')+' '+(v.model||'')+' '+(v.year||'') : '';
+  var classLabels={lowcost:'ECO',business:'BUSINESS',van:'VAN',luxe:'LUXE'};
+  var classColors={lowcost:'#6B8E23',business:'#1B5E3B',van:'#2E6B4A',luxe:'#8B0000'};
+  var vehClass = v ? (v.vehicle_class||'') : '';
+  var classBadge = vehClass ? '<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:'+(classColors[vehClass]||'var(--ink3)')+';color:#fff;font-size:9px;font-weight:700;letter-spacing:.04em;">'+(classLabels[vehClass]||vehClass.toUpperCase())+'</span>' : '';
+
+  // Amenities
+  var amenLabels={electric:'100% \u00c9lectrique',hybrid:'Hybride',wifi:'Wi-Fi',water:'Eau incluse',snacks:'Snacks'};
+  var amenIcons={
+    electric:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+    hybrid:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17l.01-.01M12 17l.01-.01M17 17l.01-.01M7 12l.01-.01M12 12l.01-.01M17 12l.01-.01"/><path d="M2 5v14a2 2 0 002 2h16a2 2 0 002-2V5a2 2 0 00-2-2H4a2 2 0 00-2 2z"/></svg>',
+    wifi:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0114 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.94 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg>',
+    water:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>',
+    snacks:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>'
+  };
+  var amenities = v && v.amenities && v.amenities.length > 0
+    ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">'+v.amenities.map(function(a){
+        return '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--sand2);border-radius:20px;font-size:10px;color:var(--ink2);font-weight:500;">'+(amenIcons[a]||'')+' '+(amenLabels[a]||a)+'</span>';
+      }).join('')+'</div>'
+    : '';
+
+  // Avatar
+  var initials = ((p.first_name||'?')[0]+(p.last_name||'')[0]).toUpperCase();
+  var avatar = '<div style="width:48px;height:48px;border-radius:50%;background:var(--sand2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:var(--ink3);flex-shrink:0;">'+initials+'</div>';
+
+  // Rating stars
+  var ratingHtml = rating
+    ? '<div style="font-size:12px;color:var(--ink3);margin-top:2px;">\u2605 '+rating+' <span style="color:var(--ink4);">('+ratingCount+')</span></div>'
+    : '<div style="font-size:12px;color:var(--ink4);margin-top:2px;">Nouveau</div>';
+
+  var msg = o.message ? '<div style="font-size:12px;color:var(--ink3);margin-top:10px;padding:8px 10px;background:var(--sand2);border-radius:var(--r);font-style:italic;">\u00ab'+o.message+'\u00bb</div>' : '';
+
+  return '<div class="offer-card" style="padding:18px 20px;">'
+    +'<div style="display:flex;gap:14px;align-items:flex-start;">'
+      // Left: avatar + rating
+      +'<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">'
+        +avatar
+      +'</div>'
+      // Center: driver name, vehicle, amenities
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-weight:600;font-size:14px;color:var(--ink);">'+companyName+'</div>'
+        +ratingHtml
+        +(vehName?'<div style="display:flex;align-items:center;gap:8px;margin-top:8px;">'+classBadge+'<span style="font-weight:600;font-size:13px;">'+vehName+'</span></div>':'')
+        +amenities
+        +msg
+      +'</div>'
+      // Right: price + button
+      +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">'
+        +'<div style="text-align:right;"><div style="font-size:10px;text-transform:uppercase;color:var(--ink4);font-weight:500;">Total Price</div><div style="font-size:22px;font-weight:700;color:var(--ink);">'+price+'</div></div>'
+        +'<button class="btn btn-green" style="white-space:nowrap;padding:8px 16px;font-size:12px;" data-oid="'+safeId+'" data-did="'+safeDrv+'" data-price="'+safePrice+'" onclick="_pickOffer(this)">Choisir cette offre</button>'
+      +'</div>'
+    +'</div>'
+  +'</div>';
 }
 
 window._pickOffer = function(btn){
