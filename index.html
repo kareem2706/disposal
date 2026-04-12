@@ -1572,7 +1572,7 @@ body{background:var(--bg);}
       <button class="btn btn-close" id="payment-btn-cancel" onclick="closeModal('m-payment')">Annuler</button>
       <button class="btn btn-close" id="payment-btn-back" style="display:none;" onclick="paymentGoBack()">&#8592; Retour</button>
       <button class="btn btn-green" id="payment-btn-next" style="min-width:200px;">Suivant &rarr;</button>
-      <button class="btn btn-green" id="payment-btn-confirm-bank" style="display:none;min-width:200px;" onclick="confirmPayment('bank_transfer')">Faire le paiement &rarr;</button>
+      <button class="btn btn-green" id="payment-btn-confirm-bank" style="display:none;min-width:200px;" onclick="confirmPayment('bank_transfer')">Paiement effectu&eacute;</button>
     </div>
   </div>
 </div>
@@ -4554,7 +4554,7 @@ function _paymentShowStep(step){
   if(step === 'stripe'){
     // Update confirm button label with total TVAC including Stripe fees
     var totalTvac = currentOfferAmount * (1 + TVA_RATE);
-    var total = (totalTvac * STRIPE_FEE_MULTIPLIER).toFixed(2);
+    var total = totalTvac.toFixed(2);
     if(confirmStripeBtn) confirmStripeBtn.textContent = 'Payer ' + total + ' € →';
     _mountStripeCard();
   }
@@ -4563,7 +4563,7 @@ function _paymentShowStep(step){
     var bankTvac = currentOfferAmount * (1 + TVA_RATE);
     document.getElementById('bank-amount').textContent = bankTvac.toFixed(2) + ' €';
     var confirmBankBtn2 = document.getElementById('payment-btn-confirm-bank');
-    if(confirmBankBtn2) confirmBankBtn2.textContent = 'Faire le paiement ' + bankTvac.toFixed(2) + ' \u20ac \u2192';
+    if(confirmBankBtn2) confirmBankBtn2.textContent = 'Paiement effectu\u00e9';
   }
 }
 
@@ -4614,7 +4614,7 @@ window.selectPaymentMethod = function(method){
   var nextBtn=document.getElementById('payment-btn-next');
   if(nextBtn){
     if(method==='stripe'){
-      var totalStripe=((currentOfferAmount*(1+TVA_RATE))*STRIPE_FEE_MULTIPLIER).toFixed(2).replace('.',',');
+      var totalStripe=(currentOfferAmount*(1+TVA_RATE)).toFixed(2).replace('.',',');
       nextBtn.textContent='Payer '+totalStripe+' \u20ac via Stripe \u2192';
       nextBtn.onclick=function(){confirmStripeCheckout();};
     } else {
@@ -4638,7 +4638,6 @@ window.confirmStripeCheckout=async function(){
   }
   await sb.from('offers').update({status:'accepted'}).eq('id',currentOfferId);
   await sb.from('offers').update({status:'rejected'}).eq('ride_id',currentRideId).neq('id',currentOfferId);
-  await sb.from('rides').update({status:'confirmed',driver_id:driverId,final_price:currentOfferAmount,payment_method:'stripe'}).eq('id',currentRideId);
 
   // Redirect to Stripe Checkout
   try{
@@ -4702,13 +4701,13 @@ window.confirmPayment = async function(method){
 
   var { error: acceptErr } = await sb.from('offers').update({status:'accepted'}).eq('id', currentOfferId);
   if(acceptErr){
-    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Faire le paiement \u2192' : 'Payer \u2192');
+    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Paiement effectu\u00e9' : 'Payer \u2192');
     if(errEl){ showError(errEl, acceptErr.message); }
     return;
   }
   var { error: rejectErr } = await sb.from('offers').update({status:'rejected'}).eq('ride_id', currentRideId).neq('id', currentOfferId);
   if(rejectErr){
-    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Faire le paiement \u2192' : 'Payer \u2192');
+    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Paiement effectu\u00e9' : 'Payer \u2192');
     if(errEl){ showError(errEl, rejectErr.message); }
     return;
   }
@@ -4728,7 +4727,7 @@ window.confirmPayment = async function(method){
   var { error } = await sb.from('rides').update(rideUpdates).eq('id', currentRideId);
 
   if(error){
-    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Faire le paiement \u2192' : 'Payer \u2192');
+    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Paiement effectu\u00e9' : 'Payer \u2192');
     if(errEl){ showError(errEl, error.message); }
     return;
   }
