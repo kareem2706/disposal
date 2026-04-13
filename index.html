@@ -2002,12 +2002,12 @@ body{background:var(--bg);}
           var payDriverId=offerRes.data?offerRes.data.driver_id:null;
           await sb.from('offers').update({status:'accepted'}).eq('id',pOffer);
           await sb.from('offers').update({status:'rejected'}).eq('ride_id',pRide).neq('id',pOffer);
-          await sb.from('rides').update({status:'confirmed',payment_method:'stripe',payment_status:'paid',final_price:tvac||null,driver_id:payDriverId}).eq('id',pRide);
-          if(typeof showPaymentResult==='function')showPaymentResult('success','Paiement r\u00e9ussi !','Votre course est confirm\u00e9e.');
+          await sb.from('rides').update({status:'confirmed',payment_method:'stripe',final_price:tvac||null,driver_id:payDriverId}).eq('id',pRide);
+          if(typeof showPaymentResult==='function')showPaymentResult('success','Paiement valid\u00e9','Votre course est confirm\u00e9e. Vous recevrez une confirmation par email.');
           if(typeof loadClientDashboard==='function')await loadClientDashboard();
         }catch(e){console.error(e);}
       }else if(payStatus==='cancel'){
-        if(typeof showPaymentResult==='function')showPaymentResult('error','Paiement annulé','Le paiement a été annulé.');
+        if(typeof showPaymentResult==='function')showPaymentResult('error','Paiement interrompu','Le paiement a \u00e9t\u00e9 interrompu. Vous pouvez r\u00e9essayer depuis vos demandes.');
       }
     },1500);
   });
@@ -4523,66 +4523,80 @@ window.openPaymentModal = function(offerId, driverId, amount){
   var feePercent = ((STRIPE_FEE_MULTIPLIER - 1) * 100).toFixed(1);
   document.getElementById('stripe-fee-label').textContent = 'Des frais supplémentaires peuvent s\'appliquer';
 
-  // Populate ride route info
+  // Populate ride route info (same style as detail popup)
   var rideInfoEl = document.getElementById('payment-ride-info');
   if(rideInfoEl){
     var r = _currentPaymentRide;
     if(r){
       var isDisp = r.trip_type === 'disposal';
-      var from = r.from_address || '—';
-      var to   = r.to_address   || '—';
-      var dateStr = (r.ride_date ? formatDate(r.ride_date) : '') + (r.ride_time ? ' ' + r.ride_time.slice(0,5) : '');
-      var metaParts = [];
-      if(dateStr.trim()) metaParts.push(dateStr.trim());
-      if(r.passengers) metaParts.push(r.passengers + ' pax');
-      if(r.vehicle_type) metaParts.push(r.vehicle_type);
-      var metaHtml = metaParts.length ? '<div style="font-size:11.5px;color:var(--ink3);margin-bottom:8px;">' + metaParts.join(' &middot; ') + '</div>' : '';
+      var from = r.from_address || '\u2014';
+      var to   = r.to_address   || '\u2014';
       var durStr = '';
+      var kmInclus = '';
       if(isDisp && r.notes){
-        var dm = r.notes.match(/Dur\u00e9e:([^\s|,]+)/);
-        if(dm) durStr = dm[1] + 'h';
+        var dm = r.notes.match(/Dur\u00e9e:([^\s|,\u2014]+)/);
+        if(dm){ durStr = dm[1]; if(durStr.indexOf('h')<0)durStr+='h'; kmInclus = (parseInt(dm[1])||2)*20+'km inclus'; }
       }
-      var toLabel = isDisp ? ('Mise à disposition' + (durStr ? ' (' + durStr + ')' : '')) : to;
-      var distRowId = 'payment-dist-row';
-      var distTextId = 'payment-dist-text';
-      var distRow = !isDisp
-        ? '<div id="' + distRowId + '" style="margin-top:8px;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink4);">'
-            + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;animation:spin .8s linear infinite;transform-origin:center"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
-            + '<span id="' + distTextId + '">Calcul de la distance…</span>'
-            + '</div>'
-        : '';
-      rideInfoEl.innerHTML = metaHtml
-        + '<div style="display:flex;gap:10px;align-items:stretch;">'
-          + '<div style="display:flex;flex-direction:column;align-items:center;width:14px;flex-shrink:0;">'
-            + '<div style="width:9px;height:9px;border-radius:50%;background:#2E6B4A;margin-top:3px;flex-shrink:0;"></div>'
-            + '<div style="width:2px;flex:1;background:var(--sand3);min-height:14px;"></div>'
-            + '<div style="width:9px;height:9px;border-radius:50%;background:#B03030;flex-shrink:0;"></div>'
-          + '</div>'
-          + '<div style="flex:1;min-width:0;">'
-            + '<div style="font-size:13px;font-weight:500;margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + from + '</div>'
-            + '<div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + toLabel + '</div>'
-          + '</div>'
-        + '</div>'
-        + distRow;
+      var toLabel = isDisp ? '\u2014' : to;
+      var iconGreen='<svg width="14" height="18" viewBox="0 0 24 30" fill="#1B5E3B"><path d="M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>';
+      var iconRed='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
+      var html='';
+      // Departure
+      html+='<div style="display:flex;gap:14px;">'
+        +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'
+          +'<div style="margin-top:3px;flex-shrink:0;">'+iconGreen+'</div>'
+          +'<div style="width:2px;flex:1;background:var(--sand3);min-height:10px;margin-top:2px;"></div>'
+        +'</div>'
+        +'<div style="flex:1;min-width:0;padding-bottom:6px;">'
+          +'<div class="detail-seg-label">LIEU DE PRISE EN CHARGE</div>'
+          +'<div style="font-size:13px;font-weight:500;">'+from+'</div>'
+        +'</div>'
+      +'</div>';
+      // Duration line for disposal
+      if(isDisp&&durStr){
+        html+='<div style="display:flex;gap:14px;">'
+          +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'
+            +'<div style="width:8px;height:8px;border-radius:2px;background:var(--sand3);margin-top:3px;"></div>'
+            +'<div style="width:2px;flex:1;background:var(--sand3);min-height:8px;margin-top:2px;"></div>'
+          +'</div>'
+          +'<div style="flex:1;font-size:12px;color:var(--ink3);padding-bottom:6px;">'+durStr+'</div>'
+        +'</div>';
+      }
+      // Arrival / end
+      html+='<div style="display:flex;gap:14px;">'
+        +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'
+          +'<div style="margin-top:3px;flex-shrink:0;">'+iconRed+'</div>'
+        +'</div>'
+        +'<div style="flex:1;min-width:0;padding-bottom:2px;">'
+          +'<div class="detail-seg-label">'+(isDisp?'FIN DE MISSION':'ARRIV\u00c9E')+'</div>'
+          +'<div style="font-size:13px;font-weight:500;">'+toLabel+'</div>'
+        +'</div>'
+      +'</div>';
+      // Km inclus for disposal
+      if(isDisp&&kmInclus){
+        html+='<div style="padding-left:30px;font-size:12px;color:var(--ink3);margin-top:4px;">'+kmInclus+'</div>';
+      }
+      // Distance row for A→B
+      if(!isDisp){
+        html+='<div id="payment-dist-row" style="padding-left:30px;margin-top:6px;display:none;font-size:12px;color:var(--ink2);font-weight:500;">'
+          +'<span id="payment-dist-text"></span></div>';
+      }
+      rideInfoEl.innerHTML=html;
       rideInfoEl.style.display = '';
-      // Compute distance & duration via Google Distance Matrix for A→B rides
+      // Compute distance for A→B
       if(!isDisp && r.from_address && r.to_address && typeof google !== 'undefined' && google.maps && google.maps.DistanceMatrixService){
         (new google.maps.DistanceMatrixService()).getDistanceMatrix({
           origins: [r.from_address], destinations: [r.to_address],
-          travelMode: google.maps.TravelMode.DRIVING, language: currentLang || 'fr'
+          travelMode: google.maps.TravelMode.DRIVING, language: 'fr'
         }, function(res, st){
-          var rowEl = document.getElementById(distRowId);
-          var textEl = document.getElementById(distTextId);
+          var rowEl = document.getElementById('payment-dist-row');
+          var textEl = document.getElementById('payment-dist-text');
           var e = res && res.rows && res.rows[0] && res.rows[0].elements && res.rows[0].elements[0];
           if(st === 'OK' && e && e.status === 'OK'){
-            if(rowEl){ rowEl.style.color = 'var(--ink3)'; var svg = rowEl.querySelector('svg'); if(svg) svg.style.animation = 'none'; }
-            if(textEl) textEl.textContent = e.distance.text + ' · ' + e.duration.text;
-          } else {
-            if(rowEl) rowEl.style.display = 'none';
+            if(rowEl)rowEl.style.display='block';
+            if(textEl)textEl.textContent=e.distance.text+' \u00b7 '+e.duration.text;
           }
         });
-      } else if(!isDisp){
-        var _pr = document.getElementById(distRowId); if(_pr) _pr.style.display = 'none';
       }
     } else {
       rideInfoEl.style.display = 'none';
@@ -4713,28 +4727,20 @@ window.confirmStripeCheckout=async function(){
   if(!sb||!currentRideId||!currentOfferId)return;
   if(btn)setLoading(btn,true,'Redirection vers Stripe...');
 
-  // Redirect to Stripe Checkout (offer acceptance handled by success callback)
   try{
-    var totalTvac=(currentOfferAmount*(1+TVA_RATE)).toFixed(2);
-    sessionStorage.setItem('stripe_pending_tvac',totalTvac);
-    console.log('[stripe] amount:', totalTvac, 'ride:', currentRideId);
+    var totalTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
+    var amountCents=Math.round(totalTvac*100);
+    sessionStorage.setItem('stripe_pending_tvac',totalTvac.toFixed(2));
+    console.log('[stripe] HTVA:', currentOfferAmount, 'TVAC:', totalTvac, 'cents:', amountCents, 'ride:', currentRideId);
     var resp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
-      body:JSON.stringify({amount:currentOfferAmount,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
+      body:JSON.stringify({amount:amountCents,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
     });
-    console.log('[stripe] response status:', resp.status);
     if(!resp.ok){var errText=await resp.text();throw new Error('Erreur serveur ('+resp.status+'): '+errText.slice(0,100));}
     var result=await resp.json();
     if(!result.url)throw new Error('Lien de paiement manquant');
     window.location.href=result.url;
-    if(!resp.ok){ throw new Error(result.error||'Erreur serveur ('+resp.status+')'); }
-    if(result.url){
-      sessionStorage.setItem('stripe_pending_tvac',totalTvac);
-      window.location.href=result.url;
-    }else{
-      throw new Error(result.error||'Lien de paiement manquant');
-    }
   }catch(e){
     if(errEl){showError(errEl,e.message||'Erreur de redirection Stripe');}
     if(btn)setLoading(btn,false,'Payer via Stripe \u2192');
