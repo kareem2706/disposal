@@ -66,7 +66,12 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
+    // Return a safe, non-stack-trace error message to the client.
+    const isStripeError =
+      error instanceof Error && error.constructor.name === "StripeError";
+    const message = isStripeError
+      ? (error as Error).message
+      : "Erreur lors de la création de la session de paiement";
     return new Response(JSON.stringify({ error: message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
