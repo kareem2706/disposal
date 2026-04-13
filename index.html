@@ -4830,10 +4830,12 @@ window.confirmStripePayment=async function(){
   var errEl=document.getElementById('payment-err-stripe');if(errEl){errEl.classList.remove('show');errEl.textContent='';}
   var btn=document.getElementById('payment-btn-confirm-stripe');if(btn)setLoading(btn,true,'Redirection…');
   try{
-    sessionStorage.setItem('stripe_pending_tvac',(currentOfferAmount*(1+TVA_RATE)).toFixed(2));
+    var totalTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
+    var amountCents=Math.round(totalTvac*100);
+    sessionStorage.setItem('stripe_pending_tvac',totalTvac.toFixed(2));
     var efResp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
-      body:JSON.stringify({amount:currentOfferAmount,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
+      body:JSON.stringify({amount:amountCents,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
     });
     if(!efResp.ok){var t=await efResp.text();throw new Error('Edge Function: '+efResp.status+' '+t.slice(0,100));}
     var d=await efResp.json();if(!d.url)throw new Error('URL manquante');window.location.href=d.url;
