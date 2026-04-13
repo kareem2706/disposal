@@ -4731,12 +4731,13 @@ window.confirmStripeCheckout=async function(){
 
   try{
     var totalTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
+    var amountCents=Math.round(totalTvac*100);
     sessionStorage.setItem('stripe_pending_tvac',totalTvac.toFixed(2));
-    console.log('[stripe] HTVA:', currentOfferAmount, 'TVAC:', totalTvac, 'ride:', currentRideId);
+    console.log('[stripe] HTVA:', currentOfferAmount, 'TVAC:', totalTvac, 'cents:', amountCents, 'ride:', currentRideId);
     var resp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
-      body:JSON.stringify({amount:currentOfferAmount,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
+      body:JSON.stringify({amount:amountCents,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
     });
     if(!resp.ok){var errText=await resp.text();throw new Error('Erreur serveur ('+resp.status+'): '+errText.slice(0,100));}
     var result=await resp.json();
