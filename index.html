@@ -4716,14 +4716,20 @@ window.confirmStripeCheckout=async function(){
   // Redirect to Stripe Checkout (offer acceptance handled by success callback)
   try{
     var totalTvac=(currentOfferAmount*(1+TVA_RATE)).toFixed(2);
+    // Refresh session to get a fresh token
+    await sb.auth.refreshSession();
     var session=await sb.auth.getSession();
     var token=session.data?.session?.access_token||'';
+    console.log('[stripe] token length:', token.length, 'amount:', totalTvac, 'ride:', currentRideId);
+    if(!token){throw new Error('Session expir\u00e9e. Veuillez vous reconnecter.');}
     var resp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SB_KEY},
       body:JSON.stringify({amount:Math.round(parseFloat(totalTvac)*100),ride_id:currentRideId,offer_id:currentOfferId,success_url:window.location.origin+window.location.pathname+'?payment=success&ride='+currentRideId+'&offer='+currentOfferId,cancel_url:window.location.origin+window.location.pathname+'?payment=cancel'})
     });
+    console.log('[stripe] response status:', resp.status);
     var rawText=await resp.text();
+    console.log('[stripe] response body:', rawText.substring(0,200));
     var result; try{ result=JSON.parse(rawText); }catch(e){ result={}; }
     if(!resp.ok){ throw new Error(result.error||'Erreur serveur ('+resp.status+')'); }
     if(result.url){
