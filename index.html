@@ -4715,10 +4715,9 @@ window.selectPaymentMethod = function(method){
     if(method==='stripe'){
       // Compute amount once here so button label and Stripe charge are identical
       var totalTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
-      var amountCents=Math.round(totalTvac*100);
       var totalStripe=totalTvac.toFixed(2).replace('.',',');
       nextBtn.textContent='Payer '+totalStripe+' \u20ac via Stripe \u2192';
-      nextBtn.onclick=function(){confirmStripeCheckout(amountCents,totalTvac);};
+      nextBtn.onclick=function(){confirmStripeCheckout(totalTvac,totalTvac);};
     } else {
       // Immediately show bank transfer details
       _paymentShowStep('bank');
@@ -4726,7 +4725,7 @@ window.selectPaymentMethod = function(method){
   }
 };
 
-window.confirmStripeCheckout=async function(amountCents,totalTvac){
+window.confirmStripeCheckout=async function(amount,totalTvac){
   var btn=document.getElementById('payment-btn-next');
   var errEl=document.getElementById('payment-err');
   if(!sb||!currentRideId||!currentOfferId)return;
@@ -4734,16 +4733,16 @@ window.confirmStripeCheckout=async function(amountCents,totalTvac){
 
   try{
     // Use the exact amount shown on the Payer button (computed in selectPaymentMethod)
-    if(amountCents===undefined||totalTvac===undefined){
+    if(amount===undefined||totalTvac===undefined){
       totalTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
-      amountCents=Math.round(totalTvac*100);
+      amount=totalTvac;
     }
     sessionStorage.setItem('stripe_pending_tvac',totalTvac.toFixed(2));
-    console.log('[stripe] HTVA:', currentOfferAmount, 'TVAC:', totalTvac, 'cents:', amountCents, 'ride:', currentRideId);
+    console.log('[stripe] HTVA:', currentOfferAmount, 'TVAC:', totalTvac, 'amount:', amount, 'ride:', currentRideId);
     var resp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
-      body:JSON.stringify({amount:amountCents,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
+      body:JSON.stringify({amount:amount,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
     });
     if(!resp.ok){var errText=await resp.text();throw new Error('Erreur serveur ('+resp.status+'): '+errText.slice(0,100));}
     var result=await resp.json();
@@ -4837,11 +4836,10 @@ window.confirmStripePayment=async function(){
   var btn=document.getElementById('payment-btn-confirm-stripe');if(btn)setLoading(btn,true,'Redirection…');
   try{
     var totalTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
-    var amountCents=Math.round(totalTvac*100);
     sessionStorage.setItem('stripe_pending_tvac',totalTvac.toFixed(2));
     var efResp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
-      body:JSON.stringify({amount:amountCents,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
+      body:JSON.stringify({amount:totalTvac,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
     });
     if(!efResp.ok){var t=await efResp.text();throw new Error('Edge Function: '+efResp.status+' '+t.slice(0,100));}
     var d=await efResp.json();if(!d.url)throw new Error('URL manquante');window.location.href=d.url;
