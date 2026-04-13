@@ -4716,21 +4716,18 @@ window.confirmStripeCheckout=async function(){
   // Redirect to Stripe Checkout (offer acceptance handled by success callback)
   try{
     var totalTvac=(currentOfferAmount*(1+TVA_RATE)).toFixed(2);
-    // Refresh session to get a fresh token
-    await sb.auth.refreshSession();
-    var session=await sb.auth.getSession();
-    var token=session.data?.session?.access_token||'';
-    console.log('[stripe] token length:', token.length, 'amount:', totalTvac, 'ride:', currentRideId);
-    if(!token){throw new Error('Session expir\u00e9e. Veuillez vous reconnecter.');}
+    sessionStorage.setItem('stripe_pending_tvac',totalTvac);
+    console.log('[stripe] amount:', totalTvac, 'ride:', currentRideId);
     var resp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SB_KEY},
-      body:JSON.stringify({amount:Math.round(parseFloat(totalTvac)*100),ride_id:currentRideId,offer_id:currentOfferId,success_url:window.location.origin+window.location.pathname+'?payment=success&ride='+currentRideId+'&offer='+currentOfferId,cancel_url:window.location.origin+window.location.pathname+'?payment=cancel'})
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
+      body:JSON.stringify({amount:currentOfferAmount,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
     });
     console.log('[stripe] response status:', resp.status);
-    var rawText=await resp.text();
-    console.log('[stripe] response body:', rawText.substring(0,200));
-    var result; try{ result=JSON.parse(rawText); }catch(e){ result={}; }
+    if(!resp.ok){var errText=await resp.text();throw new Error('Erreur serveur ('+resp.status+'): '+errText.slice(0,100));}
+    var result=await resp.json();
+    if(!result.url)throw new Error('Lien de paiement manquant');
+    window.location.href=result.url;
     if(!resp.ok){ throw new Error(result.error||'Erreur serveur ('+resp.status+')'); }
     if(result.url){
       sessionStorage.setItem('stripe_pending_tvac',totalTvac);
