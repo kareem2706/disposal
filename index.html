@@ -3124,7 +3124,7 @@ async function loadDriverDashboard(){
   document.getElementById('driver-stats').innerHTML=
     '<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>','var(--green-bg)')+'<div class="stat-label">Missions \u00e0 venir</div><div class="stat-val">'+upcomingMissions.length+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>','var(--blue-bg)')+'<div class="stat-label">Ce mois</div><div class="stat-val">'+monthMissions.length+'</div></div>'
-    +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>','var(--red-bg)')+'<div class="stat-label">Revenus</div><div class="stat-val">'+(revenueNet>0?revenueNet.toFixed(0)+' \u20ac':'0 \u20ac')+'</div></div>'
+    +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>','var(--red-bg)')+'<div class="stat-label">Revenus</div><div class="stat-val">'+(revenueNet>0?revenueNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>','#FFF3DC')+'<div class="stat-label">Score</div><div class="stat-val">'+((currentProfile&&currentProfile.rating)?currentProfile.rating.toFixed(1)+' \u2605':'\u2014')+'</div></div>';
 
   // Update marketplace badge immediately (hidden per spec)
@@ -4438,12 +4438,14 @@ var _offersSort='asc'; // asc, desc
 
 function renderOfferCard(o){
   var v = o.vehicle || null;
-  var price = o.price ? parseFloat(o.price).toFixed(2) + ' \u20ac' : '\u2014';
+  var htva = parseFloat(o.price||0);
+  var tvac = parseFloat((htva*(1+TVA_RATE)).toFixed(2));
+  var priceDisplay = htva > 0 ? tvac.toFixed(2).replace('.',',')+' \u20ac' : '\u2014';
   var safeId = String(o.id).replace(/'/g,'');
   var safeDrv = String(o.driver_id||'').replace(/'/g,'');
-  var safePrice = parseFloat(o.price||0);
+  var safePrice = htva;
 
-  var vehName = v ? (v.brand||'')+' '+(v.model||'')+' '+(v.year||'') : 'V\u00e9hicule non sp\u00e9cifi\u00e9';
+  var vehName = v ? ((v.brand||'')+' '+(v.model||'')).trim() : 'V\u00e9hicule non sp\u00e9cifi\u00e9';
   var classLabels={lowcost:'ECO',business:'BUSINESS',van:'VAN',luxe:'LUXE'};
   var classColors={lowcost:'#6B8E23',business:'#1B5E3B',van:'#2E6B4A',luxe:'#8B0000'};
   var vehClass = v ? (v.vehicle_class||'') : '';
@@ -4470,7 +4472,7 @@ function renderOfferCard(o){
         +amenities
       +'</div>'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">'
-        +'<div style="text-align:right;"><div style="font-size:10px;text-transform:uppercase;color:var(--ink4);font-weight:500;">Total Price</div><div style="font-size:20px;font-weight:700;color:var(--ink);">'+price+'</div></div>'
+        +'<div style="text-align:right;"><div style="font-size:10px;color:var(--ink4);font-weight:500;">Prix</div><div style="font-size:20px;font-weight:700;color:var(--ink);">'+priceDisplay+'</div></div>'
         +'<button class="btn btn-green" style="white-space:nowrap;padding:8px 16px;font-size:12px;" data-oid="'+safeId+'" data-did="'+safeDrv+'" data-price="'+safePrice+'" onclick="_pickOffer(this)">Choisir cette offre</button>'
       +'</div>'
     +'</div>'
@@ -4729,13 +4731,12 @@ window.confirmStripeCheckout=async function(){
 
   try{
     var totalTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
-    var amountCents=Math.round(totalTvac*100);
     sessionStorage.setItem('stripe_pending_tvac',totalTvac.toFixed(2));
-    console.log('[stripe] HTVA:', currentOfferAmount, 'TVAC:', totalTvac, 'cents:', amountCents, 'ride:', currentRideId);
+    console.log('[stripe] HTVA:', currentOfferAmount, 'TVAC:', totalTvac, 'ride:', currentRideId);
     var resp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
-      body:JSON.stringify({amount:amountCents,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
+      body:JSON.stringify({amount:currentOfferAmount,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
     });
     if(!resp.ok){var errText=await resp.text();throw new Error('Erreur serveur ('+resp.status+'): '+errText.slice(0,100));}
     var result=await resp.json();
