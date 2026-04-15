@@ -3424,124 +3424,10 @@ window.openOfferModal = function(rideId, summary, rideObj){
   sumEl.style.display = 'block';
 
   if(rideObj){
-    var isMixedOffer = rideObj.trip_type==='mixed';
-    var isDispOffer  = rideObj.trip_type==='disposal';
-    var from = rideObj.from_address||'—';
-    var to   = rideObj.to_address||'—';
-    var dateStr = formatDate(rideObj.ride_date)+' '+(rideObj.ride_time?rideObj.ride_time.slice(0,5):'');
-
-    if(isMixedOffer){
-      var mixedSegsOffer=parseMixedNotes(rideObj.notes||'');
-      if(mixedSegsOffer.length){
-        var mixedSumHtml='<div style="font-size:12px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Course mixte</div>';
-        mixedSegsOffer.forEach(function(s,i){
-          var isD=s.type.toLowerCase().indexOf('disp')>=0;
-          var segLabel=isD?'Disp.':'A → B';
-          var segColor=isD?'var(--amber)':'var(--green)';
-          var segBg=isD?'var(--amber-bg)':'var(--green-bg)';
-          var fromText=s.from||'—';
-          var toText=isD?(s.dur?s.dur+'h':'Disp.'):(s.to||'—');
-          mixedSumHtml+='<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">'
-            +'<span style="font-size:10px;font-weight:700;background:'+segBg+';color:'+segColor+';padding:1px 5px;border-radius:10px;flex-shrink:0;">'+segLabel+'</span>'
-            +'<span style="font-size:12px;color:var(--ink2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+fromText+' → '+toText+'</span>'
-            +(!isD?'<span id="offer-seg-dist-'+i+'" style="font-size:11.5px;color:var(--ink4);flex-shrink:0;">'
-              +'<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:spin .8s linear infinite;transform-origin:center"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
-              +'</span>':'')
-            +'</div>';
-        });
-        sumEl.innerHTML=mixedSumHtml;
-        if(typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
-          mixedSegsOffer.forEach(function(s,i){
-            if(s.type.toLowerCase().indexOf('disp')<0&&s.from&&s.to){
-              (function(seg,idx){
-                (new google.maps.DistanceMatrixService()).getDistanceMatrix({
-                  origins:[seg.from],destinations:[seg.to],
-                  travelMode:google.maps.TravelMode.DRIVING,language:'fr'
-                },function(res,st){
-                  var e=res&&res.rows&&res.rows[0]&&res.rows[0].elements&&res.rows[0].elements[0];
-                  var el2=document.getElementById('offer-seg-dist-'+idx);
-                  if(st==='OK'&&e&&e.status==='OK'){
-                    if(el2)el2.innerHTML='<span style="color:var(--ink3);">'+e.distance.text+' · '+e.duration.text+'</span>';
-                  } else {
-                    if(el2)el2.textContent='';
-                  }
-                });
-              })(s,i);
-            } else if(s.type.toLowerCase().indexOf('disp')<0){
-              var el3=document.getElementById('offer-seg-dist-'+i);if(el3)el3.textContent='';
-            }
-          });
-        } else {
-          mixedSegsOffer.forEach(function(s,i){var el4=document.getElementById('offer-seg-dist-'+i);if(el4)el4.textContent='';});
-        }
-      } else {
-        sumEl.innerHTML='<div style="font-size:13px;font-weight:600;margin-bottom:6px;">Course mixte</div>'+'<div style="font-size:12px;color:var(--ink3);font-style:italic;">Pour le détail aller sur la demande</div>';
-      }
-    } else {
-      var durStr = '';
-      if(isDispOffer && rideObj.notes){
-        var dm = rideObj.notes.match(/Durée:([^\s|,]+)/);
-        if(dm) durStr = dm[1]+'h';
-      }
-      var metaLine = dateStr+(durStr?' · '+durStr:'')+(rideObj.passengers?' · '+rideObj.passengers+' pax':'')+(rideObj.vehicle_type?' · '+rideObj.vehicle_type:'');
-      var toLabel = isDispOffer ? ('Mise à disposition'+(durStr?' ('+durStr+')':'')) : to;
-      var iconGreen='<svg width="14" height="18" viewBox="0 0 24 30" fill="#1B5E3B"><path d="M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>';
-      var iconRed='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
-      sumEl.innerHTML =
-        '<div style="font-size:12px;color:var(--ink3);margin-bottom:10px;display:flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>'+metaLine+'</div>'
-        +'<div style="display:flex;gap:14px;">'
-          +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'
-            +'<div style="margin-top:3px;flex-shrink:0;">'+iconGreen+'</div>'
-            +'<div style="width:2px;flex:1;background:var(--sand3);min-height:14px;margin-top:2px;"></div>'
-          +'</div>'
-          +'<div style="flex:1;min-width:0;padding-bottom:10px;">'
-            +'<div class="detail-seg-label">D\u00c9PART</div>'
-            +'<div class="detail-seg-addr">'+from+'</div>'
-          +'</div>'
-        +'</div>'
-        +'<div style="display:flex;gap:14px;">'
-          +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'
-            +'<div style="margin-top:3px;flex-shrink:0;">'+iconRed+'</div>'
-          +'</div>'
-          +'<div style="flex:1;min-width:0;padding-bottom:2px;">'
-            +'<div class="detail-seg-label">'+(isDispOffer?'MISE \u00c0 DISPOSITION':'ARRIV\u00c9E')+'</div>'
-            +'<div class="detail-seg-addr">'+toLabel+'</div>'
-          +'</div>'
-        +'</div>'
-        +(!isDispOffer
-          ?'<div id="offer-dist-info" style="padding:4px 0 4px 30px;display:none;">'
-            +'<div style="font-size:11.5px;color:var(--ink2);font-weight:500;" id="offer-dist-text"></div>'
-            +'</div>'
-          :'');
-      if(!isDispOffer&&rideObj.from_address&&rideObj.to_address&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
-        (new google.maps.DistanceMatrixService()).getDistanceMatrix({
-          origins:[rideObj.from_address],destinations:[rideObj.to_address],
-          travelMode:google.maps.TravelMode.DRIVING,language:'fr'
-        },function(res,st){
-          var infoEl=document.getElementById('offer-dist-info');
-          var textEl=document.getElementById('offer-dist-text');
-          var e=res&&res.rows&&res.rows[0]&&res.rows[0].elements&&res.rows[0].elements[0];
-          if(st==='OK'&&e&&e.status==='OK'){
-            if(infoEl)infoEl.style.display='block';
-            if(textEl)textEl.textContent=e.distance.text+' - +/- '+e.duration.text;
-          } else {
-            if(infoEl)infoEl.style.display='none';
-          }
-        });
-      } else if(!isDispOffer) {
-        var _odi=document.getElementById('offer-dist-info');if(_odi)_odi.style.display='none';
-      }
-      // Booking code + notes for driver
-      var extraHtml='';
-      if(rideObj.booking_code) extraHtml+='<div style="margin-top:8px;display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.6);border:1px solid var(--sand3);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--ink2);font-family:monospace;">'+rideObj.booking_code+'</div>';
-      var rawNotesOffer=rideObj.notes||'';
-      var cleanNotesOffer=rawNotesOffer.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|,]+/g,'').trim();
-      if(cleanNotesOffer) extraHtml+='<div style="margin-top:8px;font-size:12px;color:var(--ink3);font-style:italic;">'+cleanNotesOffer+'</div>';
-      if(extraHtml){
-        var curHtml=sumEl.innerHTML;
-        sumEl.innerHTML=curHtml+extraHtml;
-      }
-    }
+    // Use shared builder — identical layout as the detail popup
+    var _offerDetailResult = _buildRideDetailBody(rideObj, {idPrefix:'off-', showStatus:false});
+    sumEl.innerHTML = _offerDetailResult.html;
+    _triggerDistanceMatrix(rideObj, _offerDetailResult, 'off-');
   } else if(summary){
     sumEl.textContent = summary;
   } else {
@@ -3664,6 +3550,84 @@ window._offerSubmittedClick = function(btn){
 
 
 
+
+// ── Shared helper: builds identical ride detail HTML for both detail popup and offer modal ──
+function _buildRideDetailBody(r, opts){
+  opts = opts || {};
+  var idPrefix = opts.idPrefix || '';
+  var showStatus = opts.showStatus !== false;
+  var isMixed=r.trip_type==='mixed', isDisp=r.trip_type==='disposal';
+  var mixedSegs=isMixed?parseMixedNotes(r.notes||''):[];
+  var from=r.from_address||'\u2014', to=r.to_address||'\u2014';
+  var iconGreen='<svg width="14" height="18" viewBox="0 0 24 30" fill="#1B5E3B"><path d="M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>';
+  var iconRed='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
+  function segRow(dot,label,addr,withLine){
+    var ico=dot==='green'?iconGreen:iconRed;
+    return '<div style="display:flex;gap:14px;"><div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;"><div style="margin-top:3px;flex-shrink:0;">'+ico+'</div>'+(withLine?'<div style="width:2px;flex:1;background:var(--sand3);min-height:14px;margin-top:2px;"></div>':'')+'</div><div style="flex:1;min-width:0;'+(withLine?'padding-bottom:10px':'padding-bottom:2px')+';"><div class="detail-seg-label">'+label+'</div><div class="detail-seg-addr">'+(addr||'\u2014')+'</div></div></div>';
+  }
+  function segCard(s,idx,isLast,skipFrom){
+    var isD=s.type.toLowerCase().indexOf('disp')>=0;
+    var label=t('lbl_segment')+' '+(idx+1)+' \u2014 '+(isD?t('title_disp'):t('title_ab'));
+    var mp=[];var dt=(s.date?formatDate(s.date):'')+( s.time?' '+s.time:'');
+    if(dt.trim())mp.push(dt.trim());if(s.pax)mp.push(s.pax+' pax');if(s.veh)mp.push(s.veh);
+    var metaHtml=mp.length?'<div style="font-size:12px;color:var(--ink3);margin-bottom:8px;">'+mp.join(' \u00b7 ')+'</div>':'';
+    var noteHtml=s.note?'<div style="font-size:12px;color:var(--ink3);margin-top:6px;font-style:italic;">'+s.note+'</div>':'';
+    var rows='';
+    if(isD){
+      rows+=segRow('green',t('lbl_pickup'),s.from||'\u2014',true);
+      if(s.dur) rows+='<div style="display:flex;gap:14px;padding:2px 0;"><div style="width:16px;flex-shrink:0;display:flex;justify-content:center;"><div class="detail-seg-vline" style="flex:1;"></div></div><div style="padding:3px 0;font-size:11.5px;color:var(--ink3);">Dur\u00e9e : '+s.dur+'</div></div>';
+      rows+=segRow('red',t('lbl_end_disp'),'',false);
+      if(s.dur){var _dv=parseFloat(s.dur)||0;var _dk=Math.round(_dv*20);if(_dk>0)rows+='<div style="padding:2px 0 2px 30px;font-size:11.5px;color:var(--ink3);">'+_dk+'km inclus</div>';}
+    } else {
+      if(!skipFrom) rows+=segRow('green',t('lbl_depart'),s.from||'\u2014',true);
+      rows+=segRow('red',t('lbl_arrivee'),s.to||'\u2014',false);
+      rows+='<div id="'+idPrefix+'detail-route-info-'+idx+'" style="padding:4px 0 4px 30px;display:none;"><div style="font-size:11.5px;color:var(--ink2);font-weight:500;" id="'+idPrefix+'detail-route-info-text-'+idx+'"></div></div>';
+    }
+    var border=isLast?'':'border-bottom:1px solid var(--sand3);margin-bottom:12px;padding-bottom:12px;';
+    return '<div style="'+border+'"><div style="font-size:11px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">'+label+'</div>'+metaHtml+rows+noteHtml+'</div>';
+  }
+  var metaParts=[];
+  if(r.ride_date) metaParts.push(formatDate(r.ride_date)+(r.ride_time?' '+r.ride_time.slice(0,5):''));
+  if(r.passengers) metaParts.push(r.passengers+' pax');
+  if(r.vehicle_type) metaParts.push(r.vehicle_type);
+  var metaLineHtml=metaParts.length?'<div style="display:flex;align-items:center;gap:6px;margin:0;font-size:12px;color:var(--ink3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>'+metaParts.join(' &middot; ')+'</div>':'';
+  var body='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">'+metaLineHtml+(showStatus?getStatusPill(r.status,r._offerCount||0):'')+'</div>';
+  if(isMixed&&mixedSegs.length){
+    var mb='';
+    mixedSegs.forEach(function(s,i){var sf=i>0&&mixedSegs[i-1].to&&s.from&&mixedSegs[i-1].to.trim()===s.from.trim();mb+=segCard(s,i,i===mixedSegs.length-1,sf);});
+    body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+mb+'</div>';
+  } else if(isDisp){
+    var ddh='',dkh='';
+    if(r.notes){var ddm=r.notes.match(/Dur\u00e9e:([^\s|,]+)/);if(ddm){var ddv=parseFloat(ddm[1])||0;var ddk=Math.round(ddv*20);ddh='<div style="display:flex;gap:14px;padding:2px 0;"><div style="width:16px;flex-shrink:0;display:flex;justify-content:center;"><div style="width:2px;flex:1;background:var(--sand3);"></div></div><div style="padding:3px 0;font-size:11.5px;color:var(--ink3);">'+ddm[1]+'</div></div>';if(ddk>0)dkh='<div style="padding:2px 0 2px 30px;font-size:11.5px;color:var(--ink3);">'+ddk+'km inclus</div>';}}
+    body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+segRow('green',t('lbl_pickup'),from,true)+ddh+segRow('red',t('lbl_end_mission'),'',false)+dkh+'</div>';
+  } else {
+    body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+segRow('green',t('lbl_depart'),from,true)+segRow('red',t('lbl_arrivee'),to,false)+'<div id="'+idPrefix+'detail-route-info" style="padding:4px 0 4px 30px;display:none;"><div style="font-size:11.5px;color:var(--ink2);font-weight:500;" id="'+idPrefix+'detail-route-info-text"></div></div>'+'</div>';
+  }
+  var rawNotes=r.notes||'';
+  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').trim();
+  if(cleanNotes){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);">'+cleanNotes+'</div></div>';}
+  if(r.is_subcontract&&r.final_price){body+='<div style="margin-top:12px;padding:10px 14px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><span style="font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9 : '+parseFloat(r.final_price).toFixed(0)+'\u20ac</span></div>';}
+  return {html:body, isMixed:isMixed, isDisp:isDisp, mixedSegs:mixedSegs};
+}
+function _triggerDistanceMatrix(r, result, idPrefix){
+  idPrefix=idPrefix||'';
+  if(!result.isDisp&&!result.isMixed&&r.from_address&&r.to_address&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
+    (new google.maps.DistanceMatrixService()).getDistanceMatrix({origins:[r.from_address],destinations:[r.to_address],travelMode:google.maps.TravelMode.DRIVING,language:'fr'},function(res,st){
+      var ie=document.getElementById(idPrefix+'detail-route-info'),te=document.getElementById(idPrefix+'detail-route-info-text');
+      if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){var el=res.rows[0].elements[0];if(ie&&te){te.textContent=el.distance.text+' - +/- '+el.duration.text;ie.style.display='block';}}
+    });
+  }
+  if(result.isMixed&&result.mixedSegs.length&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
+    result.mixedSegs.forEach(function(s,i){
+      if(s.type.toLowerCase().indexOf('disp')<0&&s.from&&s.to){
+        (function(seg,idx){(new google.maps.DistanceMatrixService()).getDistanceMatrix({origins:[seg.from],destinations:[seg.to],travelMode:google.maps.TravelMode.DRIVING,language:'fr'},function(res,st){
+          var ie=document.getElementById(idPrefix+'detail-route-info-'+idx),te=document.getElementById(idPrefix+'detail-route-info-text-'+idx);
+          if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){var el=res.rows[0].elements[0];if(ie&&te){te.textContent=el.distance.text+' - +/- '+el.duration.text;ie.style.display='block';}}
+        });})(s,i);
+      }
+    });
+  }
+}
 
 window._detailGen=0;
 window.openRideDetail=function(el){
