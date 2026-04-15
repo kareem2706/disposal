@@ -3424,10 +3424,146 @@ window.openOfferModal = function(rideId, summary, rideObj){
   sumEl.style.display = 'block';
 
   if(rideObj){
-    // Use shared builder — identical layout as the detail popup
-    var _offerDetailResult = _buildRideDetailBody(rideObj, {idPrefix:'off-', showStatus:false});
-    sumEl.innerHTML = _offerDetailResult.html;
-    _triggerDistanceMatrix(rideObj, _offerDetailResult, 'off-');
+    var isMixedOffer = rideObj.trip_type==='mixed';
+    var isDispOffer  = rideObj.trip_type==='disposal';
+    var from = rideObj.from_address||'—';
+    var to   = rideObj.to_address||'—';
+
+    // Meta line: date · pax · vehicle
+    var metaParts=[];
+    if(rideObj.ride_date) metaParts.push(formatDate(rideObj.ride_date)+(rideObj.ride_time?' '+rideObj.ride_time.slice(0,5):''));
+    if(rideObj.passengers) metaParts.push(rideObj.passengers+' pax');
+    if(rideObj.vehicle_type) metaParts.push(rideObj.vehicle_type);
+    var metaHtml = metaParts.length
+      ? '<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink3);margin-bottom:12px;">'
+          +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>'
+          +metaParts.join(' · ')
+        +'</div>'
+      : '';
+
+    var iconGreen='<svg width="14" height="18" viewBox="0 0 24 30" fill="#1B5E3B"><path d="M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>';
+    var iconRed='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
+
+    var routeHtml = '';
+    if(isMixedOffer){
+      var mixedSegsOffer=parseMixedNotes(rideObj.notes||'');
+      if(mixedSegsOffer.length){
+        mixedSegsOffer.forEach(function(s,i){
+          var isD=s.type.toLowerCase().indexOf('disp')>=0;
+          var isLast=i===mixedSegsOffer.length-1;
+          var border=isLast?'':'border-bottom:1px solid var(--sand3);margin-bottom:10px;padding-bottom:10px;';
+          routeHtml+='<div style="'+border+'">';
+          routeHtml+='<div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Segment '+(i+1)+' — '+(isD?'Disposition':'A → B')+'</div>';
+          routeHtml+='<div style="display:flex;gap:14px;">'
+            +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'
+              +'<div style="margin-top:3px;flex-shrink:0;">'+iconGreen+'</div>'
+              +(isD?'':'<div style="width:2px;flex:1;background:var(--sand3);min-height:14px;margin-top:2px;"></div>')
+            +'</div>'
+            +'<div style="flex:1;min-width:0;padding-bottom:'+(isD?'2':'10')+'px;">'
+              +'<div class="detail-seg-label">DÉPART</div>'
+              +'<div class="detail-seg-addr">'+(s.from||'—')+'</div>'
+            +'</div>'
+          +'</div>';
+          if(isD){
+            if(s.dur) routeHtml+='<div style="padding:2px 0 2px 30px;font-size:11.5px;color:var(--ink3);">Durée : '+s.dur+'</div>';
+          } else {
+            routeHtml+='<div style="display:flex;gap:14px;">'
+              +'<div style="width:16px;flex-shrink:0;display:flex;justify-content:center;margin-top:3px;">'+iconRed+'</div>'
+              +'<div style="flex:1;min-width:0;padding-bottom:2px;">'
+                +'<div class="detail-seg-label">ARRIVÉE</div>'
+                +'<div class="detail-seg-addr">'+(s.to||'—')+'</div>'
+              +'</div>'
+            +'</div>';
+            routeHtml+='<div id="off-seg-dist-'+i+'" style="padding:3px 0 3px 30px;font-size:11.5px;color:var(--ink3);"></div>';
+          }
+          routeHtml+='</div>';
+        });
+      } else {
+        routeHtml='<div style="font-size:12px;color:var(--ink3);font-style:italic;">Course mixte — voir le détail de la demande</div>';
+      }
+    } else {
+      var durStr='';
+      if(isDispOffer&&rideObj.notes){var dm=rideObj.notes.match(/Durée:([^\s|,]+)/);if(dm)durStr=dm[1];}
+      var toLabel=isDispOffer?('Mise à disposition'+(durStr?' ('+durStr+')':'')): to;
+
+      routeHtml='<div style="display:flex;gap:14px;">'
+        +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'
+          +'<div style="margin-top:3px;flex-shrink:0;">'+iconGreen+'</div>'
+          +(isDispOffer?'':'<div style="width:2px;flex:1;background:var(--sand3);min-height:14px;margin-top:2px;"></div>')
+        +'</div>'
+        +'<div style="flex:1;min-width:0;padding-bottom:10px;">'
+          +'<div class="detail-seg-label">DÉPART</div>'
+          +'<div class="detail-seg-addr">'+from+'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:14px;">'
+        +'<div style="width:16px;flex-shrink:0;display:flex;align-items:flex-start;justify-content:center;margin-top:3px;">'+iconRed+'</div>'
+        +'<div style="flex:1;min-width:0;padding-bottom:2px;">'
+          +'<div class="detail-seg-label">'+(isDispOffer?'MISE À DISPOSITION':'ARRIVÉE')+'</div>'
+          +'<div class="detail-seg-addr">'+toLabel+'</div>'
+        +'</div>'
+      +'</div>';
+      if(!isDispOffer){
+        routeHtml+='<div id="off-dist-info" style="padding:3px 0 2px 30px;display:none;">'
+          +'<div style="font-size:11.5px;color:var(--ink3);" id="off-dist-text"></div>'
+        +'</div>';
+      }
+      if(isDispOffer&&durStr){
+        var dispKm=Math.round((parseFloat(durStr)||0)*20);
+        if(dispKm>0) routeHtml+='<div style="padding:2px 0 2px 30px;font-size:11.5px;color:var(--ink3);">'+dispKm+' km inclus</div>';
+      }
+    }
+
+    // Notes / instructions
+    var rawNotes=rideObj.notes||'';
+    var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').trim();
+    var notesHtml='';
+    if(cleanNotes){
+      notesHtml='<div style="margin-top:12px;">'
+        +'<div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">Instructions</div>'
+        +'<div style="padding:10px 12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);">'+cleanNotes+'</div>'
+      +'</div>';
+    }
+
+    // Subcontract requested price
+    var subPriceHtml='';
+    if(rideObj.is_subcontract&&rideObj.final_price){
+      subPriceHtml='<div style="margin-top:10px;padding:8px 12px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:7px;">'
+        +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>'
+        +'<span style="font-size:12.5px;font-weight:600;color:var(--amber);">Prix demandé : '+parseFloat(rideObj.final_price).toFixed(0)+' €</span>'
+      +'</div>';
+    }
+
+    sumEl.innerHTML = metaHtml + routeHtml + notesHtml + subPriceHtml;
+
+    // Distance matrix for A→B
+    if(!isDispOffer&&!isMixedOffer&&rideObj.from_address&&rideObj.to_address&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
+      (new google.maps.DistanceMatrixService()).getDistanceMatrix({
+        origins:[rideObj.from_address],destinations:[rideObj.to_address],travelMode:google.maps.TravelMode.DRIVING,language:'fr'
+      },function(res,st){
+        var ie=document.getElementById('off-dist-info'),te=document.getElementById('off-dist-text');
+        var e=res&&res.rows&&res.rows[0]&&res.rows[0].elements&&res.rows[0].elements[0];
+        if(st==='OK'&&e&&e.status==='OK'){if(ie)ie.style.display='block';if(te)te.textContent=e.distance.text+' - +/- '+e.duration.text;}
+        else{if(ie)ie.style.display='none';}
+      });
+    }
+    // Distance matrix for mixed segments
+    if(isMixedOffer&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
+      var segs=parseMixedNotes(rideObj.notes||'');
+      segs.forEach(function(s,i){
+        if(s.type.toLowerCase().indexOf('disp')<0&&s.from&&s.to){
+          (function(seg,idx){
+            (new google.maps.DistanceMatrixService()).getDistanceMatrix({
+              origins:[seg.from],destinations:[seg.to],travelMode:google.maps.TravelMode.DRIVING,language:'fr'
+            },function(res,st){
+              var el=document.getElementById('off-seg-dist-'+idx);
+              var e=res&&res.rows&&res.rows[0]&&res.rows[0].elements&&res.rows[0].elements[0];
+              if(st==='OK'&&e&&e.status==='OK'){if(el)el.textContent=e.distance.text+' - +/- '+e.duration.text;}
+            });
+          })(s,i);
+        }
+      });
+    }
   } else if(summary){
     sumEl.textContent = summary;
   } else {
