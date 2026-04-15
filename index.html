@@ -94,7 +94,7 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 .user-av img{width:100%;height:100%;object-fit:cover;}
 .user-name{font-size:12.5px;font-weight:500;line-height:1.2;}
 .user-role-badge{font-size:10px;color:var(--ink3);}
-.app-nav{flex:1;padding:14px 10px;overflow-y:auto;padding-bottom:120px;}
+.app-nav{flex:1;padding:14px 10px;overflow-y:auto;}
 .nav-sect{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ink4);padding:0 8px;margin:14px 0 5px;}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--ink2);border:none;background:transparent;width:100%;text-align:left;transition:background var(--t),color var(--t);}
 .nav-item:hover{background:var(--sand);color:var(--ink);}
@@ -300,7 +300,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
   .card{overflow:visible;}
   .stats-row{grid-template-columns:repeat(2,1fr);}
   .admin-summary-grid{grid-template-columns:1fr!important;}
-  #client-help-card{display:none!important;}
 }
 @media(max-width:480px){
   .stats-row{grid-template-columns:1fr 1fr;}
@@ -1051,6 +1050,14 @@ body{background:var(--bg);}
       </div>
     </nav>
 
+    <!-- Client help card — visible only for client role -->
+    <div id="client-help-card" style="display:none;padding:0 10px 8px;">
+      <div style="padding:11px 13px;background:linear-gradient(135deg,#1B5E3B 0%,#2E7A50 100%);color:#fff;border-radius:var(--r);">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg><span style="font-size:12px;font-weight:700;">Aide &amp; support</span></div>
+        <div style="font-size:11px;opacity:.88;">Besoin d&apos;aide&nbsp;? <a href="mailto:info@bleenr.com" style="color:#fff;font-weight:600;text-decoration:underline;">info@bleenr.com</a></div>
+      </div>
+    </div>
+
     <div class="sidebar-footer">
       <button class="nav-item" onclick="signOut()" style="color:var(--red);">
         <svg class="nav-ico" viewBox="0 0 16 16" fill="none" style="opacity:1"><path d="M6 3H3a1 1 0 00-1 1v8a1 1 0 001 1h3M10.5 5L13 8l-2.5 3M7 8h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1106,14 +1113,6 @@ body{background:var(--bg);}
       </div>
       <div id="recent-rides-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
 
-    </div>
-
-    <!-- Fixed Help card for client — aligned with sidebar footer -->
-    <div id="client-help-card" style="display:none;position:fixed;bottom:0;left:0;width:var(--sidebar);z-index:290;padding:0 10px 12px;background:var(--white);border-right:1px solid var(--sand3);border-top:1px solid var(--sand3);">
-      <div style="padding:12px 14px;background:linear-gradient(135deg,#1B5E3B 0%,#2E7A50 100%);color:#fff;border-radius:var(--r);margin-top:10px;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg><span style="font-size:13px;font-weight:700;">Aide &amp; support</span></div>
-        <div style="font-size:11.5px;opacity:.88;">Besoin d&apos;aide&nbsp;?<br><a href="mailto:info@bleenr.com" style="color:#fff;font-weight:600;text-decoration:underline;">info@bleenr.com</a></div>
-      </div>
     </div>
 
     <div id="page-rides" class="page">
@@ -2748,6 +2747,7 @@ window.signOut = async function(){
 async function loadMyOffers(){
   if(!sb || !currentUser) return;
   if(localStorage.getItem(DEMO_MODE_KEY) === '1') return;
+  _myOffers = {}; // reset before reload
   try {
     var result = await sb.from('offers')
       .select('ride_id, price, message')
@@ -2926,10 +2926,10 @@ async function loadClientDashboard(){
   const wrap = document.getElementById('active-ride-wrap');
   if(wrap) wrap.style.display = active ? 'block' : 'none';
 
-  // Non-terminated rides sorted by ride_date asc for dashboard (oldest first)
+  // Non-terminated rides sorted by ride_date asc for dashboard (oldest first), max 3
   const recent = rides.filter(function(r){ return r.status !== 'done' && r.status !== 'cancelled'; }).slice().sort(function(a,b){
     return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||''));
-  });
+  }).slice(0, 3);
 
   document.getElementById('recent-rides-list').innerHTML = recent.length
     ? recent.map(r => renderRideItem(r)).join('')
@@ -3079,6 +3079,9 @@ async function loadDriverDashboard(){
   const uid = currentUser?.id;
   let missions = [], pending = [];
 
+  // Always refresh own offers so dashboard shows current driver's offer state
+  await loadMyOffers();
+
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     const [m, p] = await Promise.all([
       sb.from('rides').select('*').eq('driver_id', uid).order('ride_date',{ascending:true}).order('ride_time',{ascending:true}),
@@ -3168,6 +3171,9 @@ function renderScoreCard(){
 // MARKETPLACE
 async function loadMarketplace(){
   let clientRides = [], subRides = [];
+
+  // Always refresh own offers before rendering so each driver sees their own state
+  await loadMyOffers();
 
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     const [c, s] = await Promise.all([
@@ -3623,7 +3629,17 @@ function renderMkItem(r,isSub,isMine){
   var tLabel=r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';
   var tColor=r.trip_type==='disposal'?'var(--amber)':r.trip_type==='mixed'?'var(--blue)':'var(--green)';
   var tBg=r.trip_type==='disposal'?'var(--amber-bg)':r.trip_type==='mixed'?'var(--blue-bg)':'var(--green-bg)';
-  return '<div class="ride-card" onclick="openRideDetail(this)" data-ride=\''+safeR.replace(/\'/g,'&#39;')+'\'>'    +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+monStr+'</div><div class="ride-card-date-day">'+dayNum+'</div></div>'    +'<div style="display:flex;align-items:center;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:'+tBg+';color:'+tColor+';padding:2px 7px;border-radius:20px;">'+tLabel+'</span></div>'    +'<div><div class="ride-card-col-label">Origine</div><div class="ride-card-col-val">'+(r.from_address||'—')+'</div></div>'    +'<div><div class="ride-card-col-label">Destination</div><div class="ride-card-col-val">'+(r.to_address||'—')+'</div></div>'    +'<div>'+statusPill+'</div>'    +'<div style="text-align:right;">'+offerBtn+'</div>'    +'<svg class="ride-card-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'  +'</div>';
+  // Subcontract indicator for marketplace
+  var mkSubBadge=(isSub||r.is_subcontract)?'<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:9.5px;font-weight:700;background:var(--amber-bg);color:var(--amber);margin-left:4px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Sous-traitée</span>':'';
+  return '<div class="ride-card" onclick="openRideDetail(this)" data-ride=\''+safeR.replace(/\'/g,'&#39;')+'\'>'
+    +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+monStr+'</div><div class="ride-card-date-day">'+dayNum+'</div></div>'
+    +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:'+tBg+';color:'+tColor+';padding:2px 7px;border-radius:20px;">'+tLabel+'</span>'+mkSubBadge+'</div>'
+    +'<div><div class="ride-card-col-label">Origine</div><div class="ride-card-col-val">'+(r.from_address||'—')+'</div></div>'
+    +'<div><div class="ride-card-col-label">Destination</div><div class="ride-card-col-val">'+(r.to_address||'—')+'</div></div>'
+    +'<div>'+statusPill+'</div>'
+    +'<div style="text-align:right;">'+offerBtn+'</div>'
+    +'<svg class="ride-card-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  +'</div>';
 }
 
 window._mkOffer = function(btn){
@@ -3663,8 +3679,14 @@ window.openRideDetail=function(el){
   // Title + subtitle
   var titleEl=document.getElementById('detail-title');
   var subTitle=isMixed?t('title_mixed'):isDisp?t('title_disp'):t('title_ab');
-  // For disposal: add duration in title
-  if(titleEl)titleEl.textContent=subTitle;
+  // Prepend booking code to title if available
+  var fullTitle = r.booking_code ? r.booking_code+' — '+subTitle : subTitle;
+  if(titleEl){
+    titleEl.innerHTML = fullTitle
+      + (r.is_subcontract
+        ? ' <span style="display:inline-flex;align-items:center;gap:3px;vertical-align:middle;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;background:var(--amber-bg);color:var(--amber);margin-left:4px;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Sous-traitée</span>'
+        : '');
+  }
 
   // Header row: big title + status pill
   var metaParts=[];
@@ -3746,14 +3768,6 @@ window.openRideDetail=function(el){
       +'</div>';
     body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+_routeInner2+'</div>';
   }
-
-  // Booking code badge
-  if(r.booking_code){
-    body+='<div style="display:inline-flex;align-items:center;gap:6px;background:var(--sand2);border:1px solid var(--sand3);border-radius:6px;padding:5px 10px;font-size:11.5px;font-weight:700;letter-spacing:.06em;color:var(--ink2);margin-bottom:12px;font-family:monospace;">'
-      +'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8M12 3v4"/></svg>'
-      +r.booking_code+'</div>';
-  }
-
 
   var rawNotes=r.notes||'';
   var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').trim();
@@ -3869,7 +3883,7 @@ window.openRideDetail=function(el){
       // Another driver's subcontract — show "Accepter XX €"
       var subPriceLbl=r.final_price?parseFloat(r.final_price).toFixed(0)+'\u20ac':'';
       ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
-        +'<button class="btn btn-green btn-full" style="min-width:180px;" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')" >Accepter'+(subPriceLbl?' '+subPriceLbl:'')+'</button>';
+        +'<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')">Accepter'+(subPriceLbl?' '+subPriceLbl:'')+'</button>';
     } else if(hasMyOffer){
       ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre \u00e0 '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'
         +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
@@ -3887,7 +3901,7 @@ window.openRideDetail=function(el){
     } else if(isExtSub2){
       var subPriceLbl2=r.final_price?parseFloat(r.final_price).toFixed(0)+'\u20ac':'';
       ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
-        +'<button class="btn btn-green" style="min-width:180px;" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')">Accepter'+(subPriceLbl2?' '+subPriceLbl2:'')+'</button>';
+        +'<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')">Accepter'+(subPriceLbl2?' '+subPriceLbl2:'')+'</button>';
     } else {
       ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
       if(isOwnSub2){
@@ -6419,7 +6433,17 @@ function renderRideItem(r){
   var isDisposal=r.trip_type==='disposal';var isCancelled=r.status==='cancelled';
   var destCol=isDisposal?'<div></div>':'<div><div class="ride-card-col-label">Destination</div><div class="ride-card-col-val">'+(r.to_address||'—')+'</div></div>';
   var priceCol=isCancelled?'<div></div>':'<div style="text-align:right;"><div class="ride-card-col-label">Prix</div><div class="ride-card-col-val" style="font-weight:700;">'+priceStr+'</div></div>';
-  return '<div class="ride-card" onclick="'+cardClick+'" data-ride=\''+safeR.replace(/\'/g,'&#39;')+'\'>'    +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+monStr+'</div><div class="ride-card-date-day">'+dayNum+'</div></div>'    +'<div style="display:flex;align-items:center;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;background:'+tBg+';color:'+tColor+';padding:2px 7px;border-radius:20px;">'+tLabel+'</span></div>'    +'<div><div class="ride-card-col-label">Origine</div><div class="ride-card-col-val">'+(r.from_address||'—')+'</div></div>'    +destCol    +'<div><div class="ride-card-col-label">Statut</div>'+statusPill+'</div>'    +priceCol    +'<svg class="ride-card-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'  +'</div>';
+  // Subcontract badge
+  var subBadge=r.is_subcontract?'<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:9.5px;font-weight:700;letter-spacing:.04em;background:var(--amber-bg);color:var(--amber);margin-left:5px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Sous-traitée</span>':'';
+  return '<div class="ride-card" onclick="'+cardClick+'" data-ride=\''+safeR.replace(/\'/g,'&#39;')+'\'>'
+    +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+monStr+'</div><div class="ride-card-date-day">'+dayNum+'</div></div>'
+    +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;background:'+tBg+';color:'+tColor+';padding:2px 7px;border-radius:20px;">'+tLabel+'</span>'+subBadge+'</div>'
+    +'<div><div class="ride-card-col-label">Origine</div><div class="ride-card-col-val">'+(r.from_address||'—')+'</div></div>'
+    +destCol
+    +'<div><div class="ride-card-col-label">Statut</div>'+statusPill+'</div>'
+    +priceCol
+    +'<svg class="ride-card-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  +'</div>';
 }
 
 
