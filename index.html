@@ -94,7 +94,7 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 .user-av img{width:100%;height:100%;object-fit:cover;}
 .user-name{font-size:12.5px;font-weight:500;line-height:1.2;}
 .user-role-badge{font-size:10px;color:var(--ink3);}
-.app-nav{flex:1;padding:14px 10px;overflow-y:auto;}
+.app-nav{flex:1;padding:14px 10px;overflow-y:auto;padding-bottom:120px;}
 .nav-sect{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ink4);padding:0 8px;margin:14px 0 5px;}
 .nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--ink2);border:none;background:transparent;width:100%;text-align:left;transition:background var(--t),color var(--t);}
 .nav-item:hover{background:var(--sand);color:var(--ink);}
@@ -243,22 +243,20 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 /* Tighter spacing in new-ride and subcontract modals */
 #m-new-ride .modal-body,#m-subcontract .modal-body{padding:12px 18px;}
 /* Payment modal: sticky footer so buttons stay visible */
-#m-payment .modal{display:flex;flex-direction:column;max-height:88vh;}
-#m-payment .modal-body{flex:1;overflow-y:auto;}
-#m-payment .modal-ft{flex-shrink:0;}
+#m-payment .modal{max-height:88vh;}
 #m-new-ride .input-group,#m-subcontract .input-group{margin-bottom:8px;}
 #m-new-ride .form-grid,#m-subcontract .form-grid{gap:8px;}
 
 /* ═══ MODAL ═══ */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(14,14,12,.45);z-index:800;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
 .modal-overlay.open{display:flex;animation:fadeIn .15s ease;}
-.modal{background:white;border-radius:var(--r-xl);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-lg);animation:scaleIn .2s var(--ease);}
+.modal{background:white;border-radius:var(--r-xl);width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--sh-lg);animation:scaleIn .2s var(--ease);}
 #m-view-offers .modal{max-width:680px;}
 @keyframes scaleIn{from{opacity:0;transform:scale(.96) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.modal-hd{padding:18px 22px;border-bottom:1px solid var(--sand3);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:1;}
+.modal-hd{padding:18px 22px;border-bottom:1px solid var(--sand3);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:1;flex-shrink:0;}
 .modal-title{font-size:15px;font-weight:600;}
-.modal-body{padding:20px 22px;}
-.modal-ft{padding:13px 22px;border-top:1px solid var(--sand3);display:flex;gap:9px;align-items:center;justify-content:flex-end;}
+.modal-body{padding:20px 22px;overflow-y:auto;flex:1;}
+.modal-ft{padding:13px 22px;border-top:1px solid var(--sand3);display:flex;gap:9px;align-items:center;justify-content:flex-end;flex-shrink:0;}
 .close-btn{width:28px;height:28px;border-radius:50%;border:none;background:var(--sand2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink2);transition:all var(--t);}
 .close-btn:hover{background:var(--sand3);color:var(--ink);}
 
@@ -302,6 +300,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
   .card{overflow:visible;}
   .stats-row{grid-template-columns:repeat(2,1fr);}
   .admin-summary-grid{grid-template-columns:1fr!important;}
+  #client-help-card{display:none!important;}
 }
 @media(max-width:480px){
   .stats-row{grid-template-columns:1fr 1fr;}
@@ -1107,12 +1106,13 @@ body{background:var(--bg);}
       </div>
       <div id="recent-rides-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
 
-      <!-- Bottom cards -->
-      <div style="margin-top:auto;padding:20px 0 4px;background:var(--bg,#FAF9F7);">
-        <div class="card" style="padding:22px;background:linear-gradient(135deg,#1B5E3B 0%,#2E7A50 100%);color:#fff;display:flex;flex-direction:column;justify-content:center;">
-          <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg><span style="font-size:14px;font-weight:700;">Aide &amp; support</span></div>
-          <div style="font-size:12.5px;opacity:.88;">Vous avez besoin d&apos;aide&nbsp;? Contactez-nous&nbsp;:<br><a href="mailto:info@bleenr.com" style="color:#fff;font-weight:600;text-decoration:underline;">info@bleenr.com</a></div>
-        </div>
+    </div>
+
+    <!-- Fixed Help card for client — aligned with sidebar footer -->
+    <div id="client-help-card" style="display:none;position:fixed;bottom:0;left:0;width:var(--sidebar);z-index:290;padding:0 10px 12px;background:var(--white);border-right:1px solid var(--sand3);border-top:1px solid var(--sand3);">
+      <div style="padding:12px 14px;background:linear-gradient(135deg,#1B5E3B 0%,#2E7A50 100%);color:#fff;border-radius:var(--r);margin-top:10px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg><span style="font-size:13px;font-weight:700;">Aide &amp; support</span></div>
+        <div style="font-size:11.5px;opacity:.88;">Besoin d&apos;aide&nbsp;?<br><a href="mailto:info@bleenr.com" style="color:#fff;font-weight:600;text-decoration:underline;">info@bleenr.com</a></div>
       </div>
     </div>
 
@@ -1664,10 +1664,10 @@ body{background:var(--bg);}
 
 <!-- New Ride -->
 <div class="modal-overlay" id="m-new-ride">
-  <div class="modal" style="max-height:92vh;display:flex;flex-direction:column;">
+  <div class="modal" style="max-height:92vh;">
     <div class="modal-hd"><span class="modal-title" id="ride-modal-title">Nouvelle demande</span><button class="close-btn" onclick="cancelRideModal()"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <input type="hidden" id="ride-edit-id" value="">
-    <div class="modal-body" style="overflow-y:auto;flex:1;">
+    <div class="modal-body">
       <div class="input-group"><label>Type de course</label>
         <div class="trip-types">
           <div class="trip-type active" data-val="ab" onclick="selTripType(this)">A &rarr; B</div>
@@ -1718,6 +1718,7 @@ body{background:var(--bg);}
   <div class="modal">
     <div class="modal-hd"><span class="modal-title" id="offers-modal-title">Offres reçues</span><button class="close-btn" onclick="closeModal('m-view-offers')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body"><div id="offers-list"><div class="page-loading"><div class="page-spinner"></div></div></div></div>
+    <div class="modal-ft"><button class="btn btn-secondary" onclick="closeModal('m-view-offers')">Fermer</button></div>
   </div>
 </div>
 
@@ -1963,13 +1964,13 @@ body{background:var(--bg);}
 
 <!-- Ride Detail -->
 <div class="modal-overlay" id="m-ride-detail">
-  <div class="modal" style="max-width:520px;max-height:88vh;display:flex;flex-direction:column;">
+  <div class="modal" style="max-width:520px;max-height:88vh;">
     <div class="modal-hd">
       <span class="modal-title" id="detail-title">D&eacute;tail de la demande</span>
       <button class="close-btn" onclick="closeModal('m-ride-detail')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
     </div>
-    <div class="modal-body" id="detail-body" style="overflow-y:auto;flex:1;padding:20px 22px;"></div>
-    <div id="detail-map-wrap" style="display:none;margin:0 22px 16px;border-radius:12px;overflow:hidden;height:160px;"><img id="detail-map-img" src="" alt="" style="width:100%;height:165px;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'"></div>
+    <div class="modal-body" id="detail-body" style="padding:20px 22px;"></div>
+    <div id="detail-map-wrap" style="display:none;margin:0 22px 0;border-radius:12px;overflow:hidden;height:160px;flex-shrink:0;"><img id="detail-map-img" src="" alt="" style="width:100%;height:165px;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'"></div>
     <div class="modal-ft" id="detail-ft"></div>
   </div>
 </div>
@@ -2776,6 +2777,9 @@ function enterApp(){
   var adminNav=document.getElementById('nav-admin');if(adminNav)adminNav.style.display=isAdmin?'block':'none';
   var cCta=document.getElementById('nav-cta-client');if(cCta)cCta.style.display=(!isAdmin && role==='client')?'block':'none';
   var dCta=document.getElementById('nav-cta-driver');if(dCta)dCta.style.display=(isAdminDriver || (!isAdmin && role==='driver'))?'block':'none';
+  // Show fixed help card only for client role
+  var helpCard=document.getElementById('client-help-card');
+  if(helpCard) helpCard.style.display = (!isAdmin && role==='client') ? 'block' : 'none';
 
   // Update nav user pill
   const fn = currentProfile?.first_name || '';
@@ -3521,6 +3525,16 @@ window.openOfferModal = function(rideId, summary, rideObj){
       } else if(!isDispOffer) {
         var _odi=document.getElementById('offer-dist-info');if(_odi)_odi.style.display='none';
       }
+      // Booking code + notes for driver
+      var extraHtml='';
+      if(rideObj.booking_code) extraHtml+='<div style="margin-top:8px;display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.6);border:1px solid var(--sand3);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--ink2);font-family:monospace;">'+rideObj.booking_code+'</div>';
+      var rawNotesOffer=rideObj.notes||'';
+      var cleanNotesOffer=rawNotesOffer.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|,]+/g,'').trim();
+      if(cleanNotesOffer) extraHtml+='<div style="margin-top:8px;font-size:12px;color:var(--ink3);font-style:italic;">'+cleanNotesOffer+'</div>';
+      if(extraHtml){
+        var curHtml=sumEl.innerHTML;
+        sumEl.innerHTML=curHtml+extraHtml;
+      }
     }
   } else if(summary){
     sumEl.textContent = summary;
@@ -3572,7 +3586,8 @@ function renderMkItem(r,isSub,isMine){
   // Button / status
   var offerBtn='';
   if(isSub && !isMine){
-    offerBtn='<button class="btn btn-green btn-sm" onclick="event.stopPropagation();acceptSubcontract(this.dataset.rid)" data-rid="'+r.id+'">'+t('btn_accept')+'</button>';
+    var subPrice = r.final_price ? parseFloat(r.final_price).toFixed(0)+'€' : '';
+    offerBtn='<button class="btn btn-green" style="min-width:160px;justify-content:center;" onclick="event.stopPropagation();acceptSubcontract(this.dataset.rid)" data-rid="'+r.id+'">Accepter'+(subPrice?' '+subPrice:'')+'</button>';
   } else if(!isSub && !isMine){
     var myOffer = _myOffers && _myOffers[r.id];
     if(myOffer){
@@ -3732,7 +3747,14 @@ window.openRideDetail=function(el){
     body+='<div style="background:rgba(27,94,59,0.06);border-radius:12px;padding:12px 16px;margin-bottom:10px;">'+_routeInner2+'</div>';
   }
 
-  // Notes / comments (strip Mixte: prefix and duration info)
+  // Booking code badge
+  if(r.booking_code){
+    body+='<div style="display:inline-flex;align-items:center;gap:6px;background:var(--sand2);border:1px solid var(--sand3);border-radius:6px;padding:5px 10px;font-size:11.5px;font-weight:700;letter-spacing:.06em;color:var(--ink2);margin-bottom:12px;font-family:monospace;">'
+      +'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8M12 3v4"/></svg>'
+      +r.booking_code+'</div>';
+  }
+
+
   var rawNotes=r.notes||'';
   var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').trim();
   if(cleanNotes){
@@ -3838,23 +3860,34 @@ window.openRideDetail=function(el){
   } else if(r.status==='waiting'&&!isClient){
     var safeRd=JSON.stringify(r).replace(/'/g,'&#39;');
     var isOwnSub=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
+    var isExtSub=(r.is_subcontract&&currentUser&&r.client_id!==currentUser.id);
     var hasMyOffer=_myOffers&&_myOffers[rId];
     if(isOwnSub){
       ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler la sous-traitance</button>'
         +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+    } else if(isExtSub){
+      // Another driver's subcontract — show "Accepter XX €"
+      var subPriceLbl=r.final_price?parseFloat(r.final_price).toFixed(0)+'\u20ac':'';
+      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
+        +'<button class="btn btn-green btn-full" style="min-width:180px;" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')" >Accepter'+(subPriceLbl?' '+subPriceLbl:'')+'</button>';
     } else if(hasMyOffer){
-      ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre à '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'
+      ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre \u00e0 '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'
         +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
     } else {
-      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
-      ft+='<button class="btn btn-green" style="margin-left:8px;" onclick="_detailOffer(this)" data-rid="'+rId+'" data-ride=\''+safeRd+'\'>Soumettre une offre</button>';
+      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
+        +'<button class="btn btn-green" style="min-width:160px;" onclick="_detailOffer(this)" data-rid="'+rId+'" data-ride=\''+safeRd+'\'>Soumettre une offre</button>';
     }
   } else if(r.status==='offers'&&!isClient){
     var isOwnSub2=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
+    var isExtSub2=(r.is_subcontract&&currentUser&&r.client_id!==currentUser.id);
     var hasMyOffer2=_myOffers&&_myOffers[rId];
-    if(hasMyOffer2&&!isOwnSub2){
-      ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre à '+parseFloat(hasMyOffer2.price).toFixed(0)+'\u20ac</div>'
+    if(hasMyOffer2&&!isOwnSub2&&!isExtSub2){
+      ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre \u00e0 '+parseFloat(hasMyOffer2.price).toFixed(0)+'\u20ac</div>'
         +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+    } else if(isExtSub2){
+      var subPriceLbl2=r.final_price?parseFloat(r.final_price).toFixed(0)+'\u20ac':'';
+      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
+        +'<button class="btn btn-green" style="min-width:180px;" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')">Accepter'+(subPriceLbl2?' '+subPriceLbl2:'')+'</button>';
     } else {
       ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
       if(isOwnSub2){
@@ -4157,7 +4190,23 @@ window.submitRide = async function(){
     if(editId){
       result = await sb.from('rides').update(rideData).eq('id', editId).eq('client_id', currentUser.id);
     } else {
-      result = await sb.from('rides').insert(rideData);
+      result = await sb.from('rides').insert(rideData).select('id').single();
+      // Generate booking code after insert: BL + type(2 chars) + MMYY + counter 3 digits
+      if(result.data && result.data.id){
+        var newId = result.data.id;
+        var typeCode = tripType==='disposal'?'AB':tripType==='mixed'?'MX':'AB';
+        // actually: AB->AB, disposal->DI, mixed->MX
+        typeCode = tripType==='ab'?'AB':tripType==='disposal'?'DI':'MX';
+        var now = new Date();
+        var mm = String(now.getMonth()+1).padStart(2,'0');
+        var yy = String(now.getFullYear()).slice(-2);
+        // count rides this month for counter
+        var monthStart = now.getFullYear()+'-'+mm+'-01';
+        var {count:rideCount} = await sb.from('rides').select('id',{count:'exact',head:true}).gte('created_at',monthStart+'T00:00:00');
+        var counter = String((rideCount||1)).padStart(3,'0');
+        var bookingCode = 'BL'+typeCode+'-'+mm+yy+counter;
+        await sb.from('rides').update({booking_code: bookingCode}).eq('id', newId);
+      }
     }
     if(result.error) throw result.error;
 
@@ -4248,6 +4297,26 @@ window._detailOffer = function(btn){
   if(!r||!rId){ console.error('_detailOffer: missing data'); return; }
   closeModal('m-ride-detail');
   setTimeout(function(){ openOfferModal(rId, '', r); }, 200);
+};
+
+window.acceptSubcontract = async function(rideId){
+  if(!sb||!currentUser){ showToast('Non connecté'); return; }
+  if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
+    showToast('✅ Course sous-traitée acceptée !');
+    return;
+  }
+  try {
+    var res = await sb.from('rides')
+      .update({status:'confirmed', driver_id: currentUser.id})
+      .eq('id', rideId)
+      .in('status',['waiting','offers']);
+    if(res.error) throw res.error;
+    showToast('✅ Course acceptée !');
+    if(typeof loadDriverDashboard==='function') await loadDriverDashboard();
+    if(typeof loadMarketplace==='function') await loadMarketplace();
+  } catch(e){
+    showToast('Erreur : '+(e.message||e));
+  }
 };
 
 
@@ -4484,8 +4553,38 @@ function renderOfferCard(o){
         +'<button class="btn btn-green" style="white-space:nowrap;padding:8px 16px;font-size:12px;" data-oid="'+safeId+'" data-did="'+safeDrv+'" data-price="'+safePrice+'" onclick="_pickOffer(this)">Choisir cette offre</button>'
       +'</div>'
     +'</div>'
+    // Driver message
+    +(o.message?'<div style="margin-top:10px;padding:8px 12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);display:flex;gap:7px;align-items:flex-start;">'
+      +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+      +'<span>'+o.message+'</span></div>':'')
+    // Voir détail toggle
+    +'<div style="margin-top:10px;">'
+      +'<button onclick="_toggleOfferDetail(this)" style="background:none;border:none;font-size:12px;color:var(--ink3);cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-family:\'DM Sans\',sans-serif;"><svg id="od-arrow-'+safeId+'" width="12" height="12" viewBox="0 0 12 12" fill="none" style="transition:transform .2s;"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Voir détail</button>'
+      +'<div id="od-detail-'+safeId+'" style="display:none;margin-top:8px;padding:10px 12px;background:var(--sand);border-radius:var(--r);font-size:12px;color:var(--ink2);">'
+        +(v?('<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;">'
+          +'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Marque</span><div style="font-weight:500;">'+(v.brand||'—')+'</div></div>'
+          +'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Modèle</span><div style="font-weight:500;">'+(v.model||'—')+'</div></div>'
+          +(v.year?'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Année</span><div style="font-weight:500;">'+v.year+'</div></div>':'')
+          +(vehClass?'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Gamme</span><div style="font-weight:500;">'+(classLabels[vehClass]||vehClass)+'</div></div>':'')
+          +'</div>'
+        ):'<div style="color:var(--ink4);font-style:italic;">Aucun détail véhicule disponible</div>')
+      +'</div>'
+    +'</div>'
   +'</div>';
 }
+
+window._toggleOfferDetail = function(btn){
+  var card = btn.closest('.offer-card');
+  if(!card) return;
+  // find detail div — it's the next sibling div inside the toggle container
+  var detailDiv = card.querySelector('[id^="od-detail-"]');
+  var arrowSvg = card.querySelector('[id^="od-arrow-"]');
+  if(!detailDiv) return;
+  var isOpen = detailDiv.style.display !== 'none';
+  detailDiv.style.display = isOpen ? 'none' : 'block';
+  if(arrowSvg) arrowSvg.style.transform = isOpen ? '' : 'rotate(180deg)';
+  btn.style.color = isOpen ? 'var(--ink3)' : 'var(--ink)';
+};
 
 function _renderOffersFiltered(){
   var filtered=_offersData.slice();
