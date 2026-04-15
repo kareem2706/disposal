@@ -1039,6 +1039,10 @@ body{background:var(--bg);}
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.3"/></svg>
           Tableau de bord
         </button>
+        <button class="nav-item" data-page="admin-rides" onclick="showPage('admin-rides')">
+          <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 7h6M5 10h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Courses
+        </button>
         <button class="nav-item" data-page="admin-fleets" onclick="showPage('admin-fleets')">
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="1" y="5" width="14" height="7" rx="2" stroke="currentColor" stroke-width="1.3"/><circle cx="4.5" cy="12" r="1.5" stroke="currentColor" stroke-width="1.2"/><circle cx="11.5" cy="12" r="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 5V4a2 2 0 012-2h6a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.3"/></svg>
           Fleets
@@ -1124,6 +1128,7 @@ body{background:var(--bg);}
         <button class="btn btn-primary btn-sm" onclick="filterRides('all',this)">Toutes</button>
         <button class="btn btn-secondary btn-sm" onclick="filterRides('waiting',this)">En attente</button>
         <button class="btn btn-secondary btn-sm" onclick="filterRides('offers',this)">Offres</button>
+        <button class="btn btn-secondary btn-sm" onclick="filterRides('pending_payment',this)">Paiement en cours</button>
         <button class="btn btn-secondary btn-sm" onclick="filterRides('confirmed',this)">Confirmées</button>
         <button class="btn btn-secondary btn-sm" onclick="filterRides('done',this)">Terminées</button>
       </div>
@@ -1573,6 +1578,51 @@ body{background:var(--bg);}
       <div id="admin-clients-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
 
+    <!-- Admin: Courses -->
+    <div id="page-admin-rides" class="page">
+      <div class="pg-head">
+        <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h7"/></svg></div>
+        <div><h1>Courses</h1><p>Toutes les courses du système</p></div>
+      </div>
+      <!-- Filters -->
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:flex-end;">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Statut</label>
+          <select id="ar-filter-status" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;min-width:150px;">
+            <option value="">Tous les statuts</option>
+            <option value="waiting">En attente</option>
+            <option value="offers">Offres reçues</option>
+            <option value="pending_payment">Paiement en cours</option>
+            <option value="confirmed">Confirmée</option>
+            <option value="done">Terminée</option>
+            <option value="cancelled">Annulée</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Client</label>
+          <select id="ar-filter-client" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;min-width:160px;">
+            <option value="">Tous les clients</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Chauffeur</label>
+          <select id="ar-filter-driver" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;min-width:160px;">
+            <option value="">Tous les chauffeurs</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Du</label>
+          <input type="date" id="ar-filter-from" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Au</label>
+          <input type="date" id="ar-filter-to" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;">
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="arResetFilters()" style="align-self:flex-end;">Réinitialiser</button>
+      </div>
+      <div id="admin-rides-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
+    </div>
+
     </main>
 </div>
 
@@ -1974,6 +2024,18 @@ body{background:var(--bg);}
   </div>
 </div>
 
+<!-- Admin Ride Detail -->
+<div class="modal-overlay" id="m-ar-detail" onclick="if(event.target===this)closeModal('m-ar-detail')">
+  <div class="modal" style="max-width:540px;max-height:88vh;">
+    <div class="modal-hd">
+      <span class="modal-title" id="ar-detail-title">Détail de la course</span>
+      <button class="close-btn" onclick="closeModal('m-ar-detail')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="modal-body" id="ar-detail-body" style="padding:20px 22px;"></div>
+    <div class="modal-ft" id="ar-detail-ft"></div>
+  </div>
+</div>
+
 <!-- Confirm Delete -->
 <div class="modal-overlay" id="m-confirm-delete" style="z-index:900;">
   <div class="modal" style="max-width:380px;">
@@ -2124,7 +2186,7 @@ const DEMO_MODE_KEY='disposal_demo';
 const STRIPE_FEE_MULTIPLIER = 1.029; // 1 + 2.9% Stripe fee
 const TVA_RATE = 0.06; // TVA rate applied to payments
 const STRIPE_PK = 'pk_test_REPLACE_WITH_YOUR_STRIPE_PUBLISHABLE_KEY'; // Replace with your Stripe publishable key
-const MISSION_STATUSES = ['confirmed', 'active', 'done']; // Driver mission statuses to display
+const MISSION_STATUSES = ['confirmed', 'active', 'done', 'pending_payment']; // Driver mission statuses to display
 const ADMIN_EMAIL = 'kb@bleenr.com';
 
 let sb=null,_entering=false;           // Supabase client
@@ -2820,7 +2882,7 @@ window.showPage = function(pageId){
 
   const pageNames = { dashboard:t('dashboard'), rides:t('rides'), calendar:'Calendrier', 'd-calendar':'Calendrier', invoices:t('invoices'),
     profile:t('profile'), 'd-dashboard':t('d-dashboard'), marketplace:t('marketplace'), missions:t('missions'),
-    'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord' };
+    'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses' };
   var ptEl=document.getElementById('page-title');if(ptEl)ptEl.textContent=pageNames[pageId]||'';
 
   // Mark nav item active
@@ -2847,6 +2909,7 @@ async function loadPageData(pageId){
     case 'admin-fleets':   await loadAdminFleets(); break;
     case 'admin-clients':  await loadAdminClients(); break;
     case 'admin-dashboard': await loadAdminDashboard(); break;
+    case 'admin-rides':    await loadAdminRides(); break;
   }
 }
 
@@ -2911,7 +2974,7 @@ async function loadClientDashboard(){
   var _s2='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
   var _s3='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
   var _s4='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>';
-  var confirmed=rides.filter(function(r){return r.status==='confirmed'||r.status==='active'||r.status==='done';}).length;
+  var confirmed=rides.filter(function(r){return r.status==='confirmed'||r.status==='active'||r.status==='done'||r.status==='pending_payment';}).length;
   var pending=rides.filter(function(r){return r.status==='waiting';}).length;
   var withOffer=rides.filter(function(r){return r.status==='offers';}).length;
   var total=rides.filter(function(r){return r.status==='done'||r.status==='confirmed';}).reduce(function(s,r){return s+(r.final_price?parseFloat(r.final_price):0);},0);
@@ -3133,7 +3196,7 @@ async function loadDriverDashboard(){
     return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
   });
   const revenueNet = monthMissions.reduce(function(a,r){var p=r.final_price||0;return a+p*0.9;},0);
-  const upcomingMissions = missions.filter(function(r){return r.status==='confirmed';});
+  const upcomingMissions = missions.filter(function(r){return r.status==='confirmed'||r.status==='pending_payment';});
 
     var dI=function(s,bg){return '<div class="stat-card-icon" style="background:'+bg+'">'+s+'</div>';};
   document.getElementById('driver-stats').innerHTML=
@@ -3961,6 +4024,11 @@ window.openRideDetail=function(el){
   var ft='';
   if(r.status==='waiting'&&isClient){
     ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Supprimer</button>'      +'<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:4px;" onclick="editRide(this.dataset.id)" data-id="'+rId+'"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Modifier</button>'      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+  } else if(r.status==='pending_payment'&&isClient){
+    ft='<div style="margin-right:auto;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#1E4D7B;">'
+      +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2"/></svg>'
+      +'Votre paiement est en cours de vérification</div>'
+      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
   } else if(r.status==='offers'&&isClient){
     ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler la demande</button>'      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'      +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRide(this.dataset.r)" data-m="m-ride-detail" data-r="'+rId+'">Voir les offres &#x2192;</button>';
   } else if(r.status==='done'&&isClient){
@@ -5028,7 +5096,7 @@ window.confirmPayment = async function(method){
   }
 
   var rideUpdates = {
-    status: 'confirmed',
+    status: method === 'bank_transfer' ? 'pending_payment' : 'confirmed',
     driver_id: currentDriverId,
     final_price: totalWithFees,
     payment_method: method
@@ -6485,6 +6553,7 @@ function getStatusPill(status, offerCount){
   var map = {
     waiting: '<span class="pill waiting"><span class="pill-dot"></span>'+t('waiting')+'</span>',
     offers:  '<span class="pill offers"><span class="pill-dot"></span>'+(offerCount>0?offerCount+' ':'')+t('offers_pill')+'</span>',
+    pending_payment: '<span class="pill" style="background:#EAF1FB;color:#1E4D7B;"><span class="pill-dot" style="background:#1E4D7B;"></span>Paiement en cours</span>',
     confirmed:'<span class="pill confirmed">'+t('confirmed')+'</span>',
     active:  '<span class="pill active pulse">'+t('active')+'</span>',
     done:    '<span class="pill done">'+t('done')+'</span>',
@@ -6928,6 +6997,214 @@ window.setAdminPeriod = function(mode) {
     }
   }
   refreshAdminDashboard();
+};
+
+// ── ADMIN: Courses ─────────────────────────────────────
+var _arAllRides = [];
+var _arProfiles = {}; // id -> {name}
+
+window.arResetFilters = function(){
+  var els = ['ar-filter-status','ar-filter-client','ar-filter-driver','ar-filter-from','ar-filter-to'];
+  els.forEach(function(id){ var el=document.getElementById(id); if(el){ if(el.tagName==='SELECT') el.value=''; else el.value=''; } });
+  loadAdminRides();
+};
+
+window.loadAdminRides = async function(){
+  var el = document.getElementById('admin-rides-list');
+  if(!el || !sb) return;
+  el.innerHTML = '<div class="page-loading"><div class="page-spinner"></div></div>';
+
+  try {
+    // Fetch all rides
+    var q = sb.from('rides').select('*').order('ride_date',{ascending:false}).order('ride_time',{ascending:false});
+    var statusVal = document.getElementById('ar-filter-status')?.value || '';
+    var fromVal   = document.getElementById('ar-filter-from')?.value   || '';
+    var toVal     = document.getElementById('ar-filter-to')?.value     || '';
+    if(statusVal) q = q.eq('status', statusVal);
+    if(fromVal)   q = q.gte('ride_date', fromVal);
+    if(toVal)     q = q.lte('ride_date', toVal);
+
+    var { data: rides, error } = await q;
+    if(error) throw error;
+    _arAllRides = rides || [];
+
+    // Collect all profile ids (clients + drivers)
+    var profileIds = [];
+    _arAllRides.forEach(function(r){
+      if(r.client_id) profileIds.push(r.client_id);
+      if(r.driver_id) profileIds.push(r.driver_id);
+    });
+    profileIds = [...new Set(profileIds)].filter(Boolean);
+
+    if(profileIds.length > 0){
+      var { data: pData } = await sb.from('profiles').select('id,first_name,last_name,role').in('id', profileIds);
+      _arProfiles = {};
+      (pData||[]).forEach(function(p){ _arProfiles[p.id] = p; });
+    } else {
+      _arProfiles = {};
+    }
+
+    // Populate client & driver dropdowns (once)
+    _arPopulateDropdowns();
+
+    // Apply client/driver filter (client-side after fetch)
+    var clientVal = document.getElementById('ar-filter-client')?.value || '';
+    var driverVal = document.getElementById('ar-filter-driver')?.value || '';
+    var filtered = _arAllRides.filter(function(r){
+      if(clientVal && r.client_id !== clientVal) return false;
+      if(driverVal && r.driver_id !== driverVal) return false;
+      return true;
+    });
+
+    _arRenderTable(filtered, el);
+  } catch(e) {
+    el.innerHTML = '<div class="page-loading" style="color:var(--red);">Erreur : '+e.message+'</div>';
+  }
+};
+
+function _arPopulateDropdowns(){
+  var clientSel = document.getElementById('ar-filter-client');
+  var driverSel = document.getElementById('ar-filter-driver');
+  if(!clientSel || !driverSel) return;
+  var prevClient = clientSel.value, prevDriver = driverSel.value;
+
+  var clients = {}, drivers = {};
+  _arAllRides.forEach(function(r){
+    if(r.client_id && _arProfiles[r.client_id]) clients[r.client_id] = _arProfiles[r.client_id];
+    if(r.driver_id && _arProfiles[r.driver_id]) drivers[r.driver_id] = _arProfiles[r.driver_id];
+  });
+
+  clientSel.innerHTML = '<option value="">Tous les clients</option>'
+    + Object.values(clients).map(function(p){
+        var name = ((p.first_name||'')+ ' '+(p.last_name||'')).trim()||p.id;
+        return '<option value="'+p.id+'"'+(prevClient===p.id?' selected':'')+'>'+name+'</option>';
+      }).join('');
+
+  driverSel.innerHTML = '<option value="">Tous les chauffeurs</option>'
+    + Object.values(drivers).map(function(p){
+        var name = ((p.first_name||'')+ ' '+(p.last_name||'')).trim()||p.id;
+        return '<option value="'+p.id+'"'+(prevDriver===p.id?' selected':'')+'>'+name+'</option>';
+      }).join('');
+}
+
+function _arName(profileId){
+  var p = _arProfiles[profileId];
+  if(!p) return '—';
+  return ((p.first_name||'')+' '+(p.last_name||'')).trim() || '—';
+}
+
+function _arRenderTable(rides, el){
+  if(!rides.length){
+    el.innerHTML = '<div class="empty-state"><p class="empty-text">Aucune course trouvée</p></div>';
+    return;
+  }
+
+  var typeLabel = function(t){ return t==='disposal'?'Disposition':t==='mixed'?'Mixte':'A → B'; };
+  var typeBg    = function(t){ return t==='disposal'?'var(--amber-bg)':t==='mixed'?'var(--blue-bg)':'var(--green-bg)'; };
+  var typeColor = function(t){ return t==='disposal'?'var(--amber)':t==='mixed'?'var(--blue)':'var(--green)'; };
+
+  var statusLabel = {
+    waiting:'En attente', offers:'Offres reçues', pending_payment:'Paiement en cours',
+    confirmed:'Confirmée', active:'En cours', done:'Terminée', cancelled:'Annulée'
+  };
+  var statusBg = {
+    waiting:'var(--amber-bg)',   offers:'var(--blue-bg)',    pending_payment:'#EAF1FB',
+    confirmed:'var(--green-bg)', active:'var(--green-bg)',   done:'var(--sand2)', cancelled:'var(--red-bg)'
+  };
+  var statusColor = {
+    waiting:'var(--amber)',   offers:'var(--blue)',    pending_payment:'#1E4D7B',
+    confirmed:'var(--green)', active:'var(--green)',   done:'var(--ink4)', cancelled:'var(--red)'
+  };
+
+  var rows = rides.map(function(r){
+    var dateStr = r.ride_date ? new Date(r.ride_date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+    var tBg=typeBg(r.trip_type), tCol=typeColor(r.trip_type), tLbl=typeLabel(r.trip_type);
+    var sBg=statusBg[r.status]||'var(--sand2)', sCol=statusColor[r.status]||'var(--ink4)', sLbl=statusLabel[r.status]||r.status;
+    var clientName = _arName(r.client_id);
+    var driverName = r.driver_id ? _arName(r.driver_id) : '—';
+    var price = r.final_price ? parseFloat(r.final_price).toFixed(2).replace('.',',')+' €' : '—';
+    var code = r.booking_code || '—';
+    var safeR = JSON.stringify(r).replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    return '<tr style="border-bottom:1px solid var(--sand2);cursor:pointer;transition:background .15s;" onclick="arOpenDetail(this)" data-ride=\''+safeR+'\' onmouseenter="this.style.background=\'var(--sand)\'" onmouseleave="this.style.background=\'\'">'
+      +'<td style="padding:10px 14px;font-size:12.5px;color:var(--ink3);white-space:nowrap;">'+dateStr+'</td>'
+      +'<td style="padding:10px 14px;"><span style="font-size:10px;font-weight:700;background:'+tBg+';color:'+tCol+';padding:2px 8px;border-radius:20px;white-space:nowrap;">'+tLbl+'</span></td>'
+      +'<td style="padding:10px 14px;font-size:12px;font-family:monospace;font-weight:600;color:var(--ink2);">'+code+'</td>'
+      +'<td style="padding:10px 14px;font-size:13px;font-weight:500;">'+clientName+'</td>'
+      +'<td style="padding:10px 14px;font-size:13px;">'+driverName+'</td>'
+      +'<td style="padding:10px 14px;"><span style="font-size:11px;font-weight:600;background:'+sBg+';color:'+sCol+';padding:3px 9px;border-radius:20px;white-space:nowrap;">'+sLbl+'</span></td>'
+      +'<td style="padding:10px 14px;font-size:13px;font-weight:600;text-align:right;">'+price+'</td>'
+    +'</tr>';
+  }).join('');
+
+  el.innerHTML = '<div class="card" style="overflow:hidden;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:700px;">'
+    +'<thead><tr style="background:var(--sand2);">'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Date</th>'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Type</th>'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Code</th>'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Client</th>'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Chauffeur</th>'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Statut</th>'
+      +'<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Prix</th>'
+    +'</tr></thead>'
+    +'<tbody>'+rows+'</tbody>'
+  +'</table></div></div>';
+}
+
+window.arOpenDetail = function(row){
+  var r; try{ r=JSON.parse(row.dataset.ride.replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>')); }catch(e){ return; }
+
+  // Build detail body using shared helper
+  var result = _buildRideDetailBody(r, {idPrefix:'ar-', showStatus:false});
+  var body = result.html;
+
+  // Extra info: client, driver, price, code
+  var infoRows = '';
+  if(r.booking_code) infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Code</span><span style="font-size:12px;font-weight:700;font-family:monospace;">'+r.booking_code+'</span></div>';
+  var clientName = _arName(r.client_id);
+  var driverName = r.driver_id ? _arName(r.driver_id) : '—';
+  if(clientName!=='—') infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Client</span><span style="font-size:12px;font-weight:600;">'+clientName+'</span></div>';
+  infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Chauffeur</span><span style="font-size:12px;font-weight:600;">'+driverName+'</span></div>';
+  if(r.final_price) infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;"><span style="font-size:12px;color:var(--ink3);">Prix</span><span style="font-size:14px;font-weight:700;">'+parseFloat(r.final_price).toFixed(2).replace('.',',')+' €</span></div>';
+
+  body += '<div style="margin-top:14px;background:var(--sand2);border-radius:var(--r);padding:4px 12px;">'+infoRows+'</div>';
+
+  // Confirm payment button for pending_payment rides
+  var footerHtml = '<button class="btn btn-secondary" onclick="closeModal(\'m-ar-detail\')">Fermer</button>';
+  if(r.status === 'pending_payment'){
+    footerHtml = '<button class="btn btn-secondary" onclick="closeModal(\'m-ar-detail\')">Fermer</button>'
+      +'<button class="btn btn-green" onclick="adminConfirmPayment(\''+r.id+'\')" style="margin-left:8px;">✓ Confirmer le paiement</button>';
+  }
+
+  // Populate modal
+  var titleEl = document.getElementById('ar-detail-title');
+  var bodyEl  = document.getElementById('ar-detail-body');
+  var ftEl    = document.getElementById('ar-detail-ft');
+  var subtitleMap = {disposal:'Mise à disposition', mixed:'Course mixte', ab:'Course A → B'};
+  var subTitle = subtitleMap[r.trip_type]||'Course';
+  if(titleEl) titleEl.innerHTML = (r.booking_code ? r.booking_code+' — '+subTitle : subTitle)
+    + ' '+getStatusPill(r.status,0);
+  if(bodyEl)  bodyEl.innerHTML  = body;
+  if(ftEl)    ftEl.innerHTML    = footerHtml;
+
+  openModal('m-ar-detail');
+  _triggerDistanceMatrix(r, result, 'ar-');
+};
+
+window.adminConfirmPayment = async function(rideId){
+  if(!sb) return;
+  var btn = document.querySelector('#ar-detail-ft .btn-green');
+  if(btn){ btn.disabled=true; btn.textContent='Confirmation…'; }
+  try {
+    var { error } = await sb.from('rides').update({status:'confirmed'}).eq('id', rideId).eq('status','pending_payment');
+    if(error) throw error;
+    closeModal('m-ar-detail');
+    showToast('✅ Paiement confirmé — course confirmée');
+    await loadAdminRides();
+  } catch(e) {
+    showToast('Erreur : '+(e.message||e));
+    if(btn){ btn.disabled=false; btn.textContent='✓ Confirmer le paiement'; }
+  }
 };
 
 window.refreshAdminDashboard = async function() {
