@@ -250,7 +250,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 /* ═══ MODAL ═══ */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(14,14,12,.45);z-index:800;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
 .modal-overlay.open{display:flex;animation:fadeIn .15s ease;}
-.modal{background:white;border-radius:var(--r-xl);width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--sh-lg);animation:scaleIn .2s var(--ease);}
+.modal{background:white;border-radius:var(--r-xl);width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--sh-lg);animation:scaleIn .2s var(--ease);overflow:hidden;}
 #m-view-offers .modal{max-width:680px;}
 @keyframes scaleIn{from{opacity:0;transform:scale(.96) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
 .modal-hd{padding:18px 22px;border-bottom:1px solid var(--sand3);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:1;flex-shrink:0;}
@@ -1582,45 +1582,59 @@ body{background:var(--bg);}
     <div id="page-admin-rides" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h7"/></svg></div>
-        <div><h1>Courses</h1><p>Toutes les courses du système</p></div>
+        <div><h1>Courses &amp; Offres</h1><p>Toutes les courses et offres du système</p></div>
       </div>
-      <!-- Filters -->
-      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:flex-end;">
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Statut</label>
-          <select id="ar-filter-status" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;min-width:150px;">
-            <option value="">Tous les statuts</option>
-            <option value="waiting">En attente</option>
-            <option value="offers">Offres reçues</option>
-            <option value="pending_payment">Paiement en cours</option>
-            <option value="confirmed">Confirmée</option>
-            <option value="done">Terminée</option>
-            <option value="cancelled">Annulée</option>
-          </select>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Client</label>
-          <select id="ar-filter-client" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;min-width:160px;">
-            <option value="">Tous les clients</option>
-          </select>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Chauffeur</label>
-          <select id="ar-filter-driver" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;min-width:160px;">
-            <option value="">Tous les chauffeurs</option>
-          </select>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Du</label>
-          <input type="date" id="ar-filter-from" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;">
-        </div>
-        <div style="display:flex;flex-direction:column;gap:4px;">
-          <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Au</label>
-          <input type="date" id="ar-filter-to" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;">
-        </div>
-        <button class="btn btn-secondary btn-sm" onclick="arResetFilters()" style="align-self:flex-end;">Réinitialiser</button>
+      <!-- Tab switch -->
+      <div style="display:flex;gap:0;background:var(--sand2);border-radius:var(--r);padding:3px;width:fit-content;margin-bottom:18px;">
+        <button id="ar-tab-rides" onclick="arSwitchTab('rides')" style="padding:7px 20px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);font-family:'DM Sans',sans-serif;">Demandes</button>
+        <button id="ar-tab-offers" onclick="arSwitchTab('offers')" style="padding:7px 20px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink3);font-family:'DM Sans',sans-serif;">Offres soumises</button>
       </div>
-      <div id="admin-rides-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
+
+      <!-- Rides tab -->
+      <div id="ar-panel-rides">
+        <!-- Filters -->
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:flex-end;">
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Statut</label>
+            <select id="ar-filter-status" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;min-width:150px;">
+              <option value="">Tous les statuts</option>
+              <option value="waiting">En attente</option>
+              <option value="offers">Offres reçues</option>
+              <option value="pending_payment">Paiement en cours</option>
+              <option value="confirmed">Confirmée</option>
+              <option value="done">Terminée</option>
+              <option value="cancelled">Annulée</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Client</label>
+            <select id="ar-filter-client" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;min-width:160px;">
+              <option value="">Tous les clients</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Chauffeur</label>
+            <select id="ar-filter-driver" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;min-width:160px;">
+              <option value="">Tous les chauffeurs</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Du</label>
+            <input type="date" id="ar-filter-from" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Au</label>
+            <input type="date" id="ar-filter-to" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;">
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="arResetFilters()" style="align-self:flex-end;">Réinitialiser</button>
+        </div>
+        <div id="admin-rides-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
+      </div>
+
+      <!-- Offers tab -->
+      <div id="ar-panel-offers" style="display:none;">
+        <div id="admin-offers-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
+      </div>
     </div>
 
     </main>
@@ -3135,6 +3149,10 @@ async function loadDriverDashboard(){
   await loadMyOffers();
 
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
+    // Reload fresh profile to get latest rating
+    var {data:freshProfile} = await sb.from('profiles').select('*').eq('id', uid).maybeSingle();
+    if(freshProfile) currentProfile = freshProfile;
+
     const [m, p] = await Promise.all([
       sb.from('rides').select('*').eq('driver_id', uid).order('ride_date',{ascending:true}).order('ride_time',{ascending:true}),
       sb.from('rides').select('*').in('status', ['waiting', 'offers']).order('ride_date',{ascending:true}).order('ride_time',{ascending:true})
@@ -5833,30 +5851,37 @@ window.submitRating=async function(){
   var rideId=document.getElementById('rate-ride-id')?.textContent;
   var score=parseInt(document.getElementById('rate-score')?.value)||0;
   var comment=(document.getElementById('rate-comment')?.value||'').trim();
-  if(!score||score<1){showToast('Veuillez s\u00e9lectionner une note');return;}
+  if(!score||score<1){showToast('Veuillez sélectionner une note');return;}
   if(!rideId){showToast('Erreur: course introuvable');return;}
   if(sb&&!localStorage.getItem(DEMO_MODE_KEY)){
     try{
       // Get the driver_id for this ride
-      var {data:ride}=await sb.from('rides').select('driver_id').eq('id',rideId).single();
+      var {data:ride,error:rideErr}=await sb.from('rides').select('driver_id').eq('id',rideId).single();
+      if(rideErr) throw rideErr;
       if(ride&&ride.driver_id){
-        // Insert rating
-        var {error}=await sb.from('ratings').insert({ride_id:rideId,driver_id:ride.driver_id,client_id:currentUser.id,score:score,comment:comment||null});
-        if(error&&error.code!=='23505')throw error; // ignore duplicate
-        // Update driver avg rating
-        var {data:ratings}=await sb.from('ratings').select('score').eq('driver_id',ride.driver_id);
-        if(ratings&&ratings.length>0){
-          var avg=ratings.reduce(function(s,r){return s+r.score;},0)/ratings.length;
-          await sb.from('profiles').update({rating:Math.round(avg*10)/10,rating_count:ratings.length}).eq('id',ride.driver_id);
+        // Upsert rating (handles duplicate gracefully)
+        var {error:insErr}=await sb.from('ratings').upsert(
+          {ride_id:rideId,driver_id:ride.driver_id,client_id:currentUser.id,score:score,comment:comment||null},
+          {onConflict:'ride_id'}
+        );
+        if(insErr) throw insErr;
+        // Recalculate driver avg rating from all their ratings
+        var {data:allRatings,error:ratErr}=await sb.from('ratings').select('score').eq('driver_id',ride.driver_id);
+        if(ratErr) throw ratErr;
+        if(allRatings&&allRatings.length>0){
+          var avg=allRatings.reduce(function(s,r){return s+r.score;},0)/allRatings.length;
+          var newRating=Math.round(avg*10)/10;
+          var {error:updErr}=await sb.from('profiles').update({rating:newRating,rating_count:allRatings.length}).eq('id',ride.driver_id);
+          if(updErr) console.warn('rating update error:',updErr);
         }
       }
       // Mark ride as rated
       await sb.from('rides').update({rated:true}).eq('id',rideId);
-    }catch(e){console.error('rating error:',e);}
+    }catch(e){console.error('rating error:',e);showToast('Erreur lors de l\'évaluation: '+(e.message||e));return;}
   }
   closeModal('m-rate');
-  showToast('\u2b50 Merci pour votre \u00e9valuation !');
-  if(typeof loadClientDashboard==='function')loadClientDashboard();
+  showToast('⭐ Merci pour votre évaluation !');
+  if(typeof loadClientDashboard==='function') await loadClientDashboard();
 };
 
 function showToast(msg){
@@ -7036,8 +7061,98 @@ var _arProfiles = {}; // id -> {name}
 
 window.arResetFilters = function(){
   var els = ['ar-filter-status','ar-filter-client','ar-filter-driver','ar-filter-from','ar-filter-to'];
-  els.forEach(function(id){ var el=document.getElementById(id); if(el){ if(el.tagName==='SELECT') el.value=''; else el.value=''; } });
+  els.forEach(function(id){ var el=document.getElementById(id); if(el){ el.value=''; } });
   loadAdminRides();
+};
+
+window.arSwitchTab = function(tab){
+  var ridesPanel  = document.getElementById('ar-panel-rides');
+  var offersPanel = document.getElementById('ar-panel-offers');
+  var ridesBtn    = document.getElementById('ar-tab-rides');
+  var offersBtn   = document.getElementById('ar-tab-offers');
+  var activeStyle   = 'padding:7px 20px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);font-family:\'DM Sans\',sans-serif;';
+  var inactiveStyle = 'padding:7px 20px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--ink3);font-family:\'DM Sans\',sans-serif;';
+  if(tab === 'rides'){
+    ridesPanel.style.display = 'block'; offersPanel.style.display = 'none';
+    ridesBtn.style.cssText = activeStyle; offersBtn.style.cssText = inactiveStyle;
+  } else {
+    ridesPanel.style.display = 'none'; offersPanel.style.display = 'block';
+    offersBtn.style.cssText = activeStyle; ridesBtn.style.cssText = inactiveStyle;
+    loadAdminOffers();
+  }
+};
+
+window.loadAdminOffers = async function(){
+  var el = document.getElementById('admin-offers-list');
+  if(!el || !sb) return;
+  el.innerHTML = '<div class="page-loading"><div class="page-spinner"></div></div>';
+  try {
+    // Fetch all offers with ride and driver info
+    var { data: offers, error } = await sb.from('offers')
+      .select('id,ride_id,driver_id,price,message,status,created_at,vehicle_id')
+      .order('created_at',{ascending:false});
+    if(error) throw error;
+
+    // Fetch associated rides
+    var rideIds = [...new Set((offers||[]).map(function(o){ return o.ride_id; }).filter(Boolean))];
+    var ridesMap = {};
+    if(rideIds.length > 0){
+      var {data:rData} = await sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date').in('id', rideIds);
+      (rData||[]).forEach(function(r){ ridesMap[r.id] = r; });
+    }
+
+    // Fetch driver profiles
+    var driverIds = [...new Set((offers||[]).map(function(o){ return o.driver_id; }).filter(Boolean))];
+    var driversMap = {};
+    if(driverIds.length > 0){
+      var {data:dData} = await sb.from('profiles').select('id,first_name,last_name').in('id', driverIds);
+      (dData||[]).forEach(function(p){ driversMap[p.id] = p; });
+    }
+
+    if(!offers || !offers.length){
+      el.innerHTML = '<div class="empty-state"><p class="empty-text">Aucune offre trouvée</p></div>';
+      return;
+    }
+
+    var statusLabel = {pending:'En attente',accepted:'Acceptée',rejected:'Rejetée'};
+    var statusBg    = {pending:'var(--amber-bg)',accepted:'var(--green-bg)',rejected:'var(--red-bg)'};
+    var statusColor = {pending:'var(--amber)',accepted:'var(--green)',rejected:'var(--red)'};
+
+    var rows = offers.map(function(o){
+      var ride = ridesMap[o.ride_id] || {};
+      var driver = driversMap[o.driver_id] || {};
+      var driverName = ((driver.first_name||'')+' '+(driver.last_name||'')).trim() || '—';
+      var rideCode = ride.booking_code || o.ride_id?.slice(0,8) || '—';
+      var rideRoute = ride.from_address ? ride.from_address.split(',')[0]+(ride.to_address?' → '+ride.to_address.split(',')[0]:'') : '—';
+      var dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+      var htva = parseFloat(o.price||0);
+      var tvac = (htva*(1+TVA_RATE)).toFixed(2).replace('.',',');
+      var sBg = statusBg[o.status]||'var(--sand2)', sCol = statusColor[o.status]||'var(--ink4)', sLbl = statusLabel[o.status]||o.status;
+      var msgHtml = o.message ? '<div style="font-size:11px;color:var(--ink4);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">'+o.message+'</div>' : '';
+      return '<tr style="border-bottom:1px solid var(--sand2);">'
+        +'<td style="padding:10px 14px;font-size:12px;color:var(--ink3);white-space:nowrap;">'+dateStr+'</td>'
+        +'<td style="padding:10px 14px;font-size:12px;font-family:monospace;font-weight:600;color:var(--ink2);">'+rideCode+'</td>'
+        +'<td style="padding:10px 14px;font-size:12px;color:var(--ink2);">'+rideRoute+'</td>'
+        +'<td style="padding:10px 14px;font-size:13px;font-weight:500;">'+driverName+'</td>'
+        +'<td style="padding:10px 14px;"><div style="font-size:13px;font-weight:600;">'+htva.toFixed(2).replace('.',',')+' € <span style="font-size:11px;font-weight:400;color:var(--ink3);">HTVA</span></div><div style="font-size:11px;color:var(--ink3);">'+tvac+' € TVAC</div>'+msgHtml+'</td>'
+        +'<td style="padding:10px 14px;"><span style="font-size:11px;font-weight:600;background:'+sBg+';color:'+sCol+';padding:3px 9px;border-radius:20px;">'+sLbl+'</span></td>'
+      +'</tr>';
+    }).join('');
+
+    el.innerHTML = '<div class="card" style="overflow:hidden;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:700px;">'
+      +'<thead><tr style="background:var(--sand2);">'
+        +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Date</th>'
+        +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Code course</th>'
+        +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Trajet</th>'
+        +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Chauffeur</th>'
+        +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Prix / Message</th>'
+        +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Statut</th>'
+      +'</tr></thead>'
+      +'<tbody>'+rows+'</tbody>'
+    +'</table></div></div>';
+  } catch(e) {
+    el.innerHTML = '<div class="page-loading" style="color:var(--red);">Erreur : '+e.message+'</div>';
+  }
 };
 
 window.loadAdminRides = async function(){
@@ -7168,16 +7283,20 @@ function _arRenderTable(rides, el){
     var ratingHtml = rating
       ? '<span style="color:#F5B100;letter-spacing:1px;">'+('★').repeat(rating.score)+('☆').repeat(5-rating.score)+'</span><span style="font-size:11px;color:var(--ink3);margin-left:4px;">'+rating.score+'/5</span>'
       : '<span style="font-size:11px;color:var(--ink4);">—</span>';
+    // Subcontract icon
+    var subIcon = r.is_subcontract
+      ? '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--amber-bg);color:var(--amber);margin-left:3px;flex-shrink:0;" title="Sous-traitée"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>'
+      : '';
     var safeR = JSON.stringify(r).replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
     return '<tr style="border-bottom:1px solid var(--sand2);cursor:pointer;transition:background .15s;" onclick="arOpenDetail(this)" data-ride=\''+safeR+'\' onmouseenter="this.style.background=\'var(--sand)\'" onmouseleave="this.style.background=\'\'">'
       +'<td style="padding:10px 14px;font-size:12.5px;color:var(--ink3);white-space:nowrap;">'+dateStr+'</td>'
-      +'<td style="padding:10px 14px;"><span style="font-size:10px;font-weight:700;background:'+tBg+';color:'+tCol+';padding:2px 8px;border-radius:20px;white-space:nowrap;">'+tLbl+'</span></td>'
+      +'<td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:2px;"><span style="font-size:10px;font-weight:700;background:'+tBg+';color:'+tCol+';padding:2px 8px;border-radius:20px;white-space:nowrap;">'+tLbl+'</span>'+subIcon+'</div></td>'
       +'<td style="padding:10px 14px;font-size:12px;font-family:monospace;font-weight:600;color:var(--ink2);">'+code+'</td>'
       +'<td style="padding:10px 14px;font-size:13px;font-weight:500;">'+clientName+'</td>'
       +'<td style="padding:10px 14px;font-size:13px;">'+driverName+'</td>'
       +'<td style="padding:10px 14px;"><span style="font-size:11px;font-weight:600;background:'+sBg+';color:'+sCol+';padding:3px 9px;border-radius:20px;white-space:nowrap;">'+sLbl+'</span></td>'
-      +'<td style="padding:10px 14px;font-size:13px;font-weight:600;text-align:right;">'+price+'</td>'
+      +'<td style="padding:10px 14px;font-size:13px;font-weight:600;text-align:right;white-space:nowrap;">'+price+'</td>'
       +'<td style="padding:10px 14px;white-space:nowrap;">'+ratingHtml+'</td>'
     +'</tr>';
   }).join('');
@@ -7211,14 +7330,33 @@ window.arOpenDetail = function(row){
   var driverName = r.driver_id ? _arName(r.driver_id) : '—';
   if(clientName!=='—') infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Client</span><span style="font-size:12px;font-weight:600;">'+clientName+'</span></div>';
   infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Chauffeur</span><span style="font-size:12px;font-weight:600;">'+driverName+'</span></div>';
-  if(r.final_price) infoRows += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Prix</span><span style="font-size:14px;font-weight:700;">'+parseFloat(r.final_price).toFixed(2).replace('.',',')+' €</span></div>';
+
+  // Price breakdown: HTVA, TVA 6%, commission 10%, prix chauffeur, TVAC
+  if(r.final_price){
+    var tvac = parseFloat(r.final_price);
+    // final_price is stored as TVAC (htva * 1.06)
+    var htva = parseFloat((tvac / (1 + TVA_RATE)).toFixed(2));
+    var tvaAmt = parseFloat((htva * TVA_RATE).toFixed(2));
+    var commission = parseFloat((htva * 0.10).toFixed(2));
+    var driverNet = parseFloat((htva * 0.90).toFixed(2));
+    var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
+    infoRows += '<div style="padding:7px 0;border-bottom:1px solid var(--sand2);">'
+      +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Détail du prix</div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Prix HTVA</span><span>'+fmt(htva)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">TVA 6%</span><span>'+fmt(tvaAmt)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Commission plateforme (10%)</span><span style="color:var(--red);">− '+fmt(commission)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Prix chauffeur net</span><span style="color:var(--green);font-weight:600;">'+fmt(driverNet)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:5px 0 2px;border-top:1px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(tvac)+'</span></div>'
+    +'</div>';
+  }
+
   // Rating
   var ratingData = window._arRatings && window._arRatings[r.id];
   if(ratingData){
     var stars = ('★').repeat(ratingData.score)+('☆').repeat(5-ratingData.score);
-    var ratingHtml = '<span style="color:#F5B100;font-size:15px;letter-spacing:2px;">'+stars+'</span> <span style="font-size:12px;font-weight:600;color:var(--ink2);">'+ratingData.score+'/5</span>';
-    if(ratingData.comment) ratingHtml += '<div style="font-size:12px;color:var(--ink3);font-style:italic;margin-top:3px;">«&nbsp;'+ratingData.comment+'&nbsp;»</div>';
-    infoRows += '<div style="padding:7px 0;"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><span style="font-size:12px;color:var(--ink3);">Évaluation client</span><div style="text-align:right;">'+ratingHtml+'</div></div></div>';
+    var ratingHtml2 = '<span style="color:#F5B100;font-size:15px;letter-spacing:2px;">'+stars+'</span> <span style="font-size:12px;font-weight:600;color:var(--ink2);">'+ratingData.score+'/5</span>';
+    if(ratingData.comment) ratingHtml2 += '<div style="font-size:12px;color:var(--ink3);font-style:italic;margin-top:3px;">«\u00a0'+ratingData.comment+'\u00a0»</div>';
+    infoRows += '<div style="padding:7px 0;"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><span style="font-size:12px;color:var(--ink3);">Évaluation client</span><div style="text-align:right;">'+ratingHtml2+'</div></div></div>';
   }
 
   body += '<div style="margin-top:14px;background:var(--sand2);border-radius:var(--r);padding:4px 12px;">'+infoRows+'</div>';
@@ -7230,14 +7368,16 @@ window.arOpenDetail = function(row){
       +'<button class="btn btn-green" onclick="adminConfirmPayment(\''+r.id+'\')" style="margin-left:8px;">✓ Confirmer le paiement</button>';
   }
 
-  // Populate modal
+  // Populate modal — subcontract icon in title
+  var subIcon2 = r.is_subcontract
+    ? ' <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--amber-bg);color:var(--amber);vertical-align:middle;margin-left:4px;" title="Sous-traitée"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>'
+    : '';
   var titleEl = document.getElementById('ar-detail-title');
   var bodyEl  = document.getElementById('ar-detail-body');
   var ftEl    = document.getElementById('ar-detail-ft');
   var subtitleMap = {disposal:'Mise à disposition', mixed:'Course mixte', ab:'Course A → B'};
   var subTitle = subtitleMap[r.trip_type]||'Course';
-  if(titleEl) titleEl.innerHTML = (r.booking_code ? r.booking_code+' — '+subTitle : subTitle)
-    + ' '+getStatusPill(r.status,0);
+  if(titleEl) titleEl.innerHTML = (r.booking_code ? r.booking_code+' — '+subTitle : subTitle) + subIcon2 + ' '+getStatusPill(r.status,0);
   if(bodyEl)  bodyEl.innerHTML  = body;
   if(ftEl)    ftEl.innerHTML    = footerHtml;
 
