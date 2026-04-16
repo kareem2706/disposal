@@ -7523,7 +7523,7 @@ window.refreshAdminDashboard = async function() {
     var [clientsRes, fleetsRes, ridesRes] = await Promise.all([
       sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','client'),
       sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','driver'),
-      sb.from('rides').select('id,final_price,ride_date,status')
+      sb.from('rides').select('id,final_price,ride_date,status,is_subcontract')
     ]);
 
     var totalClients = clientsRes.count || 0;
@@ -7532,7 +7532,7 @@ window.refreshAdminDashboard = async function() {
 
     // All-time totals for top stat cards
     var totalRides = allRides.length;
-    var totalCA    = allRides.reduce(function(s,r){ return s + (r.final_price ? parseFloat(r.final_price) : 0); }, 0);
+    var totalCA    = allRides.filter(function(r){ return !r.is_subcontract; }).reduce(function(s,r){ return s + (r.final_price ? parseFloat(r.final_price) : 0); }, 0);
 
     // Set top stat cards
     var set = function(id,val){ var el=document.getElementById(id); if(el) el.textContent=val; };
@@ -7551,7 +7551,7 @@ window.refreshAdminDashboard = async function() {
       return true;
     });
 
-    var periodCA = filteredRides.reduce(function(s,r){ return s + (r.final_price ? parseFloat(r.final_price) : 0); }, 0);
+    var periodCA = filteredRides.filter(function(r){ return !r.is_subcontract; }).reduce(function(s,r){ return s + (r.final_price ? parseFloat(r.final_price) : 0); }, 0);
     var periodProfit = periodCA * 0.10;
 
     set('admin-sum-ca',      periodCA > 0 ? periodCA.toFixed(2).replace('.',',')+' €' : '0,00 €');
