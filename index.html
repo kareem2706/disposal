@@ -3718,9 +3718,9 @@ function renderMkItem(r,isSub,isMine){
   var monStr=rDate2?rDate2.toLocaleDateString('fr-FR',{month:'short'}).toUpperCase().replace('.',''):'';
   var offerCnt2=r._offerCount||0;
   var statusPill=getStatusPill(r.status,offerCnt2);
-  var tLabel=r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';
-  var tColor=r.trip_type==='disposal'?'var(--amber)':r.trip_type==='mixed'?'var(--blue)':'var(--green)';
-  var tBg=r.trip_type==='disposal'?'var(--amber-bg)':r.trip_type==='mixed'?'var(--blue-bg)':'var(--green-bg)';
+  var tLabel=r.status==='personal'?'Personnel':r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';
+  var tColor=r.status==='personal'?'#6750A4':r.trip_type==='disposal'?'var(--amber)':r.trip_type==='mixed'?'var(--blue)':'var(--green)';
+  var tBg=r.status==='personal'?'#E8DEF8':r.trip_type==='disposal'?'var(--amber-bg)':r.trip_type==='mixed'?'var(--blue-bg)':'var(--green-bg)';
   // Subcontract indicator for marketplace
   var mkSubBadge=(isSub||r.is_subcontract)?'<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--amber-bg);color:var(--amber);margin-left:2px;flex-shrink:0;" title="Sous-traitée"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>':'';
   return '<div class="ride-card" onclick="openRideDetail(this)" data-ride=\''+safeR.replace(/\'/g,'&#39;')+'\'>'
@@ -5859,11 +5859,18 @@ window.submitRating=async function(){
       var {data:ride,error:rideErr}=await sb.from('rides').select('driver_id').eq('id',rideId).single();
       if(rideErr) throw rideErr;
       if(ride&&ride.driver_id){
-        // Upsert rating (handles duplicate gracefully)
-        var {error:insErr}=await sb.from('ratings').upsert(
-          {ride_id:rideId,driver_id:ride.driver_id,client_id:currentUser.id,score:score,comment:comment||null},
-          {onConflict:'ride_id'}
-        );
+        // Check if rating already exists for this ride
+        var {data:existingRating} = await sb.from('ratings').select('id').eq('ride_id',rideId).maybeSingle();
+        var insErr;
+        if(existingRating){
+          // Update existing rating
+          var {error:updRatErr} = await sb.from('ratings').update({score:score,comment:comment||null}).eq('ride_id',rideId);
+          insErr = updRatErr;
+        } else {
+          // Insert new rating
+          var {error:newRatErr} = await sb.from('ratings').insert({ride_id:rideId,driver_id:ride.driver_id,client_id:currentUser.id,score:score,comment:comment||null});
+          insErr = newRatErr;
+        }
         if(insErr) throw insErr;
         // Recalculate driver avg rating from all their ratings
         var {data:allRatings,error:ratErr}=await sb.from('ratings').select('score').eq('driver_id',ride.driver_id);
@@ -5872,7 +5879,8 @@ window.submitRating=async function(){
           var avg=allRatings.reduce(function(s,r){return s+r.score;},0)/allRatings.length;
           var newRating=Math.round(avg*10)/10;
           var {error:updErr}=await sb.from('profiles').update({rating:newRating,rating_count:allRatings.length}).eq('id',ride.driver_id);
-          if(updErr) console.warn('rating update error:',updErr);
+          if(updErr) console.warn('rating profile update error:',updErr);
+          else console.log('[rating] updated driver',ride.driver_id,'→',newRating,'('+allRatings.length+' ratings)');
         }
       }
       // Mark ride as rated
@@ -6652,9 +6660,9 @@ function renderRideItem(r){
   var dayNum=rDate?rDate.getDate().toString().padStart(2,'0'):'--';
   var monStr=rDate?rDate.toLocaleDateString('fr-FR',{month:'short'}).toUpperCase().replace('.',''):'';
   var priceStr=r.final_price?parseFloat(r.final_price).toFixed(2)+' €':(offerCnt>0?'Voir offres':'---');
-  var tLabel=r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';
-  var tColor=r.trip_type==='disposal'?'var(--amber)':r.trip_type==='mixed'?'var(--blue)':'var(--green)';
-  var tBg=r.trip_type==='disposal'?'var(--amber-bg)':r.trip_type==='mixed'?'var(--blue-bg)':'var(--green-bg)';
+  var tLabel=r.status==='personal'?'Personnel':r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';
+  var tColor=r.status==='personal'?'#6750A4':r.trip_type==='disposal'?'var(--amber)':r.trip_type==='mixed'?'var(--blue)':'var(--green)';
+  var tBg=r.status==='personal'?'#E8DEF8':r.trip_type==='disposal'?'var(--amber-bg)':r.trip_type==='mixed'?'var(--blue-bg)':'var(--green-bg)';
   var isDisposal=r.trip_type==='disposal';var isCancelled=r.status==='cancelled';
   var destCol=isDisposal?'<div></div>':'<div><div class="ride-card-col-label">Destination</div><div class="ride-card-col-val">'+(r.to_address||'—')+'</div></div>';
   var priceCol=isCancelled?'<div></div>':'<div style="text-align:right;"><div class="ride-card-col-label">Prix</div><div class="ride-card-col-val" style="font-weight:700;">'+priceStr+'</div></div>';
@@ -7323,15 +7331,6 @@ window.arOpenDetail = async function(row){
   var result = _buildRideDetailBody(r, {idPrefix:'ar-', showStatus:false});
   var body = result.html;
 
-  // If status is 'offers', fetch and display all submitted offers
-  if(r.status === 'offers' && sb){
-    var offersHtml = '<div style="margin-top:16px;">'
-      +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:10px;">Offres reçues</div>'
-      +'<div id="ar-offers-loading" style="font-size:13px;color:var(--ink3);">Chargement…</div>'
-    +'</div>';
-    body += offersHtml;
-  }
-
   // Extra info: client, driver, price, code
   var infoRows = '';
   if(r.booking_code) infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Code</span><span style="font-size:12px;font-weight:700;font-family:monospace;">'+r.booking_code+'</span></div>';
@@ -7340,7 +7339,6 @@ window.arOpenDetail = async function(row){
   if(clientName!=='—') infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Client</span><span style="font-size:12px;font-weight:600;">'+clientName+'</span></div>';
   infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Chauffeur</span><span style="font-size:12px;font-weight:600;">'+driverName+'</span></div>';
 
-  // Price breakdown: HTVA, TVA 6%, commission 10%, prix chauffeur, TVAC
   if(r.final_price){
     var tvac = parseFloat(r.final_price);
     var htva = parseFloat((tvac / (1 + TVA_RATE)).toFixed(2));
@@ -7358,7 +7356,6 @@ window.arOpenDetail = async function(row){
     +'</div>';
   }
 
-  // Rating
   var ratingData = window._arRatings && window._arRatings[r.id];
   if(ratingData){
     var stars = ('★').repeat(ratingData.score)+('☆').repeat(5-ratingData.score);
@@ -7369,14 +7366,21 @@ window.arOpenDetail = async function(row){
 
   body += '<div style="margin-top:14px;background:var(--sand2);border-radius:var(--r);padding:4px 12px;">'+infoRows+'</div>';
 
-  // Confirm payment button for pending_payment rides
+  // Offers section placeholder — appended LAST so it doesn't get overwritten
+  if(r.status === 'offers'){
+    body += '<div style="margin-top:16px;">'
+      +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:10px;">Offres reçues</div>'
+      +'<div id="ar-offers-container"><div style="font-size:13px;color:var(--ink3);">Chargement…</div></div>'
+    +'</div>';
+  }
+
+  // Footer
   var footerHtml = '<button class="btn btn-secondary" onclick="closeModal(\'m-ar-detail\')">Fermer</button>';
   if(r.status === 'pending_payment'){
     footerHtml = '<button class="btn btn-secondary" onclick="closeModal(\'m-ar-detail\')">Fermer</button>'
       +'<button class="btn btn-green" onclick="adminConfirmPayment(\''+r.id+'\')" style="margin-left:8px;">✓ Confirmer le paiement</button>';
   }
 
-  // Populate modal — subcontract icon in title
   var subIcon2 = r.is_subcontract
     ? ' <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--amber-bg);color:var(--amber);vertical-align:middle;margin-left:4px;" title="Sous-traitée"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>'
     : '';
@@ -7392,24 +7396,22 @@ window.arOpenDetail = async function(row){
   openModal('m-ar-detail');
   _triggerDistanceMatrix(r, result, 'ar-');
 
-  // Fetch and render offers asynchronously after modal is open
+  // Now fetch and inject offers (DOM is ready)
   if(r.status === 'offers' && sb){
     try {
-      var { data: offersData } = await sb.from('offers')
+      var { data: offersData, error: ofErr } = await sb.from('offers')
         .select('id,driver_id,price,message,status,vehicle_id,created_at')
         .eq('ride_id', r.id)
         .neq('status','rejected')
         .order('price',{ascending:true});
+      if(ofErr) throw ofErr;
 
-      // Fetch driver profiles
       var offerDriverIds = [...new Set((offersData||[]).map(function(o){ return o.driver_id; }).filter(Boolean))];
       var offerDriverMap = {};
       if(offerDriverIds.length > 0){
         var {data:dProfiles} = await sb.from('profiles').select('id,first_name,last_name,rating,rating_count').in('id', offerDriverIds);
         (dProfiles||[]).forEach(function(p){ offerDriverMap[p.id] = p; });
       }
-
-      // Fetch vehicles
       var vehIds = [...new Set((offersData||[]).map(function(o){ return o.vehicle_id; }).filter(Boolean))];
       var vehMap = {};
       if(vehIds.length > 0){
@@ -7417,52 +7419,52 @@ window.arOpenDetail = async function(row){
         (vData||[]).forEach(function(v){ vehMap[v.id] = v; });
       }
 
-      var loadingEl = document.getElementById('ar-offers-loading');
-      if(!loadingEl) return;
+      var container = document.getElementById('ar-offers-container');
+      if(!container) return;
 
       if(!offersData || !offersData.length){
-        loadingEl.innerHTML = '<div style="font-size:13px;color:var(--ink4);font-style:italic;">Aucune offre</div>';
+        container.innerHTML = '<div style="font-size:13px;color:var(--ink4);font-style:italic;">Aucune offre pour cette demande</div>';
         return;
       }
 
       var classLabels = {lowcost:'ECO',business:'BUSINESS',van:'VAN',luxe:'LUXE'};
       var classColors = {lowcost:'#6B8E23',business:'#1B5E3B',van:'#2E6B4A',luxe:'#8B0000'};
 
-      var offersRendered = offersData.map(function(o){
+      container.innerHTML = offersData.map(function(o){
         var dp = offerDriverMap[o.driver_id] || {};
         var dName = ((dp.first_name||'')+' '+(dp.last_name||'')).trim() || '—';
-        var dRating = dp.rating ? dp.rating.toFixed(1)+' ★' : '—';
+        var dRating = dp.rating ? dp.rating.toFixed(1)+' ★ ('+dp.rating_count+')' : 'Pas encore noté';
         var htva = parseFloat(o.price||0);
         var tvacO = (htva*(1+TVA_RATE)).toFixed(2).replace('.',',');
         var veh = vehMap[o.vehicle_id];
-        var vehBadge = veh
-          ? '<span style="font-size:9px;font-weight:700;background:'+(classColors[veh.vehicle_class]||'var(--ink3)')+';color:#fff;padding:1px 6px;border-radius:4px;margin-right:5px;">'+(classLabels[veh.vehicle_class]||veh.vehicle_class||'').toUpperCase()+'</span>'
-            +'<span style="font-size:12px;font-weight:600;">'+(veh.brand||'')+' '+(veh.model||'')+'</span>'
+        var vehLine = veh
+          ? '<div style="margin-bottom:4px;">'
+            +'<span style="font-size:9px;font-weight:700;background:'+(classColors[veh.vehicle_class]||'#888')+';color:#fff;padding:1px 6px;border-radius:4px;margin-right:5px;">'+(classLabels[veh.vehicle_class]||'').toUpperCase()+'</span>'
+            +'<span style="font-size:12.5px;font-weight:600;">'+(veh.brand||'')+' '+(veh.model||'')+'</span>'
+          +'</div>'
           : '';
         var statusBadge = o.status==='accepted'
-          ? '<span style="font-size:10px;font-weight:700;background:var(--green-bg);color:var(--green);padding:2px 7px;border-radius:20px;">✓ Acceptée</span>'
+          ? '<div style="margin-top:6px;"><span style="font-size:10px;font-weight:700;background:var(--green-bg);color:var(--green);padding:2px 8px;border-radius:20px;">✓ Acceptée</span></div>'
           : '';
         return '<div style="background:var(--white);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;">'
-          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-            +'<div>'
-              +'<div style="font-weight:600;font-size:13.5px;">'+dName+'</div>'
-              +'<div style="font-size:11.5px;color:var(--amber);">'+dRating+'</div>'
+          +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">'
+            +'<div style="flex:1;">'
+              +'<div style="font-weight:600;font-size:13.5px;margin-bottom:2px;">'+dName+'</div>'
+              +'<div style="font-size:11.5px;color:var(--amber);margin-bottom:6px;">'+dRating+'</div>'
+              +vehLine
+              +(o.message?'<div style="font-size:12px;color:var(--ink3);font-style:italic;">'+o.message+'</div>':'')
+              +statusBadge
             +'</div>'
-            +'<div style="text-align:right;">'
-              +'<div style="font-size:20px;font-weight:700;color:var(--ink);">'+tvacO+' €</div>'
+            +'<div style="text-align:right;flex-shrink:0;">'
+              +'<div style="font-size:22px;font-weight:700;color:var(--ink);line-height:1;">'+tvacO+' €</div>'
               +'<div style="font-size:11px;color:var(--ink3);">'+htva.toFixed(2).replace('.',',')+' € HTVA</div>'
             +'</div>'
           +'</div>'
-          +(vehBadge?'<div style="margin-bottom:5px;">'+vehBadge+'</div>':'')
-          +(o.message?'<div style="font-size:12px;color:var(--ink3);font-style:italic;">'+o.message+'</div>':'')
-          +(statusBadge?'<div style="margin-top:6px;">'+statusBadge+'</div>':'')
         +'</div>';
       }).join('');
-
-      loadingEl.outerHTML = offersRendered;
     } catch(e){
-      var loadingEl2 = document.getElementById('ar-offers-loading');
-      if(loadingEl2) loadingEl2.textContent = 'Erreur lors du chargement des offres';
+      var c2 = document.getElementById('ar-offers-container');
+      if(c2) c2.innerHTML = '<div style="font-size:13px;color:var(--red);">Erreur : '+e.message+'</div>';
       console.error('arOpenDetail offers error:', e);
     }
   }
