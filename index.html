@@ -1526,10 +1526,28 @@ body{background:var(--bg);}
       <!-- 3 summary cards -->
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;" class="admin-summary-grid" id="admin-summary-cards">
         <div class="card" style="padding:0;">
-          <div class="card-hd">Finances</div>
-          <div style="padding:18px 20px;display:flex;flex-direction:column;gap:12px;">
-            <div style="font-size:14.5px;font-weight:500;">CA : <span id="admin-sum-ca">—</span></div>
-            <div style="font-size:14.5px;font-weight:500;">Bénéfice : <span id="admin-sum-profit">—</span></div>
+          <div class="card-hd">Finances <span id="admin-sum-period-label" style="font-size:11px;font-weight:400;color:var(--ink3);margin-left:6px;"></span></div>
+          <div style="padding:14px 20px;display:flex;flex-direction:column;gap:0;">
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;color:var(--ink3);">Montant total HTVA</span>
+              <span style="font-size:13px;font-weight:600;" id="admin-sum-htva">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;color:var(--ink3);">TVA 6%</span>
+              <span style="font-size:13px;" id="admin-sum-tva">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;font-weight:600;">CA total TVAC</span>
+              <span style="font-size:14px;font-weight:700;" id="admin-sum-ca">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;color:var(--ink3);">Commission plateforme (10%)</span>
+              <span style="font-size:13px;font-weight:600;color:var(--green);" id="admin-sum-profit">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;">
+              <span style="font-size:12.5px;color:var(--ink3);">Revenu chauffeurs (90%)</span>
+              <span style="font-size:13px;" id="admin-sum-driver">—</span>
+            </div>
           </div>
         </div>
         <div class="card" style="padding:0;">
@@ -7470,11 +7488,28 @@ window.refreshAdminDashboard = async function() {
       return true;
     });
 
-    var periodCA = filteredRides.filter(function(r){ return !r.is_subcontract; }).reduce(function(s,r){ return s + (r.final_price ? parseFloat(r.final_price) : 0); }, 0);
-    var periodProfit = periodCA * 0.10;
+    var periodRides = filteredRides.filter(function(r){ return !r.is_subcontract && r.final_price && (r.status==='confirmed'||r.status==='done'||r.status==='pending_payment'); });
+    var periodTvac   = periodRides.reduce(function(s,r){ return s + parseFloat(r.final_price); }, 0);
+    var periodHtva   = parseFloat((periodTvac / (1 + TVA_RATE)).toFixed(2));
+    var periodTva    = parseFloat((periodTvac - periodHtva).toFixed(2));
+    var periodProfit = parseFloat((periodHtva * 0.10).toFixed(2));
+    var periodDriver = parseFloat((periodHtva * 0.90).toFixed(2));
 
-    set('admin-sum-ca',      periodCA > 0 ? periodCA.toFixed(2).replace('.',',')+' €' : '0,00 €');
-    set('admin-sum-profit',  periodProfit > 0 ? periodProfit.toFixed(2).replace('.',',')+' €' : '0,00 €');
+    var fmt = function(v){ return v > 0 ? v.toFixed(2).replace('.',',')+' €' : '0,00 €'; };
+
+    // Update period label
+    var periodLbl = '';
+    if(_adminDashPeriod === 'custom' && (fromDate || toDate)){
+      periodLbl = (fromDate||'…')+' → '+(toDate||'…');
+    }
+    var lblEl = document.getElementById('admin-sum-period-label');
+    if(lblEl) lblEl.textContent = periodLbl;
+
+    set('admin-sum-htva',   fmt(periodHtva));
+    set('admin-sum-tva',    fmt(periodTva));
+    set('admin-sum-ca',     fmt(periodTvac));
+    set('admin-sum-profit', fmt(periodProfit));
+    set('admin-sum-driver', fmt(periodDriver));
     set('admin-sum-clients', totalClients);
     set('admin-sum-fleets',  totalFleets);
   } catch(e) {
