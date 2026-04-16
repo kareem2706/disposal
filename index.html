@@ -3205,12 +3205,23 @@ async function loadDriverDashboard(){
   const revenueNet = monthMissions.reduce(function(a,r){var p=r.final_price||0;return a+p*0.9;},0);
   const upcomingMissions = missions.filter(function(r){return r.status==='confirmed'||r.status==='pending_payment';});
 
+  // Compute live score directly from ratings table (bypasses stale currentProfile.rating)
+  var liveRating = null, liveRatingCount = 0;
+  if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
+    var {data:myRatings} = await sb.from('ratings').select('score').eq('driver_id', uid);
+    if(myRatings && myRatings.length > 0){
+      liveRatingCount = myRatings.length;
+      liveRating = Math.round(myRatings.reduce(function(s,r){return s+r.score;},0)/myRatings.length*10)/10;
+    }
+  }
+  var scoreDisplay = liveRating !== null ? liveRating.toFixed(1)+' \u2605' : ((currentProfile&&currentProfile.rating)?currentProfile.rating.toFixed(1)+' \u2605':'\u2014');
+
     var dI=function(s,bg){return '<div class="stat-card-icon" style="background:'+bg+'">'+s+'</div>';};
   document.getElementById('driver-stats').innerHTML=
     '<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>','var(--green-bg)')+'<div class="stat-label">Missions \u00e0 venir</div><div class="stat-val">'+upcomingMissions.length+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>','var(--blue-bg)')+'<div class="stat-label">Ce mois</div><div class="stat-val">'+monthMissions.length+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>','var(--red-bg)')+'<div class="stat-label">Revenus</div><div class="stat-val">'+(revenueNet>0?revenueNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>'
-    +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>','#FFF3DC')+'<div class="stat-label">Score</div><div class="stat-val">'+((currentProfile&&currentProfile.rating)?currentProfile.rating.toFixed(1)+' \u2605':'\u2014')+'</div></div>';
+    +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>','#FFF3DC')+'<div class="stat-label">Score</div><div class="stat-val">'+scoreDisplay+'</div></div>';
 
   // Update marketplace badge immediately (hidden per spec)
   var badgeEl = document.getElementById('badge-marketplace');
@@ -3226,10 +3237,21 @@ async function loadDriverDashboard(){
   if(typeof renderDriverStatsChart==='function') renderDriverStatsChart(missions);
 }
 
-function renderScoreCard(){
-  const r = currentProfile?.rating || 0;
-  const n = currentProfile?.rating_count || 0;
-  document.getElementById('driver-score-card').innerHTML = `
+async function renderScoreCard(){
+  var r = 0, n = 0;
+  if(sb && currentUser && !localStorage.getItem(DEMO_MODE_KEY)){
+    var {data:myRatings} = await sb.from('ratings').select('score').eq('driver_id', currentUser.id);
+    if(myRatings && myRatings.length > 0){
+      n = myRatings.length;
+      r = Math.round(myRatings.reduce(function(s,rt){return s+rt.score;},0)/n*10)/10;
+    }
+  } else {
+    r = currentProfile?.rating || 0;
+    n = currentProfile?.rating_count || 0;
+  }
+  var el = document.getElementById('driver-score-card');
+  if(!el) return;
+  el.innerHTML = `
     <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px;">
       <div class="score-ring"><div class="score-num" style="color:${r>=4?'var(--green)':r>=2.5?'#C47F00':'var(--red)'}">${r > 0 ? r.toFixed(1) : '—'}</div><div class="score-lbl">/ 5.0</div></div>
       <div><div style="font-weight:600;margin-bottom:2px;">${r >= 4.5 ? 'Excellent' : r >= 4 ? 'Bien' : r > 0 ? 'Moyen' : '—'}</div><div class="text-xs">${n} évaluation${n>1?'s':''}</div></div>
@@ -3784,7 +3806,7 @@ function _buildRideDetailBody(r, opts){
     var mp=[];var dt=(s.date?formatDate(s.date):'')+( s.time?' '+s.time:'');
     if(dt.trim())mp.push(dt.trim());if(s.pax)mp.push(s.pax+' pax');if(s.veh)mp.push(s.veh);
     var metaHtml=mp.length?'<div style="font-size:12px;color:var(--ink3);margin-bottom:8px;">'+mp.join(' \u00b7 ')+'</div>':'';
-    var noteHtml=s.note?'<div style="font-size:12px;color:var(--ink3);margin-top:6px;font-style:italic;">'+s.note+'</div>':'';
+    var noteHtml=s.note?'<div style="font-size:12px;color:var(--ink3);margin-top:6px;font-style:italic;"><span style="font-style:normal;">Note du client : </span>'+s.note+'</div>':'';
     var rows='';
     if(isD){
       rows+=segRow('green',t('lbl_pickup'),s.from||'\u2014',true);
@@ -3818,7 +3840,7 @@ function _buildRideDetailBody(r, opts){
   }
   var rawNotes=r.notes||'';
   var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').trim();
-  if(cleanNotes){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);">'+cleanNotes+'</div></div>';}
+  if(cleanNotes){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div></div>';}
   if(r.is_subcontract&&r.final_price){body+='<div style="margin-top:12px;padding:10px 14px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><span style="font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9 : '+parseFloat(r.final_price).toFixed(0)+'\u20ac</span></div>';}
   return {html:body, isMixed:isMixed, isDisp:isDisp, mixedSegs:mixedSegs};
 }
@@ -3895,7 +3917,7 @@ window.openRideDetail=function(el){
     if(s.veh)  metaParts.push(s.veh);
     var metaHtml=metaParts.length?'<div style="font-size:12px;color:var(--ink3);margin-bottom:8px;">'+metaParts.join(' &middot; ')+'</div>':'';
     var timeHtml='';
-    var noteHtml=s.note?'<div style="font-size:12px;color:var(--ink3);margin-top:6px;font-style:italic;">'+s.note+'</div>':'';
+    var noteHtml=s.note?'<div style="font-size:12px;color:var(--ink3);margin-top:6px;font-style:italic;"><span style="font-style:normal;">Note du client : </span>'+s.note+'</div>':'';
     var rows='';
     if(isD){
       rows+=segRow('green',t('lbl_pickup'),s.from||'—','',true);
@@ -3951,7 +3973,7 @@ window.openRideDetail=function(el){
   if(cleanNotes){
     body+='<div style="margin-top:16px;">'
       +'<div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div>'
-      +'<div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);">'+cleanNotes+'</div>'
+      +'<div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div>'
       +'</div>';
   }
 
@@ -5912,9 +5934,16 @@ window.submitRating=async function(){
         if(allRatings&&allRatings.length>0){
           var avg=allRatings.reduce(function(s,r){return s+r.score;},0)/allRatings.length;
           var newRating=Math.round(avg*10)/10;
-          var {error:updErr}=await sb.from('profiles').update({rating:newRating,rating_count:allRatings.length}).eq('id',ride.driver_id);
-          if(updErr) console.warn('rating profile update error:',updErr);
-          else console.log('[rating] updated driver',ride.driver_id,'→',newRating,'('+allRatings.length+' ratings)');
+          // Use RPC to bypass RLS (client can't directly update another user's profile)
+          var {error:rpcErr} = await sb.rpc('update_driver_rating', {driver_id: ride.driver_id});
+          if(rpcErr){
+            // Fallback: try direct update (works if RLS allows it)
+            console.warn('RPC failed, trying direct update:', rpcErr.message);
+            var {error:updErr}=await sb.from('profiles').update({rating:newRating,rating_count:allRatings.length}).eq('id',ride.driver_id);
+            if(updErr) console.warn('Direct update also failed:', updErr.message);
+          } else {
+            console.log('[rating] RPC updated driver',ride.driver_id,'→',newRating,'('+allRatings.length+' ratings)');
+          }
         }
       }
       // Mark ride as rated
