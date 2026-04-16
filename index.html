@@ -4954,7 +4954,8 @@ function _paymentShowStep(step){
     _mountStripeCard();
   }
   if(step === 'bank'){
-    document.getElementById('bank-ref').textContent = 'BLEENR';
+    var bankRef = (_currentPaymentRide && _currentPaymentRide.booking_code) ? _currentPaymentRide.booking_code : 'BLEENR';
+    document.getElementById('bank-ref').textContent = bankRef;
     var bankTvac = currentOfferAmount * (1 + TVA_RATE);
     document.getElementById('bank-amount').textContent = bankTvac.toFixed(2) + ' €';
     var confirmBankBtn2 = document.getElementById('payment-btn-confirm-bank');
@@ -7367,7 +7368,7 @@ window.arOpenDetail = async function(row){
   body += '<div style="margin-top:14px;background:var(--sand2);border-radius:var(--r);padding:4px 12px;">'+infoRows+'</div>';
 
   // Offers section placeholder — appended LAST so it doesn't get overwritten
-  if(r.status === 'offers'){
+  if(r.status === 'offers' || r.status === 'waiting'){
     body += '<div style="margin-top:16px;">'
       +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:10px;">Offres reçues</div>'
       +'<div id="ar-offers-container"><div style="font-size:13px;color:var(--ink3);">Chargement…</div></div>'
@@ -7377,6 +7378,22 @@ window.arOpenDetail = async function(row){
   // Footer
   var footerHtml = '<button class="btn btn-secondary" onclick="closeModal(\'m-ar-detail\')">Fermer</button>';
   if(r.status === 'pending_payment'){
+    // Build bank transfer info block
+    var tvacPend = r.final_price ? parseFloat(r.final_price).toFixed(2).replace('.',',')+' €' : '—';
+    var bankRef = r.booking_code || 'BLEENR';
+    body += '<div style="margin-top:14px;padding:14px 16px;background:#EAF1FB;border-radius:var(--r);border:1.5px solid #1E4D7B22;">'
+      +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;color:#1E4D7B;">'
+        +'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2"/></svg>'
+        +'<span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Virement bancaire en attente</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:130px 1fr;gap:4px 12px;font-size:12.5px;line-height:1.9;">'
+        +'<span style="color:var(--ink3);">Bénéficiaire</span><span style="font-weight:600;">DISPOSAL SRL</span>'
+        +'<span style="color:var(--ink3);">IBAN</span><span style="font-weight:600;font-family:monospace;">BE68 5390 0754 7034</span>'
+        +'<span style="color:var(--ink3);">BIC / SWIFT</span><span style="font-weight:600;font-family:monospace;">TRIOBEBB</span>'
+        +'<span style="color:var(--ink3);">Communication</span><span style="font-weight:700;font-family:monospace;color:#1E4D7B;">'+bankRef+'</span>'
+        +'<span style="color:var(--ink3);">Montant attendu</span><span style="font-weight:700;color:var(--green);">'+tvacPend+'</span>'
+      +'</div>'
+    +'</div>';
     footerHtml = '<button class="btn btn-secondary" onclick="closeModal(\'m-ar-detail\')">Fermer</button>'
       +'<button class="btn btn-green" onclick="adminConfirmPayment(\''+r.id+'\')" style="margin-left:8px;">✓ Confirmer le paiement</button>';
   }
@@ -7396,13 +7413,13 @@ window.arOpenDetail = async function(row){
   openModal('m-ar-detail');
   _triggerDistanceMatrix(r, result, 'ar-');
 
-  // Now fetch and inject offers (DOM is ready)
-  if(r.status === 'offers' && sb){
+  // Now fetch and inject offers (DOM is ready) — show for any status that could have offers
+  if((r.status === 'offers' || r.status === 'waiting') && sb){
     try {
+      // Fetch ALL offers for this ride (same query as client openOffersModal)
       var { data: offersData, error: ofErr } = await sb.from('offers')
-        .select('id,driver_id,price,message,status,vehicle_id,created_at')
+        .select('id,ride_id,driver_id,price,message,status,vehicle_id,created_at')
         .eq('ride_id', r.id)
-        .neq('status','rejected')
         .order('price',{ascending:true});
       if(ofErr) throw ofErr;
 
@@ -7423,17 +7440,24 @@ window.arOpenDetail = async function(row){
       if(!container) return;
 
       if(!offersData || !offersData.length){
-        container.innerHTML = '<div style="font-size:13px;color:var(--ink4);font-style:italic;">Aucune offre pour cette demande</div>';
+        container.innerHTML = '<div style="font-size:13px;color:var(--ink4);font-style:italic;">Aucune offre enregistrée pour cette demande</div>';
+        return;
+      }
+
+      // Filter out rejected offers for display
+      var visibleOffers = offersData.filter(function(o){ return o.status !== 'rejected'; });
+      if(!visibleOffers.length){
+        container.innerHTML = '<div style="font-size:13px;color:var(--ink4);font-style:italic;">Toutes les offres ont été rejetées ('+offersData.length+')</div>';
         return;
       }
 
       var classLabels = {lowcost:'ECO',business:'BUSINESS',van:'VAN',luxe:'LUXE'};
       var classColors = {lowcost:'#6B8E23',business:'#1B5E3B',van:'#2E6B4A',luxe:'#8B0000'};
 
-      container.innerHTML = offersData.map(function(o){
+      container.innerHTML = visibleOffers.map(function(o){
         var dp = offerDriverMap[o.driver_id] || {};
         var dName = ((dp.first_name||'')+' '+(dp.last_name||'')).trim() || '—';
-        var dRating = dp.rating ? dp.rating.toFixed(1)+' ★ ('+dp.rating_count+')' : 'Pas encore noté';
+        var dRating = dp.rating ? dp.rating.toFixed(1)+' ★ ('+dp.rating_count+' avis)' : 'Pas encore noté';
         var htva = parseFloat(o.price||0);
         var tvacO = (htva*(1+TVA_RATE)).toFixed(2).replace('.',',');
         var veh = vehMap[o.vehicle_id];
@@ -7464,7 +7488,7 @@ window.arOpenDetail = async function(row){
       }).join('');
     } catch(e){
       var c2 = document.getElementById('ar-offers-container');
-      if(c2) c2.innerHTML = '<div style="font-size:13px;color:var(--red);">Erreur : '+e.message+'</div>';
+      if(c2) c2.innerHTML = '<div style="font-size:13px;color:var(--red);">Erreur Supabase : '+e.message+'<br><small>Vérifier les politiques RLS sur la table <code>offers</code> pour le rôle admin.</small></div>';
       console.error('arOpenDetail offers error:', e);
     }
   }
