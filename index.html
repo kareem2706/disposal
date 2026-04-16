@@ -315,9 +315,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ac-item:hover{background:var(--sand);}
 .ac-item:last-child{border-bottom:none;}
 .ac-item-icon{font-size:13px;flex-shrink:0;}
-.mixed-segment{background:rgba(27,94,59,0.06);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
+.mixed-segment{background:#F1F1F1;border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
 .mixed-segment-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.mseg-num{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mseg-num{width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .mseg-lbl{font-size:12px;font-weight:600;color:var(--ink2);flex:1;}
 .mseg-del{background:none;border:none;cursor:pointer;color:var(--ink4);font-size:18px;line-height:1;padding:0;}
 .mseg-del:hover{color:var(--red);}
@@ -325,7 +325,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .mixed-segment .input-group{margin-bottom:0;}
 .seg-type-btns{display:flex;gap:5px;margin-bottom:8px;}
 .seg-type-btn{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--sand3);background:#fff;color:var(--ink2);font-family:'DM Sans',sans-serif;transition:all var(--t);}
-.seg-type-btn.active{border-color:var(--ink);background:var(--ink);color:#fff;}
+.seg-type-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;}
 
 .ride-card{background:#FCFCFC;border:1px solid var(--sand3);border-radius:var(--r-lg);padding:14px 18px;margin-bottom:8px;cursor:pointer;transition:box-shadow var(--t),border-color var(--t);position:relative;}
 .ride-card:hover{box-shadow:var(--sh);}
@@ -362,9 +362,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ac-item:hover{background:var(--sand);}
 .ac-item:last-child{border-bottom:none;}
 .ac-item-icon{font-size:13px;flex-shrink:0;}
-.mixed-segment{background:rgba(27,94,59,0.06);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
+.mixed-segment{background:#F1F1F1;border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px;margin-bottom:8px;}
 .mixed-segment-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.mseg-num{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mseg-num{width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .mseg-lbl{font-size:12px;font-weight:600;color:var(--ink2);flex:1;}
 .mseg-del{background:none;border:none;cursor:pointer;color:var(--ink4);font-size:18px;line-height:1;padding:0;}
 .mseg-del:hover{color:var(--red);}
@@ -372,7 +372,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .mixed-segment .input-group{margin-bottom:0;}
 .seg-type-btns{display:flex;gap:5px;margin-bottom:8px;}
 .seg-type-btn{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--sand3);background:#fff;color:var(--ink2);font-family:'DM Sans',sans-serif;transition:all var(--t);}
-.seg-type-btn.active{border-color:var(--ink);background:var(--ink);color:#fff;}
+.seg-type-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;}
 
 .pac-container{z-index:10000!important;font-family:"DM Sans",sans-serif;font-size:13px;border-radius:var(--r);box-shadow:var(--sh-lg);}
 .pac-item{padding:7px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--sand3);}
@@ -2982,7 +2982,7 @@ async function loadClientDashboard(){
   var withOffer=rides.filter(function(r){return r.status==='offers';}).length;
   var total=rides.filter(function(r){return r.status==='done'||r.status==='confirmed';}).reduce(function(s,r){return s+(r.final_price?parseFloat(r.final_price):0);},0);
   document.getElementById('client-stats').innerHTML=
-    '<div class="stat-card">'+_mkI(_s1,'var(--green-bg)')+'<div class="stat-label">Confirmées</div><div class="stat-val">'+confirmed+'</div></div>'
+    '<div class="stat-card">'+_mkI(_s1,'var(--green-bg)')+'<div class="stat-label">Confirmées/terminées</div><div class="stat-val">'+confirmed+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s2,'#FFF3DC')+'<div class="stat-label">En attente</div><div class="stat-val">'+pending+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s3,'var(--blue-bg)')+'<div class="stat-label">Offres reçues</div><div class="stat-val">'+withOffer+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s4,'var(--red-bg)')+'<div class="stat-label">Total pay\u00e9</div><div class="stat-val">'+(total>0?total.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>';
@@ -3435,7 +3435,7 @@ async function openOffersModal(rideId){
       const vehIds = [...new Set(offers.map(o => o.vehicle_id).filter(Boolean))];
       if(vehIds.length > 0){
         const { data: vData } = await sb.from('fleet_vehicles')
-          .select('id, brand, model, year, vehicle_class, amenities')
+          .select('id, brand, model, year, color, vehicle_class, amenities')
           .in('id', vehIds);
         if(vData){
           const vm = {};
@@ -4754,6 +4754,7 @@ function renderOfferCard(o){
           +'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Marque</span><div style="font-weight:500;">'+(v.brand||'—')+'</div></div>'
           +'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Modèle</span><div style="font-weight:500;">'+(v.model||'—')+'</div></div>'
           +(v.year?'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Année</span><div style="font-weight:500;">'+v.year+'</div></div>':'')
+          +(v.color?'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Couleur</span><div style="font-weight:500;">'+v.color+'</div></div>':'')
           +(vehClass?'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Gamme</span><div style="font-weight:500;">'+(classLabels[vehClass]||vehClass)+'</div></div>':'')
           +'</div>'
         ):'<div style="color:var(--ink4);font-style:italic;">Aucun détail véhicule disponible</div>')
