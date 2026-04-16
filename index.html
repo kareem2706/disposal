@@ -1877,19 +1877,8 @@ body{background:var(--bg);}
 <div class="modal-overlay" id="m-rate">
   <div class="modal" style="max-width:380px;">
     <div class="modal-hd"><span class="modal-title">Évaluer votre course</span><button class="close-btn" onclick="closeModal('m-rate')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
-    <div class="modal-body" style="text-align:center;">
-      <div style="width:48px;height:48px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11h14M14 6l5 5-5 5" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <div style="font-weight:600;font-size:15px;margin-bottom:4px;">Course terminée</div>
-      <div id="rate-ride-info" class="text-xs mb-16">—</div>
-      <div style="font-size:12px;font-weight:500;margin-bottom:10px;">Comment était votre expérience ?</div>
-      <div style="font-size:32px;letter-spacing:6px;cursor:pointer;margin-bottom:14px;user-select:none;" id="stars-display"><span onclick="rateSet(1)" style="color:#CCC;">&#9733;</span><span onclick="rateSet(2)" style="color:#CCC;">&#9733;</span><span onclick="rateSet(3)" style="color:#CCC;">&#9733;</span><span onclick="rateSet(4)" style="color:#CCC;">&#9733;</span><span onclick="rateSet(5)" style="color:#CCC;">&#9733;</span></div>
-      <input type="hidden" id="rate-score" value="0">
-      <textarea id="rate-comment" rows="2" placeholder="Un commentaire ? (optionnel)"></textarea>
-      <div id="rate-ride-id" style="display:none;"></div>
-    </div>
-    <div class="modal-ft" style="justify-content:stretch;"><button class="btn btn-primary btn-full" onclick="submitRating()">Envoyer l'évaluation</button></div>
+    <div class="modal-body" style="text-align:center;"></div>
+    <div class="modal-ft" style="justify-content:stretch;"></div>
   </div>
 </div>
 
@@ -5779,12 +5768,54 @@ window.savePersonalMission=async function(btn){
 };
 
 // ── Rating functions ──
-window.openRateModal=function(rideId,fromAddr){
-  var scoreEl=document.getElementById('rate-score');if(scoreEl)scoreEl.value='0';
-  var commentEl=document.getElementById('rate-comment');if(commentEl)commentEl.value='';
-  var idEl=document.getElementById('rate-ride-id');if(idEl)idEl.textContent=rideId;
-  var infoEl=document.getElementById('rate-ride-info');if(infoEl)infoEl.textContent=fromAddr||'\u2014';
-  rateSet(0);
+window.openRateModal=async function(rideId,fromAddr){
+  // Check if already rated
+  if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
+    var {data:existing} = await sb.from('ratings').select('score,comment').eq('ride_id',rideId).maybeSingle();
+    if(existing){
+      // Already rated — show read-only view
+      var stars = '';
+      for(var i=1;i<=5;i++) stars+='<span style="font-size:28px;color:'+(i<=existing.score?'#F5B100':'#CCC')+';">&#9733;</span>';
+      var commentHtml = existing.comment
+        ? '<div style="margin-top:10px;padding:10px 12px;background:var(--sand2);border-radius:var(--r);font-size:13px;color:var(--ink2);text-align:left;">'+existing.comment+'</div>'
+        : '';
+      var bodyEl = document.querySelector('#m-rate .modal-body');
+      if(bodyEl) bodyEl.innerHTML =
+        '<div style="width:48px;height:48px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">'
+          +'<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11h14M14 6l5 5-5 5" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        +'</div>'
+        +'<div style="font-weight:600;font-size:15px;margin-bottom:4px;">Course évaluée</div>'
+        +'<div style="font-size:12px;color:var(--ink3);margin-bottom:12px;">'+(fromAddr||'—')+'</div>'
+        +'<div style="margin-bottom:6px;letter-spacing:4px;">'+stars+'</div>'
+        +'<div style="font-size:12px;color:var(--ink3);">Vous avez attribué <strong>'+existing.score+'/5</strong></div>'
+        +commentHtml;
+      var ftEl = document.querySelector('#m-rate .modal-ft');
+      if(ftEl) ftEl.innerHTML = '<button class="btn btn-secondary btn-full" onclick="closeModal(\'m-rate\')">Fermer</button>';
+      openModal('m-rate');
+      return;
+    }
+  }
+  // Fresh rating form
+  var bodyEl = document.querySelector('#m-rate .modal-body');
+  if(bodyEl) bodyEl.innerHTML =
+    '<div style="width:48px;height:48px;background:var(--green-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">'
+      +'<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11h14M14 6l5 5-5 5" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    +'</div>'
+    +'<div style="font-weight:600;font-size:15px;margin-bottom:4px;">Course terminée</div>'
+    +'<div id="rate-ride-info" class="text-xs mb-16">'+(fromAddr||'—')+'</div>'
+    +'<div style="font-size:12px;font-weight:500;margin-bottom:10px;">Comment était votre expérience ?</div>'
+    +'<div style="font-size:32px;letter-spacing:6px;cursor:pointer;margin-bottom:14px;user-select:none;" id="stars-display">'
+      +'<span onclick="rateSet(1)" style="color:#CCC;">&#9733;</span>'
+      +'<span onclick="rateSet(2)" style="color:#CCC;">&#9733;</span>'
+      +'<span onclick="rateSet(3)" style="color:#CCC;">&#9733;</span>'
+      +'<span onclick="rateSet(4)" style="color:#CCC;">&#9733;</span>'
+      +'<span onclick="rateSet(5)" style="color:#CCC;">&#9733;</span>'
+    +'</div>'
+    +'<input type="hidden" id="rate-score" value="0">'
+    +'<textarea id="rate-comment" rows="2" placeholder="Un commentaire ? (optionnel)"></textarea>'
+    +'<div id="rate-ride-id" style="display:none;">'+rideId+'</div>';
+  var ftEl = document.querySelector('#m-rate .modal-ft');
+  if(ftEl) ftEl.innerHTML = '<button class="btn btn-primary btn-full" onclick="submitRating()">Envoyer l\'évaluation</button>';
   openModal('m-rate');
 };
 
@@ -7047,6 +7078,15 @@ window.loadAdminRides = async function(){
     // Populate client & driver dropdowns (once)
     _arPopulateDropdowns();
 
+    // Fetch ratings for all rides
+    var rideIds = _arAllRides.map(function(r){ return r.id; });
+    var _arRatings = {}; // rideId -> {score, comment}
+    if(rideIds.length > 0){
+      var { data: ratData } = await sb.from('ratings').select('ride_id,score,comment').in('ride_id', rideIds);
+      (ratData||[]).forEach(function(rt){ _arRatings[rt.ride_id] = rt; });
+    }
+    window._arRatings = _arRatings;
+
     // Apply client/driver filter (client-side after fetch)
     var clientVal = document.getElementById('ar-filter-client')?.value || '';
     var driverVal = document.getElementById('ar-filter-driver')?.value || '';
@@ -7124,6 +7164,10 @@ function _arRenderTable(rides, el){
     var driverName = r.driver_id ? _arName(r.driver_id) : '—';
     var price = r.final_price ? parseFloat(r.final_price).toFixed(2).replace('.',',')+' €' : '—';
     var code = r.booking_code || '—';
+    var rating = window._arRatings && window._arRatings[r.id];
+    var ratingHtml = rating
+      ? '<span style="color:#F5B100;letter-spacing:1px;">'+('★').repeat(rating.score)+('☆').repeat(5-rating.score)+'</span><span style="font-size:11px;color:var(--ink3);margin-left:4px;">'+rating.score+'/5</span>'
+      : '<span style="font-size:11px;color:var(--ink4);">—</span>';
     var safeR = JSON.stringify(r).replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
     return '<tr style="border-bottom:1px solid var(--sand2);cursor:pointer;transition:background .15s;" onclick="arOpenDetail(this)" data-ride=\''+safeR+'\' onmouseenter="this.style.background=\'var(--sand)\'" onmouseleave="this.style.background=\'\'">'
@@ -7134,10 +7178,11 @@ function _arRenderTable(rides, el){
       +'<td style="padding:10px 14px;font-size:13px;">'+driverName+'</td>'
       +'<td style="padding:10px 14px;"><span style="font-size:11px;font-weight:600;background:'+sBg+';color:'+sCol+';padding:3px 9px;border-radius:20px;white-space:nowrap;">'+sLbl+'</span></td>'
       +'<td style="padding:10px 14px;font-size:13px;font-weight:600;text-align:right;">'+price+'</td>'
+      +'<td style="padding:10px 14px;white-space:nowrap;">'+ratingHtml+'</td>'
     +'</tr>';
   }).join('');
 
-  el.innerHTML = '<div class="card" style="overflow:hidden;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:700px;">'
+  el.innerHTML = '<div class="card" style="overflow:hidden;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:760px;">'
     +'<thead><tr style="background:var(--sand2);">'
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Date</th>'
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Type</th>'
@@ -7146,6 +7191,7 @@ function _arRenderTable(rides, el){
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Chauffeur</th>'
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Statut</th>'
       +'<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Prix</th>'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Note</th>'
     +'</tr></thead>'
     +'<tbody>'+rows+'</tbody>'
   +'</table></div></div>';
@@ -7165,7 +7211,15 @@ window.arOpenDetail = function(row){
   var driverName = r.driver_id ? _arName(r.driver_id) : '—';
   if(clientName!=='—') infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Client</span><span style="font-size:12px;font-weight:600;">'+clientName+'</span></div>';
   infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Chauffeur</span><span style="font-size:12px;font-weight:600;">'+driverName+'</span></div>';
-  if(r.final_price) infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;"><span style="font-size:12px;color:var(--ink3);">Prix</span><span style="font-size:14px;font-weight:700;">'+parseFloat(r.final_price).toFixed(2).replace('.',',')+' €</span></div>';
+  if(r.final_price) infoRows += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Prix</span><span style="font-size:14px;font-weight:700;">'+parseFloat(r.final_price).toFixed(2).replace('.',',')+' €</span></div>';
+  // Rating
+  var ratingData = window._arRatings && window._arRatings[r.id];
+  if(ratingData){
+    var stars = ('★').repeat(ratingData.score)+('☆').repeat(5-ratingData.score);
+    var ratingHtml = '<span style="color:#F5B100;font-size:15px;letter-spacing:2px;">'+stars+'</span> <span style="font-size:12px;font-weight:600;color:var(--ink2);">'+ratingData.score+'/5</span>';
+    if(ratingData.comment) ratingHtml += '<div style="font-size:12px;color:var(--ink3);font-style:italic;margin-top:3px;">«&nbsp;'+ratingData.comment+'&nbsp;»</div>';
+    infoRows += '<div style="padding:7px 0;"><div style="display:flex;justify-content:space-between;align-items:flex-start;"><span style="font-size:12px;color:var(--ink3);">Évaluation client</span><div style="text-align:right;">'+ratingHtml+'</div></div></div>';
+  }
 
   body += '<div style="margin-top:14px;background:var(--sand2);border-radius:var(--r);padding:4px 12px;">'+infoRows+'</div>';
 
