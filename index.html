@@ -7316,12 +7316,21 @@ function _arRenderTable(rides, el){
   +'</table></div></div>';
 }
 
-window.arOpenDetail = function(row){
+window.arOpenDetail = async function(row){
   var r; try{ r=JSON.parse(row.dataset.ride.replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>')); }catch(e){ return; }
 
   // Build detail body using shared helper
   var result = _buildRideDetailBody(r, {idPrefix:'ar-', showStatus:false});
   var body = result.html;
+
+  // If status is 'offers', fetch and display all submitted offers
+  if(r.status === 'offers' && sb){
+    var offersHtml = '<div style="margin-top:16px;">'
+      +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:10px;">Offres reçues</div>'
+      +'<div id="ar-offers-loading" style="font-size:13px;color:var(--ink3);">Chargement…</div>'
+    +'</div>';
+    body += offersHtml;
+  }
 
   // Extra info: client, driver, price, code
   var infoRows = '';
@@ -7334,7 +7343,6 @@ window.arOpenDetail = function(row){
   // Price breakdown: HTVA, TVA 6%, commission 10%, prix chauffeur, TVAC
   if(r.final_price){
     var tvac = parseFloat(r.final_price);
-    // final_price is stored as TVAC (htva * 1.06)
     var htva = parseFloat((tvac / (1 + TVA_RATE)).toFixed(2));
     var tvaAmt = parseFloat((htva * TVA_RATE).toFixed(2));
     var commission = parseFloat((htva * 0.10).toFixed(2));
@@ -7383,6 +7391,81 @@ window.arOpenDetail = function(row){
 
   openModal('m-ar-detail');
   _triggerDistanceMatrix(r, result, 'ar-');
+
+  // Fetch and render offers asynchronously after modal is open
+  if(r.status === 'offers' && sb){
+    try {
+      var { data: offersData } = await sb.from('offers')
+        .select('id,driver_id,price,message,status,vehicle_id,created_at')
+        .eq('ride_id', r.id)
+        .neq('status','rejected')
+        .order('price',{ascending:true});
+
+      // Fetch driver profiles
+      var offerDriverIds = [...new Set((offersData||[]).map(function(o){ return o.driver_id; }).filter(Boolean))];
+      var offerDriverMap = {};
+      if(offerDriverIds.length > 0){
+        var {data:dProfiles} = await sb.from('profiles').select('id,first_name,last_name,rating,rating_count').in('id', offerDriverIds);
+        (dProfiles||[]).forEach(function(p){ offerDriverMap[p.id] = p; });
+      }
+
+      // Fetch vehicles
+      var vehIds = [...new Set((offersData||[]).map(function(o){ return o.vehicle_id; }).filter(Boolean))];
+      var vehMap = {};
+      if(vehIds.length > 0){
+        var {data:vData} = await sb.from('fleet_vehicles').select('id,brand,model,vehicle_class').in('id', vehIds);
+        (vData||[]).forEach(function(v){ vehMap[v.id] = v; });
+      }
+
+      var loadingEl = document.getElementById('ar-offers-loading');
+      if(!loadingEl) return;
+
+      if(!offersData || !offersData.length){
+        loadingEl.innerHTML = '<div style="font-size:13px;color:var(--ink4);font-style:italic;">Aucune offre</div>';
+        return;
+      }
+
+      var classLabels = {lowcost:'ECO',business:'BUSINESS',van:'VAN',luxe:'LUXE'};
+      var classColors = {lowcost:'#6B8E23',business:'#1B5E3B',van:'#2E6B4A',luxe:'#8B0000'};
+
+      var offersRendered = offersData.map(function(o){
+        var dp = offerDriverMap[o.driver_id] || {};
+        var dName = ((dp.first_name||'')+' '+(dp.last_name||'')).trim() || '—';
+        var dRating = dp.rating ? dp.rating.toFixed(1)+' ★' : '—';
+        var htva = parseFloat(o.price||0);
+        var tvacO = (htva*(1+TVA_RATE)).toFixed(2).replace('.',',');
+        var veh = vehMap[o.vehicle_id];
+        var vehBadge = veh
+          ? '<span style="font-size:9px;font-weight:700;background:'+(classColors[veh.vehicle_class]||'var(--ink3)')+';color:#fff;padding:1px 6px;border-radius:4px;margin-right:5px;">'+(classLabels[veh.vehicle_class]||veh.vehicle_class||'').toUpperCase()+'</span>'
+            +'<span style="font-size:12px;font-weight:600;">'+(veh.brand||'')+' '+(veh.model||'')+'</span>'
+          : '';
+        var statusBadge = o.status==='accepted'
+          ? '<span style="font-size:10px;font-weight:700;background:var(--green-bg);color:var(--green);padding:2px 7px;border-radius:20px;">✓ Acceptée</span>'
+          : '';
+        return '<div style="background:var(--white);border:1.5px solid var(--sand3);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+            +'<div>'
+              +'<div style="font-weight:600;font-size:13.5px;">'+dName+'</div>'
+              +'<div style="font-size:11.5px;color:var(--amber);">'+dRating+'</div>'
+            +'</div>'
+            +'<div style="text-align:right;">'
+              +'<div style="font-size:20px;font-weight:700;color:var(--ink);">'+tvacO+' €</div>'
+              +'<div style="font-size:11px;color:var(--ink3);">'+htva.toFixed(2).replace('.',',')+' € HTVA</div>'
+            +'</div>'
+          +'</div>'
+          +(vehBadge?'<div style="margin-bottom:5px;">'+vehBadge+'</div>':'')
+          +(o.message?'<div style="font-size:12px;color:var(--ink3);font-style:italic;">'+o.message+'</div>':'')
+          +(statusBadge?'<div style="margin-top:6px;">'+statusBadge+'</div>':'')
+        +'</div>';
+      }).join('');
+
+      loadingEl.outerHTML = offersRendered;
+    } catch(e){
+      var loadingEl2 = document.getElementById('ar-offers-loading');
+      if(loadingEl2) loadingEl2.textContent = 'Erreur lors du chargement des offres';
+      console.error('arOpenDetail offers error:', e);
+    }
+  }
 };
 
 window.adminConfirmPayment = async function(rideId){
