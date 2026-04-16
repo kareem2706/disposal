@@ -4317,26 +4317,42 @@ window.submitRide = async function(){
     notes = (g('disp-notes')||'') + (dur ? ' Dur\u00e9e:'+dur+'h' : '');
     if(!from||!date||!time){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
   } else if(tripType==='mixed'){
-    var segs=[]; var segEls=document.querySelectorAll('.mixed-segment');
+    var segs=[]; var segEls=document.querySelectorAll('#mixed-segments .mixed-segment');
     segEls.forEach(function(seg){
       var n=seg.id.replace('seg-','');
-      var sf=g('sf-'+n)||g('seg-from-'+n)||'';
-      var st=g('st-'+n)||g('seg-to-'+n)||'';
-      var sd=g('sdur-'+n)||g('seg-dur-'+n)||'';
+      var sf=g('sf-'+n)||'';
+      var st=g('st-'+n)||'';
+      var sd=g('sdur-'+n)||'';
+      var sdate=g('sd8-'+n)||'';
+      var stime=g('sh-'+n)||'';
+      var spax=g('spax-'+n)||'';
+      var sveh=g('sveh-'+n)||'';
+      var snotes=(document.getElementById('snotes-'+n)||{}).value||'';
       var ab=seg.querySelector('.seg-type-btn.active');
       var isD=ab&&ab.textContent.toLowerCase().indexOf('disp')>=0;
-      segs.push((isD?'Disposition':'A>B')+':'+sf+(st&&!isD?'>'+st:'')+(sd?'('+sd+'h)':''));
+      // Format: TYPE@HH:MM:from>to(dur)|d:DATE|p:PAX|v:VEH|n:NOTE
+      var segStr=(isD?'Disposition':'A>B');
+      if(stime) segStr+='@'+stime;
+      segStr+=':'+sf;
+      if(!isD&&st) segStr+='>'+st;
+      if(isD&&sd) segStr+='('+sd+'h)';
+      if(sdate) segStr+='|d:'+sdate;
+      if(spax) segStr+='|p:'+spax;
+      if(sveh) segStr+='|v:'+sveh;
+      if(snotes.trim()) segStr+='|n:'+snotes.trim();
+      segs.push(segStr);
     });
-    from  = segs.length ? segs[0].replace(/^[^:]+:/,'').split('>')[0].trim() : 'Mixte';
+    from  = segs.length ? segs[0].replace(/^[^:]+:/,'').split('>')[0].replace(/@[^:]+:/,'').trim() : 'Mixte';
     to    = '';
-    var firstSegEl = document.querySelector('#mixed-segments .mixed-segment');
-    var firstSegN  = firstSegEl ? firstSegEl.id.replace('seg-','') : null;
-    date  = firstSegN ? (g('sd8-'+firstSegN)||todayStr()) : todayStr();
-    time  = firstSegN ? (g('sh-'+firstSegN)||'00:00') : '00:00';
-    pax   = '1';
-    veh   = null;
+    // Use date/time from first segment
+    var firstSegEl2 = document.querySelector('#mixed-segments .mixed-segment');
+    var firstN2 = firstSegEl2 ? firstSegEl2.id.replace('seg-','') : null;
+    date  = firstN2 ? (g('sd8-'+firstN2)||todayStr()) : todayStr();
+    time  = firstN2 ? (g('sh-'+firstN2)||'00:00') : '00:00';
+    pax   = firstN2 ? (g('spax-'+firstN2)||'1') : '1';
+    veh   = firstN2 ? (g('sveh-'+firstN2)||null) : null;
     notes = 'Mixte: '+segs.join(' | ');
-    if(!segs.length){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
+    if(!segs.length||!segs[0]){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
   } else {
     from  = g('ride-from');
     to    = g('ride-to');
