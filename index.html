@@ -3523,7 +3523,7 @@ window.openOfferModal = function(rideId, summary, rideObj){
           var isLast=i===mixedSegsOffer.length-1;
           var border=isLast?'':'border-bottom:1px solid var(--sand3);margin-bottom:10px;padding-bottom:10px;';
           routeHtml+='<div style="'+border+'">';
-          routeHtml+='<div style="font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Segment '+(i+1)+' — '+(isD?'Disposition':'A → B')+'</div>';
+          routeHtml+='<div style="font-size:10px;font-weight:800;color:var(--ink4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Segment '+(i+1)+' — '+(isD?'Disposition':'A → B')+'</div>';
           // Meta: time · pax · vehicle
           var mp=[];
           if(s.date||s.time){ var dt=(s.date?formatDate(s.date):'')+( s.time?' '+s.time:''); if(dt.trim())mp.push(dt.trim()); }
@@ -3552,7 +3552,7 @@ window.openOfferModal = function(rideId, summary, rideObj){
             +'</div>';
             routeHtml+='<div id="off-seg-dist-'+i+'" style="padding:3px 0 3px 30px;font-size:11.5px;color:var(--ink3);"></div>';
           }
-          if(s.note) routeHtml+='<div style="padding:2px 0 0 0;font-size:12px;color:var(--ink3);font-style:italic;">'+s.note+'</div>';
+          if(s.note) routeHtml+='<div style="padding:2px 0 0 0;font-size:12px;color:var(--ink3);font-style:italic;"><span style="font-style:normal;font-weight:600;color:var(--ink2);">Note du client : </span>'+s.note+'</div>';
           routeHtml+='</div>';
         });
       } else {
@@ -3597,7 +3597,7 @@ window.openOfferModal = function(rideId, summary, rideObj){
     var notesHtml='';
     if(cleanNotes){
       notesHtml='<div style="margin-top:12px;">'
-        +'<div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">Instructions</div>'
+        +'<div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">Note du client</div>'
         +'<div style="padding:10px 12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);">'+cleanNotes+'</div>'
       +'</div>';
     }
@@ -6599,8 +6599,8 @@ function populateOfferVehicles(requestedClass){
   matching.forEach(function(v){
     var opt=document.createElement('option');
     opt.value=v.id;
-    var amenStr=(v.amenities&&v.amenities.length>0)?' ['+v.amenities.map(function(a){return amenShort[a]||a;}).join(' ')+']':'';
-    opt.textContent=v.brand+' '+v.model;
+    var platePart = v.plate ? ' ('+v.plate+')' : '';
+    opt.textContent=v.brand+' '+v.model+platePart;
     sel.appendChild(opt);
   });
   if(matching.length===1)sel.value=matching[0].id;
