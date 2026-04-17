@@ -4002,11 +4002,7 @@ window.openRideDetail=function(el){
       ft=trashBtn+closeBtn
         +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRide(this.dataset.r)" data-m="m-ride-detail" data-r="'+rId+'">Voir les offres &#x2192;</button>';
     } else if(r.status==='pending_payment'){
-      ft=trashBtn
-        +'<div style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#1E4D7B;">'
-          +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2"/></svg>'
-          +'Paiement en cours de vérification</div>'
-        +closeBtn;
+      ft=closeBtn;
     } else if(r.status==='confirmed'){
       ft=trashBtn
         +'<div style="font-size:12px;color:var(--green);font-weight:500;margin-left:auto;">\u2713 Course confirm\u00e9e</div>'
