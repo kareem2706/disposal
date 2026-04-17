@@ -7610,8 +7610,9 @@ window.adminMarkRefunded = async function(rideId){
     if(btn){ btn.disabled=false; btn.textContent='✓ Remboursement effectué'; }
   }
 };
+
+window.adminConfirmPayment = async function(rideId){
   if(!sb) return;
-  var btn = document.querySelector('#ar-detail-ft .btn-green');
   if(btn){ btn.disabled=true; btn.textContent='Confirmation…'; }
   try {
     var { error } = await sb.from('rides').update({status:'confirmed'}).eq('id', rideId).eq('status','pending_payment');
