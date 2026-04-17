@@ -4066,7 +4066,13 @@ window.deleteRide = async function(rideId){
 
   if(titleEl) titleEl.textContent = 'Annuler la demande';
 
-  if(minsUntil >= 2880){
+  var isConfirmed = ride && (ride.status === 'confirmed' || ride.status === 'pending_payment');
+
+  if(!isConfirmed){
+    // waiting / offers — simple confirmation, no refund logic
+    if(msgEl) msgEl.textContent = 'Êtes-vous sûr(e) de vouloir annuler cette demande ?';
+    if(warnEl) warnEl.style.display = 'none';
+  } else if(minsUntil >= 2880){
     // ≥ 48h — cancellation allowed, refund possible
     if(msgEl) msgEl.textContent = 'Êtes-vous sûr(e) de vouloir annuler votre demande ?';
     if(warnEl){
