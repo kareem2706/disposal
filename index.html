@@ -4052,8 +4052,11 @@ window.deleteRide = async function(rideId){
   // Compute minutes until departure
   var minsUntil = Infinity;
   if(ride && ride.ride_date){
-    var dt = new Date(ride.ride_date+'T'+(ride.ride_time||'00:00')+':00');
-    minsUntil = (dt - new Date()) / 60000;
+    var rideTime = (ride.ride_time||'00:00').slice(0,5); // ensure HH:MM only
+    var dt = new Date(ride.ride_date+'T'+rideTime+':00');
+    if(!isNaN(dt.getTime())){
+      minsUntil = (dt - new Date()) / 60000;
+    }
   }
 
   var isPaid    = ride && ride.final_price > 0;
