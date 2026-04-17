@@ -1180,10 +1180,7 @@ body{background:var(--bg);}
 
     <div id="page-invoices" class="page">
       <div class="pg-head"><div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div><div><h1>Factures</h1></div></div>
-      <div class="card">
-        <div class="card-hd">Mes factures</div>
-        <div id="invoices-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
-      </div>
+      <div id="invoices-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
 
     <!-- DRIVER PAGES -->
@@ -3010,11 +3007,14 @@ async function loadClientDashboard(){
   var pending=rides.filter(function(r){return r.status==='waiting';}).length;
   var withOffer=rides.filter(function(r){return r.status==='offers';}).length;
   var total=rides.filter(function(r){return r.status==='done'||r.status==='confirmed';}).reduce(function(s,r){return s+(r.final_price?parseFloat(r.final_price):0);},0);
+  // Subtract refunded cancelled rides
+  var refunded=rides.filter(function(r){return r.status==='cancelled'&&r.payment_method==='refunded'&&r.final_price;}).reduce(function(s,r){return s+parseFloat(r.final_price);},0);
+  var totalNet = total - refunded;
   document.getElementById('client-stats').innerHTML=
     '<div class="stat-card">'+_mkI(_s1,'var(--green-bg)')+'<div class="stat-label">Confirmées/terminées</div><div class="stat-val">'+confirmed+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s2,'#FFF3DC')+'<div class="stat-label">En attente</div><div class="stat-val">'+pending+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s3,'var(--blue-bg)')+'<div class="stat-label">Offres reçues</div><div class="stat-val">'+withOffer+'</div></div>'
-    +'<div class="stat-card">'+_mkI(_s4,'var(--red-bg)')+'<div class="stat-label">Total pay\u00e9</div><div class="stat-val">'+(total>0?total.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>';
+    +'<div class="stat-card">'+_mkI(_s4,'var(--red-bg)')+'<div class="stat-label">Total pay\u00e9</div><div class="stat-val">'+(totalNet>0?totalNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>';
 
   // Active ride
   const active = rides.find(r => r.status==='active');
@@ -3071,13 +3071,16 @@ async function loadRides(filter){
 }
 
 // INVOICES
+var _invoiceAllRides = [];
+var _invoiceMonthKeys = [];
+var _invoiceCurrentIdx = 0;
+
 async function loadInvoices(){
   var listEl = document.getElementById('invoices-list');
   listEl.innerHTML = '<div class="page-loading"><div class="page-spinner"></div></div>';
 
   var rides = [];
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
-    // Fetch done + cancelled-paid rides
     const [doneRes, cancelledRes] = await Promise.all([
       sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes').eq('client_id', currentUser.id).eq('status','done').order('ride_date',{ascending:true}),
       sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes,payment_method').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).order('ride_date',{ascending:true})
@@ -3096,74 +3099,103 @@ async function loadInvoices(){
   // Group by YYYY-MM
   var months = {};
   rides.forEach(function(r){
-    var key = (r.ride_date||'').slice(0,7); // "YYYY-MM"
+    var key = (r.ride_date||'').slice(0,7);
     if(!key) return;
     if(!months[key]) months[key] = [];
     months[key].push(r);
   });
 
-  var monthKeys = Object.keys(months).sort().reverse(); // most recent first
+  _invoiceAllRides = months;
+  _invoiceMonthKeys = Object.keys(months).sort().reverse();
+  _invoiceCurrentIdx = 0;
 
+  _renderInvoiceMonth();
+}
+
+function _renderInvoiceMonth(){
+  var listEl = document.getElementById('invoices-list');
+  if(!listEl || !_invoiceMonthKeys.length) return;
+
+  var key = _invoiceMonthKeys[_invoiceCurrentIdx];
+  var monthRides = _invoiceAllRides[key] || [];
   var monthLabels = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  var parts = key.split('-');
+  var label = monthLabels[parseInt(parts[1])-1]+' '+parts[0];
+  var total = _invoiceMonthKeys.length;
+  var canPrev = _invoiceCurrentIdx < total - 1;
+  var canNext = _invoiceCurrentIdx > 0;
 
-  var html = monthKeys.map(function(key){
-    var parts = key.split('-');
-    var label = monthLabels[parseInt(parts[1])-1]+' '+parts[0];
-    var monthRides = months[key];
-
-    var rows = monthRides.map(function(r){
-      var htva = r.final_price ? parseFloat((parseFloat(r.final_price)/(1+TVA_RATE)).toFixed(2)) : 0;
-      var code = r.booking_code || r.id.slice(0,8);
-      var from = cleanAddr(r.from_address||'—');
-      var to   = r.to_address||'—';
-      var route = r.trip_type==='disposal' ? from+' (Disp.)' : from+' → '+to;
-      var statusBadge = r.status==='cancelled'
-        ? '<span style="font-size:9px;font-weight:700;background:var(--red-bg);color:var(--red);padding:1px 6px;border-radius:20px;margin-left:5px;">Annulée</span>'
-        : '';
-      return '<div style="display:grid;grid-template-columns:120px 1fr auto;gap:8px 14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
-        +'<div style="font-size:11px;font-family:monospace;font-weight:600;color:var(--ink2);">'+code+'</div>'
-        +'<div style="font-size:12.5px;color:var(--ink2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+route+'">'+formatDate(r.ride_date||'')+statusBadge+'<div style="font-size:12px;color:var(--ink3);white-space:normal;">'+route+'</div></div>'
-        +'<div style="text-align:right;white-space:nowrap;">'
-          +'<div style="font-size:13px;font-weight:600;">'+htva.toFixed(2).replace('.',',')+' €</div>'
-          +'<div style="font-size:10px;color:var(--ink3);">HTVA</div>'
-        +'</div>'
-      +'</div>';
-    }).join('');
-
-    var totalHtva = monthRides.reduce(function(s,r){ return s+(r.final_price?parseFloat((parseFloat(r.final_price)/(1+TVA_RATE)).toFixed(2)):0); },0);
-    var totalTva  = monthRides.reduce(function(s,r){ var tvac=r.final_price?parseFloat(r.final_price):0; var htva=parseFloat((tvac/(1+TVA_RATE)).toFixed(2)); return s+(tvac-htva); },0);
-    var totalTvac = monthRides.reduce(function(s,r){ return s+(r.final_price?parseFloat(r.final_price):0); },0);
-    var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
-
-    return '<div class="card" style="margin-bottom:16px;padding:0;">'
-      +'<div class="card-hd" style="display:flex;align-items:center;justify-content:space-between;">'
-        +'<span style="font-weight:700;">'+label+'</span>'
-        +'<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;" onclick="generateMonthInvoice(\''+key+'\')">'
-          +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>'
-          +'PDF'
-        +'</button>'
+  var rows = monthRides.map(function(r){
+    var htva = r.final_price ? parseFloat((parseFloat(r.final_price)/(1+TVA_RATE)).toFixed(2)) : 0;
+    var code = r.booking_code || r.id.slice(0,8);
+    var from = cleanAddr(r.from_address||'—');
+    var to   = r.to_address||'—';
+    var route = r.trip_type==='disposal' ? from+' (Disp.)' : from+' → '+to;
+    var statusBadge = r.status==='cancelled'
+      ? '<span style="font-size:9px;font-weight:700;background:var(--red-bg);color:var(--red);padding:1px 6px;border-radius:20px;margin-left:6px;">Annulée</span>'
+      : '';
+    return '<div style="display:grid;grid-template-columns:130px 1fr auto;gap:6px 14px;align-items:start;padding:10px 0;border-bottom:1px solid var(--sand2);">'
+      +'<div style="font-size:11px;font-family:monospace;font-weight:600;color:var(--ink2);padding-top:2px;">'+code+'</div>'
+      +'<div>'
+        +'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:1px;">'+formatDate(r.ride_date||'')+statusBadge+'</div>'
+        +'<div style="font-size:12.5px;color:var(--ink);">'+route+'</div>'
       +'</div>'
-      +'<div style="padding:0 18px;">'
-        +'<div style="display:grid;grid-template-columns:120px 1fr auto;gap:4px 14px;padding:6px 0;border-bottom:2px solid var(--sand3);margin-bottom:2px;">'
-          +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Code</div>'
-          +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Trajet</div>'
-          +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);text-align:right;">Prix HTVA</div>'
-        +'</div>'
-        +rows
-        +'<div style="padding:10px 0 6px;">'
-          +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink3);padding:2px 0;"><span>Sous-total HTVA</span><span>'+fmt(totalHtva)+'</span></div>'
-          +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink3);padding:2px 0;"><span>TVA 6%</span><span>'+fmt(totalTva)+'</span></div>'
-          +'<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:6px 0 4px;border-top:1.5px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(totalTvac)+'</span></div>'
-        +'</div>'
+      +'<div style="text-align:right;white-space:nowrap;">'
+        +'<div style="font-size:13px;font-weight:600;">'+htva.toFixed(2).replace('.',',')+' €</div>'
+        +'<div style="font-size:10px;color:var(--ink3);">HTVA</div>'
       +'</div>'
     +'</div>';
   }).join('');
 
-  listEl.innerHTML = html;
+  var totalHtva = monthRides.reduce(function(s,r){ return s+(r.final_price?parseFloat((parseFloat(r.final_price)/(1+TVA_RATE)).toFixed(2)):0); },0);
+  var totalTvac = monthRides.reduce(function(s,r){ return s+(r.final_price?parseFloat(r.final_price):0); },0);
+  var totalTva  = totalTvac - totalHtva;
+  var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
+
+  listEl.innerHTML = '<div class="card" style="padding:0;">'
+    // Header with navigation
+    +'<div class="card-hd" style="display:flex;align-items:center;gap:10px;justify-content:space-between;">'
+      +'<div style="display:flex;align-items:center;gap:8px;">'
+        +'<button onclick="_invoiceNav(-1)" '+(canPrev?'':'disabled style="opacity:.3;pointer-events:none;"')+' style="background:none;border:1.5px solid var(--sand3);border-radius:6px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">&lt;</button>'
+        +'<select onchange="_invoiceGoTo(this.value)" style="font-size:13px;font-weight:600;border:none;background:transparent;cursor:pointer;font-family:\'DM Sans\',sans-serif;color:var(--ink);">'
+          +_invoiceMonthKeys.map(function(k,i){
+            var p=k.split('-'), ml=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+            return '<option value="'+i+'"'+(i===_invoiceCurrentIdx?' selected':'')+'>'+ml[parseInt(p[1])-1]+' '+p[0]+'</option>';
+          }).join('')
+        +'</select>'
+        +'<button onclick="_invoiceNav(1)" '+(canNext?'':'disabled style="opacity:.3;pointer-events:none;"')+' style="background:none;border:1.5px solid var(--sand3);border-radius:6px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">&gt;</button>'
+      +'</div>'
+      +'<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;flex-shrink:0;" onclick="generateMonthInvoice(\''+key+'\')">'
+        +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>'
+        +'PDF'
+      +'</button>'
+    +'</div>'
+    // Column headers
+    +'<div style="display:grid;grid-template-columns:130px 1fr auto;gap:4px 14px;padding:6px 20px;border-bottom:2px solid var(--sand3);">'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Code</div>'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Trajet</div>'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);text-align:right;">Prix HTVA</div>'
+    +'</div>'
+    // Rows
+    +'<div style="padding:0 20px;">'+rows+'</div>'
+    // Totals
+    +'<div style="padding:8px 20px 14px;border-top:1px solid var(--sand2);margin-top:4px;">'
+      +'<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink3);padding:3px 0;"><span>Sous-total HTVA</span><span>'+fmt(totalHtva)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink3);padding:3px 0;"><span>TVA 6%</span><span>'+fmt(totalTva)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:7px 0 2px;border-top:1.5px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(totalTvac)+'</span></div>'
+    +'</div>'
+  +'</div>';
 }
 
-window._invoiceRidesCache = {};
-window._invoiceProfileCache = null;
+window._invoiceNav = function(dir){
+  _invoiceCurrentIdx = Math.max(0, Math.min(_invoiceMonthKeys.length-1, _invoiceCurrentIdx - dir));
+  _renderInvoiceMonth();
+};
+
+window._invoiceGoTo = function(idx){
+  _invoiceCurrentIdx = parseInt(idx);
+  _renderInvoiceMonth();
+};
 
 window.generateMonthInvoice = async function(monthKey){
   // Collect rides for this month from DOM or re-query
@@ -7835,7 +7867,8 @@ window.refreshAdminDashboard = async function() {
 
     // All-time totals for top stat cards
     var totalRides = allRides.length;
-    var totalCA    = allRides.filter(function(r){ return !r.is_subcontract; }).reduce(function(s,r){ return s + (r.final_price ? parseFloat(r.final_price) : 0); }, 0);
+    var totalRefunded = allRides.filter(function(r){ return !r.is_subcontract && r.payment_method==='refunded' && r.final_price; }).reduce(function(s,r){ return s+parseFloat(r.final_price); },0);
+    var totalCA    = allRides.filter(function(r){ return !r.is_subcontract; }).reduce(function(s,r){ return s + (r.final_price ? parseFloat(r.final_price) : 0); }, 0) - totalRefunded;
 
     // Set top stat cards
     var set = function(id,val){ var el=document.getElementById(id); if(el) el.textContent=val; };
@@ -7855,7 +7888,8 @@ window.refreshAdminDashboard = async function() {
     });
 
     var periodRides = filteredRides.filter(function(r){ return !r.is_subcontract && r.final_price && (r.status==='confirmed'||r.status==='done'||r.status==='pending_payment'); });
-    var periodTvac   = periodRides.reduce(function(s,r){ return s + parseFloat(r.final_price); }, 0);
+    var periodRefunded = filteredRides.filter(function(r){ return !r.is_subcontract && r.payment_method==='refunded' && r.final_price; }).reduce(function(s,r){ return s+parseFloat(r.final_price); },0);
+    var periodTvac   = periodRides.reduce(function(s,r){ return s + parseFloat(r.final_price); }, 0) - periodRefunded;
     var periodHtva   = parseFloat((periodTvac / (1 + TVA_RATE)).toFixed(2));
     var periodTva    = parseFloat((periodTvac - periodHtva).toFixed(2));
     var periodProfit = parseFloat((periodHtva * 0.10).toFixed(2));
