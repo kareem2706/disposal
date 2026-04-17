@@ -1551,9 +1551,20 @@ body{background:var(--bg);}
           </div>
         </div>
         <div class="card" style="padding:0;">
-          <div class="card-hd" style="font-weight:700;">Clients</div>
-          <div style="padding:18px 20px;">
-            <div style="font-size:14.5px;font-weight:700;">Inscrits : <span id="admin-sum-clients">—</span></div>
+          <div class="card-hd" style="font-weight:700;">Remboursements <span id="admin-sum-refund-period-label" style="font-size:11px;font-weight:400;color:var(--ink3);margin-left:6px;"></span></div>
+          <div style="padding:14px 20px;display:flex;flex-direction:column;gap:0;">
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;color:var(--ink3);">Virement</span>
+              <span style="font-size:13px;font-weight:600;color:var(--red);" id="admin-sum-refund-bank">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;color:var(--ink3);">Stripe</span>
+              <span style="font-size:13px;font-weight:600;color:var(--red);" id="admin-sum-refund-stripe">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;">
+              <span style="font-size:12.5px;font-weight:600;">Total à rembourser</span>
+              <span style="font-size:14px;font-weight:700;color:var(--red);" id="admin-sum-refund-total">—</span>
+            </div>
           </div>
         </div>
         <div class="card" style="padding:0;">
@@ -7363,13 +7374,17 @@ function _arRenderTable(rides, el){
       : '';
     var safeR = JSON.stringify(r).replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
+    var refundBadge = (r.status==='cancelled' && r.final_price && r.payment_method && r.payment_method!=='refunded')
+      ? '<span style="font-size:10px;font-weight:700;background:var(--red-bg);color:var(--red);padding:2px 7px;border-radius:20px;margin-left:4px;white-space:nowrap;">⚠ Remb.</span>'
+      : '';
+
     return '<tr style="border-bottom:1px solid var(--sand2);cursor:pointer;transition:background .15s;" onclick="arOpenDetail(this)" data-ride=\''+safeR+'\' onmouseenter="this.style.background=\'var(--sand)\'" onmouseleave="this.style.background=\'\'">'
       +'<td style="padding:10px 14px;font-size:12.5px;color:var(--ink3);white-space:nowrap;">'+dateStr+'</td>'
       +'<td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:2px;"><span style="font-size:10px;font-weight:700;background:'+tBg+';color:'+tCol+';padding:2px 8px;border-radius:20px;white-space:nowrap;">'+tLbl+'</span>'+subIcon+'</div></td>'
       +'<td style="padding:10px 14px;font-size:12px;font-family:monospace;font-weight:600;color:var(--ink2);">'+code+'</td>'
       +'<td style="padding:10px 14px;font-size:13px;font-weight:500;">'+clientName+'</td>'
       +'<td style="padding:10px 14px;font-size:13px;">'+driverName+'</td>'
-      +'<td style="padding:10px 14px;"><span style="font-size:11px;font-weight:600;background:'+sBg+';color:'+sCol+';padding:3px 9px;border-radius:20px;white-space:nowrap;">'+sLbl+'</span></td>'
+      +'<td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;"><span style="font-size:11px;font-weight:600;background:'+sBg+';color:'+sCol+';padding:3px 9px;border-radius:20px;white-space:nowrap;">'+sLbl+'</span>'+refundBadge+'</div></td>'
       +'<td style="padding:10px 14px;font-size:13px;font-weight:600;text-align:right;white-space:nowrap;">'+price+'</td>'
       +'<td style="padding:10px 14px;white-space:nowrap;">'+ratingHtml+'</td>'
     +'</tr>';
@@ -7461,6 +7476,25 @@ window.arOpenDetail = async function(row){
     +'</div>';
     footerHtml = '<button class="btn btn-secondary" onclick="closeModal(\'m-ar-detail\')">Fermer</button>'
       +'<button class="btn btn-green" onclick="adminConfirmPayment(\''+r.id+'\')" style="margin-left:8px;">✓ Confirmer le paiement</button>';
+  } else if(r.status === 'cancelled' && r.final_price && r.payment_method){
+    var refundAmt = parseFloat(r.final_price).toFixed(2).replace('.',',');
+    var isRefundBank   = r.payment_method === 'bank_transfer';
+    var isRefundStripe = r.payment_method === 'stripe';
+    var refundMethod   = isRefundBank ? 'Virement bancaire' : isRefundStripe ? 'Stripe' : r.payment_method;
+    var refundNote     = isRefundStripe ? '<div style="font-size:11px;color:var(--red);margin-top:4px;">⚠️ Déduire les frais Stripe non récupérables avant remboursement.</div>' : '';
+    body += '<div style="margin-top:14px;padding:14px 16px;background:var(--red-bg);border-radius:var(--r);border:1.5px solid var(--red)22;">'
+      +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;color:var(--red);">'
+        +'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>'
+        +'<span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Remboursement à effectuer</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:130px 1fr;gap:4px 12px;font-size:12.5px;line-height:1.9;">'
+        +'<span style="color:var(--ink3);">Mode</span><span style="font-weight:600;">'+refundMethod+'</span>'
+        +'<span style="color:var(--ink3);">Montant TVAC</span><span style="font-weight:700;color:var(--red);">'+refundAmt+' €</span>'
+      +'</div>'
+      +refundNote
+    +'</div>';
+    footerHtml = '<button class="btn btn-secondary" onclick="closeModal(\'m-ar-detail\')">Fermer</button>'
+      +'<button class="btn btn-danger" onclick="adminMarkRefunded(\''+r.id+'\')" style="margin-left:8px;">✓ Remboursement effectué</button>';
   }
 
   var subIcon2 = r.is_subcontract
@@ -7559,7 +7593,23 @@ window.arOpenDetail = async function(row){
   }
 };
 
-window.adminConfirmPayment = async function(rideId){
+window.adminMarkRefunded = async function(rideId){
+  if(!sb) return;
+  var btn = document.querySelector('#ar-detail-ft .btn-danger');
+  if(btn){ btn.disabled=true; btn.textContent='Traitement…'; }
+  try {
+    // Mark ride as refunded by clearing final_price (or add a refunded flag if available)
+    var { error } = await sb.from('rides').update({payment_method:'refunded'}).eq('id', rideId).eq('status','cancelled');
+    if(error) throw error;
+    closeModal('m-ar-detail');
+    showToast('✅ Remboursement marqué comme effectué');
+    await loadAdminRides();
+    await refreshAdminDashboard();
+  } catch(e) {
+    showToast('Erreur : '+(e.message||e));
+    if(btn){ btn.disabled=false; btn.textContent='✓ Remboursement effectué'; }
+  }
+};
   if(!sb) return;
   var btn = document.querySelector('#ar-detail-ft .btn-green');
   if(btn){ btn.disabled=true; btn.textContent='Confirmation…'; }
@@ -7588,7 +7638,7 @@ window.refreshAdminDashboard = async function() {
     var [clientsRes, fleetsRes, ridesRes] = await Promise.all([
       sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','client'),
       sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','driver'),
-      sb.from('rides').select('id,final_price,ride_date,status,is_subcontract')
+      sb.from('rides').select('id,final_price,ride_date,status,is_subcontract,payment_method')
     ]);
 
     var totalClients = clientsRes.count || 0;
@@ -7623,22 +7673,32 @@ window.refreshAdminDashboard = async function() {
     var periodProfit = parseFloat((periodHtva * 0.10).toFixed(2));
     var periodDriver = parseFloat((periodHtva * 0.90).toFixed(2));
 
+    // Refundable = cancelled + paid + not subcontract + not yet refunded
+    var refundRides = filteredRides.filter(function(r){ return r.status==='cancelled' && r.final_price && !r.is_subcontract && r.payment_method && r.payment_method!=='refunded'; });
+    var refundBank   = refundRides.filter(function(r){ return r.payment_method==='bank_transfer'; }).reduce(function(s,r){ return s+parseFloat(r.final_price); },0);
+    var refundStripe = refundRides.filter(function(r){ return r.payment_method==='stripe'; }).reduce(function(s,r){ return s+parseFloat(r.final_price); },0);
+    var refundTotal  = refundBank + refundStripe;
+
     var fmt = function(v){ return v > 0 ? v.toFixed(2).replace('.',',')+' €' : '0,00 €'; };
 
-    // Update period label
+    // Update period labels
     var periodLbl = '';
     if(_adminDashPeriod === 'custom' && (fromDate || toDate)){
       periodLbl = (fromDate||'…')+' → '+(toDate||'…');
     }
     var lblEl = document.getElementById('admin-sum-period-label');
     if(lblEl) lblEl.textContent = periodLbl;
+    var lblEl2 = document.getElementById('admin-sum-refund-period-label');
+    if(lblEl2) lblEl2.textContent = periodLbl;
 
-    set('admin-sum-htva',   fmt(periodHtva));
-    set('admin-sum-tva',    fmt(periodTva));
-    set('admin-sum-ca',     fmt(periodTvac));
-    set('admin-sum-profit', fmt(periodProfit));
-    set('admin-sum-driver', fmt(periodDriver));
-    set('admin-sum-clients', totalClients);
+    set('admin-sum-htva',          fmt(periodHtva));
+    set('admin-sum-tva',           fmt(periodTva));
+    set('admin-sum-ca',            fmt(periodTvac));
+    set('admin-sum-profit',        fmt(periodProfit));
+    set('admin-sum-driver',        fmt(periodDriver));
+    set('admin-sum-refund-bank',   refundBank   > 0 ? '− '+fmt(refundBank)   : '0,00 €');
+    set('admin-sum-refund-stripe', refundStripe > 0 ? '− '+fmt(refundStripe) : '0,00 €');
+    set('admin-sum-refund-total',  refundTotal  > 0 ? '− '+fmt(refundTotal)  : '0,00 €');
     set('admin-sum-fleets',  totalFleets);
   } catch(e) {
     console.error('loadAdminDashboard error', e);
