@@ -3908,27 +3908,81 @@ window.openRideDetail=function(el){
     });
   }
 
-  // ── Google Static Maps ──
+  // ── Google Static Maps — hidden for confirmed client rides ──
   (function(){
     var wrap=document.getElementById('detail-map-wrap');
     if(!wrap)return;
-    var KEY='AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y';
-    var src='';
-    if(isMixed&&mixedSegs&&mixedSegs.length>0){
-      var pts=[];
-      mixedSegs.forEach(function(s){if(s.from&&s.from!=='—')pts.push(s.from);if(s.to&&s.to!=='—'&&s.to!==s.from)pts.push(s.to);});
-      if(pts.length>0){var pP=pts.map(function(p){return encodeURIComponent(p);}).join('%7C');var mP=pts.map(function(p,i){var col=i===0?'0x1B5E3B':(i===pts.length-1?'0xC0392B':'0xE67E22');return 'markers=color:'+col+'%7Clabel:'+(i+1)+'%7C'+encodeURIComponent(p);});src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&path=color:0x1B5E3Bff|weight:4|'+pP+'&'+mP.join('&')+'&key='+KEY;}
-    } else if(r.trip_type!=='disposal'&&r.to_address){
-      var f=encodeURIComponent(r.from_address),t2=encodeURIComponent(r.to_address);
-      src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&path=color:0x1B5E3Bff|weight:4|'+f+'|'+t2+'&markers=color:0x1B5E3B%7Clabel:A%7C'+f+'&markers=color:0xC0392B%7Clabel:B%7C'+t2+'&key='+KEY;
-    } else if(r.from_address){
-      var f=encodeURIComponent(r.from_address);
-      src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&zoom=14&center='+f+'&markers=color:0x1B5E3B%7C'+f+'&key='+KEY;
+    // Hide map for confirmed/pending_payment on client side — show driver card instead
+    if(isClient && (r.status==='confirmed'||r.status==='pending_payment')){
+      wrap.style.display='none';
+    } else {
+      var KEY='AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y';
+      var src='';
+      if(isMixed&&mixedSegs&&mixedSegs.length>0){
+        var pts=[];
+        mixedSegs.forEach(function(s){if(s.from&&s.from!=='—')pts.push(s.from);if(s.to&&s.to!=='—'&&s.to!==s.from)pts.push(s.to);});
+        if(pts.length>0){var pP=pts.map(function(p){return encodeURIComponent(p);}).join('%7C');var mP=pts.map(function(p,i){var col=i===0?'0x1B5E3B':(i===pts.length-1?'0xC0392B':'0xE67E22');return 'markers=color:'+col+'%7Clabel:'+(i+1)+'%7C'+encodeURIComponent(p);});src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&path=color:0x1B5E3Bff|weight:4|'+pP+'&'+mP.join('&')+'&key='+KEY;}
+      } else if(r.trip_type!=='disposal'&&r.to_address){
+        var f=encodeURIComponent(r.from_address),t2=encodeURIComponent(r.to_address);
+        src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&path=color:0x1B5E3Bff|weight:4|'+f+'|'+t2+'&markers=color:0x1B5E3B%7Clabel:A%7C'+f+'&markers=color:0xC0392B%7Clabel:B%7C'+t2+'&key='+KEY;
+      } else if(r.from_address){
+        var f=encodeURIComponent(r.from_address);
+        src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&zoom=14&center='+f+'&markers=color:0x1B5E3B%7C'+f+'&key='+KEY;
+      }
+      if(!src){wrap.style.display='none';return;}
+      var img=document.getElementById('detail-map-img');
+      if(img){img.src=src;wrap.style.display='block';}
     }
-    if(!src){wrap.style.display='none';return;}
-    var img=document.getElementById('detail-map-img');
-    if(img){img.src=src;wrap.style.display='block';}
   })();
+
+  // ── Driver info + price block for confirmed/pending_payment (client only) ──
+  if(isClient && (r.status==='confirmed'||r.status==='pending_payment') && r.driver_id && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
+    (async function(){
+      var bodyEl2=document.getElementById('detail-body');
+      if(!bodyEl2) return;
+      try {
+        // Fetch driver profile and their accepted offer
+        var [profRes, offerRes] = await Promise.all([
+          sb.from('profiles').select('first_name,last_name,rating,rating_count').eq('id',r.driver_id).maybeSingle(),
+          sb.from('offers').select('message,price').eq('ride_id',r.id).eq('driver_id',r.driver_id).eq('status','accepted').maybeSingle()
+        ]);
+        var prof = profRes.data;
+        var offer = offerRes.data;
+        var driverName = prof ? ((prof.first_name||'')+' '+(prof.last_name||'')).trim() : '—';
+        var driverRating = prof && prof.rating ? prof.rating.toFixed(1)+' ★ ('+prof.rating_count+' avis)' : 'Pas encore noté';
+        var offerMsg = offer && offer.message ? offer.message : null;
+
+        // Price breakdown
+        var priceHtml = '';
+        if(r.final_price){
+          var tvac = parseFloat(r.final_price);
+          var htva = parseFloat((tvac/(1+TVA_RATE)).toFixed(2));
+          var tvaAmt = parseFloat((tvac-htva).toFixed(2));
+          var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
+          priceHtml = '<div style="margin-top:14px;padding:12px 14px;background:var(--sand2);border-radius:var(--r);">'
+            +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Prix</div>'
+            +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Prix HTVA</span><span>'+fmt(htva)+'</span></div>'
+            +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">TVA 6%</span><span>'+fmt(tvaAmt)+'</span></div>'
+            +'<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:5px 0 2px;border-top:1px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(tvac)+'</span></div>'
+            +'</div>';
+        }
+
+        var driverBlock = '<div style="margin-top:14px;padding:12px 14px;background:var(--sand2);border-radius:var(--r);">'
+          +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Chauffeur</div>'
+          +'<div style="display:flex;align-items:center;gap:10px;">'
+            +'<div style="width:36px;height:36px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--green);flex-shrink:0;">'+(driverName[0]||'?').toUpperCase()+'</div>'
+            +'<div>'
+              +'<div style="font-weight:600;font-size:13.5px;">'+driverName+'</div>'
+              +'<div style="font-size:12px;color:var(--amber);">'+driverRating+'</div>'
+            +'</div>'
+          +'</div>'
+          +(offerMsg?'<div style="margin-top:8px;font-size:12.5px;color:var(--ink3);font-style:italic;"><span style="font-style:normal;font-weight:600;color:var(--ink2);">Note du chauffeur : </span>'+offerMsg+'</div>':'')
+          +'</div>';
+
+        bodyEl2.innerHTML += driverBlock + priceHtml;
+      } catch(e){ console.warn('driver info fetch error:', e); }
+    })();
+  }
 
   // Footer
   var rId=r.id;
