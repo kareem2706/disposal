@@ -3933,84 +3933,89 @@ window.openRideDetail=function(el){
   // Footer
   var rId=r.id;
   var ft='';
-  if(r.status==='waiting'&&isClient){
-    ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Supprimer</button>'      +'<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:4px;" onclick="editRide(this.dataset.id)" data-id="'+rId+'"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Modifier</button>'      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
-  } else if(r.status==='pending_payment'&&isClient){
-    ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler</button>'
-      +'<div style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#1E4D7B;">'
-        +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2"/></svg>'
-        +'Paiement en cours de vérification</div>'
-      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
-  } else if(r.status==='offers'&&isClient){
-    ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler la demande</button>'      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'      +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRide(this.dataset.r)" data-m="m-ride-detail" data-r="'+rId+'">Voir les offres &#x2192;</button>';
-  } else if(r.status==='done'&&isClient){
-    if(r.rated){
-      ft='<div style="margin-right:auto;font-size:13px;color:var(--green);font-weight:500;">\u2b50 Course \u00e9valu\u00e9e</div>'
-        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+  // ── CLIENT FOOTER ────────────────────────────────────────────
+  var trashBtn = '<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">'
+    +'<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
+    +'Annuler la demande</button>';
+  var closeBtn = '<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+
+  if(isClient){
+    if(r.status==='waiting'){
+      ft=trashBtn
+        +'<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:4px;" onclick="editRide(this.dataset.id)" data-id="'+rId+'"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Modifier</button>'
+        +closeBtn;
+    } else if(r.status==='offers'){
+      ft=trashBtn+closeBtn
+        +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRide(this.dataset.r)" data-m="m-ride-detail" data-r="'+rId+'">Voir les offres &#x2192;</button>';
+    } else if(r.status==='pending_payment'){
+      ft=trashBtn
+        +'<div style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#1E4D7B;">'
+          +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2"/></svg>'
+          +'Paiement en cours de vérification</div>'
+        +closeBtn;
+    } else if(r.status==='confirmed'){
+      ft=trashBtn
+        +'<div style="font-size:12px;color:var(--green);font-weight:500;margin-left:auto;">\u2713 Course confirm\u00e9e</div>'
+        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail" style="margin-left:8px;">Fermer</button>';
+    } else if(r.status==='done'){
+      if(r.rated){
+        ft='<div style="margin-right:auto;font-size:13px;color:var(--green);font-weight:500;">\u2b50 Course \u00e9valu\u00e9e</div>'+closeBtn;
+      } else {
+        ft=closeBtn+'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRateModal(this.dataset.r,this.dataset.f)" data-m="m-ride-detail" data-r="'+rId+'" data-f="'+from.replace(/"/g,"&quot;")+'">&#11088; Evaluer</button>';
+      }
     } else {
-      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
-        +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRateModal(this.dataset.r,this.dataset.f)" data-m="m-ride-detail" data-r="'+rId+'" data-f="'+from.replace(/"/g,"&quot;")+'">&#11088; Evaluer</button>';
+      ft=closeBtn;
     }
-  } else if(r.status==='confirmed'&&isClient){
-    ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler</button>'
-      +'<div style="font-size:12px;color:var(--green);font-weight:500;margin-left:auto;">\u2713 Course confirm\u00e9e</div>'
-      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail" style="margin-left:8px;">Fermer</button>';
+
+  // ── DRIVER FOOTER ─────────────────────────────────────────────
+  } else {
     var safeRd=JSON.stringify(r).replace(/'/g,'&#39;');
     var isOwnSub=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
     var isExtSub=(r.is_subcontract&&currentUser&&r.client_id!==currentUser.id);
     var hasMyOffer=_myOffers&&_myOffers[rId];
-    if(isOwnSub){
-      ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler la sous-traitance</button>'
-        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
-    } else if(isExtSub){
-      // Another driver's subcontract — show "Accepter XX €"
-      var subPriceLbl=r.final_price?parseFloat(r.final_price).toFixed(0)+'\u20ac':'';
-      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
-        +'<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')">Accepter'+(subPriceLbl?' '+subPriceLbl:'')+'</button>';
-    } else if(hasMyOffer){
-      ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre \u00e0 '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'
-        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
-    } else {
-      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
-        +'<button class="btn btn-green" style="min-width:160px;" onclick="_detailOffer(this)" data-rid="'+rId+'" data-ride=\''+safeRd+'\'>Soumettre une offre</button>';
-    }
-  } else if(r.status==='offers'&&!isClient){
-    var isOwnSub2=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
-    var isExtSub2=(r.is_subcontract&&currentUser&&r.client_id!==currentUser.id);
-    var hasMyOffer2=_myOffers&&_myOffers[rId];
-    if(hasMyOffer2&&!isOwnSub2&&!isExtSub2){
-      ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre \u00e0 '+parseFloat(hasMyOffer2.price).toFixed(0)+'\u20ac</div>'
-        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
-    } else if(isExtSub2){
-      var subPriceLbl2=r.final_price?parseFloat(r.final_price).toFixed(0)+'\u20ac':'';
-      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
-        +'<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')">Accepter'+(subPriceLbl2?' '+subPriceLbl2:'')+'</button>';
-    } else {
-      ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
-      if(isOwnSub2){
-        ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">Annuler</button>'
-          +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+
+    if(r.status==='waiting'){
+      if(isOwnSub){
+        ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler la sous-traitance</button>'+closeBtn;
+      } else if(isExtSub){
+        var subPriceLbl=r.final_price?parseFloat(r.final_price).toFixed(0)+'\u20ac':'';
+        ft=closeBtn+'<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')">Accepter'+(subPriceLbl?' '+subPriceLbl:'')+'</button>';
+      } else if(hasMyOffer){
+        ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre \u00e0 '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'+closeBtn;
+      } else {
+        ft=closeBtn+'<button class="btn btn-green" style="min-width:160px;" onclick="_detailOffer(this)" data-rid="'+rId+'" data-ride=\''+safeRd+'\'>Soumettre une offre</button>';
       }
-    }
-  } else if(r.status==='confirmed'&&!isClient){
-    // Driver sees confirmed ride — show "Terminer" button if ride end time is passed
-    var _endTime=_getRideEndTime(r);
-    var _isOverdue=_endTime&&new Date()>_endTime;
-    if(_isOverdue){
-      ft='<div style="margin-right:auto;font-size:12px;color:var(--ink3);">Temps de course d\u00e9pass\u00e9</div>'
-        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
-        +'<button class="btn btn-green" onclick="completeRide(\''+rId+'\')" style="margin-left:8px;">Terminer la course</button>';
+    } else if(r.status==='offers'){
+      var isOwnSub2=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
+      var isExtSub2=(r.is_subcontract&&currentUser&&r.client_id!==currentUser.id);
+      var hasMyOffer2=_myOffers&&_myOffers[rId];
+      if(hasMyOffer2&&!isOwnSub2&&!isExtSub2){
+        ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre \u00e0 '+parseFloat(hasMyOffer2.price).toFixed(0)+'\u20ac</div>'+closeBtn;
+      } else if(isExtSub2){
+        var subPriceLbl2=r.final_price?parseFloat(r.final_price).toFixed(0)+'\u20ac':'';
+        ft=closeBtn+'<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')">Accepter'+(subPriceLbl2?' '+subPriceLbl2:'')+'</button>';
+      } else if(isOwnSub2){
+        ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">Annuler</button>'+closeBtn;
+      } else {
+        ft=closeBtn;
+      }
+    } else if(r.status==='confirmed'){
+      var _endTime=_getRideEndTime(r);
+      var _isOverdue=_endTime&&new Date()>_endTime;
+      if(_isOverdue){
+        ft='<div style="margin-right:auto;font-size:12px;color:var(--ink3);">Temps de course d\u00e9pass\u00e9</div>'
+          +closeBtn+'<button class="btn btn-green" onclick="completeRide(\''+rId+'\')" style="margin-left:8px;">Terminer la course</button>';
+      } else {
+        ft='<div style="margin-right:auto;font-size:12px;color:var(--green);font-weight:500;">\u2713 Course confirm\u00e9e</div>'+closeBtn;
+      }
+    } else if(r.status==='personal'){
+      var safeRp=JSON.stringify(r).replace(/'/g,'&#39;');
+      ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="closeModal(\'m-ride-detail\');deletePersonalMission(\''+rId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Supprimer</button>'
+        +'<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:4px;" onclick="closeModal(\'m-ride-detail\');_editPersonalFromDetail()" data-ride=\''+safeRp+'\'><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Modifier</button>'
+        +closeBtn;
     } else {
-      ft='<div style="margin-right:auto;font-size:12px;color:var(--green);font-weight:500;">\u2713 Course confirm\u00e9e</div>'
-        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
+      ft=closeBtn;
     }
-  } else if(r.status==='personal'&&!isClient){
-    var safeRp=JSON.stringify(r).replace(/'/g,'&#39;');
-    ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="closeModal(\'m-ride-detail\');deletePersonalMission(\''+rId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Supprimer</button>'
-      +'<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:4px;" onclick="closeModal(\'m-ride-detail\');_editPersonalFromDetail()" data-ride=\''+safeRp+'\'><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Modifier</button>'
-      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
-  } else {
-    ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
   }
   var ftEl=document.getElementById('detail-ft');if(ftEl)ftEl.innerHTML=ft;
   openModal('m-ride-detail');
