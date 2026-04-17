@@ -3912,8 +3912,8 @@ window.openRideDetail=function(el){
   (function(){
     var wrap=document.getElementById('detail-map-wrap');
     if(!wrap)return;
-    // Hide map for confirmed/pending_payment on client side — show driver card instead
-    if(isClient && (r.status==='confirmed'||r.status==='pending_payment')){
+    // Hide map only for confirmed (vehicle card shown); pending_payment keeps the map
+    if(isClient && r.status==='confirmed'){
       wrap.style.display='none';
     } else {
       var KEY='AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y';
@@ -3935,8 +3935,8 @@ window.openRideDetail=function(el){
     }
   })();
 
-  // ── Driver info + price block for confirmed/pending_payment (client only) ──
-  if(isClient && (r.status==='confirmed'||r.status==='pending_payment') && r.driver_id && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
+  // ── Vehicle + price block for confirmed (client only) ──
+  if(isClient && r.status==='confirmed' && r.driver_id && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     (async function(){
       var bodyEl2=document.getElementById('detail-body');
       if(!bodyEl2) return;
@@ -3944,13 +3944,22 @@ window.openRideDetail=function(el){
         // Fetch driver profile and their accepted offer
         var [profRes, offerRes] = await Promise.all([
           sb.from('profiles').select('first_name,last_name,rating,rating_count').eq('id',r.driver_id).maybeSingle(),
-          sb.from('offers').select('message,price').eq('ride_id',r.id).eq('driver_id',r.driver_id).eq('status','accepted').maybeSingle()
+          sb.from('offers').select('message,price,vehicle_id').eq('ride_id',r.id).eq('driver_id',r.driver_id).eq('status','accepted').maybeSingle()
         ]);
         var prof = profRes.data;
         var offer = offerRes.data;
-        var driverName = prof ? ((prof.first_name||'')+' '+(prof.last_name||'')).trim() : '—';
-        var driverRating = prof && prof.rating ? prof.rating.toFixed(1)+' ★ ('+prof.rating_count+' avis)' : 'Pas encore noté';
         var offerMsg = offer && offer.message ? offer.message : null;
+
+        // Fetch vehicle
+        var veh = null;
+        if(offer && offer.vehicle_id){
+          var vehRes = await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',offer.vehicle_id).maybeSingle();
+          veh = vehRes.data;
+        }
+        var vehLabel = veh ? ((veh.brand||'')+' '+(veh.model||'')).trim() : '—';
+        var vehColor = veh && veh.color ? veh.color : null;
+        var vehPlate = veh && veh.plate ? veh.plate : null;
+        var vehDesc = [vehLabel, vehColor].filter(Boolean).join(' ');
 
         // Price breakdown
         var priceHtml = '';
@@ -3959,7 +3968,7 @@ window.openRideDetail=function(el){
           var htva = parseFloat((tvac/(1+TVA_RATE)).toFixed(2));
           var tvaAmt = parseFloat((tvac-htva).toFixed(2));
           var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
-          priceHtml = '<div style="margin-top:14px;padding:12px 14px;background:var(--sand2);border-radius:var(--r);">'
+          priceHtml = '<div style="margin-top:14px;padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
             +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Prix</div>'
             +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Prix HTVA</span><span>'+fmt(htva)+'</span></div>'
             +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">TVA 6%</span><span>'+fmt(tvaAmt)+'</span></div>'
@@ -3967,20 +3976,15 @@ window.openRideDetail=function(el){
             +'</div>';
         }
 
-        var driverBlock = '<div style="margin-top:14px;padding:12px 14px;background:var(--sand2);border-radius:var(--r);">'
-          +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Chauffeur</div>'
-          +'<div style="display:flex;align-items:center;gap:10px;">'
-            +'<div style="width:36px;height:36px;border-radius:50%;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--green);flex-shrink:0;">'+(driverName[0]||'?').toUpperCase()+'</div>'
-            +'<div>'
-              +'<div style="font-weight:600;font-size:13.5px;">'+driverName+'</div>'
-              +'<div style="font-size:12px;color:var(--amber);">'+driverRating+'</div>'
-            +'</div>'
-          +'</div>'
-          +(offerMsg?'<div style="margin-top:8px;font-size:12.5px;color:var(--ink3);font-style:italic;"><span style="font-style:normal;font-weight:600;color:var(--ink2);">Note du chauffeur : </span>'+offerMsg+'</div>':'')
+        var vehicleBlock = '<div style="margin-top:14px;padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
+          +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Voiture</div>'
+          +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+vehDesc+'</div>'
+          +(vehPlate?'<div style="font-size:12px;color:var(--ink3);font-family:monospace;">'+vehPlate+'</div>':'')
+          +(offerMsg?'<div style="margin-top:8px;font-size:12.5px;color:var(--ink3);font-style:italic;"><span style="font-style:normal;font-weight:600;color:var(--ink2);">Note du chauffeur\u00a0: </span>'+offerMsg+'</div>':'')
           +'</div>';
 
-        bodyEl2.innerHTML += driverBlock + priceHtml;
-      } catch(e){ console.warn('driver info fetch error:', e); }
+        bodyEl2.innerHTML += vehicleBlock + priceHtml;
+      } catch(e){ console.warn('vehicle info fetch error:', e); }
     })();
   }
 
@@ -4004,9 +4008,7 @@ window.openRideDetail=function(el){
     } else if(r.status==='pending_payment'){
       ft=closeBtn;
     } else if(r.status==='confirmed'){
-      ft=trashBtn
-        +'<div style="font-size:12px;color:var(--green);font-weight:500;margin-left:auto;">\u2713 Course confirm\u00e9e</div>'
-        +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail" style="margin-left:8px;">Fermer</button>';
+      ft=trashBtn+closeBtn;
     } else if(r.status==='done'){
       if(r.rated){
         ft='<div style="margin-right:auto;font-size:13px;color:var(--green);font-weight:500;">\u2b50 Course \u00e9valu\u00e9e</div>'+closeBtn;
