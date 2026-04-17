@@ -1717,12 +1717,12 @@ body{background:var(--bg);}
             <span style="color:var(--ink3);">Bénéficiaire</span><span style="font-weight:600;">DISPOSAL SRL</span>
             <span style="color:var(--ink3);">IBAN</span><span style="font-weight:600;font-family:monospace;" id="bank-iban">BE68 5390 0754 7034</span>
             <span style="color:var(--ink3);">BIC / SWIFT</span><span style="font-weight:600;font-family:monospace;">TRIOBEBB</span>
-            <span style="color:var(--ink3);">Communication</span><span style="font-weight:600;font-family:monospace;" id="bank-ref">BLEENR</span>
+            <span style="color:var(--ink3);">Communication</span><span style="font-weight:700;font-family:monospace;color:var(--blue);" id="bank-ref">BLEENR</span>
             <span style="color:var(--ink3);">Montant</span><span style="font-weight:700;color:var(--green);" id="bank-amount">—</span>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--ink3);margin-top:10px;">Votre réservation sera confirmée dès réception du virement.</div>
-        <div style="font-size:11px;color:var(--ink3);margin-top:4px;">* Confirmation à la réception du paiement</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:8px;">⚠️ Veuillez indiquer la <strong>communication exacte</strong> lors de votre virement afin que votre réservation soit identifiée.</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:4px;">Votre réservation sera confirmée dès réception du paiement.</div>
         <div id="payment-err-bank" class="auth-error" style="margin-top:12px;"></div>
       </div>
 
@@ -3445,7 +3445,7 @@ async function openOffersModal(rideId){
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     // Fetch ride data for payment modal route info
     const { data: rideData } = await sb.from('rides')
-      .select('id, from_address, to_address, trip_type, ride_date, ride_time, passengers, vehicle_type, notes')
+      .select('id, booking_code, from_address, to_address, trip_type, ride_date, ride_time, passengers, vehicle_type, notes')
       .eq('id', rideId)
       .maybeSingle();
     _currentPaymentRide = rideData || null;
@@ -4738,7 +4738,7 @@ function renderOfferCard(o){
     +'<div style="margin-top:10px;">'
       +'<button onclick="_toggleOfferDetail(this)" style="background:none;border:none;font-size:12px;color:var(--ink3);cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-family:\'DM Sans\',sans-serif;"><svg id="od-arrow-'+safeId+'" width="12" height="12" viewBox="0 0 12 12" fill="none" style="transition:transform .2s;"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Voir détail</button>'
       +'<div id="od-detail-'+safeId+'" style="display:none;margin-top:8px;padding:10px 12px;background:var(--sand);border-radius:var(--r);font-size:12px;color:var(--ink2);">'
-        +(v?('<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;">'
+        +(v?('<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 16px;">'
           +'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Marque</span><div style="font-weight:500;">'+(v.brand||'—')+'</div></div>'
           +'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Modèle</span><div style="font-weight:500;">'+(v.model||'—')+'</div></div>'
           +(v.year?'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Année</span><div style="font-weight:500;">'+v.year+'</div></div>':'')
