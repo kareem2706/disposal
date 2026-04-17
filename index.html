@@ -3936,9 +3936,10 @@ window.openRideDetail=function(el){
   if(r.status==='waiting'&&isClient){
     ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Supprimer</button>'      +'<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:4px;" onclick="editRide(this.dataset.id)" data-id="'+rId+'"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Modifier</button>'      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
   } else if(r.status==='pending_payment'&&isClient){
-    ft='<div style="margin-right:auto;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#1E4D7B;">'
-      +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2"/></svg>'
-      +'Votre paiement est en cours de vérification</div>'
+    ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler</button>'
+      +'<div style="display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#1E4D7B;">'
+        +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2"/></svg>'
+        +'Paiement en cours de vérification</div>'
       +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>';
   } else if(r.status==='offers'&&isClient){
     ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler la demande</button>'      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'      +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRide(this.dataset.r)" data-m="m-ride-detail" data-r="'+rId+'">Voir les offres &#x2192;</button>';
@@ -3950,7 +3951,10 @@ window.openRideDetail=function(el){
       ft='<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail">Fermer</button>'
         +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRateModal(this.dataset.r,this.dataset.f)" data-m="m-ride-detail" data-r="'+rId+'" data-f="'+from.replace(/"/g,"&quot;")+'">&#11088; Evaluer</button>';
     }
-  } else if(r.status==='waiting'&&!isClient){
+  } else if(r.status==='confirmed'&&isClient){
+    ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler</button>'
+      +'<div style="font-size:12px;color:var(--green);font-weight:500;margin-left:auto;">\u2713 Course confirm\u00e9e</div>'
+      +'<button class="btn btn-close" onclick="closeModal(this.dataset.m)" data-m="m-ride-detail" style="margin-left:8px;">Fermer</button>';
     var safeRd=JSON.stringify(r).replace(/'/g,'&#39;');
     var isOwnSub=(r.is_subcontract&&currentUser&&r.client_id===currentUser.id);
     var isExtSub=(r.is_subcontract&&currentUser&&r.client_id!==currentUser.id);
@@ -4031,18 +4035,66 @@ window.completeRide=async function(rideId){
 window.deleteRide = async function(rideId){
   _pendingDeleteId=rideId;
   var ride=null;
-  if(sb&&localStorage.getItem(DEMO_MODE_KEY)!=='1'){var r=await sb.from('rides').select('id,ride_date,ride_time,status,final_price,payment_method').eq('id',rideId).maybeSingle();ride=r.data;}
-  var h=Infinity;
-  if(ride&&ride.ride_date){var dt=new Date(ride.ride_date+'T'+(ride.ride_time||'00:00')+':00');h=(dt-new Date())/3600000;}
-  var titleEl=document.getElementById('confirm-delete-title');
-  var msgEl=document.getElementById('confirm-delete-msg');
-  var warnEl=document.getElementById('confirm-delete-warn');
-  if(titleEl)titleEl.textContent='Annuler la demande';
-  if(msgEl)msgEl.textContent=h>=48?'Annulation sans frais.':'La course commence dans moins de 48 heures.';
-  if(warnEl){if(ride&&ride.final_price>0&&h<48){warnEl.style.display='block';warnEl.innerHTML='⚠️ <strong>Annulation tardive</strong> — Le montant payé ne sera <strong>pas remboursé</strong>';}else{warnEl.style.display='none';}}
+  if(sb&&localStorage.getItem(DEMO_MODE_KEY)!=='1'){
+    var r=await sb.from('rides').select('id,ride_date,ride_time,status,final_price,payment_method').eq('id',rideId).maybeSingle();
+    ride=r.data;
+  }
+
+  var titleEl  = document.getElementById('confirm-delete-title');
+  var msgEl    = document.getElementById('confirm-delete-msg');
+  var warnEl   = document.getElementById('confirm-delete-warn');
+
+  // Compute minutes until departure
+  var minsUntil = Infinity;
+  if(ride && ride.ride_date){
+    var dt = new Date(ride.ride_date+'T'+(ride.ride_time||'00:00')+':00');
+    minsUntil = (dt - new Date()) / 60000;
+  }
+
+  var isPaid    = ride && ride.final_price > 0;
+  var isStripe  = ride && ride.payment_method === 'stripe';
+  var isBank    = ride && (ride.payment_method === 'bank_transfer');
+  var isConfirmed = ride && (ride.status === 'confirmed' || ride.status === 'pending_payment');
+
+  if(titleEl) titleEl.textContent = 'Annuler la demande';
+
+  if(minsUntil >= 2880){
+    // ≥ 48h — cancellation allowed, refund possible
+    if(msgEl) msgEl.textContent = 'Êtes-vous sûr(e) de vouloir annuler votre demande ?';
+    if(warnEl){
+      if(isPaid){
+        var refundMsg = '';
+        if(isBank){
+          refundMsg = '💳 <strong>Remboursement intégral</strong> — Votre paiement par virement sera intégralement remboursé.';
+        } else if(isStripe){
+          refundMsg = '💳 <strong>Remboursement partiel</strong> — Le prix payé vous sera remboursé, <strong>déduction faite des frais Stripe</strong> non récupérables.';
+        } else {
+          refundMsg = 'ℹ️ Votre remboursement sera traité selon le mode de paiement utilisé.';
+        }
+        warnEl.style.display='block';
+        warnEl.style.background='var(--blue-bg)';
+        warnEl.style.borderColor='var(--blue)';
+        warnEl.style.color='var(--blue)';
+        warnEl.innerHTML=refundMsg;
+      } else {
+        warnEl.style.display='none';
+      }
+    }
+  } else {
+    // < 48h — non-refundable
+    if(msgEl) msgEl.textContent = '';
+    if(warnEl){
+      warnEl.style.display='block';
+      warnEl.style.background='var(--red-bg)';
+      warnEl.style.borderColor='var(--red)';
+      warnEl.style.color='var(--red)';
+      warnEl.innerHTML='⚠️ <strong>Attention</strong> — L\'annulation de votre demande à moins de 48h du départ <strong>n\'est pas remboursable</strong>. Êtes-vous sûr(e) de vouloir annuler ?';
+    }
+  }
+
   closeModal('m-ride-detail');
   openModal('m-confirm-delete');
-};;
+};
 
 window.confirmDeleteRide = async function(){
   var rideId = _pendingDeleteId;
