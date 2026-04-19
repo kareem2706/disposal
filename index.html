@@ -4260,10 +4260,21 @@ window.openRideDetail=function(el){
         ft=priceTagDone+closeBtn+'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRateModal(this.dataset.r,this.dataset.f,this.dataset.rd)" data-m="m-ride-detail" data-r="'+rId+'" data-f="'+from.replace(/"/g,"&quot;")+'" data-rd=\''+JSON.stringify({trip_type:r.trip_type,to_address:r.to_address,notes:r.notes}).replace(/'/g,'&#39;')+'\'>&#11088; Evaluer</button>';
       }
     } else if(r.status==='cancelled'){
-      var priceTagCancelled = r.final_price
-        ? '<div style="margin-right:auto;padding:6px 12px;background:var(--red-bg);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--red);">Montant non remboursé\u00a0: '+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</div>'
-        : '<div style="margin-right:auto;"></div>';
-      ft=priceTagCancelled+closeBtn;
+      var cancelledPriceTag = '';
+      if(r.final_price){
+        var pm = r.payment_method||'';
+        if(pm==='refunded'){
+          cancelledPriceTag = '<div style="margin-right:auto;padding:6px 12px;background:var(--green-bg);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--green);">Montant remboursé\u00a0: '+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</div>';
+        } else if(pm==='non_refundable'||!pm){
+          cancelledPriceTag = '<div style="margin-right:auto;padding:6px 12px;background:var(--red-bg);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--red);">Montant non remboursé\u00a0: '+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</div>';
+        } else {
+          // bank_transfer or stripe — refundable
+          cancelledPriceTag = '<div style="margin-right:auto;padding:6px 12px;background:#EAF1FB;border-radius:var(--r);font-size:13px;font-weight:600;color:#1E4D7B;">Montant à rembourser\u00a0: '+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</div>';
+        }
+      } else {
+        cancelledPriceTag = '<div style="margin-right:auto;"></div>';
+      }
+      ft=cancelledPriceTag+closeBtn;
     }
 
   // ── DRIVER FOOTER ─────────────────────────────────────────────
@@ -4324,6 +4335,7 @@ window.openRideDetail=function(el){
 
 
 var _pendingDeleteId = null;
+var _pendingDeleteRide = null;
 
 window.completeRide=async function(rideId){
   if(!sb)return;
@@ -4339,10 +4351,12 @@ window.completeRide=async function(rideId){
 
 window.deleteRide = async function(rideId){
   _pendingDeleteId=rideId;
+  _pendingDeleteRide=null;
   var ride=null;
   if(sb&&localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     var r=await sb.from('rides').select('id,ride_date,ride_time,status,final_price,payment_method').eq('id',rideId).maybeSingle();
     ride=r.data;
+    _pendingDeleteRide=ride;
   }
 
   var titleEl  = document.getElementById('confirm-delete-title');
@@ -4438,7 +4452,17 @@ window.confirmDeleteRide = async function(){
   try {
     var offRes=await sb.from('offers').select('driver_id').eq('ride_id',rideId);
     var dIds=offRes.data?offRes.data.map(function(o){return o.driver_id;}):[]; 
-    var res=await sb.from('rides').update({status:'cancelled'}).eq('id',rideId).eq('client_id',currentUser.id);
+    // Determine if ride was refundable at cancellation time
+    var rideForCancel=_pendingDeleteRide||null;
+    var cancelUpdate={status:'cancelled'};
+    if(rideForCancel&&rideForCancel.final_price){
+      var rideTime2=(rideForCancel.ride_time||'00:00').slice(0,5);
+      var dtCancel=new Date(rideForCancel.ride_date+'T'+rideTime2+':00');
+      var minsLeft=!isNaN(dtCancel)?(dtCancel-new Date())/60000:Infinity;
+      if(minsLeft<2880) cancelUpdate.payment_method='non_refundable';
+      // else keep original payment_method (bank_transfer/stripe) = refundable
+    }
+    var res=await sb.from('rides').update(cancelUpdate).eq('id',rideId).eq('client_id',currentUser.id);
     _pendingDeleteId = null;
     if(btn){ btn.disabled=false; btn.textContent='Oui, annuler'; }
     if(res.error){
