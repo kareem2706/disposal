@@ -4252,8 +4252,8 @@ window.openRideDetail=function(el){
       ft=trashBtn+closeBtn;
     } else if(r.status==='done'){
       var priceTagDone = r.final_price
-        ? '<div style="margin-right:auto;font-size:13px;font-weight:600;color:var(--ink2);">'+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</div>'
-        : '';
+        ? '<div style="margin-right:auto;padding:6px 12px;background:var(--green-bg);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--green);">Montant pay\u00e9\u00a0: '+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</div>'
+        : '<div style="margin-right:auto;"></div>';
       if(r.rated){
         ft=priceTagDone+'<div style="font-size:13px;color:var(--green);font-weight:500;">\u2b50 \u00c9valu\u00e9e</div>'+closeBtn;
       } else {
