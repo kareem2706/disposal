@@ -2047,10 +2047,10 @@ body{background:var(--bg);}
       <span class="modal-title" id="detail-title">D&eacute;tail de la demande</span>
       <button class="close-btn" onclick="closeModal('m-ride-detail')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
     </div>
-    <div class="modal-body" id="detail-body" style="padding:20px 22px 12px;"></div>
+    <div class="modal-body" id="detail-body" style="padding:16px 22px;display:flex;flex-direction:column;gap:14px;"></div>
     <div id="detail-map-wrap" style="display:none;margin:0 22px;border-radius:12px;overflow:hidden;height:160px;flex-shrink:0;"><img id="detail-map-img" src="" alt="" style="width:100%;height:165px;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'"></div>
-    <div style="height:16px;flex-shrink:0;" id="detail-map-spacer"></div>
-    <div class="modal-ft" id="detail-ft"></div>
+    <div style="height:0px;flex-shrink:0;" id="detail-map-spacer"></div>
+    <div class="modal-ft" style="margin-top:14px;" id="detail-ft"></div>
   </div>
 </div>
 
@@ -3939,22 +3939,22 @@ function _buildRideDetailBody(r, opts){
   if(r.passengers) metaParts.push(r.passengers+' pax');
   if(r.vehicle_type) metaParts.push(r.vehicle_type);
   var metaLineHtml=metaParts.length?'<div style="display:flex;align-items:center;gap:6px;margin:0;font-size:12px;color:var(--ink3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>'+metaParts.join(' &middot; ')+'</div>':'';
-  var body='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">'+metaLineHtml+(showStatus?getStatusPill(r.status,r._offerCount||0):'')+'</div>';
+  var body='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'+metaLineHtml+(showStatus?getStatusPill(r.status,r._offerCount||0):'')+'</div>';
   if(isMixed&&mixedSegs.length){
     var mb='';
     mixedSegs.forEach(function(s,i){var sf=i>0&&mixedSegs[i-1].to&&s.from&&mixedSegs[i-1].to.trim()===s.from.trim();mb+=segCard(s,i,i===mixedSegs.length-1,sf);});
-    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;margin-bottom:12px;">'+mb+'</div>';
+    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+mb+'</div>';
   } else if(isDisp){
     var ddh='',dkh='';
     if(r.notes){var ddm=r.notes.match(/Dur\u00e9e:([^\s|,]+)/);if(ddm){var ddv=parseFloat(ddm[1])||0;var ddk=Math.round(ddv*20);ddh='<div style="display:flex;gap:14px;padding:2px 0;"><div style="width:16px;flex-shrink:0;display:flex;justify-content:center;"><div style="width:2px;flex:1;background:var(--sand3);"></div></div><div style="padding:3px 0;font-size:11.5px;color:var(--ink3);">'+ddm[1]+'</div></div>';if(ddk>0)dkh='<div style="padding:2px 0 2px 30px;font-size:11.5px;color:var(--ink3);">'+ddk+'km inclus</div>';}}
-    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;margin-bottom:12px;">'+segRow('green',t('lbl_pickup'),from,true)+ddh+segRow('red',t('lbl_end_mission'),'',false)+dkh+'</div>';
+    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+segRow('green',t('lbl_pickup'),from,true)+ddh+segRow('red',t('lbl_end_mission'),'',false)+dkh+'</div>';
   } else {
-    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;margin-bottom:12px;">'+segRow('green',t('lbl_depart'),from,true)+segRow('red',t('lbl_arrivee'),to,false)+'<div id="'+idPrefix+'detail-route-info" style="padding:4px 0 4px 30px;display:none;"><div style="font-size:11.5px;color:var(--ink2);font-weight:500;" id="'+idPrefix+'detail-route-info-text"></div></div>'+'</div>';
+    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+segRow('green',t('lbl_depart'),from,true)+segRow('red',t('lbl_arrivee'),to,false)+'<div id="'+idPrefix+'detail-route-info" style="padding:4px 0 4px 30px;display:none;"><div style="font-size:11.5px;color:var(--ink2);font-weight:500;" id="'+idPrefix+'detail-route-info-text"></div></div>'+'</div>';
   }
   var rawNotes=r.notes||'';
   var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').trim();
   if(cleanNotes){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div></div>';}
-  if(r.is_subcontract&&r.final_price){body+='<div style="margin-top:12px;padding:10px 14px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><span style="font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9 : '+parseFloat(r.final_price).toFixed(0)+'\u20ac</span></div>';}
+  if(r.is_subcontract&&r.final_price){body+='<div style="padding:10px 14px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><span style="font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9 : '+parseFloat(r.final_price).toFixed(0)+'\u20ac</span></div>';}
   return {html:body, isMixed:isMixed, isDisp:isDisp, mixedSegs:mixedSegs};
 }
 function _triggerDistanceMatrix(r, result, idPrefix){
@@ -4006,7 +4006,7 @@ window.openRideDetail=function(el){
   if(r.passengers) metaParts.push(r.passengers+' pax');
   if(r.vehicle_type) metaParts.push(r.vehicle_type);
   var metaLine=metaParts.length?'<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;font-size:12px;color:var(--ink3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>'+metaParts.join(' &middot; ')+'</div>':'';
-  var body='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">'    +metaLine.replace('<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;','<div style="display:flex;align-items:center;gap:6px;margin:0;')    +getStatusPill(r.status,r._offerCount||0)  +'</div>';
+  var body='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'    +metaLine.replace('<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;','<div style="display:flex;align-items:center;gap:6px;margin:0;')    +getStatusPill(r.status,r._offerCount||0)  +'</div>';
 
   
   // Helper: one segment row (dot + line/no-line + content)
@@ -4057,7 +4057,7 @@ window.openRideDetail=function(el){
       var skipFrom=i>0&&mixedSegs[i-1].to&&s.from&&mixedSegs[i-1].to.trim()===s.from.trim();
       mixedBody+=segCard(s,i,i===mixedSegs.length-1,skipFrom);
     });
-    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;margin-bottom:12px;">'+mixedBody+'</div>';
+    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+mixedBody+'</div>';
   } else if(isDisp){
     var dispDurHtml='', dispKmHtml='';
      if(r.notes){var dispDurMatch=r.notes.match(/Durée:([^\s|,]+)/);
@@ -4072,19 +4072,19 @@ window.openRideDetail=function(el){
       }
     }
     var _routeInner=segRow('green',t('lbl_pickup'),from,'',true)+dispDurHtml+segRow('red',t('lbl_end_mission'),'','',false)+dispKmHtml;
-    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;margin-bottom:12px;">'+_routeInner+'</div>';
+    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+_routeInner+'</div>';
   } else {
     var _routeInner2=segRow('green',t('lbl_depart'),from,'',true)+segRow('red',t('lbl_arrivee'),to,'',false)
       +'<div id="detail-route-info" style="padding:4px 0 4px 30px;display:none;">'
       +'<div style="font-size:11.5px;color:var(--ink2);font-weight:500;" id="detail-route-info-text"></div>'
       +'</div>';
-    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;margin-bottom:12px;">'+_routeInner2+'</div>';
+    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+_routeInner2+'</div>';
   }
 
   var rawNotes=r.notes||'';
   var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').trim();
   if(cleanNotes){
-    body+='<div style="margin-top:12px;">'
+    body+='<div>'
       +'<div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div>'
       +'<div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div>'
       +'</div>';
@@ -4092,7 +4092,7 @@ window.openRideDetail=function(el){
 
   // Show requested price for subcontract rides
   if(r.is_subcontract&&r.final_price){
-    body+='<div style="margin-top:12px;padding:10px 14px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;">'
+    body+='<div style="padding:10px 14px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;">'
       +'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>'
       +'<span style="font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9 : '+parseFloat(r.final_price).toFixed(0)+'\u20ac</span>'
       +'</div>';
@@ -4100,7 +4100,7 @@ window.openRideDetail=function(el){
 
   // Show price in red for cancelled paid rides (no refund)
   if(r.status==='cancelled'&&r.final_price){
-    body+='<div style="margin-top:12px;padding:10px 14px;background:var(--red-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;">'
+    body+='<div style="padding:10px 14px;background:var(--red-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;">'
       +'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>'
       +'<span style="font-size:13px;font-weight:600;color:var(--red);">Montant non remboursé : '+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</span>'
       +'</div>';
@@ -4161,7 +4161,7 @@ window.openRideDetail=function(el){
     // Hide map only for confirmed (vehicle card shown); pending_payment keeps the map
     if(isClient && r.status==='confirmed'){
       wrap.style.display='none';
-      var sp=document.getElementById('detail-map-spacer');if(sp)sp.style.display='none';
+      var sp=document.getElementById('detail-map-spacer');if(sp)sp.style.height='0px';
     } else {
       var KEY='AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y';
       var src='';
@@ -4176,9 +4176,9 @@ window.openRideDetail=function(el){
         var f=encodeURIComponent(r.from_address);
         src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&zoom=14&center='+f+'&markers=color:0x1B5E3B%7C'+f+'&key='+KEY;
       }
-      if(!src){wrap.style.display='none';var sp2=document.getElementById('detail-map-spacer');if(sp2)sp2.style.display='none';return;}
+      if(!src){wrap.style.display='none';var sp2=document.getElementById('detail-map-spacer');if(sp2)sp2.style.height='0px';return;}
       var img=document.getElementById('detail-map-img');
-      if(img){img.src=src;wrap.style.display='block';var sp3=document.getElementById('detail-map-spacer');if(sp3)sp3.style.display='block';}
+      if(img){img.src=src;wrap.style.display='block';var sp3=document.getElementById('detail-map-spacer');if(sp3)sp3.style.height='14px';}
     }
   })();
 
@@ -4215,7 +4215,7 @@ window.openRideDetail=function(el){
           var htva = parseFloat((tvac/(1+TVA_RATE)).toFixed(2));
           var tvaAmt = parseFloat((tvac-htva).toFixed(2));
           var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
-          priceHtml = '<div style="margin-top:14px;padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
+          priceHtml = '<div style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
             +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Prix</div>'
             +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Prix HTVA</span><span>'+fmt(htva)+'</span></div>'
             +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">TVA 6%</span><span>'+fmt(tvaAmt)+'</span></div>'
@@ -4223,7 +4223,7 @@ window.openRideDetail=function(el){
             +'</div>';
         }
 
-        var vehicleBlock = '<div style="margin-top:14px;padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
+        var vehicleBlock = '<div style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
           +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Voiture</div>'
           +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+vehDesc+'</div>'
           +(vehPlate?'<div style="font-size:12px;color:var(--ink3);font-family:monospace;">'+vehPlate+'</div>':'')
@@ -4317,7 +4317,7 @@ window.openRideDetail=function(el){
     }
   }
   var ftEl=document.getElementById('detail-ft');if(ftEl)ftEl.innerHTML=ft;
-  var sp0=document.getElementById('detail-map-spacer');if(sp0)sp0.style.display='none';
+  var sp0=document.getElementById('detail-map-spacer');if(sp0)sp0.style.height='0px';
   openModal('m-ride-detail');
 };
 
@@ -6101,7 +6101,7 @@ window.openRateModal=async function(rideId,fromAddr){
           +'<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11h14M14 6l5 5-5 5" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         +'</div>'
         +'<div style="font-weight:600;font-size:15px;margin-bottom:4px;">Course évaluée</div>'
-        +'<div style="font-size:12px;color:var(--ink3);margin-bottom:12px;">'+(fromAddr||'—')+'</div>'
+        +'<div style="font-size:12px;color:var(--ink3);">'+(fromAddr||'—')+'</div>'
         +'<div style="margin-bottom:6px;letter-spacing:4px;">'+stars+'</div>'
         +'<div style="font-size:12px;color:var(--ink3);">Vous avez attribué <strong>'+existing.score+'/5</strong></div>'
         +commentHtml;
@@ -7679,7 +7679,7 @@ window.arOpenDetail = async function(row){
 
   // Offers section placeholder — appended LAST so it doesn't get overwritten
   if(r.status === 'offers' || r.status === 'waiting'){
-    body += '<div style="margin-top:12px;">'
+    body += '<div>'
       +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:10px;">Offres reçues</div>'
       +'<div id="ar-offers-container"><div style="font-size:13px;color:var(--ink3);">Chargement…</div></div>'
     +'</div>';
@@ -7691,7 +7691,7 @@ window.arOpenDetail = async function(row){
     // Build bank transfer info block
     var tvacPend = r.final_price ? parseFloat(r.final_price).toFixed(2).replace('.',',')+' €' : '—';
     var bankRef = r.booking_code || 'BLEENR';
-    body += '<div style="margin-top:14px;padding:14px 16px;background:#EAF1FB;border-radius:var(--r);border:1.5px solid #1E4D7B22;">'
+    body += '<div style="padding:14px 16px;background:#EAF1FB;border-radius:var(--r);border:1.5px solid #1E4D7B22;">'
       +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;color:#1E4D7B;">'
         +'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2"/></svg>'
         +'<span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Virement bancaire en attente</span>'
@@ -7712,7 +7712,7 @@ window.arOpenDetail = async function(row){
     var isRefundStripe = r.payment_method === 'stripe';
     var refundMethod   = isRefundBank ? 'Virement bancaire' : isRefundStripe ? 'Stripe' : r.payment_method;
     var refundNote     = isRefundStripe ? '<div style="font-size:11px;color:var(--red);margin-top:4px;">⚠️ Déduire les frais Stripe non récupérables avant remboursement.</div>' : '';
-    body += '<div style="margin-top:14px;padding:14px 16px;background:var(--red-bg);border-radius:var(--r);border:1.5px solid var(--red)22;">'
+    body += '<div style="padding:14px 16px;background:var(--red-bg);border-radius:var(--r);border:1.5px solid var(--red)22;">'
       +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;color:var(--red);">'
         +'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>'
         +'<span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Remboursement à effectuer</span>'
