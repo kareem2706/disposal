@@ -1729,8 +1729,7 @@ body{background:var(--bg);}
             <span style="color:var(--ink3);">Montant</span><span style="font-weight:700;color:var(--green);" id="bank-amount">—</span>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--ink3);margin-top:8px;">⚠️ Veuillez indiquer la <strong>communication exacte</strong> lors de votre virement afin que votre réservation soit identifiée.</div>
-        <div style="font-size:11px;color:var(--ink3);margin-top:4px;">Votre réservation sera confirmée dès réception du paiement.</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:8px;">⚠️ Veuillez indiquer la <strong>communication exacte</strong> lors de votre virement afin que votre réservation soit identifiée. Votre réservation sera confirmée dès réception du paiement.</div>
         <div id="payment-err-bank" class="auth-error" style="margin-top:12px;"></div>
       </div>
 
@@ -2903,9 +2902,10 @@ function enterApp(){
           showPaymentResult('success','Paiement réussi','Course confirmée.');
           if(typeof loadClientDashboard==='function') await loadClientDashboard();
         }catch(e){ console.error('Stripe return error:',e); showPaymentResult('error','Erreur','Paiement reçu mais erreur de mise à jour. Contactez le support.'); }
-      } else if(_sr.status==='cancel'||_sr.status==='error'){
+      } else if(_sr.status==='error'){
         showPaymentResult('error','Le paiement a échoué','Le paiement n\'a pas pu être traité. Vous pouvez réessayer depuis vos demandes.');
       }
+      // status==='cancel' : silent return, no modal
     }, 800);
   }
 }
@@ -4260,7 +4260,7 @@ window.openRideDetail=function(el){
       if(r.rated){
         ft='<div style="margin-right:auto;font-size:13px;color:var(--green);font-weight:500;">\u2b50 Course \u00e9valu\u00e9e</div>'+closeBtn;
       } else {
-        ft=closeBtn+'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRateModal(this.dataset.r,this.dataset.f)" data-m="m-ride-detail" data-r="'+rId+'" data-f="'+from.replace(/"/g,"&quot;")+'">&#11088; Evaluer</button>';
+        ft=closeBtn+'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRateModal(this.dataset.r,this.dataset.f,this.dataset.rd)" data-m="m-ride-detail" data-r="'+rId+'" data-f="'+from.replace(/"/g,"&quot;")+'" data-rd=\''+JSON.stringify({trip_type:r.trip_type,to_address:r.to_address,notes:r.notes}).replace(/'/g,'&#39;')+'\'>&#11088; Evaluer</button>';
       }
     } else {
       ft=closeBtn;
@@ -6084,12 +6084,28 @@ window.savePersonalMission=async function(btn){
 };
 
 // ── Rating functions ──
-window.openRateModal=async function(rideId,fromAddr){
+window.openRateModal=async function(rideId,fromAddr,rideDataStr){
+  var rd = {};
+  try{ if(rideDataStr) rd = JSON.parse(rideDataStr.replace(/&#39;/g,"'")); }catch(e){}
+
+  // Build ride info subtitle: from + type/destination
+  var rideInfoHtml = '<div style="font-size:12px;color:var(--ink3);margin-bottom:16px;">'
+    +'<div>'+(fromAddr||'—')+'</div>';
+  if(rd.trip_type==='disposal'){
+    var durMatch = (rd.notes||'').match(/Durée:([^\s|,]+)/);
+    var durStr = durMatch ? durMatch[1]+'h' : '';
+    rideInfoHtml += '<div style="color:var(--ink4);">Mise à disposition'+(durStr?' · '+durStr:'')+'</div>';
+  } else if(rd.trip_type==='mixed'){
+    rideInfoHtml += '<div style="color:var(--ink4);">Course mixte</div>';
+  } else if(rd.to_address){
+    rideInfoHtml += '<div style="color:var(--ink4);">→ '+rd.to_address+'</div>';
+  }
+  rideInfoHtml += '</div>';
+
   // Check if already rated
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     var {data:existing} = await sb.from('ratings').select('score,comment').eq('ride_id',rideId).maybeSingle();
     if(existing){
-      // Already rated — show read-only view
       var stars = '';
       for(var i=1;i<=5;i++) stars+='<span style="font-size:28px;color:'+(i<=existing.score?'#F5B100':'#CCC')+';">&#9733;</span>';
       var commentHtml = existing.comment
@@ -6101,7 +6117,7 @@ window.openRateModal=async function(rideId,fromAddr){
           +'<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11h14M14 6l5 5-5 5" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         +'</div>'
         +'<div style="font-weight:600;font-size:15px;margin-bottom:4px;">Course évaluée</div>'
-        +'<div style="font-size:12px;color:var(--ink3);">'+(fromAddr||'—')+'</div>'
+        +rideInfoHtml
         +'<div style="margin-bottom:6px;letter-spacing:4px;">'+stars+'</div>'
         +'<div style="font-size:12px;color:var(--ink3);">Vous avez attribué <strong>'+existing.score+'/5</strong></div>'
         +commentHtml;
@@ -6118,7 +6134,7 @@ window.openRateModal=async function(rideId,fromAddr){
       +'<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11h14M14 6l5 5-5 5" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
     +'</div>'
     +'<div style="font-weight:600;font-size:15px;margin-bottom:4px;">Course terminée</div>'
-    +'<div id="rate-ride-info" class="text-xs mb-16">'+(fromAddr||'—')+'</div>'
+    +rideInfoHtml
     +'<div style="font-size:12px;font-weight:500;margin-bottom:10px;">Comment était votre expérience ?</div>'
     +'<div style="font-size:32px;letter-spacing:6px;cursor:pointer;margin-bottom:14px;user-select:none;" id="stars-display">'
       +'<span onclick="rateSet(1)" style="color:#CCC;">&#9733;</span>'
