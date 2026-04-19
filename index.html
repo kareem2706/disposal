@@ -3093,7 +3093,7 @@ async function loadInvoices(){
       sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes').eq('client_id', currentUser.id).eq('status','done').order('ride_date',{ascending:true}),
       sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes,payment_method').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).order('ride_date',{ascending:true})
     ]);
-    rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'))];
+    rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'&&r.payment_method!=='non_refundable'))];
     rides.sort(function(a,b){ return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||'')); });
   } else {
     rides = getDemoRides().filter(r => r.status === 'done' || (r.status==='cancelled'&&r.final_price));
@@ -3217,7 +3217,7 @@ window.generateMonthInvoice = async function(monthKey){
       sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status').eq('client_id', currentUser.id).eq('status','done').gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true}),
       sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,payment_method').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true})
     ]);
-    rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'))];
+    rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'&&r.payment_method!=='non_refundable'))];
     rides.sort(function(a,b){ return (a.ride_date||'').localeCompare(b.ride_date||''); });
   } else {
     rides = getDemoRides().filter(r=>(r.ride_date||'').slice(0,7)===monthKey&&(r.status==='done'||(r.status==='cancelled'&&r.final_price)));
@@ -4460,7 +4460,7 @@ window.confirmDeleteRide = async function(){
       var dtCancel=new Date(rideForCancel.ride_date+'T'+rideTime2+':00');
       var minsLeft=!isNaN(dtCancel)?(dtCancel-new Date())/60000:Infinity;
       if(minsLeft<2880) cancelUpdate.payment_method='non_refundable';
-      // else keep original payment_method (bank_transfer/stripe) = refundable
+      // >= 2880 min before departure = refundable, keep original payment_method (bank_transfer/stripe)
     }
     var res=await sb.from('rides').update(cancelUpdate).eq('id',rideId).eq('client_id',currentUser.id);
     _pendingDeleteId = null;
@@ -7645,7 +7645,7 @@ function _arRenderTable(rides, el){
       : '';
     var safeR = JSON.stringify(r).replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    var refundBadge = (r.status==='cancelled' && r.final_price && r.payment_method && r.payment_method!=='refunded')
+    var refundBadge = (r.status==='cancelled' && r.final_price && r.payment_method && r.payment_method!=='refunded' && r.payment_method!=='non_refundable')
       ? '<span style="font-size:10px;font-weight:700;background:var(--red-bg);color:var(--red);padding:2px 7px;border-radius:20px;margin-left:4px;white-space:nowrap;">⚠ Remb.</span>'
       : '';
 
@@ -7747,7 +7747,7 @@ window.arOpenDetail = async function(row){
     +'</div>';
     footerHtml = '<button class="btn btn-secondary" onclick="closeModal(\'m-ar-detail\')">Fermer</button>'
       +'<button class="btn btn-green" onclick="adminConfirmPayment(\''+r.id+'\')" style="margin-left:8px;">✓ Confirmer le paiement</button>';
-  } else if(r.status === 'cancelled' && r.final_price && r.payment_method){
+  } else if(r.status === 'cancelled' && r.final_price && r.payment_method && r.payment_method !== 'non_refundable'){
     var refundAmt = parseFloat(r.final_price).toFixed(2).replace('.',',');
     var isRefundBank   = r.payment_method === 'bank_transfer';
     var isRefundStripe = r.payment_method === 'stripe';
@@ -7948,7 +7948,7 @@ window.refreshAdminDashboard = async function() {
     var periodDriver = parseFloat((periodHtva * 0.90).toFixed(2));
 
     // Refundable = cancelled + paid + not subcontract + not yet refunded
-    var refundRides = filteredRides.filter(function(r){ return r.status==='cancelled' && r.final_price && !r.is_subcontract && r.payment_method && r.payment_method!=='refunded'; });
+    var refundRides = filteredRides.filter(function(r){ return r.status==='cancelled' && r.final_price && !r.is_subcontract && r.payment_method && r.payment_method!=='refunded' && r.payment_method!=='non_refundable'; });
     var refundBank   = refundRides.filter(function(r){ return r.payment_method==='bank_transfer'; }).reduce(function(s,r){ return s+parseFloat(r.final_price); },0);
     var refundStripe = refundRides.filter(function(r){ return r.payment_method==='stripe'; }).reduce(function(s,r){ return s+parseFloat(r.final_price); },0);
     var refundTotal  = refundBank + refundStripe;
