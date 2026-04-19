@@ -6093,12 +6093,13 @@ window.openRateModal=async function(rideId,fromAddr,rideDataStr){
     +'<div style="font-weight:500;color:var(--ink2);">'+(fromAddr||'—')+'</div>';
   if(rd.trip_type==='disposal'){
     var durMatch = (rd.notes||'').match(/Durée:([^\s|,]+)/);
-    var durStr = durMatch ? durMatch[1]+'h' : '';
-    rideInfoHtml += '<div>Mise à disposition'+(durStr?' · '+durStr:'')+'</div>';
+    var durRaw = durMatch ? durMatch[1].replace(/h$/,'') : '';
+    var durStr = durRaw ? durRaw+'h' : '';
+    rideInfoHtml += '<div style="color:var(--ink2);">Mise à disposition'+(durStr?' · '+durStr:'')+'</div>';
   } else if(rd.trip_type==='mixed'){
-    rideInfoHtml += '<div>Course mixte</div>';
+    rideInfoHtml += '<div style="color:var(--ink2);">Course mixte</div>';
   } else if(rd.to_address){
-    rideInfoHtml += '<div>'+(rd.to_address)+'</div>';
+    rideInfoHtml += '<div style="color:var(--ink2);">'+rd.to_address+'</div>';
   }
   rideInfoHtml += '</div>';
 
