@@ -3093,7 +3093,7 @@ async function loadInvoices(){
       sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes').eq('client_id', currentUser.id).eq('status','done').order('ride_date',{ascending:true}),
       sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes,payment_method').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).order('ride_date',{ascending:true})
     ]);
-    rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'&&r.payment_method!=='non_refundable'))];
+    rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'))];
     rides.sort(function(a,b){ return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||'')); });
   } else {
     rides = getDemoRides().filter(r => r.status === 'done' || (r.status==='cancelled'&&r.final_price));
@@ -3217,7 +3217,7 @@ window.generateMonthInvoice = async function(monthKey){
       sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status').eq('client_id', currentUser.id).eq('status','done').gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true}),
       sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,payment_method').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true})
     ]);
-    rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'&&r.payment_method!=='non_refundable'))];
+    rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'))];
     rides.sort(function(a,b){ return (a.ride_date||'').localeCompare(b.ride_date||''); });
   } else {
     rides = getDemoRides().filter(r=>(r.ride_date||'').slice(0,7)===monthKey&&(r.status==='done'||(r.status==='cancelled'&&r.final_price)));
