@@ -2092,24 +2092,8 @@ body{background:var(--bg);}
   var payStatus=params.get('payment'),pRide=params.get('ride'),pOffer=params.get('offer');
   if(!payStatus)return;
   window.history.replaceState({},'',window.location.pathname);
-  window.addEventListener('DOMContentLoaded',function(){
-    setTimeout(async function(){
-      if(payStatus==='success'&&pRide&&pOffer&&sb){
-        try{var tvac=parseFloat(sessionStorage.getItem('stripe_pending_tvac')||'0');sessionStorage.removeItem('stripe_pending_tvac');
-          // Get driver_id from the accepted offer
-          var offerRes=await sb.from('offers').select('driver_id').eq('id',pOffer).single();
-          var payDriverId=offerRes.data?offerRes.data.driver_id:null;
-          await sb.from('offers').update({status:'accepted'}).eq('id',pOffer);
-          await sb.from('offers').update({status:'rejected'}).eq('ride_id',pRide).neq('id',pOffer);
-          await sb.from('rides').update({status:'confirmed',payment_method:'stripe',final_price:tvac||null,driver_id:payDriverId}).eq('id',pRide);
-          if(typeof showPaymentResult==='function')showPaymentResult('success','Paiement réussi','Course confirmée.');
-          if(typeof loadClientDashboard==='function')await loadClientDashboard();
-        }catch(e){console.error(e);}
-      }else if(payStatus==='cancel'||payStatus==='error'){
-        if(typeof showPaymentResult==='function')showPaymentResult('error','Le paiement a échoué','Le paiement n\'a pas pu être traité. Vous pouvez réessayer depuis vos demandes.');
-      }
-    },1500);
-  });
+  // Store params globally — will be processed once the app is ready (after auth + enterApp)
+  window._stripePendingReturn = {status: payStatus, ride: pRide, offer: pOffer};
 })();
 
 // ── Google Places — widget natif ──
@@ -2900,6 +2884,29 @@ function enterApp(){
 
   // Mobile check
   var mbEl=document.getElementById('mob-btn');if(mbEl&&window.innerWidth<=900)mbEl.style.display='flex';
+
+  // Handle Stripe return if coming back from checkout
+  if(window._stripePendingReturn){
+    var _sr = window._stripePendingReturn;
+    window._stripePendingReturn = null;
+    setTimeout(async function(){
+      if(_sr.status==='success' && _sr.ride && _sr.offer && sb){
+        try{
+          var tvac=parseFloat(sessionStorage.getItem('stripe_pending_tvac')||'0');
+          sessionStorage.removeItem('stripe_pending_tvac');
+          var offerRes=await sb.from('offers').select('driver_id').eq('id',_sr.offer).single();
+          var payDriverId=offerRes.data?offerRes.data.driver_id:null;
+          await sb.from('offers').update({status:'accepted'}).eq('id',_sr.offer);
+          await sb.from('offers').update({status:'rejected'}).eq('ride_id',_sr.ride).neq('id',_sr.offer);
+          await sb.from('rides').update({status:'confirmed',payment_method:'stripe',final_price:tvac||null,driver_id:payDriverId}).eq('id',_sr.ride);
+          showPaymentResult('success','Paiement réussi','Course confirmée.');
+          if(typeof loadClientDashboard==='function') await loadClientDashboard();
+        }catch(e){ console.error('Stripe return error:',e); showPaymentResult('error','Erreur','Paiement reçu mais erreur de mise à jour. Contactez le support.'); }
+      } else if(_sr.status==='cancel'||_sr.status==='error'){
+        showPaymentResult('error','Le paiement a échoué','Le paiement n\'a pas pu être traité. Vous pouvez réessayer depuis vos demandes.');
+      }
+    }, 800);
+  }
 }
 
 // ── NAVIGATION ────────────────────────────────────────
@@ -5411,9 +5418,12 @@ window.confirmStripePayment=async function(){
   try{
     var totalTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
     sessionStorage.setItem('stripe_pending_tvac',totalTvac.toFixed(2));
+    // Send amount_cents (integer) to avoid floating point issues
+    // amount_cents = totalTvac * 100, already includes 6% TVA — Edge Function must NOT add any tax
+    var amountCents = Math.round(totalTvac * 100);
     var efResp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
-      body:JSON.stringify({amount:totalTvac,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
+      body:JSON.stringify({amount:totalTvac, amount_cents:amountCents, rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
     });
     if(!efResp.ok){var et=await efResp.text();throw new Error('Edge Function: '+efResp.status+' '+et.slice(0,100));}
     var d=await efResp.json();if(!d.url)throw new Error('URL manquante');window.location.href=d.url;
