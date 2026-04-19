@@ -2102,11 +2102,11 @@ body{background:var(--bg);}
           await sb.from('offers').update({status:'accepted'}).eq('id',pOffer);
           await sb.from('offers').update({status:'rejected'}).eq('ride_id',pRide).neq('id',pOffer);
           await sb.from('rides').update({status:'confirmed',payment_method:'stripe',final_price:tvac||null,driver_id:payDriverId}).eq('id',pRide);
-          if(typeof showPaymentResult==='function')showPaymentResult('success','Paiement valid\u00e9','Votre course est confirm\u00e9e. Vous recevrez une confirmation par email.');
+          if(typeof showPaymentResult==='function')showPaymentResult('success','Paiement réussi','Course confirmée.');
           if(typeof loadClientDashboard==='function')await loadClientDashboard();
         }catch(e){console.error(e);}
-      }else if(payStatus==='cancel'){
-        if(typeof showPaymentResult==='function')showPaymentResult('error','Paiement interrompu','Le paiement a \u00e9t\u00e9 interrompu. Vous pouvez r\u00e9essayer depuis vos demandes.');
+      }else if(payStatus==='cancel'||payStatus==='error'){
+        if(typeof showPaymentResult==='function')showPaymentResult('error','Le paiement a échoué','Le paiement n\'a pas pu être traité. Vous pouvez réessayer depuis vos demandes.');
       }
     },1500);
   });
@@ -5226,10 +5226,9 @@ function _paymentShowStep(step){
   if(confirmStripeBtn) confirmStripeBtn.style.display = step === 'stripe' ? '' : 'none';
 
   if(step === 'stripe'){
-    // Update confirm button label with total TVAC including Stripe fees
-    var totalTvac = currentOfferAmount * (1 + TVA_RATE);
-    var total = totalTvac.toFixed(2);
-    if(confirmStripeBtn) confirmStripeBtn.textContent = 'Payer ' + total + ' € →';
+    // Show TVAC (HTVA × 1.06) — Stripe fees handled separately by Stripe
+    var totalTvac2 = (currentOfferAmount * (1 + TVA_RATE)).toFixed(2);
+    if(confirmStripeBtn) confirmStripeBtn.textContent = 'Payer ' + totalTvac2 + ' € →';
     _mountStripeCard();
   }
   if(step === 'bank'){
@@ -5353,9 +5352,8 @@ window.confirmPayment = async function(method){
   var errEl = document.getElementById(method === 'bank_transfer' ? 'payment-err-bank' : 'payment-err');
   if(errEl){ errEl.classList.remove('show'); errEl.textContent = ''; }
 
-  var totalWithFees = method === 'stripe'
-    ? parseFloat(((currentOfferAmount * (1 + TVA_RATE)) * STRIPE_FEE_MULTIPLIER).toFixed(2))
-    : parseFloat((currentOfferAmount * (1 + TVA_RATE)).toFixed(2));
+  // Amount is always HTVA × (1 + TVA) = TVAC — no Stripe fee multiplier added to stored price
+  var totalTvac = parseFloat((currentOfferAmount * (1 + TVA_RATE)).toFixed(2));
   var paymentStatus = method === 'stripe' ? 'confirmed' : 'pending_payment';
 
   if(localStorage.getItem(DEMO_MODE_KEY) === '1'){
@@ -5385,7 +5383,7 @@ window.confirmPayment = async function(method){
   var rideUpdates = {
     status: method === 'bank_transfer' ? 'pending_payment' : 'confirmed',
     driver_id: currentDriverId,
-    final_price: totalWithFees,
+    final_price: totalTvac,
     payment_method: method
   };
   console.log('[confirmPayment] updating ride', currentRideId, 'driver_id:', currentDriverId, 'price:', currentOfferAmount);
@@ -5417,7 +5415,7 @@ window.confirmStripePayment=async function(){
       method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
       body:JSON.stringify({amount:totalTvac,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
     });
-    if(!efResp.ok){var t=await efResp.text();throw new Error('Edge Function: '+efResp.status+' '+t.slice(0,100));}
+    if(!efResp.ok){var et=await efResp.text();throw new Error('Edge Function: '+efResp.status+' '+et.slice(0,100));}
     var d=await efResp.json();if(!d.url)throw new Error('URL manquante');window.location.href=d.url;
   }catch(e){if(btn)setLoading(btn,false,'Payer →');if(errEl)showError(errEl,e.message||'Erreur Stripe');}
 };;
