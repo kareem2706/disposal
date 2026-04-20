@@ -3079,9 +3079,11 @@ async function loadRides(filter){
 }
 
 // INVOICES
-var _invoiceAllRides = [];
+var _invoiceAllRides = {};
 var _invoiceMonthKeys = [];
 var _invoiceCurrentIdx = 0;
+var _invoiceSelMonth = new Date().getMonth() + 1; // 1-12
+var _invoiceSelYear  = new Date().getFullYear();
 
 async function loadInvoices(){
   var listEl = document.getElementById('invoices-list');
@@ -3099,39 +3101,72 @@ async function loadInvoices(){
     rides = getDemoRides().filter(r => r.status === 'done' || (r.status==='cancelled'&&r.final_price));
   }
 
-  if(!rides.length){
-    listEl.innerHTML = '<div class="empty-state"><p class="empty-text">Aucune facture disponible</p></div>';
-    return;
-  }
-
   // Group by YYYY-MM
   var months = {};
   rides.forEach(function(r){
-    var key = (r.ride_date||'').slice(0,7);
-    if(!key) return;
-    if(!months[key]) months[key] = [];
-    months[key].push(r);
+    var k = (r.ride_date||'').slice(0,7);
+    if(!k) return;
+    if(!months[k]) months[k] = [];
+    months[k].push(r);
   });
 
   _invoiceAllRides = months;
   _invoiceMonthKeys = Object.keys(months).sort().reverse();
-  _invoiceCurrentIdx = 0;
+
+  // Default to most recent month with data, or current month
+  if(_invoiceMonthKeys.length){
+    var first = _invoiceMonthKeys[0].split('-');
+    _invoiceSelYear  = parseInt(first[0]);
+    _invoiceSelMonth = parseInt(first[1]);
+  }
 
   _renderInvoiceMonth();
 }
 
+function _invoiceKey(){ return _invoiceSelYear+'-'+String(_invoiceSelMonth).padStart(2,'0'); }
+
 function _renderInvoiceMonth(){
   var listEl = document.getElementById('invoices-list');
-  if(!listEl || !_invoiceMonthKeys.length) return;
+  if(!listEl) return;
 
-  var key = _invoiceMonthKeys[_invoiceCurrentIdx];
+  var key = _invoiceKey();
   var monthRides = _invoiceAllRides[key] || [];
   var monthLabels = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  var parts = key.split('-');
-  var label = monthLabels[parseInt(parts[1])-1]+' '+parts[0];
-  var total = _invoiceMonthKeys.length;
-  var canPrev = _invoiceCurrentIdx < total - 1;
-  var canNext = _invoiceCurrentIdx > 0;
+  var monthShort  = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+
+  // Year range: from earliest data or current-3 to current+1
+  var minYear = _invoiceMonthKeys.length ? parseInt(_invoiceMonthKeys[_invoiceMonthKeys.length-1].slice(0,4)) : new Date().getFullYear();
+  var maxYear = new Date().getFullYear() + 1;
+  var yearOpts = '';
+  for(var y=maxYear; y>=minYear; y--){
+    yearOpts += '<option value="'+y+'"'+(_invoiceSelYear===y?' selected':'')+'>'+y+'</option>';
+  }
+  var monthOpts = monthLabels.map(function(ml,i){
+    return '<option value="'+(i+1)+'"'+(_invoiceSelMonth===i+1?' selected':'')+'>'+ml+'</option>';
+  }).join('');
+
+  var btnStyle = 'background:none;border:1.5px solid var(--sand3);border-radius:6px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;font-family:inherit;';
+  var selStyle = 'font-size:13px;font-weight:600;border:1.5px solid var(--sand3);border-radius:6px;padding:3px 6px;background:var(--white);cursor:pointer;font-family:\'DM Sans\',sans-serif;color:var(--ink);';
+
+  var header = '<div class="card-hd" style="display:flex;align-items:center;gap:8px;justify-content:space-between;">'
+    +'<div style="display:flex;align-items:center;gap:6px;">'
+      +'<button onclick="_invoiceStep(-1)" style="'+btnStyle+'">&lt;</button>'
+      +'<select onchange="_invoiceSetMonth(parseInt(this.value))" style="'+selStyle+'">'+monthOpts+'</select>'
+      +'<select onchange="_invoiceSetYear(parseInt(this.value))" style="'+selStyle+'">'+yearOpts+'</select>'
+      +'<button onclick="_invoiceStep(1)" style="'+btnStyle+'">&gt;</button>'
+    +'</div>'
+    +(monthRides.length
+      ? '<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;flex-shrink:0;" onclick="generateMonthInvoice(\''+key+'\')">'
+          +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>PDF</button>'
+      : '')
+  +'</div>';
+
+  if(!monthRides.length){
+    listEl.innerHTML = '<div class="card" style="padding:0;">'+header
+      +'<div style="padding:40px 20px;text-align:center;color:var(--ink3);font-size:13px;">Aucune donnée</div>'
+    +'</div>';
+    return;
+  }
 
   var rows = monthRides.map(function(r){
     var htva = r.final_price ? parseFloat((parseFloat(r.final_price)/(1+TVA_RATE)).toFixed(2)) : 0;
@@ -3161,32 +3196,13 @@ function _renderInvoiceMonth(){
   var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
 
   listEl.innerHTML = '<div class="card" style="padding:0;">'
-    // Header with navigation
-    +'<div class="card-hd" style="display:flex;align-items:center;gap:10px;justify-content:space-between;">'
-      +'<div style="display:flex;align-items:center;gap:8px;">'
-        +'<button onclick="_invoiceNav(-1)" '+(canPrev?'':'disabled style="opacity:.3;pointer-events:none;"')+' style="background:none;border:1.5px solid var(--sand3);border-radius:6px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">&lt;</button>'
-        +'<select onchange="_invoiceGoTo(this.value)" style="font-size:13px;font-weight:600;border:none;background:transparent;cursor:pointer;font-family:\'DM Sans\',sans-serif;color:var(--ink);">'
-          +_invoiceMonthKeys.map(function(k,i){
-            var p=k.split('-'), ml=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-            return '<option value="'+i+'"'+(i===_invoiceCurrentIdx?' selected':'')+'>'+ml[parseInt(p[1])-1]+' '+p[0]+'</option>';
-          }).join('')
-        +'</select>'
-        +'<button onclick="_invoiceNav(1)" '+(canNext?'':'disabled style="opacity:.3;pointer-events:none;"')+' style="background:none;border:1.5px solid var(--sand3);border-radius:6px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">&gt;</button>'
-      +'</div>'
-      +'<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;flex-shrink:0;" onclick="generateMonthInvoice(\''+key+'\')">'
-        +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>'
-        +'PDF'
-      +'</button>'
-    +'</div>'
-    // Column headers
+    +header
     +'<div style="display:grid;grid-template-columns:130px 1fr auto;gap:4px 14px;padding:6px 20px;border-bottom:2px solid var(--sand3);">'
       +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Code</div>'
       +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Trajet</div>'
       +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);text-align:right;">Prix HTVA</div>'
     +'</div>'
-    // Rows
     +'<div style="padding:0 20px;">'+rows+'</div>'
-    // Totals
     +'<div style="padding:8px 20px 14px;border-top:1px solid var(--sand2);margin-top:4px;">'
       +'<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink3);padding:3px 0;"><span>Sous-total HTVA</span><span>'+fmt(totalHtva)+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink3);padding:3px 0;"><span>TVA 6%</span><span>'+fmt(totalTva)+'</span></div>'
@@ -3195,15 +3211,19 @@ function _renderInvoiceMonth(){
   +'</div>';
 }
 
-window._invoiceNav = function(dir){
-  _invoiceCurrentIdx = Math.max(0, Math.min(_invoiceMonthKeys.length-1, _invoiceCurrentIdx - dir));
+window._invoiceSetMonth = function(m){ _invoiceSelMonth = m; _renderInvoiceMonth(); };
+window._invoiceSetYear  = function(y){ _invoiceSelYear  = y; _renderInvoiceMonth(); };
+window._invoiceStep = function(dir){
+  // dir: -1 = previous month, +1 = next month
+  _invoiceSelMonth -= dir;
+  if(_invoiceSelMonth < 1){ _invoiceSelMonth = 12; _invoiceSelYear--; }
+  if(_invoiceSelMonth > 12){ _invoiceSelMonth = 1;  _invoiceSelYear++; }
   _renderInvoiceMonth();
 };
 
-window._invoiceGoTo = function(idx){
-  _invoiceCurrentIdx = parseInt(idx);
-  _renderInvoiceMonth();
-};
+// Keep old nav functions as aliases
+window._invoiceNav = function(dir){ window._invoiceStep(dir); };
+window._invoiceGoTo = function(idx){ _invoiceCurrentIdx = parseInt(idx); _renderInvoiceMonth(); };
 
 window.generateMonthInvoice = async function(monthKey){
   // Collect rides for this month from DOM or re-query
