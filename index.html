@@ -3214,8 +3214,8 @@ function _renderInvoiceMonth(){
 window._invoiceSetMonth = function(m){ _invoiceSelMonth = m; _renderInvoiceMonth(); };
 window._invoiceSetYear  = function(y){ _invoiceSelYear  = y; _renderInvoiceMonth(); };
 window._invoiceStep = function(dir){
-  // dir: -1 = previous month, +1 = next month
-  _invoiceSelMonth -= dir;
+  // dir: -1 = one month into the past (go back), +1 = one month into the future (go forward)
+  _invoiceSelMonth += dir;
   if(_invoiceSelMonth < 1){ _invoiceSelMonth = 12; _invoiceSelYear--; }
   if(_invoiceSelMonth > 12){ _invoiceSelMonth = 1;  _invoiceSelYear++; }
   _renderInvoiceMonth();
