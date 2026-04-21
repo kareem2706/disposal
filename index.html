@@ -3031,8 +3031,8 @@ async function loadClientDashboard(){
   var pending=rides.filter(function(r){return r.status==='waiting';}).length;
   var withOffer=rides.filter(function(r){return r.status==='offers';}).length;
   var total=rides.filter(function(r){return r.status==='done'||r.status==='confirmed';}).reduce(function(s,r){return s+(r.final_price?parseFloat(r.final_price):0);},0);
-  // Add cancelled rides that were paid and not refunded (non_refundable)
-  var paidCancelled=rides.filter(function(r){return r.status==='cancelled'&&r.payment_method==='non_refundable'&&r.final_price;}).reduce(function(s,r){return s+parseFloat(r.final_price);},0);
+  // Add ALL cancelled rides with final_price that haven't been refunded yet
+  var paidCancelled=rides.filter(function(r){return r.status==='cancelled'&&r.final_price&&r.payment_method&&r.payment_method!=='refunded';}).reduce(function(s,r){return s+parseFloat(r.final_price);},0);
   // Subtract refunded amounts
   var refunded=rides.filter(function(r){return r.status==='cancelled'&&r.payment_method==='refunded'&&r.final_price;}).reduce(function(s,r){return s+parseFloat(r.final_price);},0);
   var totalNet = total + paidCancelled - refunded;
