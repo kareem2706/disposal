@@ -4026,7 +4026,7 @@ function _buildRideDetailBody(r, opts){
   var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|tel:[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').trim();
   if(cleanNotes){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div></div>';}
   var noteDrvMatch = rawNotes.match(/\|note_drv:([^|]+)/);
-  if(noteDrvMatch){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">Note sp\u00e9ciale</div><div style="padding:12px;background:var(--blue-bg);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;">'+noteDrvMatch[1].trim()+'</div></div>';}
+  if(noteDrvMatch){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">Note du client</div><div style="padding:12px;background:var(--blue-bg);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;">'+noteDrvMatch[1].trim()+'</div></div>';}
   if(r.is_subcontract&&r.final_price){body+='<div style="padding:10px 14px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><span style="font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9 : '+parseFloat(r.final_price).toFixed(0)+'\u20ac</span></div>';}
   return {html:body, isMixed:isMixed, isDisp:isDisp, mixedSegs:mixedSegs};
 }
@@ -7951,7 +7951,7 @@ window.arOpenDetail = async function(row){
   var clientName = _arName(r.client_id);
   var driverName = r.driver_id ? _arName(r.driver_id) : '—';
   if(clientName!=='—') infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Client</span><span style="font-size:12px;font-weight:600;" id="ar-client-name-row">'+clientName+'</span></div>';
-  infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Chauffeur</span><span style="font-size:12px;font-weight:600;">'+driverName+'</span></div>';
+  infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Chauffeur</span><span style="font-size:12px;font-weight:600;" id="ar-driver-name-row">'+driverName+'</span></div>';
 
   if(r.final_price){
     var tvac = parseFloat(r.final_price);
@@ -8048,6 +8048,30 @@ window.arOpenDetail = async function(row){
       if(!res.data || !res.data.phone) return;
       var nameEl = document.getElementById('ar-client-name-row');
       if(nameEl) nameEl.innerHTML = nameEl.textContent + ' <span style="font-weight:400;color:var(--ink3);margin-left:6px;">· <a href="tel:'+res.data.phone+'" style="color:var(--blue);text-decoration:none;">'+res.data.phone+'</a></span>';
+    });
+  }
+
+  // Fetch driver phone + vehicle plate for admin popup
+  if(r.driver_id && sb){
+    sb.from('profiles').select('phone').eq('id',r.driver_id).maybeSingle().then(function(profRes){
+      sb.from('offers').select('vehicle_id').eq('ride_id',r.id).eq('driver_id',r.driver_id).eq('status','accepted').maybeSingle().then(function(offerRes){
+        var phone = profRes.data?.phone||'';
+        var vehId = offerRes.data?.vehicle_id||'';
+        if(!vehId){
+          var driverEl = document.getElementById('ar-driver-name-row');
+          if(driverEl && phone) driverEl.innerHTML = driverEl.textContent + ' <span style="font-weight:400;color:var(--ink3);margin-left:6px;">· <a href="tel:'+phone+'" style="color:var(--blue);text-decoration:none;">'+phone+'</a></span>';
+          return;
+        }
+        sb.from('fleet_vehicles').select('plate').eq('id',vehId).maybeSingle().then(function(vehRes){
+          var plate = vehRes.data?.plate||'';
+          var driverEl = document.getElementById('ar-driver-name-row');
+          if(!driverEl) return;
+          var extra = '';
+          if(phone) extra += ' · <a href="tel:'+phone+'" style="color:var(--blue);text-decoration:none;">'+phone+'</a>';
+          if(plate) extra += ' · <span style="font-family:monospace;">'+plate+'</span>';
+          if(extra) driverEl.innerHTML = driverEl.textContent + ' <span style="font-weight:400;color:var(--ink3);margin-left:6px;">'+extra+'</span>';
+        });
+      });
     });
   }
 
