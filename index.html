@@ -3526,10 +3526,8 @@ async function loadDriverDashboard(){
 // Returns true if the driver (with their fleet vehicles) can handle this ride's vehicle_type
 function _driverCanHandleRide(r){
   if(!r.vehicle_type) return true; // no requirement = any driver
-  var allowed = _classCompat[r.vehicle_type] || [r.vehicle_type];
-  // Driver must have at least one validated vehicle whose class is in allowed list
-  // Also check reverse: which ride classes a vehicle_class can serve (per image table)
-  // vehicle can serve: itself + lower classes
+  // If fleet not loaded yet, show all rides (don't block)
+  if(!_fleetVehicles || _fleetVehicles.length === 0) return true;
   var _vehicleServes = {
     lowcost: ['lowcost'],
     business: ['lowcost','business'],
@@ -3537,7 +3535,6 @@ function _driverCanHandleRide(r){
     luxe: ['lowcost','business','luxe']
   };
   return _fleetVehicles.some(function(v){
-    if(v.status !== 'validated') return false;
     var servedByVehicle = _vehicleServes[v.vehicle_class] || [v.vehicle_class];
     return servedByVehicle.indexOf(r.vehicle_type) >= 0;
   });
@@ -3578,6 +3575,12 @@ async function renderScoreCard(){
 // MARKETPLACE
 async function loadMarketplace(){
   let clientRides = [], subRides = [];
+
+  // Ensure fleet vehicles are loaded for compatibility filtering
+  if(_fleetVehicles.length === 0 && sb && currentUser && !localStorage.getItem(DEMO_MODE_KEY)){
+    var fvRes = await sb.from('fleet_vehicles').select('*').eq('fleet_id', currentUser.id).eq('active', true);
+    _fleetVehicles = fvRes.data || [];
+  }
 
   // Always refresh own offers before rendering so each driver sees their own state
   await loadMyOffers();
