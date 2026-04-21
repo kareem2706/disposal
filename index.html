@@ -1151,6 +1151,13 @@ body{background:var(--bg);}
           </div>
           <button onclick="calNextMonth()" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--r);color:var(--ink3);flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
         </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid var(--sand2);">
+          <button onclick="calSetFilter('')" id="cal-f-all" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;">Tout</button>
+          <button onclick="calSetFilter('confirmed')" id="cal-f-confirmed" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Confirmées</button>
+          <button onclick="calSetFilter('done')" id="cal-f-done" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Terminées</button>
+          <button onclick="calSetFilter('waiting')" id="cal-f-waiting" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">En attente</button>
+          <button onclick="calSetFilter('cancelled')" id="cal-f-cancelled" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Annulées</button>
+        </div>
         <div id="cal-grid" style="padding:12px 16px 16px;"></div>
       </div>
     </div>
@@ -1173,6 +1180,13 @@ body{background:var(--bg);}
             <button class="d-cal-vbtn" data-view="week" onclick="dCalView('week')" style="border:none;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--ink3);">Semaine</button>
           </div>
           <button onclick="dCalNext()" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--r);color:var(--ink3);flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid var(--sand2);">
+          <button onclick="dCalSetFilter('')" id="dcal-f-all" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;">Tout</button>
+          <button onclick="dCalSetFilter('confirmed')" id="dcal-f-confirmed" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Confirmées</button>
+          <button onclick="dCalSetFilter('done')" id="dcal-f-done" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Terminées</button>
+          <button onclick="dCalSetFilter('personal')" id="dcal-f-personal" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Personnelles</button>
+          <button onclick="dCalSetFilter('cancelled')" id="dcal-f-cancelled" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Annulées</button>
         </div>
         <div id="d-cal-grid" style="padding:12px 16px 16px;"></div>
       </div>
@@ -5840,10 +5854,19 @@ function _renderCalGrid(gridId,titleId,calYear,calMonth,calView,calWS,calRides,p
 }
 
 // CLIENT CALENDAR
-var _calY=new Date().getFullYear(),_calM=new Date().getMonth(),_calRides=[],_calView='month',_calWS=null,_calCache={};
+var _calY=new Date().getFullYear(),_calM=new Date().getMonth(),_calRides=[],_calView='month',_calWS=null,_calCache={},_calFilter='';
 window.calPrevMonth=function(){if(_calView==='week'){var d=new Date(_calWS);d.setDate(d.getDate()-7);_calWS=d;}else{_calM--;if(_calM<0){_calM=11;_calY--;}}loadCalendar(true);};
 window.calNextMonth=function(){if(_calView==='week'){var d=new Date(_calWS);d.setDate(d.getDate()+7);_calWS=d;}else{_calM++;if(_calM>11){_calM=0;_calY++;}}loadCalendar(true);};
 window.calSetView=function(view,ds){if(!view)return;_calView=view;document.querySelectorAll('.cal-view-btn').forEach(function(b){b.classList.toggle('cal-view-active',b.dataset.view===view);});if(view==='week'){var d=new Date((ds||new Date().toISOString().split('T')[0])+'T00:00:00');var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_calWS=d;_calM=d.getMonth();_calY=d.getFullYear();}loadCalendar(true);};
+window.calSetFilter=function(status){
+  _calFilter=status;
+  // Update button styles
+  ['','confirmed','done','waiting','cancelled'].forEach(function(s){
+    var btn=document.getElementById('cal-f-'+(s||'all'));
+    if(btn){btn.style.background=(_calFilter===s)?'var(--ink)':'transparent';btn.style.color=(_calFilter===s)?'#fff':'var(--ink3)';btn.style.borderColor=(_calFilter===s)?'var(--ink)':'var(--sand3)';}
+  });
+  loadCalendar(false);
+};
 window.loadCalendar=async function(force){
   if(sb&&currentUser&&localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     var s,e;
@@ -5851,25 +5874,33 @@ window.loadCalendar=async function(force){
     else{var fd2=new Date(_calY,_calM,1).getDay();fd2=fd2===0?6:fd2-1;var sD=new Date(_calY,_calM,1-fd2);var eD=new Date(_calY,_calM+1,14);s=sD.toISOString().split('T')[0];e=eD.toISOString().split('T')[0];}
     var ck=s+'_'+e;
     if(force||!_calCache[ck]){var res=await sb.from('rides').select('*').eq('client_id',currentUser.id).gte('ride_date',s).lte('ride_date',e);_calCache[ck]=res.data||[];}
-    _calRides=_calCache[ck];
+    _calRides=_calFilter ? (_calCache[ck]||[]).filter(function(r){return r.status===_calFilter;}) : (_calCache[ck]||[]);
   }
   if(!_calWS){var d=new Date();var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_calWS=d;}
   _renderCalGrid('cal-grid','cal-title',_calY,_calM,_calView,_calWS,_calRides,calPrevMonth,calNextMonth,calSetView);
 };
 
 // DRIVER CALENDAR
-var _dCalY=new Date().getFullYear(),_dCalM=new Date().getMonth(),_dCalRides=[],_dCalView='month',_dCalWS=null,_dCalCache={};
+var _dCalY=new Date().getFullYear(),_dCalM=new Date().getMonth(),_dCalRides=[],_dCalView='month',_dCalWS=null,_dCalCache={},_dCalFilter='';
 window.dCalPrev=function(){if(_dCalView==='week'){var d=new Date(_dCalWS);d.setDate(d.getDate()-7);_dCalWS=d;}else{_dCalM--;if(_dCalM<0){_dCalM=11;_dCalY--;}}loadDriverCalendar(true);};
 window.dCalNext=function(){if(_dCalView==='week'){var d=new Date(_dCalWS);d.setDate(d.getDate()+7);_dCalWS=d;}else{_dCalM++;if(_dCalM>11){_dCalM=0;_dCalY++;}}loadDriverCalendar(true);};
 window.dCalView=function(view,ds){if(!view)return;_dCalView=view;document.querySelectorAll('.d-cal-vbtn').forEach(function(b){b.classList.toggle('d-cal-vactive',b.dataset.view===view);});if(view==='week'){var d=new Date((ds||new Date().toISOString().split('T')[0])+'T00:00:00');var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_dCalWS=d;_dCalM=d.getMonth();_dCalY=d.getFullYear();}loadDriverCalendar(true);};
+window.dCalSetFilter=function(status){
+  _dCalFilter=status;
+  ['','confirmed','done','personal','cancelled'].forEach(function(s){
+    var btn=document.getElementById('dcal-f-'+(s||'all'));
+    if(btn){btn.style.background=(_dCalFilter===s)?'var(--ink)':'transparent';btn.style.color=(_dCalFilter===s)?'#fff':'var(--ink3)';btn.style.borderColor=(_dCalFilter===s)?'var(--ink)':'var(--sand3)';}
+  });
+  loadDriverCalendar(false);
+};
 window.loadDriverCalendar=async function(force){
   if(sb&&currentUser&&localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     var s,e;
     if(_dCalView==='week'&&_dCalWS){var we=new Date(_dCalWS);we.setDate(we.getDate()+6);s=_dCalWS.toISOString().split('T')[0];e=we.toISOString().split('T')[0];}
     else{var fd2=new Date(_dCalY,_dCalM,1).getDay();fd2=fd2===0?6:fd2-1;var sD=new Date(_dCalY,_dCalM,1-fd2);var eD=new Date(_dCalY,_dCalM+1,14);s=sD.toISOString().split('T')[0];e=eD.toISOString().split('T')[0];}
     var ck=s+'_'+e;
-    if(force||!_dCalCache[ck]){var res=await sb.from('rides').select('*').eq('driver_id',currentUser.id).neq('status','cancelled').gte('ride_date',s).lte('ride_date',e);_dCalCache[ck]=res.data||[];}
-    _dCalRides=_dCalCache[ck];
+    if(force||!_dCalCache[ck]){var res=await sb.from('rides').select('*').eq('driver_id',currentUser.id).gte('ride_date',s).lte('ride_date',e);_dCalCache[ck]=res.data||[];}
+    _dCalRides=_dCalFilter ? (_dCalCache[ck]||[]).filter(function(r){return r.status===_dCalFilter;}) : (_dCalCache[ck]||[]);
   }
   if(!_dCalWS){var d=new Date();var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_dCalWS=d;}
   _renderCalGrid('d-cal-grid','d-cal-title',_dCalY,_dCalM,_dCalView,_dCalWS,_dCalRides);
@@ -5936,21 +5967,6 @@ function renderDriverStatsChart(missions){
   });
 }
 // ── Driver calendar ──
-var _dCalY=new Date().getFullYear(),_dCalM=new Date().getMonth(),_dCalRides=[],_dCalView='month',_dCalWS=null,_dCalCache={};
-window.dCalPrev=function(){if(_dCalView==='week'){var d=new Date(_dCalWS);d.setDate(d.getDate()-7);_dCalWS=d;}else{_dCalM--;if(_dCalM<0){_dCalM=11;_dCalY--;}}loadDriverCalendar(true);};
-window.dCalNext=function(){if(_dCalView==='week'){var d=new Date(_dCalWS);d.setDate(d.getDate()+7);_dCalWS=d;}else{_dCalM++;if(_dCalM>11){_dCalM=0;_dCalY++;}}loadDriverCalendar(true);};
-window.dCalView=function(view,ds){if(!view)return;_dCalView=view;document.querySelectorAll('.d-cal-vbtn').forEach(function(b){b.classList.toggle('d-cal-vactive',b.dataset.view===view);});if(view==='week'){var d=new Date((ds||new Date().toISOString().split('T')[0])+'T00:00:00');var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_dCalWS=d;_dCalM=d.getMonth();_dCalY=d.getFullYear();}loadDriverCalendar(true);};
-window.loadDriverCalendar=async function(force){
-  if(sb&&currentUser&&localStorage.getItem(DEMO_MODE_KEY)!=='1'){
-    var s,e;if(_dCalView==='week'&&_dCalWS){var we=new Date(_dCalWS);we.setDate(we.getDate()+6);s=_dCalWS.toISOString().split('T')[0];e=we.toISOString().split('T')[0];}
-    else{var fd2=new Date(_dCalY,_dCalM,1).getDay();fd2=fd2===0?6:fd2-1;var sD=new Date(_dCalY,_dCalM,1-fd2);var eD=new Date(_dCalY,_dCalM+1,14);s=sD.toISOString().split('T')[0];e=eD.toISOString().split('T')[0];}
-    var ck=s+'_'+e;
-    if(force||!_dCalCache[ck]){var res=await sb.from('rides').select('*').eq('driver_id',currentUser.id).neq('status','cancelled').gte('ride_date',s).lte('ride_date',e);_dCalCache[ck]=res.data||[];}_dCalRides=_dCalCache[ck];
-  }
-  if(!_dCalWS){var d=new Date();var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_dCalWS=d;}
-  if(typeof _renderCalGrid==='function')_renderCalGrid('d-cal-grid','d-cal-title',_dCalY,_dCalM,_dCalView,_dCalWS,_dCalRides);
-};
-
 // ── Personal Mission ──
 window.pmSetType=function(type){
   var green='var(--green)',greenBg='var(--green-bg)',amber='var(--amber)',amberBg='var(--amber-bg)',sand2='var(--sand2)',ink3='var(--ink3)';
