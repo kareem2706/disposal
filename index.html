@@ -4029,7 +4029,7 @@ function _buildRideDetailBody(r, opts){
   if(cleanNotes){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div></div>';}
   var noteDrvMatch = rawNotes.match(/\|note_drv:([^|]+)/);
   if(noteDrvMatch){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">Note du client</div><div style="padding:12px;background:var(--blue-bg);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;">'+noteDrvMatch[1].trim()+'</div></div>';}
-  if(r.is_subcontract&&r.final_price){body+='<div style="padding:10px 14px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><span style="font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9 : '+parseFloat(r.final_price).toFixed(0)+' € HTVA</span></div>';}
+  // Note: prix demandé for subcontract shown in footer only
   return {html:body, isMixed:isMixed, isDisp:isDisp, mixedSegs:mixedSegs};
 }
 function _triggerDistanceMatrix(r, result, idPrefix){
@@ -4165,13 +4165,7 @@ window.openRideDetail=function(el){
       +'</div>';
   }
 
-  // Show requested price for subcontract rides
-  if(r.is_subcontract&&r.final_price){
-    body+='<div style="padding:10px 14px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;">'
-      +'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>'
-      +'<span style="font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9 : '+parseFloat(r.final_price).toFixed(0)+' € HTVA</span>'
-      +'</div>';
-  }
+  // Note: prix demandé for subcontract shown in footer only
 
   // Note: price for cancelled/done rides is shown in the footer (not body)
 
