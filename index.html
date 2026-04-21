@@ -4264,7 +4264,7 @@ window.openRideDetail=function(el){
         var cName = paxMatch ? paxMatch[1].trim() : (((cp.first_name||'')+' '+(cp.last_name||'')).trim() || '—');
         var noteDriver = noteDrvMatch ? noteDrvMatch[1].trim() : '';
         var contactBlock = '<div style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
-          +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Passager</div>'
+          +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Informations passager</div>'
           +'<div style="font-weight:600;font-size:14px;'+(noteDriver?'margin-bottom:6px;':'')+'">'+cName+'</div>'
           +(noteDriver?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;padding-top:4px;border-top:1px solid var(--sand2);">'+noteDriver+'</div>':'')
           +'</div>';
@@ -7918,6 +7918,7 @@ function _arRenderTable(rides, el){
       +'<td style="padding:10px 14px;font-size:13px;font-weight:500;">'+clientName+'</td>'
       +'<td style="padding:10px 14px;font-size:13px;">'+driverName+'</td>'
       +'<td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;"><span style="font-size:11px;font-weight:600;background:'+sBg+';color:'+sCol+';padding:3px 9px;border-radius:20px;white-space:nowrap;">'+sLbl+'</span>'+refundBadge+'</div></td>'
+      +(function(){var pm=r.payment_method||''; var pmMap={'stripe':'💳 Stripe','bank_transfer':'🏦 Virement','non_refundable':'Non remb.','refunded':'✅ Remboursé','cash':'💵 Cash'};var pmLabel=pmMap[pm]||(pm||'—'); return '<td style="padding:10px 14px;font-size:12px;color:var(--ink3);white-space:nowrap;">'+pmLabel+'</td>'; })()
       +'<td style="padding:10px 14px;font-size:13px;font-weight:600;text-align:right;white-space:nowrap;">'+price+'</td>'
       +'<td style="padding:10px 14px;white-space:nowrap;">'+ratingHtml+'</td>'
     +'</tr>';
@@ -7931,6 +7932,7 @@ function _arRenderTable(rides, el){
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Client</th>'
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Chauffeur</th>'
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Statut</th>'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Paiement</th>'
       +'<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Prix</th>'
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Note</th>'
     +'</tr></thead>'
@@ -7952,6 +7954,11 @@ window.arOpenDetail = async function(row){
   var driverName = r.driver_id ? _arName(r.driver_id) : '—';
   if(clientName!=='—') infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Client</span><span style="font-size:12px;font-weight:600;" id="ar-client-name-row">'+clientName+'</span></div>';
   infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Chauffeur</span><span style="font-size:12px;font-weight:600;" id="ar-driver-name-row">'+driverName+'</span></div>';
+  if(r.payment_method){
+    var pmMap={'stripe':'💳 Stripe','bank_transfer':'🏦 Virement bancaire','non_refundable':'Non remboursable','refunded':'✅ Remboursé','cash':'💵 Espèces'};
+    var pmLabel = pmMap[r.payment_method]||r.payment_method;
+    infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Paiement</span><span style="font-size:12px;font-weight:600;">'+pmLabel+'</span></div>';
+  }
 
   if(r.final_price){
     var tvac = parseFloat(r.final_price);
