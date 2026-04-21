@@ -4155,7 +4155,7 @@ window.openRideDetail=function(el){
   }
 
   var rawNotes=r.notes||'';
-  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').trim();
+  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|tel:[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').trim();
   if(cleanNotes){
     body+='<div>'
       +'<div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div>'
@@ -6341,8 +6341,10 @@ window.savePaxInfo = async function(rideId){
   if(error){ console.error('savePaxInfo error:', error); showToast('Erreur: '+error.message); if(btn){btn.disabled=false;btn.textContent='Enregistrer';} return; }
   document.getElementById('m-pax-edit')?.remove();
   showToast('✅ Informations mises à jour');
-  closeModal('m-ride-detail');
   await loadClientDashboard();
+  // Reopen detail with updated data
+  var {data:updated} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
+  if(updated){ var tmp=document.createElement('div'); tmp.dataset.ride=JSON.stringify(updated).replace(/'/g,"&#39;"); openRideDetail(tmp); }
 };
 
 window.saveNoteInfo = async function(rideId){
@@ -6358,8 +6360,10 @@ window.saveNoteInfo = async function(rideId){
   if(error){ console.error('saveNoteInfo error:', error); showToast('Erreur: '+error.message); if(btn){btn.disabled=false;btn.textContent='Enregistrer';} return; }
   document.getElementById('m-pax-edit')?.remove();
   showToast('✅ Note mise à jour');
-  closeModal('m-ride-detail');
   await loadClientDashboard();
+  // Reopen detail with updated data
+  var {data:updated2} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
+  if(updated2){ var tmp2=document.createElement('div'); tmp2.dataset.ride=JSON.stringify(updated2).replace(/'/g,"&#39;"); openRideDetail(tmp2); }
 };
 
 window.openRateModal=async function(rideId,fromAddr,rideDataStr){
