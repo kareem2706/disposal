@@ -3436,6 +3436,22 @@ async function _autoCancelOverdueRides(pendingRides){
   if(cancelled>0)console.log('[auto-cancel]',cancelled,'overdue pending ride(s) cancelled');
 }
 
+// Returns true if the driver (with their fleet vehicles) can handle this ride's vehicle_type
+function _driverCanHandleRide(r){
+  if(!r.vehicle_type || r.vehicle_type === '') return true;
+  var _vehicleServes = {
+    lowcost:  ['lowcost'],
+    business: ['lowcost','business'],
+    van:      ['lowcost','business','van'],
+    luxe:     ['lowcost','business','luxe']
+  };
+  if(!_fleetVehicles || _fleetVehicles.length === 0) return r.vehicle_type === 'lowcost';
+  return _fleetVehicles.some(function(v){
+    var s = _vehicleServes[v.vehicle_class] || [v.vehicle_class];
+    return s.indexOf(r.vehicle_type) >= 0;
+  });
+}
+
 async function loadDriverDashboard(){
   const uid = currentUser?.id;
   let missions = [], pending = [];
@@ -3527,26 +3543,6 @@ async function loadDriverDashboard(){
   // Update marketplace badge immediately (hidden per spec)
   var badgeEl = document.getElementById('badge-marketplace');
   if(badgeEl){ badgeEl.style.display = 'none'; }
-
-
-// Returns true if the driver (with their fleet vehicles) can handle this ride's vehicle_type
-function _driverCanHandleRide(r){
-  if(!r.vehicle_type || r.vehicle_type === '') return true; // no requirement = any driver
-  var _vehicleServes = {
-    lowcost:  ['lowcost'],
-    business: ['lowcost','business'],
-    van:      ['lowcost','business','van'],
-    luxe:     ['lowcost','business','luxe']
-  };
-  // If fleet not loaded, only show lowcost (safest default)
-  if(!_fleetVehicles || _fleetVehicles.length === 0){
-    return r.vehicle_type === 'lowcost';
-  }
-  return _fleetVehicles.some(function(v){
-    var servedByVehicle = _vehicleServes[v.vehicle_class] || [v.vehicle_class];
-    return servedByVehicle.indexOf(r.vehicle_type) >= 0;
-  });
-}
 
   var latestPending = pending.filter(_driverCanHandleRide).slice().sort(function(a,b){
     return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||''));
