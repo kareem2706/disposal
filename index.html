@@ -4407,7 +4407,7 @@ window.openRideDetail=function(el){
     } else if(r.status==='pending_payment'){
       ft=closeBtn;
     } else if(r.status==='confirmed'){
-      var pdfVoucherBtn = '<button onclick="generateRideVoucher(\''+rId+'\')" style="background:none;border:1.5px solid var(--sand3);border-radius:var(--r);padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);font-family:\'DM Sans\',sans-serif;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Voucher</button>';
+      var pdfVoucherBtn = '<button onclick="generateRideVoucher(\''+rId+'\')" class="btn btn-secondary" style="display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Voucher</button>';
       ft=trashBtn+pdfVoucherBtn+closeBtn;
     } else if(r.status==='done'){
       var priceTagDone = r.final_price
