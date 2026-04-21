@@ -3135,8 +3135,9 @@ function _renderInvoiceMonth(){
   var monthShort  = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
 
   // Year range: from earliest data or current-3 to current+1
-  var minYear = _invoiceMonthKeys.length ? parseInt(_invoiceMonthKeys[_invoiceMonthKeys.length-1].slice(0,4)) : new Date().getFullYear();
-  var maxYear = new Date().getFullYear() + 1;
+  var dataMinYear = _invoiceMonthKeys.length ? parseInt(_invoiceMonthKeys[_invoiceMonthKeys.length-1].slice(0,4)) : new Date().getFullYear();
+  var minYear = Math.min(dataMinYear, _invoiceSelYear, new Date().getFullYear() - 2);
+  var maxYear = Math.max(new Date().getFullYear() + 1, _invoiceSelYear);
   var yearOpts = '';
   for(var y=maxYear; y>=minYear; y--){
     yearOpts += '<option value="'+y+'"'+(_invoiceSelYear===y?' selected':'')+'>'+y+'</option>';
@@ -3214,7 +3215,7 @@ function _renderInvoiceMonth(){
 window._invoiceSetMonth = function(m){ _invoiceSelMonth = m; _renderInvoiceMonth(); };
 window._invoiceSetYear  = function(y){ _invoiceSelYear  = y; _renderInvoiceMonth(); };
 window._invoiceStep = function(dir){
-  // dir: -1 = one month into the past (go back), +1 = one month into the future (go forward)
+  // dir: -1 = one month into the past, +1 = one month into the future
   _invoiceSelMonth += dir;
   if(_invoiceSelMonth < 1){ _invoiceSelMonth = 12; _invoiceSelYear--; }
   if(_invoiceSelMonth > 12){ _invoiceSelMonth = 1;  _invoiceSelYear++; }
