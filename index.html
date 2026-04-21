@@ -4258,7 +4258,6 @@ window.openRideDetail=function(el){
         var cRes = await sb.from('profiles').select('first_name,last_name').eq('id',r.client_id).maybeSingle();
         var cp = cRes.data;
         if(!cp) return;
-        // Check for overridden passenger name in notes
         var paxMatch = (r.notes||'').match(/\|pax:([^|]+)/);
         var cName = paxMatch ? paxMatch[1].trim() : (((cp.first_name||'')+' '+(cp.last_name||'')).trim() || '—');
         var contactBlock = '<div style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
@@ -4270,53 +4269,115 @@ window.openRideDetail=function(el){
     })();
   }
 
-  // ── Passenger info block for CLIENT (confirmed ride) — with edit + note ──
-  if(isClient && (r.status==='confirmed'||r.status==='active') && currentUser && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
+  // ── All confirmed blocks for CLIENT in correct order: vehicle → passenger → note → price ──
+  if(isClient && r.status==='confirmed' && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
+    // Pre-inject ordered placeholders synchronously
+    var bodyElMain = document.getElementById('detail-body');
+    if(bodyElMain){
+      bodyElMain.insertAdjacentHTML('beforeend',
+        '<div id="ph-vehicle"></div>'
+        +'<div id="ph-passenger"></div>'
+        +'<div id="ph-note"></div>'
+        +'<div id="ph-price"></div>'
+      );
+    }
     var _rideIdForPax = r.id;
     (async function(){
-      var bodyEl4=document.getElementById('detail-body');
-      if(!bodyEl4) return;
       try {
-        var cpRes = await sb.from('profiles').select('first_name,last_name,phone').eq('id',currentUser.id).maybeSingle();
-        var cp = cpRes.data;
-        if(!cp) return;
-        // Parse overrides from notes
         var notesRaw = r.notes||'';
-        var paxMatch = notesRaw.match(/\|pax:([^|]+)/);
-        var telMatch = notesRaw.match(/\|tel:([^|]+)/);
-        var defName = ((cp.first_name||'')+' '+(cp.last_name||'')).trim() || '—';
-        var dispName = paxMatch ? paxMatch[1].trim() : defName;
-        var dispPhone = telMatch ? telMatch[1].trim() : (cp.phone||'');
+        // Fetch all data in parallel
+        var fetchVehicle = r.driver_id
+          ? sb.from('offers').select('message,price,vehicle_id').eq('ride_id',r.id).eq('driver_id',r.driver_id).eq('status','accepted').maybeSingle()
+          : Promise.resolve({data:null});
+        var fetchProfile = currentUser
+          ? sb.from('profiles').select('first_name,last_name,phone').eq('id',currentUser.id).maybeSingle()
+          : Promise.resolve({data:null});
+        var [offerRes, cpRes] = await Promise.all([fetchVehicle, fetchProfile]);
 
-        var passBlock = '<div id="pax-info-block" style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
-          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-            +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Informations passager</div>'
-            +'<button id="btn-pax-edit" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;font-family:\'DM Sans\',sans-serif;">✏ Modifier</button>'
-          +'</div>'
-          +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+dispName+'</div>'
-          +(dispPhone?'<div style="font-size:12px;color:var(--ink3);">'+dispPhone+'</div>':'')
-          +'</div>';
+        // Fetch vehicle details if needed
+        var offer = offerRes.data;
+        var veh = null;
+        if(offer && offer.vehicle_id){
+          var vehRes = await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',offer.vehicle_id).maybeSingle();
+          veh = vehRes.data;
+        }
 
-        var noteMatch = notesRaw.match(/\|note_drv:([^|]+)/);
-        var currentNote = noteMatch ? noteMatch[1].trim() : '';
-        var noteBlock = '<div id="pax-note-block" style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
-          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-            +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Note au chauffeur</div>'
-            +'<button id="btn-note-edit" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;font-family:\'DM Sans\',sans-serif;">'+(currentNote?'✏ Modifier':'+ Ajouter')+'</button>'
-          +'</div>'
-          +(currentNote?'<div style="font-size:13px;color:var(--ink2);font-style:italic;">'+currentNote+'</div>':'<div style="font-size:12px;color:var(--ink3);">Aucune note</div>')
-          +'</div>';
+        // ── Vehicle block ──
+        var phVeh = document.getElementById('ph-vehicle');
+        if(phVeh && r.driver_id){
+          var offerMsg = offer && offer.message ? offer.message : null;
+          var vehLabel = veh ? ((veh.brand||'')+' '+(veh.model||'')).trim() : '—';
+          var vehDesc = [vehLabel, veh&&veh.color?veh.color:null].filter(Boolean).join(' ');
+          var vehPlate = veh && veh.plate ? veh.plate : null;
+          var vehicleHtml = '<div style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
+            +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Information du v\u00e9hicule</div>'
+            +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+vehDesc+'</div>'
+            +(vehPlate?'<div style="font-size:12px;color:var(--ink3);font-family:monospace;">'+vehPlate+'</div>':'')
+            +(offerMsg?'<div style="margin-top:8px;font-size:12.5px;color:var(--ink3);font-style:italic;"><span style="font-style:normal;font-weight:600;color:var(--ink2);">Note du chauffeur\u00a0: </span>'+offerMsg+'</div>':'')
+            +'</div>';
+          phVeh.outerHTML = vehicleHtml;
+        } else if(phVeh){ phVeh.remove(); }
 
-        bodyEl4.insertAdjacentHTML('beforeend', passBlock + noteBlock);
+        // ── Passenger block ──
+        var phPax = document.getElementById('ph-passenger');
+        var cp = cpRes.data;
+        if(phPax && cp){
+          var paxMatch = notesRaw.match(/\|pax:([^|]+)/);
+          var telMatch = notesRaw.match(/\|tel:([^|]+)/);
+          var defName = ((cp.first_name||'')+' '+(cp.last_name||'')).trim() || '—';
+          var dispName = paxMatch ? paxMatch[1].trim() : defName;
+          var dispPhone = telMatch ? telMatch[1].trim() : (cp.phone||'');
+          var paxHtml = '<div id="pax-info-block" style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
+            +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+              +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Informations passager</div>'
+              +'<button id="btn-pax-edit" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;font-family:\'DM Sans\',sans-serif;">✏ Modifier</button>'
+            +'</div>'
+            +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+dispName+'</div>'
+            +(dispPhone?'<div style="font-size:12px;color:var(--ink3);">'+dispPhone+'</div>':'')
+            +'</div>';
+          phPax.outerHTML = paxHtml;
+          // Attach listener after DOM update
+          setTimeout(function(){
+            var btn = document.getElementById('btn-pax-edit');
+            if(btn) btn.addEventListener('click', function(){ openPaxEdit(_rideIdForPax, dispName, dispPhone); });
+          }, 30);
+        } else if(phPax){ phPax.remove(); }
 
-        // Attach click handlers using closure (avoids string escaping issues)
-        setTimeout(function(){
-          var btnPax = document.getElementById('btn-pax-edit');
-          if(btnPax) btnPax.addEventListener('click', function(){ openPaxEdit(_rideIdForPax, dispName, dispPhone); });
-          var btnNote = document.getElementById('btn-note-edit');
-          if(btnNote) btnNote.addEventListener('click', function(){ openNoteEdit(_rideIdForPax, currentNote); });
-        }, 50);
-      } catch(e){ console.warn('passenger info fetch error:', e); }
+        // ── Note block ──
+        var phNote = document.getElementById('ph-note');
+        if(phNote){
+          var noteMatch = notesRaw.match(/\|note_drv:([^|]+)/);
+          var currentNote = noteMatch ? noteMatch[1].trim() : '';
+          var noteHtml = '<div id="pax-note-block" style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
+            +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+              +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Note au chauffeur</div>'
+              +'<button id="btn-note-edit" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;font-family:\'DM Sans\',sans-serif;">'+(currentNote?'✏ Modifier':'+ Ajouter')+'</button>'
+            +'</div>'
+            +(currentNote?'<div style="font-size:13px;color:var(--ink2);font-style:italic;">'+currentNote+'</div>':'<div style="font-size:12px;color:var(--ink3);">Aucune note</div>')
+            +'</div>';
+          phNote.outerHTML = noteHtml;
+          setTimeout(function(){
+            var btn = document.getElementById('btn-note-edit');
+            if(btn) btn.addEventListener('click', function(){ openNoteEdit(_rideIdForPax, currentNote); });
+          }, 30);
+        }
+
+        // ── Price block ──
+        var phPrice = document.getElementById('ph-price');
+        if(phPrice && r.final_price){
+          var tvac = parseFloat(r.final_price);
+          var htva = parseFloat((tvac/(1+TVA_RATE)).toFixed(2));
+          var tvaAmt = parseFloat((tvac-htva).toFixed(2));
+          var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
+          phPrice.outerHTML = '<div style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
+            +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Prix</div>'
+            +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Prix HTVA</span><span>'+fmt(htva)+'</span></div>'
+            +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">TVA 6%</span><span>'+fmt(tvaAmt)+'</span></div>'
+            +'<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:5px 0 2px;border-top:1px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(tvac)+'</span></div>'
+            +'</div>';
+        } else if(phPrice){ phPrice.remove(); }
+
+      } catch(e){ console.warn('confirmed client blocks error:', e); }
     })();
   }
 
