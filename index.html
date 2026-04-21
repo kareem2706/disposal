@@ -4248,7 +4248,7 @@ window.openRideDetail=function(el){
   })();
 
   // ── Client contact info for driver (confirmed ride) ──
-  if(!isClient && r.status==='confirmed' && r.client_id && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
+  if(!isClient && (r.status==='confirmed'||r.status==='active') && r.client_id && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     (async function(){
       var bodyEl3=document.getElementById('detail-body');
       if(!bodyEl3) return;
@@ -4264,6 +4264,26 @@ window.openRideDetail=function(el){
           +'</div>';
         bodyEl3.innerHTML += contactBlock;
       } catch(e){ console.warn('client contact fetch error:', e); }
+    })();
+  }
+
+  // ── Passenger info block for CLIENT (confirmed ride) ──
+  if(isClient && (r.status==='confirmed'||r.status==='active') && currentUser && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
+    (async function(){
+      var bodyEl4=document.getElementById('detail-body');
+      if(!bodyEl4) return;
+      try {
+        var cpRes = await sb.from('profiles').select('first_name,last_name,phone').eq('id',currentUser.id).maybeSingle();
+        var cp = cpRes.data;
+        if(!cp) return;
+        var cName = ((cp.first_name||'')+' '+(cp.last_name||'')).trim() || '—';
+        var passBlock = '<div style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
+          +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Informations passager</div>'
+          +'<div style="font-weight:600;font-size:14px;margin-bottom:4px;">'+cName+'</div>'
+          +(cp.phone?'<div style="font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.66 2 2 0 012-2.18h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 6a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 12.92z"/></svg>'+cp.phone+'</div>':'')
+          +'</div>';
+        bodyEl4.innerHTML += passBlock;
+      } catch(e){ console.warn('passenger info fetch error:', e); }
     })();
   }
 
@@ -7806,7 +7826,7 @@ window.arOpenDetail = async function(row){
   if(r.booking_code) infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Code</span><span style="font-size:12px;font-weight:700;font-family:monospace;">'+r.booking_code+'</span></div>';
   var clientName = _arName(r.client_id);
   var driverName = r.driver_id ? _arName(r.driver_id) : '—';
-  if(clientName!=='—') infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Client</span><span style="font-size:12px;font-weight:600;">'+clientName+'</span></div>';
+  if(clientName!=='—') infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Client</span><span style="font-size:12px;font-weight:600;" id="ar-client-name-row">'+clientName+'</span></div>';
   infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Chauffeur</span><span style="font-size:12px;font-weight:600;">'+driverName+'</span></div>';
 
   if(r.final_price){
@@ -7897,6 +7917,15 @@ window.arOpenDetail = async function(row){
   if(titleEl) titleEl.innerHTML = (r.booking_code ? r.booking_code+' — '+subTitle : subTitle) + subIcon2 + ' '+getStatusPill(r.status,0);
   if(bodyEl)  bodyEl.innerHTML  = body;
   if(ftEl)    ftEl.innerHTML    = footerHtml;
+
+  // Fetch client phone for admin popup
+  if(r.client_id && sb){
+    sb.from('profiles').select('phone').eq('id',r.client_id).maybeSingle().then(function(res){
+      if(!res.data || !res.data.phone) return;
+      var nameEl = document.getElementById('ar-client-name-row');
+      if(nameEl) nameEl.innerHTML = nameEl.textContent + ' <span style="font-weight:400;color:var(--ink3);margin-left:6px;">· <a href="tel:'+res.data.phone+'" style="color:var(--blue);text-decoration:none;">'+res.data.phone+'</a></span>';
+    });
+  }
 
   openModal('m-ar-detail');
   _triggerDistanceMatrix(r, result, 'ar-');
