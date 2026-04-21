@@ -3443,6 +3443,12 @@ async function loadDriverDashboard(){
   // Always refresh own offers so dashboard shows current driver's offer state
   await loadMyOffers();
 
+  // Load fleet vehicles for compatibility filtering
+  if(_fleetVehicles.length === 0 && sb && uid && !localStorage.getItem(DEMO_MODE_KEY)){
+    var fvDash = await sb.from('fleet_vehicles').select('*').eq('fleet_id', uid).eq('active', true);
+    _fleetVehicles = fvDash.data || [];
+  }
+
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     // Reload fresh profile to get latest rating
     var {data:freshProfile} = await sb.from('profiles').select('*').eq('id', uid).maybeSingle();
@@ -3525,15 +3531,17 @@ async function loadDriverDashboard(){
 
 // Returns true if the driver (with their fleet vehicles) can handle this ride's vehicle_type
 function _driverCanHandleRide(r){
-  if(!r.vehicle_type) return true; // no requirement = any driver
-  // If fleet not loaded yet, show all rides (don't block)
-  if(!_fleetVehicles || _fleetVehicles.length === 0) return true;
+  if(!r.vehicle_type || r.vehicle_type === '') return true; // no requirement = any driver
   var _vehicleServes = {
-    lowcost: ['lowcost'],
+    lowcost:  ['lowcost'],
     business: ['lowcost','business'],
-    van: ['lowcost','business','van'],
-    luxe: ['lowcost','business','luxe']
+    van:      ['lowcost','business','van'],
+    luxe:     ['lowcost','business','luxe']
   };
+  // If fleet not loaded, only show lowcost (safest default)
+  if(!_fleetVehicles || _fleetVehicles.length === 0){
+    return r.vehicle_type === 'lowcost';
+  }
   return _fleetVehicles.some(function(v){
     var servedByVehicle = _vehicleServes[v.vehicle_class] || [v.vehicle_class];
     return servedByVehicle.indexOf(r.vehicle_type) >= 0;
