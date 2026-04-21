@@ -4258,11 +4258,15 @@ window.openRideDetail=function(el){
         var cRes = await sb.from('profiles').select('first_name,last_name').eq('id',r.client_id).maybeSingle();
         var cp = cRes.data;
         if(!cp) return;
-        var paxMatch = (r.notes||'').match(/\|pax:([^|]+)/);
+        var notesRaw = r.notes||'';
+        var paxMatch = notesRaw.match(/\|pax:([^|]+)/);
+        var noteDrvMatch = notesRaw.match(/\|note_drv:([^|]+)/);
         var cName = paxMatch ? paxMatch[1].trim() : (((cp.first_name||'')+' '+(cp.last_name||'')).trim() || '—');
+        var noteDriver = noteDrvMatch ? noteDrvMatch[1].trim() : '';
         var contactBlock = '<div style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
           +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Passager</div>'
-          +'<div style="font-weight:600;font-size:14px;">'+cName+'</div>'
+          +'<div style="font-weight:600;font-size:14px;'+(noteDriver?'margin-bottom:6px;':'')+'">'+cName+'</div>'
+          +(noteDriver?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;padding-top:4px;border-top:1px solid var(--sand2);">'+noteDriver+'</div>':'')
           +'</div>';
         bodyEl3.insertAdjacentHTML('beforeend', contactBlock);
       } catch(e){ console.warn('client contact fetch error:', e); }
