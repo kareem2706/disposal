@@ -1897,6 +1897,7 @@ body{background:var(--bg);}
   <div class="modal" style="max-width:480px;">
     <div class="modal-hd"><span class="modal-title">Ajouter un chauffeur</span><button class="close-btn" onclick="closeModal('m-driver')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body" style="padding:20px 22px;">
+      <div id="drv-validated-notice" style="display:none;padding:8px 12px;background:var(--green-bg);border-radius:var(--r);font-size:12px;color:var(--green);font-weight:500;margin-bottom:12px;">✓ Chauffeur validé — le nom ne peut plus être modifié.</div>
       <div class="form-grid"><div class="input-group"><label>Pr&eacute;nom <span style="color:var(--red)">*</span></label><input id="drv-fname" placeholder="Jean"></div><div class="input-group"><label>Nom <span style="color:var(--red)">*</span></label><input id="drv-lname" placeholder="Dupont"></div></div>
       <div class="form-grid"><div class="input-group"><label>T&eacute;l&eacute;phone</label><input id="drv-phone" type="tel" placeholder="+32 470 12 34 56"></div><div class="input-group"><label>Email</label><input id="drv-email" type="email" placeholder="jean@example.com"></div></div>
       <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
@@ -4406,7 +4407,8 @@ window.openRideDetail=function(el){
     } else if(r.status==='pending_payment'){
       ft=closeBtn;
     } else if(r.status==='confirmed'){
-      ft=trashBtn+closeBtn;
+      var pdfVoucherBtn = '<button onclick="generateRideVoucher(\''+rId+'\')" style="background:none;border:1.5px solid var(--sand3);border-radius:var(--r);padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);font-family:\'DM Sans\',sans-serif;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Voucher</button>';
+      ft=trashBtn+pdfVoucherBtn+closeBtn;
     } else if(r.status==='done'){
       var priceTagDone = r.final_price
         ? '<div style="margin-right:auto;padding:6px 12px;background:var(--green-bg);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--green);">Montant pay\u00e9\u00a0: '+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</div>'
@@ -4469,11 +4471,11 @@ window.openRideDetail=function(el){
     } else if(r.status==='confirmed'){
       var _endTime=_getRideEndTime(r);
       var _isOverdue=_endTime&&new Date()>_endTime;
+      var _missionBtn='<button onclick="generateMissionPdf(\''+rId+'\')" style="background:none;border:1.5px solid var(--sand3);border-radius:var(--r);padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);font-family:\'DM Sans\',sans-serif;margin-right:auto;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>T\u00e9l\u00e9charger mission</button>';
       if(_isOverdue){
-        ft='<div style="margin-right:auto;font-size:12px;color:var(--ink3);">Temps de course d\u00e9pass\u00e9</div>'
-          +closeBtn+'<button class="btn btn-green" onclick="completeRide(\''+rId+'\')" style="margin-left:8px;">Terminer la course</button>';
+        ft=_missionBtn+closeBtn+'<button class="btn btn-green" onclick="completeRide(\''+rId+'\')" style="margin-left:8px;">Terminer la course</button>';
       } else {
-        ft='<div style="margin-right:auto;font-size:12px;color:var(--green);font-weight:500;">\u2713 Course confirm\u00e9e</div>'+closeBtn;
+        ft=_missionBtn+closeBtn;
       }
     } else if(r.status==='personal'){
       var safeRp=JSON.stringify(r).replace(/'/g,'&#39;');
@@ -4493,6 +4495,103 @@ window.openRideDetail=function(el){
 
 var _pendingDeleteId = null;
 var _pendingDeleteRide = null;
+
+// ── PDF generation helpers ──
+function _buildPdfWindow(html){var win=window.open('','_blank');if(win){win.document.write(html);win.document.close();}}
+function _pdfBase(title,bodyHtml){
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>'+title+'</title>'
+    +'<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:"Helvetica Neue",Arial,sans-serif;color:#1A1A18;background:#fff;padding:36px;}h1{font-family:Georgia,serif;font-size:22px;letter-spacing:.1em;margin-bottom:24px;}table{width:100%;border-collapse:collapse;margin-bottom:4px;}td{padding:7px 12px;font-size:13px;border-bottom:1px solid #E8E8E8;}td:first-child{color:#777;width:38%;}td:last-child{font-weight:600;}.section{margin-bottom:22px;}.section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:8px;border-bottom:2px solid #1A1A18;padding-bottom:4px;}.footer{margin-top:40px;font-size:10px;color:#999;text-align:center;border-top:1px solid #E8E8E8;padding-top:12px;}@media print{button{display:none!important;}}</style>'
+    +'</head><body><h1>BLEENR</h1>'+bodyHtml
+    +'<div style="text-align:center;margin-top:28px;"><button onclick="window.print()" style="padding:9px 24px;background:#1A1A18;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">Imprimer / PDF</button></div>'
+    +'<div class="footer">DISPOSAL SRL — bleenr.com</div></body></html>';
+}
+
+window.generateMissionPdf = async function(rideId){
+  if(!sb) return;
+  var {data:r} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
+  if(!r) return;
+  var {data:clientP} = await sb.from('profiles').select('first_name,last_name,phone').eq('id',r.client_id).maybeSingle();
+  var {data:ofr} = await sb.from('offers').select('vehicle_id').eq('ride_id',rideId).eq('status','accepted').maybeSingle();
+  var veh=null; if(ofr&&ofr.vehicle_id){var vr=await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',ofr.vehicle_id).maybeSingle();veh=vr.data;}
+  var nR=r.notes||'';
+  var paxN=(nR.match(/\|pax:([^|]+)/)||[])[1]||''; var paxT=(nR.match(/\|tel:([^|]+)/)||[])[1]||'';
+  var noteD=(nR.match(/\|note_drv:([^|]+)/)||[])[1]||'';
+  var cln=nR.replace(/\|pax:[^|]*/g,'').replace(/\|tel:[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').trim();
+  var cName=paxN||(clientP?(((clientP.first_name||'')+' '+(clientP.last_name||'')).trim()):'');
+  var cTel=paxT||(clientP&&clientP.phone?clientP.phone:'');
+  var htva=r.final_price?parseFloat((parseFloat(r.final_price)/1.06).toFixed(2)):0;
+  var fmt=function(v){return v.toFixed(2).replace('.',',')+' \u20ac';};
+  var tLbl={ab:'Course A \u2192 B',disposal:'Mise \u00e0 disposition',mixed:'Course mixte'};
+  var body='<div class="section"><div class="section-title">Mission</div><table>'
+    +'<tr><td>R\u00e9f.</td><td>'+(r.booking_code||r.id.slice(0,8))+'</td></tr>'
+    +'<tr><td>Date</td><td>'+(r.ride_date||'')+(r.ride_time?' \u00e0 '+r.ride_time:'')+'</td></tr>'
+    +'<tr><td>Type</td><td>'+(tLbl[r.trip_type]||r.trip_type||'\u2014')+'</td></tr>'
+    +'<tr><td>D\u00e9part</td><td>'+(r.from_address||'\u2014')+'</td></tr>'
+    +(r.to_address?'<tr><td>Arriv\u00e9e</td><td>'+r.to_address+'</td></tr>':'')
+    +'<tr><td>Passagers</td><td>'+(r.passengers||1)+'</td></tr>'
+    +'<tr><td>Gamme</td><td>'+(r.vehicle_type||'\u2014')+'</td></tr>'
+    +'</table></div>'
+    +'<div class="section"><div class="section-title">Passager</div><table>'
+    +(cName?'<tr><td>Nom</td><td>'+cName+'</td></tr>':'')
+    +(cTel?'<tr><td>T\u00e9l\u00e9phone</td><td>'+cTel+'</td></tr>':'')
+    +(cln?'<tr><td>Note client</td><td>'+cln+'</td></tr>':'')
+    +(noteD?'<tr><td>Note sp\u00e9ciale</td><td>'+noteD+'</td></tr>':'')
+    +'</table></div>'
+    +(veh?'<div class="section"><div class="section-title">V\u00e9hicule</div><table>'
+      +'<tr><td>V\u00e9hicule</td><td>'+(veh.brand||'')+' '+(veh.model||'')+'</td></tr>'
+      +(veh.color?'<tr><td>Couleur</td><td>'+veh.color+'</td></tr>':'')
+      +(veh.plate?'<tr><td>Plaque</td><td>'+veh.plate+'</td></tr>':'')
+      +'</table></div>':'')
+    +(r.final_price?'<div class="section"><div class="section-title">Prix</div><table>'
+      +'<tr><td>Prix HTVA</td><td>'+fmt(htva)+'</td></tr>'
+      +'<tr><td>TVA 6%</td><td>'+fmt(parseFloat(r.final_price)-htva)+'</td></tr>'
+      +'<tr><td>Total TVAC</td><td>'+fmt(parseFloat(r.final_price))+'</td></tr>'
+      +'</table></div>':'');
+  _buildPdfWindow(_pdfBase('Mission \u2014 '+(r.booking_code||rideId.slice(0,8)),body));
+};
+
+window.generateRideVoucher = async function(rideId){
+  if(!sb) return;
+  var {data:r} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
+  if(!r) return;
+  var {data:ofr} = await sb.from('offers').select('vehicle_id').eq('ride_id',rideId).eq('status','accepted').maybeSingle();
+  var veh=null; if(ofr&&ofr.vehicle_id){var vr=await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',ofr.vehicle_id).maybeSingle();veh=vr.data;}
+  var {data:dP} = r.driver_id ? await sb.from('profiles').select('first_name,last_name').eq('id',r.driver_id).maybeSingle() : {data:null};
+  var nR=r.notes||'';
+  var paxN=(nR.match(/\|pax:([^|]+)/)||[])[1]||''; var paxT=(nR.match(/\|tel:([^|]+)/)||[])[1]||'';
+  var noteD=(nR.match(/\|note_drv:([^|]+)/)||[])[1]||'';
+  var cName=paxN||(currentProfile?(((currentProfile.first_name||'')+' '+(currentProfile.last_name||'')).trim()):'');
+  var cTel=paxT||(currentProfile&&currentProfile.phone?currentProfile.phone:'');
+  var htva=r.final_price?parseFloat((parseFloat(r.final_price)/1.06).toFixed(2)):0;
+  var fmt=function(v){return v.toFixed(2).replace('.',',')+' \u20ac';};
+  var tLbl={ab:'Course A \u2192 B',disposal:'Mise \u00e0 disposition',mixed:'Course mixte'};
+  var body='<div style="font-size:12px;color:#888;margin-bottom:20px;">Voucher de transport \u2014 '+(new Date().toLocaleDateString('fr-BE',{day:'2-digit',month:'long',year:'numeric'}))+'</div>'
+    +'<div class="section"><div class="section-title">R\u00e9servation</div><table>'
+    +'<tr><td>R\u00e9f.</td><td>'+(r.booking_code||r.id.slice(0,8))+'</td></tr>'
+    +'<tr><td>Date</td><td>'+(r.ride_date||'')+(r.ride_time?' \u00e0 '+r.ride_time:'')+'</td></tr>'
+    +'<tr><td>Type</td><td>'+(tLbl[r.trip_type]||r.trip_type||'\u2014')+'</td></tr>'
+    +'<tr><td>D\u00e9part</td><td>'+(r.from_address||'\u2014')+'</td></tr>'
+    +(r.to_address?'<tr><td>Arriv\u00e9e</td><td>'+r.to_address+'</td></tr>':'')
+    +'<tr><td>Passagers</td><td>'+(r.passengers||1)+'</td></tr>'
+    +'<tr><td>Gamme</td><td>'+(r.vehicle_type||'\u2014')+'</td></tr>'
+    +'</table></div>'
+    +'<div class="section"><div class="section-title">Passager</div><table>'
+    +(cName?'<tr><td>Nom</td><td>'+cName+'</td></tr>':'')
+    +(cTel?'<tr><td>T\u00e9l\u00e9phone</td><td>'+cTel+'</td></tr>':'')
+    +(noteD?'<tr><td>Note au chauffeur</td><td>'+noteD+'</td></tr>':'')
+    +'</table></div>'
+    +(dP||veh?'<div class="section"><div class="section-title">Chauffeur &amp; V\u00e9hicule</div><table>'
+      +(dP?'<tr><td>Chauffeur</td><td>'+(((dP.first_name||'')+' '+(dP.last_name||'')).trim()||'\u2014')+'</td></tr>':'')
+      +(veh?'<tr><td>V\u00e9hicule</td><td>'+(veh.brand||'')+' '+(veh.model||'')+(veh.color?' \u2014 '+veh.color:'')+'</td></tr>':'')
+      +(veh&&veh.plate?'<tr><td>Plaque</td><td>'+veh.plate+'</td></tr>':'')
+      +'</table></div>':'')
+    +(r.final_price?'<div class="section"><div class="section-title">Prix</div><table>'
+      +'<tr><td>Prix HTVA</td><td>'+fmt(htva)+'</td></tr>'
+      +'<tr><td>TVA 6%</td><td>'+fmt(parseFloat(r.final_price)-htva)+'</td></tr>'
+      +'<tr><td>Total TVAC</td><td>'+fmt(parseFloat(r.final_price))+'</td></tr>'
+      +'</table></div>':'');
+  _buildPdfWindow(_pdfBase('Voucher \u2014 '+(r.booking_code||rideId.slice(0,8)),body));
+};
 
 window.completeRide=async function(rideId){
   if(!sb)return;
@@ -7108,16 +7207,6 @@ window.editDriver=async function(id){
   set('drv-email',d.email||'',false);
   // Show/hide validated notice
   var notice=document.getElementById('drv-validated-notice');
-  if(!notice){
-    var errEl2=document.getElementById('drv-err');
-    if(errEl2){
-      var n=document.createElement('div');n.id='drv-validated-notice';
-      n.style.cssText='padding:8px 12px;background:var(--green-bg);border-radius:var(--r);font-size:12px;color:var(--green);font-weight:500;margin-bottom:10px;display:none;';
-      n.textContent='✓ Chauffeur validé — le nom ne peut plus être modifié.';
-      errEl2.insertAdjacentElement('afterend',n);
-    }
-    notice=document.getElementById('drv-validated-notice');
-  }
   if(notice) notice.style.display=isValidated?'block':'none';
   // Load existing docs
   var drvDocMap={permis_conduire:'drv-doc-permis',carte_vtc:'drv-doc-vtc'};
