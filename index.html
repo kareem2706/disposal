@@ -6288,14 +6288,14 @@ window.savePersonalMission=async function(btn){
 
 // ── Rating functions ──
 // ── Passenger info edit helpers ──
-function _paxModalHtml(title, fields, saveCall){
+function _paxModalHtml(title, fields, saveType, rideId){
   return '<div id="m-pax-edit" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)this.remove();">'
     +'<div style="background:var(--white);border-radius:16px 16px 0 0;padding:24px 22px 32px;width:100%;max-width:520px;box-shadow:0 -4px 24px rgba(0,0,0,.12);">'
       +'<div style="font-size:15px;font-weight:700;margin-bottom:16px;">'+title+'</div>'
       +fields
       +'<div style="display:flex;gap:8px;margin-top:16px;">'
         +'<button class="btn btn-secondary" style="flex:1;" onclick="document.getElementById(\'m-pax-edit\').remove()">Annuler</button>'
-        +'<button class="btn btn-primary" style="flex:1;" onclick="'+saveCall+'">Enregistrer</button>'
+        +'<button class="btn btn-primary" style="flex:1;" id="btn-pax-save" data-type="'+saveType+'" data-rid="'+rideId+'">Enregistrer</button>'
       +'</div>'
     +'</div>'
   +'</div>';
@@ -6304,17 +6304,26 @@ function _paxModalHtml(title, fields, saveCall){
 window.openPaxEdit = function(rideId, currentName, currentPhone){
   var existing = document.getElementById('m-pax-edit'); if(existing) existing.remove();
   var fields = '<div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Nom du passager</label>'
-    +'<input id="pax-edit-name" type="text" value="'+currentName+'" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;" placeholder="Nom Prénom"></div>'
+    +'<input id="pax-edit-name" type="text" value="'+currentName.replace(/"/g,'&quot;')+'" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;" placeholder="Nom Prénom"></div>'
     +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Numéro de téléphone</label>'
-    +'<input id="pax-edit-phone" type="tel" value="'+currentPhone+'" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;" placeholder="+32 ..."></div>';
-  document.body.insertAdjacentHTML('beforeend', _paxModalHtml('Modifier le passager', fields, 'savePaxInfo("'+rideId+'")'));
+    +'<input id="pax-edit-phone" type="tel" value="'+currentPhone.replace(/"/g,'&quot;')+'" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;" placeholder="+32 ..."></div>';
+  document.body.insertAdjacentHTML('beforeend', _paxModalHtml('Modifier le passager', fields, 'pax', rideId));
+  setTimeout(function(){
+    var btn = document.getElementById('btn-pax-save');
+    if(btn) btn.addEventListener('click', function(){ savePaxInfo(this.dataset.rid); });
+  }, 10);
 };
 
 window.openNoteEdit = function(rideId, currentNote){
   var existing = document.getElementById('m-pax-edit'); if(existing) existing.remove();
+  var safeNote = (currentNote||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   var fields = '<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Note au chauffeur</label>'
-    +'<textarea id="pax-edit-note" rows="3" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;resize:none;" placeholder="Ex: Merci d\'attendre devant l\'entrée principale">'+currentNote+'</textarea></div>';
-  document.body.insertAdjacentHTML('beforeend', _paxModalHtml('Note au chauffeur', fields, 'saveNoteInfo("'+rideId+'")'));
+    +'<textarea id="pax-edit-note" rows="3" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;resize:none;" placeholder="Ex: Merci d\'attendre devant l\'entrée principale">'+safeNote+'</textarea></div>';
+  document.body.insertAdjacentHTML('beforeend', _paxModalHtml('Note au chauffeur', fields, 'note', rideId));
+  setTimeout(function(){
+    var btn = document.getElementById('btn-pax-save');
+    if(btn) btn.addEventListener('click', function(){ saveNoteInfo(this.dataset.rid); });
+  }, 10);
 };
 
 window.savePaxInfo = async function(rideId){
