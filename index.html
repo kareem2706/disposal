@@ -3699,9 +3699,10 @@ async function loadMissions(){
 
 window.saveProfile = async function(){
   var gv=function(id){var e=document.getElementById(id);return e?e.value.trim():'';};
+  var isValidatedDriver = (currentProfile?.role==='driver' || currentRole==='driver') && currentProfile?.fleet_verified==='validated';
   const updates = {
-    first_name:      gv('pf-fname'),
-    last_name:       gv('pf-lname'),
+    first_name:      isValidatedDriver ? undefined : gv('pf-fname'),
+    last_name:       isValidatedDriver ? undefined : gv('pf-lname'),
     phone:           gv('pf-phone'),
     vat_number:      gv('pf-vat'),
     address_street:  gv('pf-street'),
@@ -6610,6 +6611,23 @@ function loadProfileForm(){
   var fleetSec=document.getElementById('pf-fleet-sections');
   if(fleetSec) fleetSec.style.display=(role==='driver'?'block':'none');
   if(role==='driver') loadFleetProfile();
+  // Lock first/last name if driver is validated
+  if(role==='driver'){
+    var isVerified = currentProfile.fleet_verified==='validated';
+    var fnEl=document.getElementById('pf-fname');
+    var lnEl=document.getElementById('pf-lname');
+    if(fnEl){fnEl.disabled=isVerified;fnEl.style.opacity=isVerified?'0.5':'1';fnEl.style.cursor=isVerified?'not-allowed':'text';}
+    if(lnEl){lnEl.disabled=isVerified;lnEl.style.opacity=isVerified?'0.5':'1';lnEl.style.cursor=isVerified?'not-allowed':'text';}
+    // Show notice under name fields
+    var nameGrid=document.getElementById('pf-names-grid');
+    var verNotice=document.getElementById('pf-verified-notice');
+    if(nameGrid && isVerified && !verNotice){
+      var n=document.createElement('div');n.id='pf-verified-notice';
+      n.style.cssText='font-size:11px;color:var(--green);font-weight:500;margin-top:4px;';
+      n.textContent='✓ Profil validé — le nom ne peut plus être modifié.';
+      nameGrid.insertAdjacentElement('afterend',n);
+    } else if(verNotice){ verNotice.style.display=isVerified?'block':'none'; }
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -6872,7 +6890,10 @@ async function loadFleetVehicles(){
       +'<div style="font-size:11px;color:var(--ink4);">'+(v.color||'')+' \u00b7 '+(classLabels[v.vehicle_class]||v.vehicle_class)+(v.plate?' \u00b7 '+v.plate:'')+'</div>'
       +amenHtml+docsHtml+'</div>'
       +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
-      +'<button style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:2px;" title="Modifier" onclick="editVehicle(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+      +(vStatus==='validated'
+        ? '<button style="background:none;border:none;color:var(--blue);cursor:pointer;padding:2px;font-size:11px;font-family:\'DM Sans\',sans-serif;font-weight:600;" title="Modifier les documents" onclick="editVehicle(\''+safeId+'\',true)">Documents</button>'
+        : '<button style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:2px;" title="Modifier" onclick="editVehicle(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+      )
       +'<button style="background:none;border:none;color:var(--red);cursor:pointer;padding:2px;" title="Supprimer" onclick="deleteVehicle(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>'
       +'</div></div>';
   }).join('');
@@ -6880,7 +6901,12 @@ async function loadFleetVehicles(){
 
 window.openVehicleModal=function(){
   window._editVehicleId=null;
+  window._editVehicleDocsOnly=false;
   var titleEl=document.querySelector('#m-vehicle .modal-title');if(titleEl)titleEl.textContent='Ajouter un v\u00e9hicule';
+  // Re-enable all fields
+  ['veh-brand','veh-model','veh-year','veh-color','veh-plate','veh-class'].forEach(function(id){var e=document.getElementById(id);if(e)e.disabled=false;});
+  ['electric','hybrid','wifi','water','snacks'].forEach(function(a){var cb=document.getElementById('veh-amen-'+a);if(cb)cb.disabled=false;});
+  var notice=document.getElementById('veh-validated-notice');if(notice)notice.style.display='none';
   populateVehBrands();
   ['veh-year','veh-color','veh-plate'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
   var brand=document.getElementById('veh-brand');if(brand)brand.value='';
@@ -6941,20 +6967,37 @@ window.saveVehicle=async function(){
   }catch(e){showError(errEl,e.message||'Erreur');}
 };
 
-window.editVehicle=async function(id){
+window.editVehicle=async function(id, docsOnly){
   var v=_fleetVehicles.find(function(x){return x.id===id;});
   if(!v)return;
+  var isValidated = docsOnly || v.status==='validated';
   populateVehBrands();
-  var brandEl=document.getElementById('veh-brand');if(brandEl)brandEl.value=v.brand;
+  var brandEl=document.getElementById('veh-brand');if(brandEl){brandEl.value=v.brand;brandEl.disabled=isValidated;}
   populateVehModels();
-  var modelEl=document.getElementById('veh-model');if(modelEl)modelEl.value=v.model;
-  var set=function(sid,val){var e=document.getElementById(sid);if(e)e.value=val||'';};
-  set('veh-year',v.year||'');set('veh-color',v.color||'');set('veh-plate',v.plate||'');
-  var cls=document.getElementById('veh-class');if(cls)cls.value=v.vehicle_class||'lowcost';
-  // Restore amenities
+  var modelEl=document.getElementById('veh-model');if(modelEl){modelEl.value=v.model;modelEl.disabled=isValidated;}
+  var setField=function(sid,val){var e=document.getElementById(sid);if(e){e.value=val||'';e.disabled=isValidated;}};
+  setField('veh-year',v.year||'');setField('veh-color',v.color||'');setField('veh-plate',v.plate||'');
+  var cls=document.getElementById('veh-class');if(cls){cls.value=v.vehicle_class||'lowcost';cls.disabled=isValidated;}
+  // Amenities
   var vAmen=v.amenities||[];
-  ['electric','hybrid','wifi','water','snacks'].forEach(function(a){var cb=document.getElementById('veh-amen-'+a);if(cb)cb.checked=vAmen.indexOf(a)>=0;});
-  // Load existing docs and show which are already uploaded
+  ['electric','hybrid','wifi','water','snacks'].forEach(function(a){
+    var cb=document.getElementById('veh-amen-'+a);
+    if(cb){cb.checked=vAmen.indexOf(a)>=0;cb.disabled=isValidated;}
+  });
+  // Show validated notice
+  var noticeEl=document.getElementById('veh-validated-notice');
+  if(!noticeEl){
+    var form=document.querySelector('#m-vehicle .modal-body');
+    if(form){
+      var n=document.createElement('div');n.id='veh-validated-notice';
+      n.style.cssText='padding:8px 12px;background:var(--green-bg);border-radius:var(--r);font-size:12px;color:var(--green);font-weight:500;margin-bottom:12px;';
+      n.textContent='✓ Véhicule validé — seuls les documents peuvent être modifiés.';
+      form.prepend(n);
+    }
+  } else {
+    noticeEl.style.display = isValidated ? 'block' : 'none';
+  }
+  // Docs
   var vehDocMap={carte_grise:'veh-doc-cg',assurance:'veh-doc-assurance',controle_technique:'veh-doc-ct',vignette_identification:'veh-doc-vignette'};
   var {data:existDocs}=await sb.from('vehicle_documents').select('*').eq('vehicle_id',id);
   var uploadedTypes={};
@@ -6977,13 +7020,15 @@ window.editVehicle=async function(id){
       tag.textContent='\u2713 D\u00e9j\u00e0 ajout\u00e9';
       wrap.appendChild(tag);
     } else {
-      fi.style.display='';fi.value='';
+      fi.style.display='';fi.value='';fi.disabled=false;
       var existTag=wrap.querySelector('.doc-exists-tag');
       if(existTag)existTag.remove();
     }
   });
   window._editVehicleId=id;
-  var titleEl=document.querySelector('#m-vehicle .modal-title');if(titleEl)titleEl.textContent='Modifier le v\u00e9hicule';
+  window._editVehicleDocsOnly=isValidated;
+  var titleEl=document.querySelector('#m-vehicle .modal-title');
+  if(titleEl)titleEl.textContent=isValidated?'Documents du v\u00e9hicule':'Modifier le v\u00e9hicule';
   openModal('m-vehicle');
 };
 
