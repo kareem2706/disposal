@@ -4029,7 +4029,7 @@ function _buildRideDetailBody(r, opts){
   if(cleanNotes){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div></div>';}
   var noteDrvMatch = rawNotes.match(/\|note_drv:([^|]+)/);
   if(noteDrvMatch){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">Note du client</div><div style="padding:12px;background:var(--blue-bg);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;">'+noteDrvMatch[1].trim()+'</div></div>';}
-  if(r.is_subcontract&&r.final_price){body+='<div style="padding:10px 14px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><span style="font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9 : '+parseFloat(r.final_price).toFixed(0)+'\u20ac</span></div>';}
+  if(r.is_subcontract&&r.final_price){body+='<div style="padding:10px 14px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><span style="font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9 : '+parseFloat(r.final_price).toFixed(0)+' € HTVA</span></div>';}
   return {html:body, isMixed:isMixed, isDisp:isDisp, mixedSegs:mixedSegs};
 }
 function _triggerDistanceMatrix(r, result, idPrefix){
@@ -4169,7 +4169,7 @@ window.openRideDetail=function(el){
   if(r.is_subcontract&&r.final_price){
     body+='<div style="padding:10px 14px;background:var(--amber-bg);border-radius:var(--r);display:flex;align-items:center;gap:8px;">'
       +'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>'
-      +'<span style="font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9 : '+parseFloat(r.final_price).toFixed(0)+' \u20ac HTVA</span>'
+      +'<span style="font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9 : '+parseFloat(r.final_price).toFixed(0)+' € HTVA</span>'
       +'</div>';
   }
 
@@ -4448,7 +4448,7 @@ window.openRideDetail=function(el){
         ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler la sous-traitance</button>'+closeBtn;
       } else if(isExtSub){
         var subPriceLbl=r.final_price?parseFloat(r.final_price).toFixed(0)+'\u20ac':'';
-        var priceLeft=r.final_price?'<div style="margin-right:auto;font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9\u00a0: '+parseFloat(r.final_price).toFixed(0)+'\u00a0\u20ac HTVA</div>':'<div style="margin-right:auto;"></div>';
+        var priceLeft=r.final_price?'<div style="margin-right:auto;font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9\u00a0: '+parseFloat(r.final_price).toFixed(0)+' € HTVA</div>':'<div style="margin-right:auto;"></div>';
         ft=priceLeft+closeBtn+'<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')">Accepter</button>';
       } else if(hasMyOffer){
         ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre \u00e0 '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'+closeBtn;
@@ -4463,7 +4463,7 @@ window.openRideDetail=function(el){
         ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre \u00e0 '+parseFloat(hasMyOffer2.price).toFixed(0)+'\u20ac</div>'+closeBtn;
       } else if(isExtSub2){
         var subPriceLbl2=r.final_price?parseFloat(r.final_price).toFixed(0)+'\u20ac':'';
-        var priceLeft2=r.final_price?'<div style="margin-right:auto;font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9\u00a0: '+parseFloat(r.final_price).toFixed(0)+'\u00a0\u20ac HTVA</div>':'<div style="margin-right:auto;"></div>';
+        var priceLeft2=r.final_price?'<div style="margin-right:auto;font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9\u00a0: '+parseFloat(r.final_price).toFixed(0)+' € HTVA</div>':'<div style="margin-right:auto;"></div>';
         ft=priceLeft2+closeBtn+'<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')">Accepter</button>';
       } else if(isOwnSub2){
         ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">Annuler</button>'+closeBtn;
@@ -4485,7 +4485,11 @@ window.openRideDetail=function(el){
         +'<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:4px;" onclick="closeModal(\'m-ride-detail\');_editPersonalFromDetail()" data-ride=\''+safeRp+'\'><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Modifier</button>'
         +closeBtn;
     } else {
-      ft=closeBtn;
+      // For subcontract rides (done/cancelled etc.) — show price left
+      var subDonePrice = (r.is_subcontract && r.final_price)
+        ? '<div style="margin-right:auto;padding:6px 12px;background:var(--amber-bg);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9\u00a0: '+parseFloat(r.final_price).toFixed(0)+' € HTVA</div>'
+        : '';
+      ft=(subDonePrice||'')+closeBtn;
     }
   }
   var ftEl=document.getElementById('detail-ft');if(ftEl)ftEl.innerHTML=ft;
