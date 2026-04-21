@@ -3523,7 +3523,27 @@ async function loadDriverDashboard(){
   if(badgeEl){ badgeEl.style.display = 'none'; }
 
 
-  var latestPending = pending.slice().sort(function(a,b){
+// Returns true if the driver (with their fleet vehicles) can handle this ride's vehicle_type
+function _driverCanHandleRide(r){
+  if(!r.vehicle_type) return true; // no requirement = any driver
+  var allowed = _classCompat[r.vehicle_type] || [r.vehicle_type];
+  // Driver must have at least one validated vehicle whose class is in allowed list
+  // Also check reverse: which ride classes a vehicle_class can serve (per image table)
+  // vehicle can serve: itself + lower classes
+  var _vehicleServes = {
+    lowcost: ['lowcost'],
+    business: ['lowcost','business'],
+    van: ['lowcost','business','van'],
+    luxe: ['lowcost','business','luxe']
+  };
+  return _fleetVehicles.some(function(v){
+    if(v.status !== 'validated') return false;
+    var servedByVehicle = _vehicleServes[v.vehicle_class] || [v.vehicle_class];
+    return servedByVehicle.indexOf(r.vehicle_type) >= 0;
+  });
+}
+
+  var latestPending = pending.filter(_driverCanHandleRide).slice().sort(function(a,b){
     return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||''));
   });
   document.getElementById('driver-latest-requests').innerHTML = latestPending.length
@@ -3586,8 +3606,8 @@ async function loadMarketplace(){
     mySubRides = ms.data || [];
   }
 
-  document.getElementById('mk-client').innerHTML = clientRides.length
-    ? clientRides.map(r => renderMkItem(r)).join('')
+  document.getElementById('mk-client').innerHTML = clientRides.filter(_driverCanHandleRide).length
+    ? clientRides.filter(_driverCanHandleRide).map(r => renderMkItem(r)).join('')
     : `<div class="empty-state"><p class="empty-text">${t('empty_marketplace')}</p></div>`;
 
   // Filter out my own subcontracts from the shared tab
