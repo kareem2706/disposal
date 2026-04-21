@@ -1269,9 +1269,11 @@ body{background:var(--bg);}
       <div class="mktabs">
         <button class="mktab active" id="mstab-upcoming" onclick="msSwitch(this,'ms-upcoming')">Missions à venir</button>
         <button class="mktab" id="mstab-done" onclick="msSwitch(this,'ms-done')">Missions terminées</button>
+        <button class="mktab" id="mstab-cancelled" onclick="msSwitch(this,'ms-cancelled')">Annulées</button>
       </div>
       <div id="ms-upcoming"><div class="page-loading"><div class="page-spinner"></div></div></div>
       <div class="card" id="ms-done" style="display:none;"><div class="page-loading"><div class="page-spinner"></div></div></div>
+      <div class="card" id="ms-cancelled" style="display:none;"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
 
     <!-- SHARED: PROFILE -->
@@ -3596,7 +3598,7 @@ window.mkSwitch = function(btn, target){
 window.msSwitch = function(btn, target){
   document.querySelectorAll('#page-missions .mktab').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
-  ['ms-upcoming','ms-done'].forEach(function(id){
+  ['ms-upcoming','ms-done','ms-cancelled'].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.style.display = id===target ? 'block' : 'none';
   });
@@ -3604,8 +3606,9 @@ window.msSwitch = function(btn, target){
 
 async function loadMissions(){
   let missions = [];
+  const MISSIONS_ALL = [...MISSION_STATUSES, 'cancelled'];
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
-    const { data } = await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSION_STATUSES).order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
+    const { data } = await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSIONS_ALL).order('ride_date',{ascending:false}).order('ride_time',{ascending:false});
     missions = data || [];
 
     // Also find rides via accepted offers (in case driver_id wasn't set on ride)
@@ -3615,7 +3618,7 @@ async function loadMissions(){
       var existingIds=missions.map(function(r){return r.id;});
       var missingIds=acceptedRideIds.filter(function(id){return existingIds.indexOf(id)<0;});
       if(missingIds.length>0){
-        var {data:extraRides}=await sb.from('rides').select('*').in('id',missingIds).in('status',MISSION_STATUSES);
+        var {data:extraRides}=await sb.from('rides').select('*').in('id',missingIds).in('status',MISSIONS_ALL);
         if(extraRides)missions=missions.concat(extraRides);
       }
     }
@@ -3624,16 +3627,16 @@ async function loadMissions(){
     var confirmedMissions=missions.filter(function(r){return r.status==='confirmed';});
     if(confirmedMissions.length>0){
       await _autoCompleteOverdueRides(confirmedMissions);
-      // Re-fetch after auto-complete
-      var refreshed=await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSION_STATUSES).order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
+      var refreshed=await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSIONS_ALL).order('ride_date',{ascending:false}).order('ride_time',{ascending:false});
       missions=refreshed.data||[];
     }
   } else {
-    missions = getDemoMissions().filter(r => MISSION_STATUSES.includes(r.status));
+    missions = getDemoMissions().filter(r => MISSIONS_ALL.includes(r.status));
   }
 
-  const upcoming = missions.filter(function(r){return r.status==='confirmed'||r.status==='active';});
-  const done     = missions.filter(function(r){return r.status==='done';});
+  const upcoming   = missions.filter(function(r){return r.status==='confirmed'||r.status==='active';});
+  const done       = missions.filter(function(r){return r.status==='done';});
+  const cancelled  = missions.filter(function(r){return r.status==='cancelled';});
 
   document.getElementById('ms-upcoming').innerHTML = upcoming.length
     ? upcoming.map(r => renderRideItem(r)).join('')
@@ -3642,6 +3645,10 @@ async function loadMissions(){
   document.getElementById('ms-done').innerHTML = done.length
     ? done.map(r => renderRideItem(r)).join('')
     : '<div class="empty-state"><p class="empty-text">Aucune mission terminée</p></div>';
+
+  document.getElementById('ms-cancelled').innerHTML = cancelled.length
+    ? cancelled.map(r => renderRideItem(r)).join('')
+    : '<div class="empty-state"><p class="empty-text">Aucune mission annulée</p></div>';
 }
 
 // PROFILE
