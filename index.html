@@ -1152,11 +1152,11 @@ body{background:var(--bg);}
           <button onclick="calNextMonth()" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--r);color:var(--ink3);flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid var(--sand2);">
-          <button onclick="calSetFilter('')" id="cal-f-all" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;">Tout</button>
-          <button onclick="calSetFilter('confirmed')" id="cal-f-confirmed" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Confirmées</button>
-          <button onclick="calSetFilter('done')" id="cal-f-done" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Terminées</button>
-          <button onclick="calSetFilter('waiting')" id="cal-f-waiting" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">En attente</button>
-          <button onclick="calSetFilter('cancelled')" id="cal-f-cancelled" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Annulées</button>
+          <button onclick="calSetFilter('')" id="cal-f-all" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1.5px solid var(--green);background:var(--green);color:#fff;">Tout</button>
+          <button onclick="calSetFilter('confirmed')" id="cal-f-confirmed" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1.5px solid var(--green);background:var(--green-bg);color:var(--green);">Confirmées</button>
+          <button onclick="calSetFilter('done')" id="cal-f-done" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1.5px solid var(--sand3);background:var(--sand2);color:var(--ink4);">Terminées</button>
+          <button onclick="calSetFilter('waiting')" id="cal-f-waiting" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1.5px solid var(--amber);background:var(--amber-bg);color:var(--amber);">En attente</button>
+          <button onclick="calSetFilter('cancelled')" id="cal-f-cancelled" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1.5px solid var(--red);background:var(--red-bg);color:var(--red);">Annulées</button>
         </div>
         <div id="cal-grid" style="padding:12px 16px 16px;"></div>
       </div>
@@ -1182,11 +1182,11 @@ body{background:var(--bg);}
           <button onclick="dCalNext()" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--r);color:var(--ink3);flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 16px;border-bottom:1px solid var(--sand2);">
-          <button onclick="dCalSetFilter('')" id="dcal-f-all" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;">Tout</button>
-          <button onclick="dCalSetFilter('confirmed')" id="dcal-f-confirmed" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Confirmées</button>
-          <button onclick="dCalSetFilter('done')" id="dcal-f-done" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Terminées</button>
-          <button onclick="dCalSetFilter('personal')" id="dcal-f-personal" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Personnelles</button>
-          <button onclick="dCalSetFilter('cancelled')" id="dcal-f-cancelled" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid var(--sand3);background:transparent;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;">Annulées</button>
+          <button onclick="dCalSetFilter('')" id="dcal-f-all" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1.5px solid var(--green);background:var(--green);color:#fff;">Tout</button>
+          <button onclick="dCalSetFilter('confirmed')" id="dcal-f-confirmed" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1.5px solid var(--green);background:var(--green-bg);color:var(--green);">Confirmées</button>
+          <button onclick="dCalSetFilter('done')" id="dcal-f-done" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1.5px solid var(--sand3);background:var(--sand2);color:var(--ink4);">Terminées</button>
+          <button onclick="dCalSetFilter('personal')" id="dcal-f-personal" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1.5px solid #6750A4;background:#E8DEF8;color:#6750A4;">Personnelles</button>
+          <button onclick="dCalSetFilter('cancelled')" id="dcal-f-cancelled" style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:pointer;font-family:'DM Sans',sans-serif;border:1.5px solid var(--red);background:var(--red-bg);color:var(--red);">Annulées</button>
         </div>
         <div id="d-cal-grid" style="padding:12px 16px 16px;"></div>
       </div>
@@ -5860,10 +5860,22 @@ window.calNextMonth=function(){if(_calView==='week'){var d=new Date(_calWS);d.se
 window.calSetView=function(view,ds){if(!view)return;_calView=view;document.querySelectorAll('.cal-view-btn').forEach(function(b){b.classList.toggle('cal-view-active',b.dataset.view===view);});if(view==='week'){var d=new Date((ds||new Date().toISOString().split('T')[0])+'T00:00:00');var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_calWS=d;_calM=d.getMonth();_calY=d.getFullYear();}loadCalendar(true);};
 window.calSetFilter=function(status){
   _calFilter=status;
-  // Update button styles
+  var _calColors={
+    '':    {bg:'var(--green)',   border:'var(--green)',   color:'#fff'},
+    'confirmed': {bg:'var(--green-bg)', border:'var(--green)',   color:'var(--green)'},
+    'done':      {bg:'var(--sand2)',    border:'var(--sand3)',   color:'var(--ink4)'},
+    'waiting':   {bg:'var(--amber-bg)',  border:'var(--amber)',   color:'var(--amber)'},
+    'cancelled': {bg:'var(--red-bg)',   border:'var(--red)',     color:'var(--red)'}
+  };
   ['','confirmed','done','waiting','cancelled'].forEach(function(s){
     var btn=document.getElementById('cal-f-'+(s||'all'));
-    if(btn){btn.style.background=(_calFilter===s)?'var(--ink)':'transparent';btn.style.color=(_calFilter===s)?'#fff':'var(--ink3)';btn.style.borderColor=(_calFilter===s)?'var(--ink)':'var(--sand3)';}
+    if(!btn) return;
+    var c=_calColors[s]||_calColors[''];
+    var active=(_calFilter===s);
+    btn.style.background = active ? c.border : c.bg;
+    btn.style.color      = active ? (s===''?'#fff': c.color) : c.color;
+    btn.style.borderColor= c.border;
+    btn.style.opacity    = active ? '1' : '0.55';
   });
   loadCalendar(false);
 };
@@ -5887,9 +5899,22 @@ window.dCalNext=function(){if(_dCalView==='week'){var d=new Date(_dCalWS);d.setD
 window.dCalView=function(view,ds){if(!view)return;_dCalView=view;document.querySelectorAll('.d-cal-vbtn').forEach(function(b){b.classList.toggle('d-cal-vactive',b.dataset.view===view);});if(view==='week'){var d=new Date((ds||new Date().toISOString().split('T')[0])+'T00:00:00');var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_dCalWS=d;_dCalM=d.getMonth();_dCalY=d.getFullYear();}loadDriverCalendar(true);};
 window.dCalSetFilter=function(status){
   _dCalFilter=status;
+  var _dCalColors={
+    '':          {bg:'var(--green)',   border:'var(--green)',   color:'#fff'},
+    'confirmed': {bg:'var(--green-bg)', border:'var(--green)',  color:'var(--green)'},
+    'done':      {bg:'var(--sand2)',   border:'var(--sand3)',   color:'var(--ink4)'},
+    'personal':  {bg:'#E8DEF8',        border:'#6750A4',        color:'#6750A4'},
+    'cancelled': {bg:'var(--red-bg)',  border:'var(--red)',     color:'var(--red)'}
+  };
   ['','confirmed','done','personal','cancelled'].forEach(function(s){
     var btn=document.getElementById('dcal-f-'+(s||'all'));
-    if(btn){btn.style.background=(_dCalFilter===s)?'var(--ink)':'transparent';btn.style.color=(_dCalFilter===s)?'#fff':'var(--ink3)';btn.style.borderColor=(_dCalFilter===s)?'var(--ink)':'var(--sand3)';}
+    if(!btn) return;
+    var c=_dCalColors[s]||_dCalColors[''];
+    var active=(_dCalFilter===s);
+    btn.style.background = active ? c.border : c.bg;
+    btn.style.color      = active ? (s===''?'#fff': c.color) : c.color;
+    btn.style.borderColor= c.border;
+    btn.style.opacity    = active ? '1' : '0.55';
   });
   loadDriverCalendar(false);
 };
