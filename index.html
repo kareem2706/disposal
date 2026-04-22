@@ -811,10 +811,10 @@ body{background:var(--bg);}
 
       <div class="auth-or"><span data-i18n="auth_or">ou</span></div>
 
-      <!-- Method selector -->
+      <!-- Method selector — phone disabled -->
       <div class="method-tabs" style="margin-bottom:14px;">
         <button class="method-tab active" id="mtab-email" data-i18n="auth_email" onclick="authMethod('email')">Email</button>
-        <button class="method-tab" id="mtab-phone" data-i18n="auth_phone" onclick="authMethod('phone')">T&eacute;l&eacute;phone</button>
+        <button class="method-tab" id="mtab-phone" data-i18n="auth_phone" onclick="authMethod('phone')" style="display:none;">T&eacute;l&eacute;phone</button>
       </div>
 
       <!-- Email panel -->
