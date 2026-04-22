@@ -2943,6 +2943,9 @@ function enterApp(){
   // Handle Stripe return if coming back from checkout
   if(window._stripePendingReturn){
     var _sr = window._stripePendingReturn;
+    // cancel is handled by the self-contained overlay — ignore it here
+    if(_sr.status === 'cancel'){ window._stripePendingReturn = null; }
+    else {
     window._stripePendingReturn = null;
     setTimeout(async function(){
       if(_sr.status==='success' && _sr.ride && _sr.offer && sb){
@@ -2961,8 +2964,8 @@ function enterApp(){
         if(typeof loadClientDashboard==='function') await loadClientDashboard();
         showPaymentResult('error','Le paiement a \u00e9chou\u00e9','Le paiement n\'a pas pu \u00eatre trait\u00e9. Vous pouvez r\u00e9essayer depuis vos demandes.');
       }
-      // cancel handled by self-contained overlay in IIFE
     }, 1200);
+    }
   }
 }
 
