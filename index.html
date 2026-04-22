@@ -2924,8 +2924,6 @@ function enterApp(){
         }catch(e){ console.error('Stripe return error:',e); showPaymentResult('error','Erreur','Paiement re\u00e7u mais erreur de mise \u00e0 jour. Contactez le support.'); }
       } else if(_sr.status==='error'){
         showPaymentResult('error','Le paiement a \u00e9chou\u00e9','Le paiement n\'a pas pu \u00eatre trait\u00e9. Vous pouvez r\u00e9essayer depuis vos demandes.');
-      }
-      // status==='cancel' : show failure modal
       } else if(_sr.status==='cancel'){
         if(typeof loadClientDashboard==='function') await loadClientDashboard();
         showPaymentResult('error','Paiement annulé','Vous avez annulé le paiement. Vous pouvez réessayer depuis vos demandes.');
