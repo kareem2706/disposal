@@ -797,7 +797,7 @@ body{background:var(--bg);}
           <span data-i18n="auth_continue_google">Continuer avec Google</span>
           <svg class="sso-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
-        <button class="sso-row" onclick="ssoAuth('apple')">
+        <button class="sso-row" onclick="ssoAuth('apple')" style="display:none;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--ink)"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701z"/></svg>
           <span data-i18n="auth_continue_apple">Continuer avec Apple</span>
           <svg class="sso-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2496,18 +2496,15 @@ async function loadProfile(){
   const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
   if(data) {
     currentProfile = data;
-    // Sync email from auth to profiles so it appears in admin lists
     var updates = {};
     if(currentUser.email && data.email !== currentUser.email){
       updates.email = currentUser.email;
       currentProfile.email = currentUser.email;
     }
-    // Sync phone from auth to profiles so it appears in admin lists
     if(currentUser.phone && data.phone !== currentUser.phone){
       updates.phone = currentUser.phone;
       currentProfile.phone = currentUser.phone;
     }
-    // Sync role from auth metadata if profile role is missing
     var metaRole = currentUser.user_metadata?.role;
     if(!data.role && metaRole){
       updates.role = metaRole;
@@ -2515,6 +2512,24 @@ async function loadProfile(){
     }
     if(Object.keys(updates).length > 0){
       try{sb.from('profiles').update(updates).eq('id', currentUser.id).then(function(){},function(){});}catch(ex){}
+    }
+  } else {
+    // Profile doesn't exist — create it (e.g. Google OAuth first login)
+    var meta = currentUser.user_metadata || {};
+    var metaRole2 = meta.role || 'client';
+    var newProfile = {
+      id: currentUser.id,
+      email: currentUser.email || null,
+      first_name: meta.full_name ? meta.full_name.split(' ')[0] : (meta.name||'').split(' ')[0] || null,
+      last_name: meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : (meta.name||'').split(' ').slice(1).join(' ') || null,
+      role: metaRole2,
+      avatar_url: meta.avatar_url || meta.picture || null,
+    };
+    try {
+      var {data:created} = await sb.from('profiles').insert(newProfile).select().single();
+      currentProfile = created || newProfile;
+    } catch(ex) {
+      currentProfile = newProfile;
     }
   }
 }
@@ -2739,7 +2754,7 @@ window.ssoAuth = async function(provider){
   document.getElementById('auth-sso').style.display = 'block';
   document.getElementById('sso-msg').textContent = 'Redirection vers ' + provider.charAt(0).toUpperCase() + provider.slice(1) + '…';
 
-  const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.href }});
+  const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + window.location.pathname }});
   if(error){
     document.getElementById('auth-main').style.display = 'block';
     document.getElementById('auth-sso').style.display = 'none';
