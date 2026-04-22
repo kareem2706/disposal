@@ -2112,27 +2112,40 @@ body{background:var(--bg);}
   window._stripePendingReturn = {status: payStatus, ride: pRide, offer: pOffer};
   window._stripeResetEntering = true;
 
-  // For cancel/error: show modal as soon as DOM + app are ready, no auth needed
+  // For cancel/error: inject a self-contained overlay that shows immediately
   if(payStatus==='cancel' || payStatus==='error'){
-    var _showStripeResult = function(){
-      var _tryShow = function(){
-        if(typeof showPaymentResult === 'function' && document.getElementById('m-payment-result')){
-          if(payStatus==='cancel'){
-            showPaymentResult('error','Paiement annulé','Vous avez annulé le paiement. Vous pouvez réessayer depuis vos demandes.');
-          } else {
-            showPaymentResult('error','Le paiement a échoué','Le paiement n\'a pas pu être traité. Vous pouvez réessayer.');
-          }
-          window._stripePendingReturn = null;
-        } else {
-          setTimeout(_tryShow, 300);
-        }
-      };
-      setTimeout(_tryShow, 2500);
+    var msg = payStatus==='cancel'
+      ? 'Vous avez annulé le paiement. Vous pouvez réessayer depuis vos demandes.'
+      : 'Le paiement n\'a pas pu être traité. Vous pouvez réessayer.';
+    var title = payStatus==='cancel' ? 'Paiement annulé' : 'Paiement échoué';
+
+    window._showStripeCancel = function(){
+      // Remove any existing overlay
+      var old = document.getElementById('stripe-cancel-overlay');
+      if(old) old.remove();
+
+      var div = document.createElement('div');
+      div.id = 'stripe-cancel-overlay';
+      div.style.cssText = 'position:fixed;inset:0;background:rgba(14,14,12,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+      div.innerHTML = '<div style="background:#fff;border-radius:16px;padding:36px 28px;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.18);">'
+        +'<div style="font-size:52px;margin-bottom:12px;">❌</div>'
+        +'<div style="font-size:19px;font-weight:700;color:#C0392B;margin-bottom:10px;">'+title+'</div>'
+        +'<div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:24px;">'+msg+'</div>'
+        +'<button onclick="document.getElementById(\'stripe-cancel-overlay\').remove()" style="padding:11px 28px;background:#1A1A18;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">OK</button>'
+        +'</div>';
+      document.body.appendChild(div);
+      window._stripePendingReturn = null;
+    };
+
+    // Try immediately, then retry until body is ready
+    var _try = function(){
+      if(document.body){ window._showStripeCancel(); }
+      else { setTimeout(_try, 100); }
     };
     if(document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', _showStripeResult);
+      document.addEventListener('DOMContentLoaded', function(){ setTimeout(window._showStripeCancel, 500); });
     } else {
-      _showStripeResult();
+      setTimeout(_try, 500);
     }
   }
 })();
