@@ -2958,11 +2958,28 @@ function enterApp(){
           await sb.from('offers').update({status:'rejected'}).eq('ride_id',_sr.ride).neq('id',_sr.offer);
           await sb.from('rides').update({status:'confirmed',payment_method:'stripe',final_price:tvac||null,driver_id:payDriverId}).eq('id',_sr.ride);
           if(typeof loadClientDashboard==='function') await loadClientDashboard();
-          showPaymentResult('success','Paiement réussi','Votre course est confirm\u00e9e \uD83C\uDF89');
+          // Self-contained success overlay
+          var _so=document.createElement('div');
+          _so.style.cssText='position:fixed;inset:0;background:rgba(14,14,12,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+          _so.innerHTML='<div style="background:#fff;border-radius:16px;padding:36px 28px;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.18);">'
+            +'<div style="font-size:52px;margin-bottom:12px;">✅</div>'
+            +'<div style="font-size:19px;font-weight:700;color:#1B5E3B;margin-bottom:10px;">Paiement réussi</div>'
+            +'<div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:24px;">Votre course est confirmée 🎉</div>'
+            +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="padding:11px 28px;background:#1A1A18;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">OK</button>'
+            +'</div>';
+          document.body.appendChild(_so);
         }catch(e){ console.error('Stripe return error:',e); showPaymentResult('error','Erreur','Paiement re\u00e7u mais erreur de mise \u00e0 jour. Contactez le support.'); }
       } else if(_sr.status==='error'){
         if(typeof loadClientDashboard==='function') await loadClientDashboard();
-        showPaymentResult('error','Le paiement a \u00e9chou\u00e9','Le paiement n\'a pas pu \u00eatre trait\u00e9. Vous pouvez r\u00e9essayer depuis vos demandes.');
+        var _eo=document.createElement('div');
+        _eo.style.cssText='position:fixed;inset:0;background:rgba(14,14,12,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+        _eo.innerHTML='<div style="background:#fff;border-radius:16px;padding:36px 28px;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.18);">'
+          +'<div style="font-size:52px;margin-bottom:12px;">❌</div>'
+          +'<div style="font-size:19px;font-weight:700;color:#C0392B;margin-bottom:10px;">Le paiement a échoué</div>'
+          +'<div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:24px;">Le paiement n\'a pas pu être traité. Vous pouvez réessayer depuis vos demandes.</div>'
+          +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="padding:11px 28px;background:#1A1A18;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">OK</button>'
+          +'</div>';
+        document.body.appendChild(_eo);
       }
     }, 1200);
     }
