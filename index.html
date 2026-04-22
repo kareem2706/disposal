@@ -2109,10 +2109,32 @@ body{background:var(--bg);}
   var payStatus=params.get('payment'),pRide=params.get('ride'),pOffer=params.get('offer');
   if(!payStatus)return;
   window.history.replaceState({},'',window.location.pathname);
-  // Store params globally — processed in enterApp OR immediately if app already running
   window._stripePendingReturn = {status: payStatus, ride: pRide, offer: pOffer};
-  // Reset _entering so enterApp can re-run with the pending return
   window._stripeResetEntering = true;
+
+  // For cancel/error: show modal as soon as DOM + app are ready, no auth needed
+  if(payStatus==='cancel' || payStatus==='error'){
+    var _showStripeResult = function(){
+      var _tryShow = function(){
+        if(typeof showPaymentResult === 'function' && document.getElementById('m-payment-result')){
+          if(payStatus==='cancel'){
+            showPaymentResult('error','Paiement annulé','Vous avez annulé le paiement. Vous pouvez réessayer depuis vos demandes.');
+          } else {
+            showPaymentResult('error','Le paiement a échoué','Le paiement n\'a pas pu être traité. Vous pouvez réessayer.');
+          }
+          window._stripePendingReturn = null;
+        } else {
+          setTimeout(_tryShow, 300);
+        }
+      };
+      setTimeout(_tryShow, 1500);
+    };
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', _showStripeResult);
+    } else {
+      _showStripeResult();
+    }
+  }
 })();
 
 // ── Google Places — widget natif ──
