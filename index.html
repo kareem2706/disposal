@@ -2109,8 +2109,10 @@ body{background:var(--bg);}
   var payStatus=params.get('payment'),pRide=params.get('ride'),pOffer=params.get('offer');
   if(!payStatus)return;
   window.history.replaceState({},'',window.location.pathname);
-  // Store params globally — will be processed once the app is ready (after auth + enterApp)
+  // Store params globally — processed in enterApp OR immediately if app already running
   window._stripePendingReturn = {status: payStatus, ride: pRide, offer: pOffer};
+  // Reset _entering so enterApp can re-run with the pending return
+  if(typeof _entering !== 'undefined') _entering = false;
 })();
 
 // ── Google Places — widget natif ──
@@ -2909,21 +2911,21 @@ function enterApp(){
     setTimeout(async function(){
       if(_sr.status==='success' && _sr.ride && _sr.offer && sb){
         try{
-          var tvac=parseFloat(sessionStorage.getItem('stripe_pending_tvac')||'0');
-          sessionStorage.removeItem('stripe_pending_tvac');
+          var tvac=parseFloat(localStorage.getItem('stripe_pending_tvac')||'0');
+          localStorage.removeItem('stripe_pending_tvac');
           var offerRes=await sb.from('offers').select('driver_id').eq('id',_sr.offer).single();
           var payDriverId=offerRes.data?offerRes.data.driver_id:null;
           await sb.from('offers').update({status:'accepted'}).eq('id',_sr.offer);
           await sb.from('offers').update({status:'rejected'}).eq('ride_id',_sr.ride).neq('id',_sr.offer);
           await sb.from('rides').update({status:'confirmed',payment_method:'stripe',final_price:tvac||null,driver_id:payDriverId}).eq('id',_sr.ride);
-          showPaymentResult('success','Paiement réussi','Course confirmée.');
           if(typeof loadClientDashboard==='function') await loadClientDashboard();
-        }catch(e){ console.error('Stripe return error:',e); showPaymentResult('error','Erreur','Paiement reçu mais erreur de mise à jour. Contactez le support.'); }
+          showPaymentResult('success','Paiement réussi','Votre course est confirm\u00e9e \uD83C\uDF89');
+        }catch(e){ console.error('Stripe return error:',e); showPaymentResult('error','Erreur','Paiement re\u00e7u mais erreur de mise \u00e0 jour. Contactez le support.'); }
       } else if(_sr.status==='error'){
-        showPaymentResult('error','Le paiement a échoué','Le paiement n\'a pas pu être traité. Vous pouvez réessayer depuis vos demandes.');
+        showPaymentResult('error','Le paiement a \u00e9chou\u00e9','Le paiement n\'a pas pu \u00eatre trait\u00e9. Vous pouvez r\u00e9essayer depuis vos demandes.');
       }
       // status==='cancel' : silent return, no modal
-    }, 800);
+    }, 1200);
   }
 }
 
@@ -5602,7 +5604,7 @@ window.confirmStripeCheckout=async function(amount,totalTvac){
       totalTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
       amount=totalTvac;
     }
-    sessionStorage.setItem('stripe_pending_tvac',totalTvac.toFixed(2));
+    localStorage.setItem('stripe_pending_tvac',totalTvac.toFixed(2));
     console.log('[stripe] HTVA:', currentOfferAmount, 'TVAC:', totalTvac, 'amount:', amount, 'ride:', currentRideId);
     var resp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
       method:'POST',
@@ -5700,7 +5702,7 @@ window.confirmStripePayment=async function(){
   var btn=document.getElementById('payment-btn-confirm-stripe');if(btn)setLoading(btn,true,'Redirection…');
   try{
     var totalTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
-    sessionStorage.setItem('stripe_pending_tvac',totalTvac.toFixed(2));
+    localStorage.setItem('stripe_pending_tvac',totalTvac.toFixed(2));
     // Send amount_cents (integer) to avoid floating point issues
     // amount_cents = totalTvac * 100, already includes 6% TVA — Edge Function must NOT add any tax
     var amountCents = Math.round(totalTvac * 100);
