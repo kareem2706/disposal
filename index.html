@@ -2112,7 +2112,7 @@ body{background:var(--bg);}
   // Store params globally — processed in enterApp OR immediately if app already running
   window._stripePendingReturn = {status: payStatus, ride: pRide, offer: pOffer};
   // Reset _entering so enterApp can re-run with the pending return
-  if(typeof _entering !== 'undefined') _entering = false;
+  window._stripeResetEntering = true;
 })();
 
 // ── Google Places — widget natif ──
@@ -2222,6 +2222,7 @@ const MISSION_STATUSES = ['confirmed', 'active', 'done', 'pending_payment']; // 
 const ADMIN_EMAIL = 'kb@bleenr.com';
 
 let sb=null,_entering=false;           // Supabase client
+if(window._stripeResetEntering){ _entering=false; window._stripeResetEntering=false; }
 let currentUser = null;  // auth.User
 let currentProfile = null; // profiles row
 let currentRole = 'client'; // active role: 'client' | 'driver'
@@ -2924,7 +2925,11 @@ function enterApp(){
       } else if(_sr.status==='error'){
         showPaymentResult('error','Le paiement a \u00e9chou\u00e9','Le paiement n\'a pas pu \u00eatre trait\u00e9. Vous pouvez r\u00e9essayer depuis vos demandes.');
       }
-      // status==='cancel' : silent return, no modal
+      // status==='cancel' : show failure modal
+      } else if(_sr.status==='cancel'){
+        if(typeof loadClientDashboard==='function') await loadClientDashboard();
+        showPaymentResult('error','Paiement annulé','Vous avez annulé le paiement. Vous pouvez réessayer depuis vos demandes.');
+      }
     }, 1200);
   }
 }
