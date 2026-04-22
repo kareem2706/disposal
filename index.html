@@ -4464,9 +4464,8 @@ window.openRideDetail=function(el){
       } else if(isOwnSub2){
         ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">Annuler</button>'+closeBtn;
       } else {
-        ft=closeBtn;
+        ft=closeBtn+'<button class="btn btn-green" style="min-width:160px;" onclick="_detailOffer(this)" data-rid="'+rId+'" data-ride=\''+safeRd+'\'>Soumettre une offre</button>';
       }
-    } else if(r.status==='confirmed'){
       var _endTime=_getRideEndTime(r);
       var _isOverdue=_endTime&&new Date()>_endTime;
       var _missionBtn='<button onclick="generateMissionPdf(\''+rId+'\')" style="background:none;border:1.5px solid var(--sand3);border-radius:var(--r);padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);font-family:\'DM Sans\',sans-serif;margin-right:auto;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>T\u00e9l\u00e9charger mission</button>';
