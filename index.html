@@ -2127,7 +2127,7 @@ body{background:var(--bg);}
           setTimeout(_tryShow, 300);
         }
       };
-      setTimeout(_tryShow, 1500);
+      setTimeout(_tryShow, 2500);
     };
     if(document.readyState === 'loading'){
       document.addEventListener('DOMContentLoaded', _showStripeResult);
@@ -8465,7 +8465,7 @@ async function loadAdminDashboard() {
 
 </script>
 
-<div class="modal-overlay" id="m-payment-result" onclick="if(event.target===this)closeModal('m-payment-result')">
+<div class="modal-overlay" id="m-payment-result" style="z-index:9999;" onclick="if(event.target===this)closeModal('m-payment-result')">
   <div class="modal" style="max-width:380px;text-align:center;">
     <div class="modal-body" style="padding:36px 28px;">
       <div id="payment-result-icon" style="font-size:56px;margin-bottom:16px;"></div>
