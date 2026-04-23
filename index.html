@@ -1190,7 +1190,6 @@ body{background:var(--bg);}
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a7 7 0 0114 0v2"/><circle cx="19" cy="7" r="3"/><path d="M22 21v-1.5a4.5 4.5 0 00-3-4.243"/></svg></div>
         <div><h1>Passagers</h1><p>Gérez vos passagers habituels</p></div>
-        <button class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="openPassengerModal()">+ Ajouter</button>
       </div>
       <div id="passengers-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
@@ -8581,7 +8580,10 @@ async function loadPassengersList(){
     el.innerHTML='<div class="card" style="padding:40px;text-align:center;"><div style="font-size:32px;margin-bottom:12px;">👤</div><div style="font-size:14px;color:var(--ink3);">Aucun passager enregistré</div><button class="btn btn-primary btn-sm" style="margin-top:16px;" onclick="openPassengerModal()">+ Ajouter un passager</button></div>';
     return;
   }
-  el.innerHTML = '<div class="card" style="overflow:hidden;">'
+  el.innerHTML = '<div style="display:flex;justify-content:flex-start;margin-bottom:12px;">'
+    +'<button class="btn btn-primary btn-sm" onclick="openPassengerModal()">+ Ajouter</button>'
+    +'</div>'
+    +'<div class="card" style="overflow:hidden;">'
     +'<table style="width:100%;border-collapse:collapse;font-size:13px;">'
     +'<thead><tr style="background:var(--sand2);">'
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Nom</th>'
@@ -8591,7 +8593,6 @@ async function loadPassengersList(){
     +'</tr></thead><tbody>'
     +data.map(function(p){
       var name = ((p.first_name||'')+' '+(p.last_name||'')).trim();
-      var sid = JSON.stringify(p.id).replace(/'/g,"&#39;");
       return '<tr style="border-bottom:1px solid var(--sand2);">'
         +'<td style="padding:10px 14px;font-weight:500;">'+name+'</td>'
         +'<td style="padding:10px 14px;color:var(--ink3);">'+(p.phone||'—')+'</td>'
