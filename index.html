@@ -2495,19 +2495,14 @@ async function loadProfile(){
   if(data) {
     currentProfile = data;
     var updates = {};
-    if(currentUser.email && data.email !== currentUser.email){
-      updates.email = currentUser.email;
-      currentProfile.email = currentUser.email;
-    }
-    if(currentUser.phone && data.phone !== currentUser.phone){
-      updates.phone = currentUser.phone;
-      currentProfile.phone = currentUser.phone;
-    }
-    var metaRole = currentUser.user_metadata?.role;
-    if(!data.role && metaRole){
-      updates.role = metaRole;
-      currentProfile.role = metaRole;
-    }
+    if(currentUser.email && data.email !== currentUser.email){ updates.email = currentUser.email; currentProfile.email = currentUser.email; }
+    if(currentUser.phone && data.phone !== currentUser.phone){ updates.phone = currentUser.phone; currentProfile.phone = currentUser.phone; }
+    var meta2 = currentUser.user_metadata || {};
+    if(!data.role && meta2.role){ updates.role = meta2.role; currentProfile.role = meta2.role; }
+    if(!data.client_type && meta2.client_type){ updates.client_type = meta2.client_type; currentProfile.client_type = meta2.client_type; }
+    if(!data.first_name && meta2.first_name){ updates.first_name = meta2.first_name; currentProfile.first_name = meta2.first_name; }
+    if(!data.last_name && meta2.last_name){ updates.last_name = meta2.last_name; currentProfile.last_name = meta2.last_name; }
+    if(!data.company_name && meta2.company_name){ updates.company_name = meta2.company_name; currentProfile.company_name = meta2.company_name; }
     if(Object.keys(updates).length > 0){
       try{sb.from('profiles').update(updates).eq('id', currentUser.id).then(function(){},function(){});}catch(ex){}
     }
@@ -2518,9 +2513,11 @@ async function loadProfile(){
     var newProfile = {
       id: currentUser.id,
       email: currentUser.email || null,
-      first_name: meta.full_name ? meta.full_name.split(' ')[0] : (meta.name||'').split(' ')[0] || null,
-      last_name: meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : (meta.name||'').split(' ').slice(1).join(' ') || null,
+      first_name: meta.first_name || (meta.full_name ? meta.full_name.split(' ')[0] : (meta.name||'').split(' ')[0]) || null,
+      last_name: meta.last_name || (meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : (meta.name||'').split(' ').slice(1).join(' ')) || null,
       role: metaRole2,
+      client_type: meta.client_type || (metaRole2==='client' ? 'perso' : null),
+      company_name: meta.company_name || null,
       avatar_url: meta.avatar_url || meta.picture || null,
     };
     try {
@@ -2649,6 +2646,11 @@ window.submitEmailReg = async function(){
   var {data,error} = await sb.auth.signUp({email,password:pwd,options:{data:meta,emailRedirectTo:window.location.origin+window.location.pathname}});
   if(btn) setLoading(btn,false,'Créer le compte →');
   if(error){ if(errEl){errEl.textContent=error.message;errEl.classList.add('show');} return; }
+  if(data?.user){
+    // Immediately upsert profile with correct client_type
+    var profileData = {id:data.user.id, email:email, role:role, client_type:clientType||'perso', first_name:fname||null, last_name:lname||null, company_name:company||null};
+    try{ await sb.from('profiles').upsert(profileData); }catch(ex){ console.warn('profile upsert error',ex); }
+  }
   if(data?.user&&!data.session){
     showToast('✅ Vérifie ton email pour confirmer ton compte');
     authMode('login');
