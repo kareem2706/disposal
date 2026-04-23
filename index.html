@@ -3825,6 +3825,7 @@ window.saveProfile = async function(){
   const updates = {
     first_name:      isValidatedDriver ? undefined : gv('pf-fname'),
     last_name:       isValidatedDriver ? undefined : gv('pf-lname'),
+    company_name:    gv('pf-company') || undefined,
     phone:           gv('pf-phone'),
     vat_number:      gv('pf-vat'),
     address_street:  gv('pf-street'),
@@ -3832,6 +3833,8 @@ window.saveProfile = async function(){
     address_city:    gv('pf-city'),
     address_country: gv('pf-country'),
   };
+  // Remove undefined keys
+  Object.keys(updates).forEach(function(k){ if(updates[k]===undefined) delete updates[k]; });
 
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     const { error } = await sb.from('profiles').update(updates).eq('id', currentUser.id);
@@ -3839,8 +3842,11 @@ window.saveProfile = async function(){
   }
   Object.assign(currentProfile, updates);
   // Update nav
-  document.getElementById('nav-name').textContent = (updates.first_name + ' ' + updates.last_name).trim();
-  document.getElementById('nav-avatar').textContent = (updates.first_name[0]||'?').toUpperCase();
+  var displayName = (updates.company_name || ((updates.first_name||currentProfile.first_name||'')+' '+(updates.last_name||currentProfile.last_name||'')).trim() || '');
+  var navNameEl = document.getElementById('nav-name');
+  var navAvEl = document.getElementById('nav-avatar');
+  if(navNameEl) navNameEl.textContent = displayName;
+  if(navAvEl && !currentProfile.avatar_url) navAvEl.textContent = (displayName[0]||'?').toUpperCase();
   showToast(t('toast_saved'));
 };
 
