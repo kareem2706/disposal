@@ -759,137 +759,118 @@ body{background:var(--bg);}
         <button class="auth-tab" id="tab-register" data-i18n="auth_register" onclick="authMode('register')">Inscription</button>
       </div>
 
-      <!-- Role selector (register only) -->
-      <div id="role-selector" style="display:none;margin-bottom:18px;">
-        <label style="margin-bottom:8px;" data-i18n="auth_you_are">Vous &ecirc;tes</label>
-        <div class="role-toggle" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
-          <div class="role-opt active" id="role-client" onclick="selectRole('client')">
-            <span class="role-opt-icon"><svg width="32" height="32" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="12" r="6" stroke="currentColor" stroke-width="2" fill="none"/><path d="M6 30c0-6.627 5.373-12 12-12s12 5.373 12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></span>
-            <div class="role-opt-label" data-i18n="client">Client</div>
-            <div class="role-opt-desc" data-i18n="auth_client_desc">Je r&eacute;serve des courses</div>
-          </div>
-          <div class="role-opt" id="role-driver" onclick="selectRole('driver')">
-            <span class="role-opt-icon"><svg width="36" height="28" viewBox="0 0 54 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Car 1 (left, smaller) -->
-  <rect x="1" y="14" width="15" height="8" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-  <path d="M2 14l3-5h7l3 5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
-  <circle cx="5" cy="22" r="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-  <circle cx="13" cy="22" r="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-  <!-- Car 2 (center, larger) -->
-  <rect x="18" y="12" width="18" height="10" rx="2.5" stroke="currentColor" stroke-width="2" fill="none"/>
-  <path d="M19 12l4-7h10l3 7" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/>
-  <circle cx="23" cy="22" r="2.5" stroke="currentColor" stroke-width="2" fill="none"/>
-  <circle cx="33" cy="22" r="2.5" stroke="currentColor" stroke-width="2" fill="none"/>
-  <!-- Car 3 (right, smaller) -->
-  <rect x="38" y="14" width="15" height="8" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-  <path d="M39 14l3-5h7l3 5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
-  <circle cx="42" cy="22" r="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-  <circle cx="50" cy="22" r="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-</svg></span>
-            <div class="role-opt-label">Fleet</div>
-            <div class="role-opt-desc" data-i18n="auth_fleet_desc">Je propose mes services</div>
-          </div>
+      <!-- ══ LOGIN PANEL ══ -->
+      <div id="login-panel">
+        <div class="sso-stack">
+          <button class="sso-row" onclick="ssoAuth('google')">
+            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.33 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.67 14.62 48 24 48z"/></svg>
+            <span>Google</span>
+          </button>
+          <button class="sso-row" onclick="ssoAuth('azure')">
+            <svg width="18" height="18" viewBox="0 0 21 21"><path fill="#0078D4" d="M0 0h10v10H0z"/><path fill="#50D9FF" d="M11 0h10v10H11z"/><path fill="#FFB900" d="M11 11h10v10H11z"/><path fill="#00B4E0" d="M0 11h10v10H0z"/></svg>
+            <span>Microsoft</span>
+          </button>
         </div>
-      </div>
-
-      <!-- SSO -->
-      <div class="sso-stack">
-        <button class="sso-row" onclick="ssoAuth('google')">
-          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.33 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.67 14.62 48 24 48z"/></svg>
-          <span data-i18n="auth_continue_google">Continuer avec Google</span>
-          <svg class="sso-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <button class="sso-row" onclick="ssoAuth('apple')" style="display:none;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--ink)"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701z"/></svg>
-          <span data-i18n="auth_continue_apple">Continuer avec Apple</span>
-          <svg class="sso-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <button class="sso-row" onclick="ssoAuth('azure')">
-          <svg width="18" height="18" viewBox="0 0 21 21"><path fill="#0078D4" d="M0 0h10v10H0z"/><path fill="#50D9FF" d="M11 0h10v10H11z"/><path fill="#FFB900" d="M11 11h10v10H11z"/><path fill="#00B4E0" d="M0 11h10v10H0z"/></svg>
-          <span data-i18n="auth_continue_ms">Continuer avec Microsoft</span>
-          <svg class="sso-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M4 2l4 4-4 4" stroke="var(--ink)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-      </div>
-
-      <div class="auth-or"><span>OU CONTINUER AVEC</span></div>
-
-      <!-- Method selector — hidden (email only) -->
-      <div class="method-tabs" style="display:none;">
-        <button class="method-tab active" id="mtab-email" data-i18n="auth_email" onclick="authMethod('email')">Email</button>
-        <button class="method-tab" id="mtab-phone" data-i18n="auth_phone" onclick="authMethod('phone')">T&eacute;l&eacute;phone</button>
-      </div>
-
-      <!-- Email panel -->
-      <div id="panel-email">
-        <!-- Registration-only fields -->
-        <div id="reg-client-fields" style="display:none;">
-          <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer;font-size:13px;">
-            <input type="checkbox" id="inp-pro-client" onchange="toggleClientType()" style="width:16px;height:16px;accent-color:var(--ink);flex-shrink:0;">
-            <span data-i18n="auth_pro_client">Client professionnel</span>
-          </label>
-          <div id="reg-perso-fields" class="form-grid">
-            <div class="input-group"><label data-i18n="auth_fname">Pr&eacute;nom</label><input id="inp-fname" placeholder="Marie" autocomplete="given-name"></div>
-            <div class="input-group"><label data-i18n="auth_lname">Nom</label><input id="inp-lname" placeholder="Dupont" autocomplete="family-name"></div>
-          </div>
-          <div id="reg-pro-fields" style="display:none;">
-            <div class="input-group"><label data-i18n="auth_company">Nom de soci&eacute;t&eacute;</label><input id="inp-company-client" placeholder="Acme SA" autocomplete="organization"></div>
-          </div>
-        </div>
-        <div id="reg-driver-fields" style="display:none;">
-          <div class="input-group"><label data-i18n="auth_company">Nom de soci&eacute;t&eacute;</label><input id="inp-company-driver" placeholder="Transport Dupont SPRL" autocomplete="organization"></div>
-        </div>
-        <!-- Always visible -->
-        <div class="input-group"><label data-i18n="auth_email_label">Adresse email</label><input id="inp-email" type="email" placeholder="marie@example.com" autocomplete="email"></div>
-        <div class="input-group"><label data-i18n="auth_pwd_label">Mot de passe</label><input id="inp-pwd" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitEmail()"></div>
-        <div id="forgot-pwd-link" style="text-align:right;margin:-4px 0 8px;"><a href="#" onclick="forgotPassword();return false;" style="font-size:12px;color:var(--green);text-decoration:none;" data-i18n="auth_forgot_pwd">Mot de passe oubli&eacute; ?</a></div>
-        <div id="inp-pwd2-wrap" class="input-group mb-20" style="display:none;"><label data-i18n="auth_pwd2_label">Confirmer le mot de passe</label><input id="inp-pwd2" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitEmail()"></div>
-        <div id="reg-vat" class="input-group mb-20" style="display:none;"><label data-i18n="auth_vat">N&deg; de TVA (optionnel)</label><input id="inp-vat" placeholder="BE 0000.000.000"></div>
+        <div class="auth-or"><span>OU</span></div>
+        <div class="input-group"><label>Adresse email</label><input id="inp-email" type="email" placeholder="marie@example.com" autocomplete="email"></div>
+        <div class="input-group"><label>Mot de passe</label><input id="inp-pwd" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitEmail()"></div>
+        <div id="forgot-pwd-link" style="text-align:right;margin:-4px 0 8px;"><a href="#" onclick="forgotPassword();return false;" style="font-size:12px;color:var(--green);text-decoration:none;">Mot de passe oublié ?</a></div>
         <div id="auth-err-email" class="auth-error"></div>
-        <button class="btn btn-primary btn-full" id="btn-email-submit" onclick="submitEmail()">Continuer &rarr;</button>
+        <button class="btn btn-primary btn-full" id="btn-email-submit" onclick="submitEmail()">Connexion →</button>
       </div>
 
-      <!-- Phone panel -->
-      <div id="panel-phone" style="display:none;">
-        <!-- Registration-only fields -->
-        <div id="reg-phone-client-fields" style="display:none;">
-          <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer;font-size:13px;">
-            <input type="checkbox" id="inp-pro-client-p" onchange="toggleClientTypePhone()" style="width:16px;height:16px;accent-color:var(--ink);flex-shrink:0;">
-            <span data-i18n="auth_pro_client">Client professionnel</span>
-          </label>
-          <div id="reg-phone-perso-fields" class="form-grid">
-            <div class="input-group"><label data-i18n="auth_fname">Pr&eacute;nom</label><input id="inp-fname-p" placeholder="Marie"></div>
-            <div class="input-group"><label data-i18n="auth_lname">Nom</label><input id="inp-lname-p" placeholder="Dupont"></div>
+      <!-- ══ REGISTER STEPS ══ -->
+      <div id="register-panel" style="display:none;">
+
+        <!-- Step R1: Choose role -->
+        <div id="reg-step1">
+          <div style="font-size:13px;font-weight:600;color:var(--ink3);margin-bottom:12px;">Vous êtes</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+            <div class="role-opt active" id="role-client" onclick="selectRole('client')">
+              <span class="role-opt-icon"><svg width="26" height="26" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="12" r="6" stroke="currentColor" stroke-width="2" fill="none"/><path d="M6 30c0-6.627 5.373-12 12-12s12 5.373 12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg></span>
+              <div class="role-opt-label">Client</div>
+            </div>
+            <div class="role-opt" id="role-driver" onclick="selectRole('driver')">
+              <span class="role-opt-icon"><svg width="32" height="22" viewBox="0 0 54 28" fill="none"><rect x="18" y="12" width="18" height="10" rx="2.5" stroke="currentColor" stroke-width="2" fill="none"/><path d="M19 12l4-7h10l3 7" stroke="currentColor" stroke-width="2" stroke-linejoin="round" fill="none"/><circle cx="23" cy="22" r="2.5" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="33" cy="22" r="2.5" stroke="currentColor" stroke-width="2" fill="none"/></svg></span>
+              <div class="role-opt-label">Fleet</div>
+            </div>
           </div>
-          <div id="reg-phone-pro-fields" style="display:none;">
-            <div class="input-group"><label data-i18n="auth_company">Nom de soci&eacute;t&eacute;</label><input id="inp-company-client-p" placeholder="Acme SA" autocomplete="organization"></div>
+          <button class="btn btn-primary btn-full" onclick="regNextStep()">Continuer →</button>
+        </div>
+
+        <!-- Step R2a: Client type (particulier / pro) -->
+        <div id="reg-step2-client" style="display:none;">
+          <button onclick="regPrevStep()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink3);display:flex;align-items:center;gap:5px;padding:0;margin-bottom:16px;font-family:'DM Sans',sans-serif;">
+            <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Retour
+          </button>
+          <div style="font-size:13px;font-weight:600;color:var(--ink3);margin-bottom:12px;">Type de compte</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+            <div class="role-opt active" id="ctype-perso" onclick="selectClientType('perso')">
+              <span class="role-opt-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg></span>
+              <div class="role-opt-label">Particulier</div>
+            </div>
+            <div class="role-opt" id="ctype-pro" onclick="selectClientType('pro')">
+              <span class="role-opt-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg></span>
+              <div class="role-opt-label">Professionnel</div>
+            </div>
           </div>
+          <button class="btn btn-primary btn-full" onclick="regShowForm()">Continuer →</button>
         </div>
-        <div id="reg-phone-driver-fields" style="display:none;">
-          <div class="input-group"><label data-i18n="auth_company">Nom de soci&eacute;t&eacute;</label><input id="inp-company-driver-p" placeholder="Transport Dupont SPRL" autocomplete="organization"></div>
-        </div>
-        <!-- Always visible -->
-        <div class="input-group mb-20">
-          <label data-i18n="auth_phone_label">Num&eacute;ro de t&eacute;l&eacute;phone</label>
-          <div class="phone-row">
-            <select id="inp-prefix">
-              <option value="+32">&#x1F1E7;&#x1F1EA; +32</option>
-              <option value="+33">&#x1F1EB;&#x1F1F7; +33</option>
-              <option value="+31">&#x1F1F3;&#x1F1F1; +31</option>
-              <option value="+49">&#x1F1E9;&#x1F1EA; +49</option>
-              <option value="+352">&#x1F1F1;&#x1F1FA; +352</option>
-              <option value="+44">&#x1F1EC;&#x1F1E7; +44</option>
-              <option value="+34">&#x1F1EA;&#x1F1F8; +34</option>
-              <option value="+1">&#x1F1FA;&#x1F1F8; +1</option>
-            </select>
-            <input id="inp-phone" type="tel" placeholder="4XX XXX XXX" onkeydown="if(event.key==='Enter')submitPhone()">
+
+        <!-- Step R3: SSO + form -->
+        <div id="reg-step3" style="display:none;">
+          <button onclick="regPrevStep()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink3);display:flex;align-items:center;gap:5px;padding:0;margin-bottom:16px;font-family:'DM Sans',sans-serif;">
+            <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Retour
+          </button>
+          <div class="sso-stack">
+            <button class="sso-row" onclick="ssoAuth('google')">
+              <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.33 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.67 14.62 48 24 48z"/></svg>
+              <span>Google</span>
+            </button>
+            <button class="sso-row" onclick="ssoAuth('azure')">
+              <svg width="18" height="18" viewBox="0 0 21 21"><path fill="#0078D4" d="M0 0h10v10H0z"/><path fill="#50D9FF" d="M11 0h10v10H11z"/><path fill="#FFB900" d="M11 11h10v10H11z"/><path fill="#00B4E0" d="M0 11h10v10H0z"/></svg>
+              <span>Microsoft</span>
+            </button>
           </div>
+          <div class="auth-or"><span>OU</span></div>
+          <!-- Registration fields -->
+          <div id="reg-client-fields" style="display:none;">
+            <div id="reg-perso-fields" class="form-grid">
+              <div class="input-group"><label>Prénom</label><input id="inp-fname" placeholder="Marie" autocomplete="given-name"></div>
+              <div class="input-group"><label>Nom</label><input id="inp-lname" placeholder="Dupont" autocomplete="family-name"></div>
+            </div>
+            <div id="reg-pro-fields" style="display:none;">
+              <div class="input-group"><label>Nom de société</label><input id="inp-company-client" placeholder="Acme SA" autocomplete="organization"></div>
+            </div>
+          </div>
+          <div id="reg-driver-fields" style="display:none;">
+            <div class="input-group"><label>Nom de société</label><input id="inp-company-driver" placeholder="Transport Dupont SPRL" autocomplete="organization"></div>
+          </div>
+          <div class="input-group"><label>Adresse email</label><input id="inp-email-reg" type="email" placeholder="marie@example.com" autocomplete="email"></div>
+          <div class="input-group"><label>Mot de passe</label><input id="inp-pwd-reg" type="password" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitEmailReg()"></div>
+          <div class="input-group" style="display:none;" id="inp-pwd2-wrap"><label>Confirmer le mot de passe</label><input id="inp-pwd2" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+          <div id="reg-vat" class="input-group" style="display:none;"><label>N° de TVA (optionnel)</label><input id="inp-vat" placeholder="BE 0000.000.000"></div>
+          <div id="auth-err-email" class="auth-error"></div>
+          <button class="btn btn-primary btn-full" onclick="submitEmailReg()">Créer le compte →</button>
         </div>
-        <div id="auth-err-phone" class="auth-error"></div>
-        <button class="btn btn-primary btn-full" id="btn-phone-submit" onclick="submitPhone()">Envoyer le code &rarr;</button>
+
+      </div><!-- end register-panel -->
+
+      <!-- Legacy hidden fields for phone panel compat -->
+      <div style="display:none;">
+        <input id="inp-pwd" type="password" style="display:none;">
+        <div id="role-selector"></div>
+        <div id="reg-phone-client-fields"></div><div id="reg-phone-driver-fields"></div>
+        <input id="inp-fname-p"><input id="inp-lname-p"><input id="inp-company-client-p"><input id="inp-company-driver-p">
+        <input id="inp-pro-client-p" type="checkbox">
       </div>
+
+      <!-- Phone panel (hidden) -->
+      <div id="panel-phone" style="display:none;"></div>
+      <div id="panel-email" style="display:none;"></div>
 
       <div style="text-align:center;margin-top:12px;">
-        <button class="btn btn-ghost btn-sm" onclick="showConfig()">&larr; Param&egrave;tres</button>
+        <button class="btn btn-ghost btn-sm" onclick="showConfig()">← Paramètres</button>
       </div>
       <p style="text-align:center;font-size:11px;color:#aaa;margin-top:16px;line-height:1.6;">En continuant, vous acceptez nos <a href="#" style="color:var(--green);text-decoration:underline;">Conditions d'utilisation</a> et notre <a href="#" style="color:var(--green);text-decoration:underline;">Politique de confidentialité</a>.</p>
     </div>
@@ -2574,28 +2555,94 @@ window.authMode = function(mode){
   _authCurrentMode = mode;
   document.getElementById('tab-login').classList.toggle('active', mode==='login');
   document.getElementById('tab-register').classList.toggle('active', mode==='register');
-  document.getElementById('role-selector').style.display = mode==='register' ? 'block' : 'none';
-  var forgotLink=document.getElementById('forgot-pwd-link');if(forgotLink)forgotLink.style.display=mode==='login'?'block':'none';
-  var vatEl=document.getElementById('reg-vat');
-  if(vatEl) vatEl.style.display=(mode==='register' && _authSelectedRole==='driver')?'block':'none';
-  var btnE=document.getElementById('btn-email-submit');
-  if(btnE) btnE.textContent=mode==='register'?t('auth_create'):t('auth_continue');
-  var btnP=document.getElementById('btn-phone-submit');
-  if(btnP) btnP.textContent=mode==='register'?t('auth_send_code'):t('auth_send_code');
-  ['auth-err-email','auth-err-phone','auth-err-otp'].forEach(function(id){
+  var loginPanel = document.getElementById('login-panel');
+  var registerPanel = document.getElementById('register-panel');
+  if(loginPanel) loginPanel.style.display = mode==='login' ? 'block' : 'none';
+  if(registerPanel) registerPanel.style.display = mode==='register' ? 'block' : 'none';
+  if(mode==='register'){
+    // Reset to step 1
+    _regCurrentStep = 1;
+    _showRegStep(1);
+  }
+  ['auth-err-email'].forEach(function(id){
     var e=document.getElementById(id);if(e)e.classList.remove('show');
   });
-  if(mode==='register'){
-    var pw2=document.getElementById('inp-pwd2-wrap');if(pw2)pw2.style.display='block';
-    updateRegFields();
-  } else {
-    // Login: hide all registration-only fields
-    ['reg-client-fields','reg-driver-fields','reg-phone-client-fields',
-     'reg-phone-driver-fields','reg-vat','inp-pwd2-wrap'].forEach(function(id){
-      var el=document.getElementById(id);if(el)el.style.display='none';
-    });
+};
+
+var _regCurrentStep = 1;
+var _regClientType = 'perso';
+
+function _showRegStep(step){
+  ['reg-step1','reg-step2-client','reg-step3'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.display='none';
+  });
+  if(step===1) document.getElementById('reg-step1').style.display='block';
+  else if(step===2) document.getElementById('reg-step2-client').style.display='block';
+  else if(step===3){
+    document.getElementById('reg-step3').style.display='block';
+    // Show correct fields
+    var isDriver = _authSelectedRole==='driver';
+    var cf=document.getElementById('reg-client-fields'); if(cf) cf.style.display=isDriver?'none':'block';
+    var df=document.getElementById('reg-driver-fields'); if(df) df.style.display=isDriver?'block':'none';
+    var pf=document.getElementById('reg-perso-fields'); if(pf) pf.style.display=(_regClientType==='pro')?'none':'block';
+    var prof=document.getElementById('reg-pro-fields'); if(prof) prof.style.display=(_regClientType==='pro')?'block':'none';
+    var vat=document.getElementById('reg-vat'); if(vat) vat.style.display=isDriver?'block':'none';
+  }
+}
+
+window.regNextStep = function(){
+  if(_regCurrentStep===1){
+    if(_authSelectedRole==='driver'){
+      _regCurrentStep=3; _showRegStep(3);
+    } else {
+      _regCurrentStep=2; _showRegStep(2);
+    }
   }
 };
+
+window.regPrevStep = function(){
+  if(_regCurrentStep===3 && _authSelectedRole==='driver'){ _regCurrentStep=1; _showRegStep(1); }
+  else if(_regCurrentStep===3){ _regCurrentStep=2; _showRegStep(2); }
+  else if(_regCurrentStep===2){ _regCurrentStep=1; _showRegStep(1); }
+};
+
+window.regShowForm = function(){
+  _regCurrentStep=3; _showRegStep(3);
+};
+
+window.selectClientType = function(type){
+  _regClientType = type;
+  document.getElementById('ctype-perso').classList.toggle('active', type==='perso');
+  document.getElementById('ctype-pro').classList.toggle('active', type==='pro');
+};
+
+// submitEmailReg reads from reg-specific fields
+window.submitEmailReg = async function(){
+  var email = (document.getElementById('inp-email-reg')?.value||'').trim();
+  var pwd   = (document.getElementById('inp-pwd-reg')?.value||'').trim();
+  var fname = (document.getElementById('inp-fname')?.value||'').trim();
+  var lname = (document.getElementById('inp-lname')?.value||'').trim();
+  var company = _authSelectedRole==='driver'
+    ? (document.getElementById('inp-company-driver')?.value||'').trim()
+    : (_regClientType==='pro' ? (document.getElementById('inp-company-client')?.value||'').trim() : '');
+  var errEl = document.getElementById('auth-err-email');
+  if(!email||!pwd){ if(errEl){errEl.textContent='Email et mot de passe requis';errEl.classList.add('show');} return; }
+  var btn = document.querySelector('#reg-step3 .btn-primary');
+  if(btn) setLoading(btn,true,'Création...');
+  var role = _authSelectedRole||'client';
+  var clientType = role==='client' ? (_regClientType||'perso') : null;
+  var meta = {role, client_type: clientType, first_name:fname||null, last_name:lname||null, company_name:company||null};
+  var {data,error} = await sb.auth.signUp({email,password:pwd,options:{data:meta,emailRedirectTo:window.location.origin+window.location.pathname}});
+  if(btn) setLoading(btn,false,'Créer le compte →');
+  if(error){ if(errEl){errEl.textContent=error.message;errEl.classList.add('show');} return; }
+  if(data?.user&&!data.session){
+    showToast('✅ Vérifie ton email pour confirmer ton compte');
+    authMode('login');
+  } else if(data?.session){
+    currentUser=data.user; await loadProfile(); enterApp();
+  }
+};
+
 
 window.authMethod = function(method){
   _authCurrentMethod = method;
@@ -2644,81 +2691,30 @@ window.toggleClientTypePhone = function(){
 };
 
 window.submitEmail = async function(){
-  const email = document.getElementById('inp-email').value.trim();
-  const pwd   = document.getElementById('inp-pwd').value;
+  const email = (document.getElementById('inp-email')?.value||'').trim();
+  const pwd   = (document.getElementById('inp-pwd')?.value||'');
   const err   = document.getElementById('auth-err-email');
   const btn   = document.getElementById('btn-email-submit');
-
-  if(!email || !pwd){ showError(err, t('err_required')); return; }
-  if(_authCurrentMode === 'register'){
-    var pwd2 = document.getElementById('inp-pwd2')?.value || '';
-    if(!pwd2){ showError(err, t('err_required')); return; }
-    if(pwd !== pwd2){ showError(err, t('err_pwd_match')||'Les mots de passe ne correspondent pas'); return; }
-    if(pwd.length < 6){ showError(err, t('err_pwd_short')||'Mot de passe trop court (min. 6 caractères)'); return; }
-  }
+  if(!email || !pwd){ if(err){err.textContent='Email et mot de passe requis';err.classList.add('show');} return; }
   if(localStorage.getItem(DEMO_MODE_KEY) === '1'){ enterApp(); return; }
-  if(!sb){ showError(err, 'Supabase non configuré'); return; }
-
-  setLoading(btn, true, 'Chargement…');
-  err.classList.remove('show');
-
+  if(!sb){ if(err){err.textContent='Supabase non configuré';err.classList.add('show');} return; }
+  if(btn) setLoading(btn, true, 'Connexion…');
+  if(err) err.classList.remove('show');
   try {
-    if(_authCurrentMode === 'register'){
-      var isDriver=_authSelectedRole==='driver';
-      var isPro=document.getElementById('inp-pro-client')?.checked;
-      var fname='',lname='',company='',clientType='perso';
-      if(isDriver){
-        company=document.getElementById('inp-company-driver')?.value.trim()||'';
-        if(!company){showError(err,t('err_required'));setLoading(btn,false,'Créer le compte →');return;}
-        fname=company; lname='';
-      } else {
-        if(isPro){
-          company=document.getElementById('inp-company-client')?.value.trim()||'';
-          if(!company){showError(err,t('err_required'));setLoading(btn,false,'Créer le compte →');return;}
-          fname=company; lname=''; clientType='pro';
-        } else {
-          fname=document.getElementById('inp-fname')?.value.trim()||'';
-          lname=document.getElementById('inp-lname')?.value.trim()||'';
-          if(!fname||!lname){showError(err,t('err_required'));setLoading(btn,false,'Créer le compte →');return;}
-          clientType='perso';
-        }
-      }
-      const { data, error } = await sb.auth.signUp({
-        email, password: pwd,
-        options: { data: { email: email, first_name: fname, last_name: lname, company_name: company||null, client_type: clientType, role: _authSelectedRole, vat_number: document.getElementById('inp-vat')?.value.trim()||'' }}
-      });
-      if(error) throw error;
-      if(data.user && !data.session){
-        // Email confirmation required — sync email to profile now so admin can see it
-        sb.from('profiles').update({email: email}).eq('id', data.user.id).then(function(){},function(e){console.warn('Email sync on signup failed',e);});
-        showToast('📧 Vérifiez votre email pour confirmer votre compte');
-        setLoading(btn, false, 'Créer le compte →');
-        return;
-      }
-      currentUser = data.user;
-      await loadProfile();
-      enterApp();
-    } else {
-      _loginInProgress = true;
-      _entering = false;
-      const { data, error } = await sb.auth.signInWithPassword({ email, password: pwd });
-      if(error) throw error;
-      console.log('[login] signIn OK, loading profile...');
-      currentUser = data.user;
-      await loadProfile();
-      console.log('[login] profile loaded, entering app...');
-      setLoading(btn, false, t('auth_continue')||'Continuer →');
-      enterApp();
-      _loginInProgress = false;
-      console.log('[login] enterApp called');
-    }
+    _loginInProgress = true;
+    _entering = false;
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pwd });
+    if(error) throw error;
+    currentUser = data.user;
+    await loadProfile();
+    if(btn) setLoading(btn, false, 'Connexion →');
+    enterApp();
+    _loginInProgress = false;
   } catch(e){
     _loginInProgress = false;
-    const msg = e.message?.includes('Invalid login') ? t('err_auth') :
-                e.message?.includes('already registered') ? t('err_exists') :
-                e.message || 'Erreur inconnue';
-    showError(err, msg);
-    setLoading(btn, false, _authCurrentMode==='register' ? t('auth_create')||'Créer le compte →' : t('auth_continue')||'Continuer →');
+    const msg = e.message?.includes('Invalid login') ? 'Email ou mot de passe incorrect' : e.message || 'Erreur inconnue';
+    if(err){err.textContent=msg;err.classList.add('show');}
+    if(btn) setLoading(btn, false, 'Connexion →');
   }
 };
 
