@@ -2591,12 +2591,13 @@ function _showRegStep(step){
   else if(step===2) document.getElementById('reg-step2-client').style.display='block';
   else if(step===3){
     document.getElementById('reg-step3').style.display='block';
-    // Show correct fields
     var isDriver = _authSelectedRole==='driver';
+    var isPro = _regClientType==='pro';
     var cf=document.getElementById('reg-client-fields'); if(cf) cf.style.display=isDriver?'none':'block';
     var df=document.getElementById('reg-driver-fields'); if(df) df.style.display=isDriver?'block':'none';
-    var pf=document.getElementById('reg-perso-fields'); if(pf) pf.style.display=(_regClientType==='pro')?'none':'block';
-    var prof=document.getElementById('reg-pro-fields'); if(prof) prof.style.display=(_regClientType==='pro')?'block':'none';
+    // For client: show perso fields (fname/lname) OR pro fields (company), not both
+    var pf=document.getElementById('reg-perso-fields'); if(pf) pf.style.display=(!isDriver && !isPro)?'block':'none';
+    var prof=document.getElementById('reg-pro-fields'); if(prof) prof.style.display=(!isDriver && isPro)?'block':'none';
     var vat=document.getElementById('reg-vat'); if(vat) vat.style.display=isDriver?'block':'none';
   }
 }
@@ -2631,23 +2632,32 @@ window.selectClientType = function(type){
 window.submitEmailReg = async function(){
   var email = (document.getElementById('inp-email-reg')?.value||'').trim();
   var pwd   = (document.getElementById('inp-pwd-reg')?.value||'').trim();
-  var fname = (document.getElementById('inp-fname')?.value||'').trim();
-  var lname = (document.getElementById('inp-lname')?.value||'').trim();
-  var company = _authSelectedRole==='driver'
-    ? (document.getElementById('inp-company-driver')?.value||'').trim()
-    : (_regClientType==='pro' ? (document.getElementById('inp-company-client')?.value||'').trim() : '');
   var errEl = document.getElementById('auth-err-email');
   if(!email||!pwd){ if(errEl){errEl.textContent='Email et mot de passe requis';errEl.classList.add('show');} return; }
-  var btn = document.querySelector('#reg-step3 .btn-primary');
-  if(btn) setLoading(btn,true,'Création...');
+
   var role = _authSelectedRole||'client';
   var clientType = role==='client' ? (_regClientType||'perso') : null;
-  var meta = {role, client_type: clientType, first_name:fname||null, last_name:lname||null, company_name:company||null};
+  var fname='', lname='', company='';
+
+  if(role==='driver'){
+    company = (document.getElementById('inp-company-driver')?.value||'').trim();
+    fname = company; lname = '';
+  } else if(clientType==='pro'){
+    company = (document.getElementById('inp-company-client')?.value||'').trim();
+    if(!company){ if(errEl){errEl.textContent='Nom de société requis';errEl.classList.add('show');} return; }
+    fname = company; lname = '';
+  } else {
+    fname = (document.getElementById('inp-fname')?.value||'').trim();
+    lname = (document.getElementById('inp-lname')?.value||'').trim();
+  }
+
+  var btn = document.querySelector('#reg-step3 .btn-primary');
+  if(btn) setLoading(btn,true,'Création...');
+  var meta = {role, client_type:clientType, first_name:fname||null, last_name:lname||null, company_name:company||null};
   var {data,error} = await sb.auth.signUp({email,password:pwd,options:{data:meta,emailRedirectTo:window.location.origin+window.location.pathname}});
   if(btn) setLoading(btn,false,'Créer le compte →');
   if(error){ if(errEl){errEl.textContent=error.message;errEl.classList.add('show');} return; }
   if(data?.user){
-    // Immediately upsert profile with correct client_type
     var profileData = {id:data.user.id, email:email, role:role, client_type:clientType||'perso', first_name:fname||null, last_name:lname||null, company_name:company||null};
     try{ await sb.from('profiles').upsert(profileData); }catch(ex){ console.warn('profile upsert error',ex); }
   }
