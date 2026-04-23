@@ -2757,7 +2757,7 @@ window.ssoAuth = async function(provider){
   document.getElementById('auth-sso').style.display = 'block';
   document.getElementById('sso-msg').textContent = 'Redirection vers ' + provider.charAt(0).toUpperCase() + provider.slice(1) + '…';
 
-  const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + window.location.pathname }});
+  const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + window.location.pathname, ...(provider==='azure' ? {scopes:'email profile openid'} : {}) }});
   if(error){
     document.getElementById('auth-main').style.display = 'block';
     document.getElementById('auth-sso').style.display = 'none';
