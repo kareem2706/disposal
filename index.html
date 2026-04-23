@@ -992,6 +992,10 @@ body{background:var(--bg);}
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="3" y="1.5" width="10" height="13" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 5h5M5.5 7.5h5M5.5 10h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           <span data-i18n="invoices">Factures</span>
         </button>
+        <button class="nav-item" id="nav-passengers-btn" data-page="passengers" onclick="showPage('passengers')" style="display:none;">
+          <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.4"/><path d="M1 14c0-2.761 2.239-5 5-5s5 2.239 5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="12" cy="5" r="2" stroke="currentColor" stroke-width="1.3"/><path d="M14.5 14c0-2.209-1.119-4-2.5-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Passagers
+        </button>
       </div>
 
       <!-- DRIVER nav -->
@@ -1179,6 +1183,16 @@ body{background:var(--bg);}
     <div id="page-invoices" class="page">
       <div class="pg-head"><div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div><div><h1>Factures</h1></div></div>
       <div id="invoices-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
+    </div>
+
+    <!-- PASSENGERS PAGE (pro clients only) -->
+    <div id="page-passengers" class="page">
+      <div class="pg-head">
+        <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a7 7 0 0114 0v2"/><circle cx="19" cy="7" r="3"/><path d="M22 21v-1.5a4.5 4.5 0 00-3-4.243"/></svg></div>
+        <div><h1>Passagers</h1><p>Gérez vos passagers habituels</p></div>
+        <button class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="openPassengerModal()">+ Ajouter</button>
+      </div>
+      <div id="passengers-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
 
     <!-- DRIVER PAGES -->
@@ -2929,7 +2943,11 @@ function enterApp(){
   const fn = currentProfile?.first_name || '';
   const ln = currentProfile?.last_name || '';
   document.getElementById('nav-name').textContent = (fn + ' ' + ln).trim() || currentUser?.email?.split('@')[0] || '—';
-  document.getElementById('nav-role').textContent = isAdmin ? (isAdminDriver ? 'Admin / Fleet' : 'Admin') : t(role);
+  var roleLabel = isAdmin ? (isAdminDriver ? 'Admin / Fleet' : 'Admin') : (role==='client' ? (currentProfile?.client_type==='pro' ? 'Client Pro' : 'Client') : t(role));
+  document.getElementById('nav-role').textContent = roleLabel;
+  // Show Passagers menu only for pro clients
+  var passBtnNav = document.getElementById('nav-passengers-btn');
+  if(passBtnNav) passBtnNav.style.display = (!isAdmin && role==='client' && currentProfile?.client_type==='pro') ? 'flex' : 'none';
   const avEl = document.getElementById('nav-avatar');
   if(currentProfile?.avatar_url){
     avEl.innerHTML = `<img src="${currentProfile.avatar_url}" alt="">`;
@@ -3036,6 +3054,7 @@ async function loadPageData(pageId){
     case 'admin-fleets':   await loadAdminFleets(); break;
     case 'admin-clients':  await loadAdminClients(); break;
     case 'admin-dashboard': await loadAdminDashboard(); break;
+    case 'passengers':    await loadPassengersList(); break;
     case 'admin-rides':    await loadAdminRides(); break;
   }
 }
@@ -8524,10 +8543,116 @@ async function loadAdminDashboard() {
   await refreshAdminDashboard();
 }
 
+// ═══════════════════════════════════════════════════════════════
+// PASSENGERS (pro clients)
+// ═══════════════════════════════════════════════════════════════
+var _editPassengerId = null;
+
+window.showPage_passengers_hook = async function(){
+  await loadPassengersList();
+};
+
+async function loadPassengersList(){
+  if(!sb||!currentUser) return;
+  var el = document.getElementById('passengers-list');
+  if(!el) return;
+  el.innerHTML = '<div class="page-loading"><div class="page-spinner"></div></div>';
+  var {data,error} = await sb.from('passengers').select('*').eq('client_id',currentUser.id).order('last_name',{ascending:true});
+  if(error){ el.innerHTML='<div style="padding:24px;color:var(--red);">Erreur: '+error.message+'</div>'; return; }
+  if(!data||data.length===0){
+    el.innerHTML='<div class="card" style="padding:40px;text-align:center;"><div style="font-size:32px;margin-bottom:12px;">👤</div><div style="font-size:14px;color:var(--ink3);">Aucun passager enregistré</div><button class="btn btn-primary btn-sm" style="margin-top:16px;" onclick="openPassengerModal()">+ Ajouter un passager</button></div>';
+    return;
+  }
+  el.innerHTML = '<div class="card" style="overflow:hidden;">'
+    +'<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+    +'<thead><tr style="background:var(--sand2);">'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Nom</th>'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Téléphone</th>'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Email</th>'
+      +'<th style="padding:10px 14px;"></th>'
+    +'</tr></thead><tbody>'
+    +data.map(function(p){
+      var name = ((p.first_name||'')+' '+(p.last_name||'')).trim();
+      var sid = JSON.stringify(p.id).replace(/'/g,"&#39;");
+      return '<tr style="border-bottom:1px solid var(--sand2);">'
+        +'<td style="padding:10px 14px;font-weight:500;">'+name+'</td>'
+        +'<td style="padding:10px 14px;color:var(--ink3);">'+(p.phone||'—')+'</td>'
+        +'<td style="padding:10px 14px;color:var(--ink3);">'+(p.email||'—')+'</td>'
+        +'<td style="padding:10px 14px;text-align:right;white-space:nowrap;">'
+          +'<button onclick="editPassenger(\''+p.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--ink3);padding:4px;margin-right:4px;"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+          +'<button onclick="deletePassenger(\''+p.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--red);padding:4px;"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>'
+        +'</td></tr>';
+    }).join('')
+    +'</tbody></table></div>';
+}
+
+window.openPassengerModal = function(){
+  _editPassengerId = null;
+  document.getElementById('passenger-modal-title').textContent = 'Ajouter un passager';
+  ['pax-fname','pax-lname','pax-phone','pax-email'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('pax-err').classList.remove('show');
+  openModal('m-passenger');
+};
+
+window.editPassenger = async function(id){
+  if(!sb) return;
+  var {data} = await sb.from('passengers').select('*').eq('id',id).maybeSingle();
+  if(!data) return;
+  _editPassengerId = id;
+  document.getElementById('passenger-modal-title').textContent = 'Modifier le passager';
+  var s = function(eid,v){var e=document.getElementById(eid);if(e)e.value=v||'';};
+  s('pax-fname',data.first_name);s('pax-lname',data.last_name);s('pax-phone',data.phone);s('pax-email',data.email);
+  document.getElementById('pax-err').classList.remove('show');
+  openModal('m-passenger');
+};
+
+window.savePassenger = async function(){
+  if(!sb) return;
+  var fname = (document.getElementById('pax-fname')?.value||'').trim();
+  var lname = (document.getElementById('pax-lname')?.value||'').trim();
+  var phone = (document.getElementById('pax-phone')?.value||'').trim();
+  var email = (document.getElementById('pax-email')?.value||'').trim();
+  var errEl = document.getElementById('pax-err');
+  if(!fname||!lname){ if(errEl){errEl.textContent='Prénom et nom requis';errEl.classList.add('show');} return; }
+  var payload = {first_name:fname,last_name:lname,phone:phone||null,email:email||null,client_id:currentUser.id};
+  var {error} = _editPassengerId
+    ? await sb.from('passengers').update(payload).eq('id',_editPassengerId)
+    : await sb.from('passengers').insert(payload);
+  if(error){ if(errEl){errEl.textContent=error.message;errEl.classList.add('show');} return; }
+  closeModal('m-passenger');
+  showToast(_editPassengerId ? '✅ Passager mis à jour' : '✅ Passager ajouté');
+  await loadPassengersList();
+};
+
+window.deletePassenger = async function(id){
+  if(!sb||!confirm('Supprimer ce passager ?')) return;
+  await sb.from('passengers').delete().eq('id',id);
+  showToast('Passager supprimé');
+  await loadPassengersList();
+};
+
 
 
 </script>
 
+
+
+<!-- PASSENGER MODAL -->
+<div class="modal-overlay" id="m-passenger" onclick="if(event.target===this)closeModal('m-passenger')">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-hd"><span class="modal-title" id="passenger-modal-title">Ajouter un passager</span><button class="close-btn" onclick="closeModal('m-passenger')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+    <div class="modal-body" style="padding:20px 22px;">
+      <div class="form-grid">
+        <div class="input-group"><label>Prénom <span style="color:var(--red)">*</span></label><input id="pax-fname" placeholder="Marie"></div>
+        <div class="input-group"><label>Nom <span style="color:var(--red)">*</span></label><input id="pax-lname" placeholder="Dupont"></div>
+      </div>
+      <div class="input-group"><label>Téléphone</label><input id="pax-phone" type="tel" placeholder="+32 470 12 34 56"></div>
+      <div class="input-group"><label>Email</label><input id="pax-email" type="email" placeholder="marie@example.com"></div>
+      <div id="pax-err" class="auth-error"></div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-secondary" onclick="closeModal('m-passenger')">Annuler</button><button class="btn btn-primary" onclick="savePassenger()">Enregistrer</button></div>
+  </div>
+</div>
 <div class="modal-overlay" id="m-payment-result" style="z-index:9999;" onclick="if(event.target===this)closeModal('m-payment-result')">
   <div class="modal" style="max-width:380px;text-align:center;">
     <div class="modal-body" style="padding:36px 28px;">
