@@ -8644,10 +8644,12 @@ window.savePassenger = async function(){
 };
 
 window.deletePassenger = async function(id){
-  if(!sb||!confirm('Supprimer ce passager ?')) return;
-  await sb.from('passengers').delete().eq('id',id);
-  showToast('Passager supprimé');
-  await loadPassengersList();
+  if(!sb) return;
+  _fleetConfirm('Supprimer ce passager ?','Cette action est irréversible.',async function(){
+    await sb.from('passengers').delete().eq('id',id);
+    showToast('Passager supprimé');
+    await loadPassengersList();
+  });
 };
 
 
