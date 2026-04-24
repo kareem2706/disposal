@@ -4195,6 +4195,25 @@ window._detailGen=0;
 window.openRideDetail=function(el){
   var r;
   try{ r=JSON.parse(el.dataset.ride.replace(/&#39;/g,"'")); }catch(e){return;}
+  // Always fetch fresh data from Supabase to ensure latest notes/status
+  if(sb && r.id && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
+    sb.from('rides').select('*').eq('id',r.id).maybeSingle().then(function(res){
+      if(res.data){
+        var freshEl = document.createElement('div');
+        freshEl.dataset.ride = JSON.stringify(res.data).replace(/'/g,"&#39;");
+        _openRideDetailImpl(freshEl);
+      } else {
+        _openRideDetailImpl(el);
+      }
+    }, function(){ _openRideDetailImpl(el); });
+    return;
+  }
+  _openRideDetailImpl(el);
+};
+
+function _openRideDetailImpl(el){
+  var r;
+  try{ r=JSON.parse(el.dataset.ride.replace(/&#39;/g,"'")); }catch(e){return;}
   window._lastDetailRide=r;
   var gen=++window._detailGen;
   var isClient=currentRole==='client';
