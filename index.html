@@ -4411,20 +4411,19 @@ window.openRideDetail=function(el){
           sb.from('rides').update({notes: updatedNotes}).eq('id', r.id).then(function(){}, function(){});
           notesRaw = updatedNotes;
         }
-        var offerNoteMatch = notesRaw.match(/\|offer_note:([^|]+)/);
-        var offerNote = offerNoteMatch ? offerNoteMatch[1].trim() : '';
+        var offerNote = (notesRaw.match(/\|offer_note:([^|]+)/)||[])[1]||'';
+        var drvNoteId = 'drv-note-card-'+r.id;
+
         var contactBlock = '<div style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
           +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Informations passager</div>'
           +'<div style="font-weight:600;font-size:14px;'+(noteDriver?'margin-bottom:6px;':'')+'">'+cName+'</div>'
           +(noteDriver?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;padding-top:4px;border-top:1px solid var(--sand2);">'+noteDriver+'</div>':'')
           +'</div>';
         // Note au client card (editable by driver)
-        var offerNoteMatch = notesRaw.match(/\|offer_note:([^|]+)/);
-        var offerNote = offerNoteMatch ? offerNoteMatch[1].trim() : '';
         var noteCard = '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
           +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
             +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Note au client</div>'
-            +'<button id="btn-drv-note-edit" onclick="openDriverNoteEdit(\''+r.id+'\',\''+offerNote.replace(/'/g,'&#39;')+'\')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;font-family:\'DM Sans\',sans-serif;">'
+            +'<button onclick="openDriverNoteEdit(\''+r.id+'\',\''+offerNote.replace(/'/g,'&#39;')+'\')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;font-family:\'DM Sans\',sans-serif;">'
               +'<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/><path d="M10 4l2 2"/></svg>'
               +(offerNote ? ' Modifier' : ' Ajouter')
             +'</button>'
