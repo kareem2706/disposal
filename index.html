@@ -3001,6 +3001,7 @@ function enterApp(){
           await sb.from('offers').update({status:'accepted'}).eq('id',_sr.offer);
           await sb.from('offers').update({status:'rejected'}).eq('ride_id',_sr.ride).neq('id',_sr.offer);
           await sb.from('rides').update({status:'confirmed',payment_method:'stripe',final_price:tvac||null,driver_id:payDriverId}).eq('id',_sr.ride);
+          await _promoteNotesToDriver(_sr.ride);
           if(typeof loadClientDashboard==='function') await loadClientDashboard();
           // Self-contained success overlay
           var _so=document.createElement('div');
@@ -3971,6 +3972,7 @@ window.acceptOffer = async function(offerId, driverId, price){
   await sb.from('offers').update({status:'accepted'}).eq('id', offerId);
   await sb.from('offers').update({status:'rejected'}).eq('ride_id', currentRideId).neq('id', offerId);
   await sb.from('rides').update({status:'confirmed', driver_id: driverId, final_price: price}).eq('id', currentRideId);
+  await _promoteNotesToDriver(currentRideId);
   closeModal('m-view-offers');
   showToast(t('toast_offer_acc'));
   await loadClientDashboard();
@@ -4163,7 +4165,7 @@ function _buildRideDetailBody(r, opts){
   }
   var rawNotes=r.notes||'';
   var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|tel:[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').trim();
-  if(cleanNotes){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div></div>';}
+  if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div></div>';}
   var noteDrvMatch = rawNotes.match(/\|note_drv:([^|]+)/);
   if(noteDrvMatch){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">Note du client</div><div style="padding:12px;background:var(--blue-bg);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;">'+noteDrvMatch[1].trim()+'</div></div>';}
   // Note: prix demandé for subcontract shown in footer only
@@ -4295,7 +4297,7 @@ window.openRideDetail=function(el){
 
   var rawNotes=r.notes||'';
   var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|tel:[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').trim();
-  if(cleanNotes){
+  if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){
     body+='<div>'
       +'<div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div>'
       +'<div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div>'
@@ -4728,6 +4730,25 @@ window.generateRideVoucher = async function(rideId){
       +'</table></div>':'');
   _buildPdfWindow(_pdfBase('Voucher \u2014 '+(r.booking_code||rideId.slice(0,8)),body));
 };
+
+// Promote base notes to |note_drv: when a ride is confirmed
+async function _promoteNotesToDriver(rideId){
+  if(!sb||!rideId) return;
+  try{
+    var {data:rd} = await sb.from('rides').select('notes').eq('id',rideId).maybeSingle();
+    if(!rd) return;
+    var notes = rd.notes||'';
+    // Only promote if there's no note_drv yet
+    if(notes.includes('|note_drv:')) return;
+    // Extract clean base note (strip pax/tel/duration/mixte tags)
+    var clean = notes
+      .replace(/\|pax:[^|]*/g,'').replace(/\|tel:[^|]*/g,'')
+      .replace(/^Mixte:.*$/m,'').replace(/Dur\u00e9e:[^\s|]+/g,'').trim();
+    if(!clean) return;
+    var newNotes = notes.trimEnd() + '|note_drv:' + clean;
+    await sb.from('rides').update({notes: newNotes}).eq('id',rideId);
+  }catch(e){ console.warn('_promoteNotesToDriver error',e); }
+}
 
 window.completeRide=async function(rideId){
   if(!sb)return;
@@ -8500,6 +8521,7 @@ window.adminConfirmPayment = async function(rideId){
   if(btn){ btn.disabled=true; btn.textContent='Confirmation…'; }
   try {
     var { error } = await sb.from('rides').update({status:'confirmed'}).eq('id', rideId).eq('status','pending_payment');
+    if(!error) await _promoteNotesToDriver(rideId);
     if(error) throw error;
     closeModal('m-ar-detail');
     showToast('✅ Paiement confirmé — course confirmée');
