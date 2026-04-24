@@ -4409,13 +4409,17 @@ function _openRideDetailImpl(el){
       var bodyEl3=document.getElementById('detail-body');
       if(!bodyEl3) return;
       try {
+        var driverIdForOffer = r.driver_id || (currentUser ? currentUser.id : null);
         var [cRes, offerRes2] = await Promise.all([
           sb.from('profiles').select('first_name,last_name').eq('id',r.client_id).maybeSingle(),
-          r.driver_id ? sb.from('offers').select('message').eq('ride_id',r.id).eq('driver_id',r.driver_id).eq('status','accepted').maybeSingle() : Promise.resolve({data:null})
+          driverIdForOffer ? sb.from('offers').select('message').eq('ride_id',r.id).eq('driver_id',driverIdForOffer).eq('status','accepted').maybeSingle() : Promise.resolve({data:null})
         ]);
         var cp = cRes.data;
         var offerForNote = offerRes2.data;
-        if(!cp) return;
+        if(!cp){
+          // Still show note card even without client profile
+          cp = {first_name:'', last_name:''};
+        }
         var notesRaw = r.notes||'';
         var paxMatch = notesRaw.match(/\|pax:([^|]+)/);
         var noteDrvMatch = notesRaw.match(/\|note_drv:([^|]+)/);
@@ -4439,10 +4443,10 @@ function _openRideDetailImpl(el){
           +(noteDriver?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;padding-top:4px;border-top:1px solid #d0e4f7;">'+noteDriver+'</div>':'')
           +'</div>';
         // Note au client card (editable by driver)
-        var noteCard = '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
+        var noteCard = '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
           +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
             +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Note au client</div>'
-            +'<button onclick="openDriverNoteEdit(\''+r.id+'\',\''+offerNote.replace(/'/g,'&#39;')+'\')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;font-family:\'DM Sans\',sans-serif;">'
+            +'<button class="drv-note-btn" data-rid="'+r.id+'" data-note="'+offerNote.replace(/"/g,'&quot;')+'" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;font-family:\'DM Sans\',sans-serif;">'
               +'<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/><path d="M10 4l2 2"/></svg>'
               +(offerNote ? ' Modifier' : ' Ajouter')
             +'</button>'
@@ -4452,6 +4456,13 @@ function _openRideDetailImpl(el){
             : '<div style="font-size:12px;color:var(--ink4);">Aucune note</div>')
           +'</div>';
         bodyEl3.insertAdjacentHTML('beforeend', contactBlock + noteCard);
+        // Attach event via JS (safe for all characters including apostrophes)
+        setTimeout(function(){
+          var btn = bodyEl3.querySelector('.drv-note-btn');
+          if(btn) btn.addEventListener('click', function(){
+            openDriverNoteEdit(this.dataset.rid, this.dataset.note);
+          });
+        }, 10);
       } catch(e){ console.warn('client contact fetch error:', e); }
     })();
   }
