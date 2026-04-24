@@ -1013,6 +1013,7 @@ body{background:var(--bg);}
         <button class="nav-item" data-page="missions" onclick="showPage('missions')">
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M5 8l2 2 4-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span data-i18n="missions">Mes missions</span>
+          <span id="missions-badge" style="display:none;background:var(--green);color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:1px 6px;margin-left:auto;line-height:16px;"></span>
         </button>
         <button class="nav-item" data-page="d-calendar" onclick="showPage('d-calendar')">
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M5 1v3M11 1v3M2 7h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
@@ -3633,6 +3634,16 @@ async function loadDriverDashboard(){
     // Re-fetch after auto-complete
     var refreshed = await sb.from('rides').select('*').eq('driver_id', uid).order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
     missions = refreshed.data || [];
+  }
+
+  // Update missions badge
+  var confirmedUpcoming = missions.filter(function(r){
+    return r.status==='confirmed' && r.ride_date >= todayISO;
+  });
+  var badge = document.getElementById('missions-badge');
+  if(badge){
+    if(confirmedUpcoming.length > 0){ badge.textContent = confirmedUpcoming.length; badge.style.display='inline-block'; }
+    else { badge.style.display='none'; }
   }
 
   const monthMissions = missions.filter(function(r){
@@ -6530,12 +6541,35 @@ function _paxModalHtml(title, fields, saveType, rideId){
   +'</div>';
 }
 
-window.openPaxEdit = function(rideId, currentName, currentPhone){
+window.openPaxEdit = async function(rideId, currentName, currentPhone){
   var existing = document.getElementById('m-pax-edit'); if(existing) existing.remove();
-  var fields = '<div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Nom du passager</label>'
+
+  var isPro = currentProfile?.client_type === 'pro';
+  var fields = '';
+
+  if(isPro && sb){
+    // Load saved passengers for dropdown
+    var {data:passList} = await sb.from('passengers').select('*').eq('client_id', currentUser.id).order('last_name',{ascending:true});
+    if(passList && passList.length > 0){
+      var opts = '<option value="">— Saisir manuellement —</option>'
+        + passList.map(function(p){
+            var n = ((p.first_name||'')+' '+(p.last_name||'')).trim();
+            var tel = p.phone||'';
+            return '<option value="'+n.replace(/"/g,'&quot;')+'|'+tel.replace(/"/g,'&quot;')+'">'+n+(tel?' ('+tel+')':'')+'</option>';
+          }).join('');
+      fields += '<div style="margin-bottom:12px;">'
+        +'<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Choisir un passager</label>'
+        +'<select id="pax-select" onchange="(function(){var v=document.getElementById(\'pax-select\').value;if(!v)return;var parts=v.split(\'|\');document.getElementById(\'pax-edit-name\').value=parts[0]||\'\';document.getElementById(\'pax-edit-phone\').value=parts[1]||\'\';})()" '
+        +'style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;background:#fff;">'
+        +opts+'</select></div>';
+    }
+  }
+
+  fields += '<div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Nom du passager</label>'
     +'<input id="pax-edit-name" type="text" value="'+currentName.replace(/"/g,'&quot;')+'" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;" placeholder="Nom Prénom"></div>'
     +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Numéro de téléphone</label>'
     +'<input id="pax-edit-phone" type="tel" value="'+currentPhone.replace(/"/g,'&quot;')+'" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;" placeholder="+32 ..."></div>';
+
   document.body.insertAdjacentHTML('beforeend', _paxModalHtml('Modifier le passager', fields, 'pax', rideId));
   setTimeout(function(){
     var btn = document.getElementById('btn-pax-save');
