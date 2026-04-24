@@ -3784,7 +3784,7 @@ async function loadMissions(){
   let missions = [];
   const MISSIONS_ALL = [...MISSION_STATUSES, 'cancelled'];
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
-    const { data } = await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSIONS_ALL).order('ride_date',{ascending:false}).order('ride_time',{ascending:false});
+    const { data } = await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSIONS_ALL).order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
     missions = data || [];
 
     // Also find rides via accepted offers (in case driver_id wasn't set on ride)
@@ -3803,7 +3803,7 @@ async function loadMissions(){
     var confirmedMissions=missions.filter(function(r){return r.status==='confirmed';});
     if(confirmedMissions.length>0){
       await _autoCompleteOverdueRides(confirmedMissions);
-      var refreshed=await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSIONS_ALL).order('ride_date',{ascending:false}).order('ride_time',{ascending:false});
+      var refreshed=await sb.from('rides').select('*').eq('driver_id', currentUser.id).in('status', MISSIONS_ALL).order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
       missions=refreshed.data||[];
     }
   } else {
@@ -4612,10 +4612,6 @@ window.openRideDetail=function(el){
       } else {
         ft=_missionBtn+closeBtn;
       }
-      var safeRp=JSON.stringify(r).replace(/'/g,'&#39;');
-      ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="closeModal(\'m-ride-detail\');deletePersonalMission(\''+rId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Supprimer</button>'
-        +'<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:4px;" onclick="closeModal(\'m-ride-detail\');_editPersonalFromDetail()" data-ride=\''+safeRp+'\'><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Modifier</button>'
-        +closeBtn;
     } else {
       // For subcontract rides (done/cancelled etc.) — show price left
       var subDonePrice = (r.is_subcontract && r.final_price)
