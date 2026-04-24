@@ -3083,8 +3083,8 @@ async function loadClientDashboard(){
     const { data: rideData, error: rideErr } = await sb
       .from('rides').select('*')
       .eq('client_id', uid)
-      .order('ride_date',{ascending:true})
-      .order('ride_time',{ascending:true});
+      .order('ride_date',{ascending:false})
+      .order('ride_time',{ascending:false});
     if(rideErr){ console.error('rides error:', rideErr.message, rideErr.code); }
     rides = rideData || [];
 
@@ -3093,7 +3093,7 @@ async function loadClientDashboard(){
     if(pendingToCancel.length>0){
       await _autoCancelOverdueRides(pendingToCancel);
       // Re-fetch rides
-      var rr=await sb.from('rides').select('*').eq('client_id', uid).order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
+      var rr=await sb.from('rides').select('*').eq('client_id', uid).order('ride_date',{ascending:false}).order('ride_time',{ascending:false});
       rides=rr.data||[];
     }
 
@@ -3101,7 +3101,7 @@ async function loadClientDashboard(){
     var confirmedToComplete=rides.filter(function(r){return r.status==='confirmed';});
     if(confirmedToComplete.length>0){
       await _autoCompleteOverdueRides(confirmedToComplete);
-      var rr2=await sb.from('rides').select('*').eq('client_id', uid).order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
+      var rr2=await sb.from('rides').select('*').eq('client_id', uid).order('ride_date',{ascending:false}).order('ride_time',{ascending:false});
       rides=rr2.data||[];
     }
 
@@ -3171,7 +3171,7 @@ async function loadRides(filter){
 
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     var q = sb.from('rides').select('*').eq('client_id', uid)
-      .order('ride_date',{ascending:true}).order('ride_time',{ascending:true});
+      .order('ride_date',{ascending:false}).order('ride_time',{ascending:false});
     if(filter !== 'all') q = q.eq('status', filter);
     var res = await q;
     if(res.error) console.error('loadRides error:', res.error);
@@ -3216,8 +3216,8 @@ async function loadInvoices(){
   var rides = [];
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     const [doneRes, cancelledRes] = await Promise.all([
-      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes').eq('client_id', currentUser.id).eq('status','done').order('ride_date',{ascending:true}),
-      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes,payment_method').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).order('ride_date',{ascending:true})
+      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes').eq('client_id', currentUser.id).eq('status','done').order('ride_date',{ascending:false}),
+      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes,payment_method').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).order('ride_date',{ascending:false})
     ]);
     rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'))];
     rides.sort(function(a,b){ return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||'')); });
@@ -3369,8 +3369,8 @@ window.generateMonthInvoice = async function(monthKey){
     var d = new Date(parseInt(monthKey.slice(0,4)), parseInt(monthKey.slice(5,7)), 0);
     var to = monthKey+'-'+String(d.getDate()).padStart(2,'0');
     const [doneRes, cancelledRes] = await Promise.all([
-      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status').eq('client_id', currentUser.id).eq('status','done').gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true}),
-      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,payment_method').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true})
+      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status').eq('client_id', currentUser.id).eq('status','done').gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:false}),
+      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,payment_method').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:false})
     ]);
     rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'))];
     rides.sort(function(a,b){ return (a.ride_date||'').localeCompare(b.ride_date||''); });
@@ -3742,7 +3742,7 @@ async function loadMarketplace(){
   // My own subcontracts
   let mySubRides = [];
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
-    const ms = await sb.from('rides').select('*').eq('client_id', currentUser.id).eq('is_subcontract', true).order('ride_date',{ascending:true});
+    const ms = await sb.from('rides').select('*').eq('client_id', currentUser.id).eq('is_subcontract', true).order('ride_date',{ascending:false});
     mySubRides = ms.data || [];
   }
 
@@ -6570,7 +6570,7 @@ window.openPaxEdit = async function(rideId, currentName, currentPhone){
 
   if(isPro && sb){
     // Load saved passengers for dropdown
-    var {data:passList} = await sb.from('passengers').select('*').eq('client_id', currentUser.id).order('last_name',{ascending:true});
+    var {data:passList} = await sb.from('passengers').select('*').eq('client_id', currentUser.id).order('created_at',{ascending:false});
     if(passList && passList.length > 0){
       var opts = '<option value="">— Saisir manuellement —</option>'
         + passList.map(function(p){
