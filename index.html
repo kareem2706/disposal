@@ -6559,16 +6559,18 @@ window.openPaxEdit = async function(rideId, currentName, currentPhone){
           }).join('');
       fields += '<div style="margin-bottom:12px;">'
         +'<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Choisir un passager</label>'
-        +'<select id="pax-select" onchange="(function(){var v=document.getElementById(\'pax-select\').value;if(!v)return;var parts=v.split(\'|\');document.getElementById(\'pax-edit-name\').value=parts[0]||\'\';document.getElementById(\'pax-edit-phone\').value=parts[1]||\'\';})()" '
+        +'<select id="pax-select" onchange="(function(){var v=document.getElementById(\'pax-select\').value;var manual=document.getElementById(\'pax-manual-fields\');if(!v){manual.style.display=\'block\';}else{var parts=v.split(\'|\');document.getElementById(\'pax-edit-name\').value=parts[0]||\'\';document.getElementById(\'pax-edit-phone\').value=parts[1]||\'\';;manual.style.display=\'none\';}})()" '
         +'style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;background:#fff;">'
-        +opts+'</select></div>';
+        +opts+'</select></div>'
+        +'<div id="pax-manual-fields">';
     }
   }
 
   fields += '<div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Nom du passager</label>'
     +'<input id="pax-edit-name" type="text" value="'+currentName.replace(/"/g,'&quot;')+'" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;" placeholder="Nom Prénom"></div>'
     +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Numéro de téléphone</label>'
-    +'<input id="pax-edit-phone" type="tel" value="'+currentPhone.replace(/"/g,'&quot;')+'" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;" placeholder="+32 ..."></div>';
+    +'<input id="pax-edit-phone" type="tel" value="'+currentPhone.replace(/"/g,'&quot;')+'" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;" placeholder="+32 ..."></div>'
+    +(isPro && passList && passList.length > 0 ? '</div>' : '');
 
   document.body.insertAdjacentHTML('beforeend', _paxModalHtml('Modifier le passager', fields, 'pax', rideId));
   setTimeout(function(){
