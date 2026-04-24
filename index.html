@@ -4440,7 +4440,7 @@ function _openRideDetailImpl(el){
         var contactBlock = '<div style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
           +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Informations passager</div>'
           +'<div style="font-weight:600;font-size:14px;'+(noteDriver?'margin-bottom:6px;':'')+'">'+cName+'</div>'
-          +(noteDriver?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;padding-top:4px;border-top:1px solid #d0e4f7;">'+noteDriver+'</div>':'')
+          +(noteDriver?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;padding-top:4px;border-top:1px solid #d0e4f7;"><span style="font-style:normal;font-weight:600;color:var(--ink2);">Message du client\u00a0: </span>'+noteDriver+'</div>':'')
           +'</div>';
         // Note au client card (editable by driver)
         var noteCard = '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
