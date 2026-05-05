@@ -6758,37 +6758,63 @@ window.saveDriverNote = async function(rideId){
 
 window.openPaxEdit = async function(rideId, currentName, currentPhone){
   var existing = document.getElementById('m-pax-edit'); if(existing) existing.remove();
-
   var isPro = currentProfile?.client_type === 'pro';
   var fields = '';
 
   if(isPro && sb){
-    // Load saved passengers for dropdown
-    var {data:passList} = await sb.from('passengers').select('*').eq('client_id', currentUser.id).order('created_at',{ascending:false});
+    var {data:passList} = await sb.from('passengers').select('*').eq('client_id', currentUser.id).order('last_name',{ascending:true});
     if(passList && passList.length > 0){
-      var opts = '<option value="">— Saisir manuellement —</option>'
+      var opts = '<option value="">— Choisir un passager —</option>'
         + passList.map(function(p){
             var n = ((p.first_name||'')+' '+(p.last_name||'')).trim();
-            var tel = p.phone||'';
-            return '<option value="'+n.replace(/"/g,'&quot;')+'|'+tel.replace(/"/g,'&quot;')+'">'+n+(tel?' ('+tel+')':'')+'</option>';
-          }).join('');
-      fields += '<div style="margin-bottom:12px;">'
+            var t = p.phone||'';
+            return '<option value="'+n.replace(/"/g,'&quot;')+'||'+t.replace(/"/g,'&quot;')+'">'+n+(t?' · '+t:'')+'</option>';
+          }).join('')
+        +'<option value="__manual__">✏ Autre passager</option>';
+
+      fields = '<div class="input-group" style="margin-bottom:10px;">'
         +'<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Choisir un passager</label>'
-        +'<select id="pax-select" onchange="(function(){var v=document.getElementById(\'pax-select\').value;var manual=document.getElementById(\'pax-manual-fields\');if(!v){manual.style.display=\'block\';}else{var parts=v.split(\'|\');document.getElementById(\'pax-edit-name\').value=parts[0]||\'\';document.getElementById(\'pax-edit-phone\').value=parts[1]||\'\';;manual.style.display=\'none\';}})()" '
-        +'style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;background:#fff;">'
+        +'<select id="pax-select" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:13px;background:#fff;font-family:\'DM Sans\',sans-serif;">'
         +opts+'</select></div>'
-        +'<div id="pax-manual-fields">';
+        +'<div id="pax-manual-fields" style="display:block;">';
     }
   }
 
-  fields += '<div style="margin-bottom:12px;"><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Nom du passager</label>'
-    +'<input id="pax-edit-name" type="text" value="'+currentName.replace(/"/g,'&quot;')+'" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;" placeholder="Nom Prénom"></div>'
-    +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Numéro de téléphone</label>'
-    +'<input id="pax-edit-phone" type="tel" value="'+currentPhone.replace(/"/g,'&quot;')+'" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;" placeholder="+32 ..."></div>'
-    +(isPro && passList && passList.length > 0 ? '</div>' : '');
+  var safeN = (currentName||'').replace(/"/g,'&quot;');
+  var safeT = (currentPhone||'').replace(/"/g,'&quot;');
+  var nameVal = (currentName && currentName!=='—') ? ' value="'+safeN+'"' : '';
+  var telVal  = currentPhone ? ' value="'+safeT+'"' : '';
 
-  document.body.insertAdjacentHTML('beforeend', _paxModalHtml('Modifier le passager', fields, 'pax', rideId));
+  fields += '<div style="margin-bottom:10px;">'
+    +'<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Nom &amp; Pr&eacute;nom</label>'
+    +'<input id="pax-edit-name" type="text"'+nameVal+' style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;" placeholder="Marie Dupont"></div>'
+    +'<div>'
+    +'<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">T&eacute;l&eacute;phone</label>'
+    +'<input id="pax-edit-phone" type="tel"'+telVal+' style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;" placeholder="+32 470 12 34 56"></div>'
+    +(isPro ? '</div>' : '');
+
+  document.body.insertAdjacentHTML('beforeend', _paxModalHtml('Informations passager', fields, 'pax', rideId));
+
+  // Wire up dropdown after render
   setTimeout(function(){
+    var sel = document.getElementById('pax-select');
+    var manDiv = document.getElementById('pax-manual-fields');
+    if(sel && manDiv){
+      sel.addEventListener('change', function(){
+        if(sel.value === '__manual__'){
+          manDiv.style.display = 'block';
+          var ni=document.getElementById('pax-edit-name'); if(ni) ni.value='';
+          var ti=document.getElementById('pax-edit-phone'); if(ti) ti.value='';
+        } else if(sel.value){
+          manDiv.style.display = 'none';
+          var parts = sel.value.split('||');
+          var ni=document.getElementById('pax-edit-name'); if(ni) ni.value=parts[0]||'';
+          var ti=document.getElementById('pax-edit-phone'); if(ti) ti.value=parts[1]||'';
+        } else {
+          manDiv.style.display = 'block';
+        }
+      });
+    }
     var btn = document.getElementById('btn-pax-save');
     if(btn) btn.addEventListener('click', function(){ savePaxInfo(this.dataset.rid); });
   }, 10);
