@@ -969,7 +969,7 @@ body{background:var(--bg);}
     <nav class="app-nav">
       <!-- CLIENT nav -->
       <div id="nav-cta-client" style="padding:8px 10px 4px;">
-        <button class="sidebar-cta" onclick="cancelRideModal();openModal('m-new-ride')">
+        <button class="sidebar-cta" onclick="cancelRideModal();openModal('m-new-ride');if(currentProfile?.role==='client'||currentRole==='client')setTimeout(_initPaxSelector,80);">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="white" stroke-width="1.5"/><path d="M8 5v6M5 8h6" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
           Nouvelle demande
         </button>
@@ -5246,11 +5246,14 @@ window.cancelRideModal = function(){
   _segN=0;
   // Reset error
   var err=document.getElementById('ride-err');if(err)err.style.display='none';
-  // Reset passenger selector
-  window._rideSelectedPax = null;
-  ['ride-pax-selector-wrap','disp-pax-selector-wrap'].forEach(function(id){
-    var el=document.getElementById(id); if(el){el.innerHTML='';el.style.display='none';}
+  // Reset passenger sections
+  ['ride-pax-section','disp-pax-section'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.innerHTML='';
   });
+  // Init pax selector for clients (after DOM resets)
+  if(currentProfile?.role==='client' || currentRole==='client'){
+    setTimeout(_initPaxSelector, 80);
+  }
 };
 
 // Initialize passenger selector for pro clients
