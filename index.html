@@ -5063,8 +5063,8 @@ window.editRide = async function(rideId){
   }
 
   openModal('m-new-ride');
-  // Init passenger selector for pro clients (after DOM renders)
-  if(currentProfile?.client_type==='pro') setTimeout(_initPaxSelector, 50);
+  // Init passenger selector for all clients
+  if(currentProfile?.role==='client' || currentRole==='client') setTimeout(_initPaxSelector, 50);
 };
 
 
@@ -5140,7 +5140,7 @@ window.submitRide = async function(){
 
   // DEMO MODE
   // Inject passenger info from selector into notes (pro clients)
-  if(currentProfile?.client_type==='pro' && window._rideSelectedPax){
+  if((currentProfile?.role==='client' || currentRole==='client') && window._rideSelectedPax){
     var wrapKey = tripType==='disposal' ? 'disp-pax-selector-wrap' : 'ride-pax-selector-wrap';
     var sp = window._rideSelectedPax[wrapKey];
     if(sp){
@@ -5258,21 +5258,17 @@ window.cancelRideModal = function(){
 // Initialize passenger selector for pro clients
 window._rideSelectedPax = {};
 async function _initPaxSelector(){
-  var isPro = currentProfile?.client_type==='pro' || (currentProfile?.role==='client' && !currentProfile?.client_type);
-  if(!sb) return;
-  if(!isPro){
-    // Hide wraps if not pro
-    ['ride-pax-selector-wrap','disp-pax-selector-wrap'].forEach(function(id){
-      var el=document.getElementById(id); if(el){el.style.display='none';el.innerHTML='';}
-    });
-    return;
-  }
+  if(!sb || !currentUser) return;
+  var isClient = currentProfile?.role==='client';
+  if(!isClient) return;
   var passList = [];
-  try{
-    var res = await sb.from('passengers').select('*').eq('client_id',currentUser.id).order('last_name',{ascending:true});
-    passList = res.data||[];
-    window._lastPassengerList = passList;
-  }catch(e){ console.warn('pax list error',e); }
+  if(currentProfile?.client_type==='pro'){
+    try{
+      var res = await sb.from('passengers').select('*').eq('client_id',currentUser.id).order('last_name',{ascending:true});
+      passList = res.data||[];
+      window._lastPassengerList = passList;
+    }catch(e){ console.warn('pax list error',e); }
+  }
 
   function _buildSelectorHtml(wrapId, label){
     var opts = '';
@@ -7111,7 +7107,7 @@ window.addMixedSegment=function(){
   if(dateEl){ dateEl.value=todayStr(); dateEl.min=todayStr(); }
   setTimeout(function(){
     window.attachGPToSeg(n);
-    if(currentProfile?.client_type==='pro') _addPaxSelectorToSegment(d, window._lastPassengerList||[]);
+    if(currentProfile?.role==='client') _addPaxSelectorToSegment(d, window._lastPassengerList||[]);
   }, 50);
 };
 window.setSegType=function(btn,n,t2){
@@ -7126,7 +7122,7 @@ window.setSegType=function(btn,n,t2){
     if(dateEl){ dateEl.value=todayStr(); dateEl.min=todayStr(); }
     setTimeout(function(){
       window.attachGPToSeg(n);
-      if(currentProfile?.client_type==='pro') _addPaxSelectorToSegment(document.getElementById('seg-'+n), window._lastPassengerList||[]);
+      if(currentProfile?.role==='client') _addPaxSelectorToSegment(document.getElementById('seg-'+n), window._lastPassengerList||[]);
     }, 50);
   }
 };
