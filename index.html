@@ -5258,14 +5258,21 @@ window.cancelRideModal = function(){
 // Initialize passenger selector for pro clients
 window._rideSelectedPax = {};
 async function _initPaxSelector(){
-  var isPro = currentProfile?.client_type==='pro';
-  if(!isPro || !sb) return;
+  var isPro = currentProfile?.client_type==='pro' || (currentProfile?.role==='client' && !currentProfile?.client_type);
+  if(!sb) return;
+  if(!isPro){
+    // Hide wraps if not pro
+    ['ride-pax-selector-wrap','disp-pax-selector-wrap'].forEach(function(id){
+      var el=document.getElementById(id); if(el){el.style.display='none';el.innerHTML='';}
+    });
+    return;
+  }
   var passList = [];
   try{
     var res = await sb.from('passengers').select('*').eq('client_id',currentUser.id).order('last_name',{ascending:true});
     passList = res.data||[];
     window._lastPassengerList = passList;
-  }catch(e){}
+  }catch(e){ console.warn('pax list error',e); }
 
   function _buildSelectorHtml(wrapId, label){
     var opts = '';
@@ -5316,18 +5323,21 @@ async function _initPaxSelector(){
     _addPaxSelectorToSegment(seg, passList);
   });
 
-  // Event delegation on the modal
-  var modal = document.getElementById('m-new-ride');
-  if(modal && !modal._paxSelBound){
-    modal._paxSelBound = true;
-    modal.addEventListener('click', function(e){
+  // Event delegation at document level for all pax selectors
+  if(!window._paxSelBound){
+    window._paxSelBound = true;
+    document.addEventListener('click', function(e){
       // Toggle dropdown
       var btnEl = e.target.closest('.pax-sel-btn');
       if(btnEl){
         var wid = btnEl.dataset.wid;
-        var list = modal.querySelector('.pax-sel-list[data-wid="'+wid+'"]');
+        var list = document.querySelector('.pax-sel-list[data-wid="'+wid+'"]');
         if(list) list.style.display = list.style.display==='none' ? 'block' : 'none';
         return;
+      }
+      // Close dropdowns when clicking outside
+      if(!e.target.closest('.pax-sel-list') && !e.target.closest('.pax-sel-btn')){
+        document.querySelectorAll('.pax-sel-list').forEach(function(l){ l.style.display='none'; });
       }
       // Select existing passenger
       var optEl = e.target.closest('.pax-sel-opt');
@@ -5335,11 +5345,11 @@ async function _initPaxSelector(){
         var wid = optEl.dataset.wid;
         var name = optEl.dataset.name; var tel = optEl.dataset.tel;
         window._rideSelectedPax[wid] = {manual:false, name:name, tel:tel};
-        var lbl = modal.querySelector('.pax-sel-btn[data-wid="'+wid+'"] .pax-sel-label');
-        if(lbl) lbl.textContent = '👤 '+name+(tel?' · '+tel:'');
-        var list = modal.querySelector('.pax-sel-list[data-wid="'+wid+'"]');
-        if(list) list.style.display='none';
-        var mf = modal.querySelector('.pax-sel-manual-fields[data-wid="'+wid+'"]');
+        var btn2 = document.querySelector('.pax-sel-btn[data-wid="'+wid+'"]');
+        if(btn2){ var lbl=btn2.querySelector('.pax-sel-label'); if(lbl) lbl.textContent='👤 '+name+(tel?' · '+tel:''); }
+        var list2 = document.querySelector('.pax-sel-list[data-wid="'+wid+'"]');
+        if(list2) list2.style.display='none';
+        var mf = document.querySelector('.pax-sel-manual-fields[data-wid="'+wid+'"]');
         if(mf) mf.style.display='none';
         return;
       }
@@ -5348,12 +5358,12 @@ async function _initPaxSelector(){
       if(manEl){
         var wid = manEl.dataset.wid;
         window._rideSelectedPax[wid] = {manual:true};
-        var lbl = modal.querySelector('.pax-sel-btn[data-wid="'+wid+'"] .pax-sel-label');
-        if(lbl) lbl.textContent = '✏ Saisir manuellement';
-        var list = modal.querySelector('.pax-sel-list[data-wid="'+wid+'"]');
-        if(list) list.style.display='none';
-        var mf = modal.querySelector('.pax-sel-manual-fields[data-wid="'+wid+'"]');
-        if(mf) mf.style.display='block';
+        var btn3 = document.querySelector('.pax-sel-btn[data-wid="'+wid+'"]');
+        if(btn3){ var lbl3=btn3.querySelector('.pax-sel-label'); if(lbl3) lbl3.textContent='✏ Saisir manuellement'; }
+        var list3 = document.querySelector('.pax-sel-list[data-wid="'+wid+'"]');
+        if(list3) list3.style.display='none';
+        var mf3 = document.querySelector('.pax-sel-manual-fields[data-wid="'+wid+'"]');
+        if(mf3) mf3.style.display='block';
         return;
       }
     });
