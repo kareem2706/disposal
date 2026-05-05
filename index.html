@@ -1785,6 +1785,7 @@ body{background:var(--bg);}
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="ride-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="ride-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="ride-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
+          <div class="input-group full" id="ride-pax-selector-wrap" style="display:none;"></div>
           <div class="input-group full"><label>Instructions</label><textarea id="ride-notes" rows="2" placeholder="Bagages, enfants, acc&egrave;s PMR&hellip;"></textarea></div>
         </div>
       </div>
@@ -1796,6 +1797,7 @@ body{background:var(--bg);}
           <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
           <div class="input-group"><label>Passagers</label><select id="disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="disp-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
+          <div class="input-group full" id="disp-pax-selector-wrap" style="display:none;"></div>
           <div class="input-group full"><label>Instructions</label><textarea id="disp-notes" rows="2" placeholder="It&eacute;n&eacute;raire, arr&ecirc;ts pr&eacute;vus&hellip;"></textarea></div>
         </div>
       </div>
@@ -2954,7 +2956,12 @@ function enterApp(){
   // Update nav user pill
   const fn = currentProfile?.first_name || '';
   const ln = currentProfile?.last_name || '';
-  document.getElementById('nav-name').textContent = (fn + ' ' + ln).trim() || currentUser?.email?.split('@')[0] || '—';
+  const co = currentProfile?.company_name || '';
+  var isPro = role==='client' && currentProfile?.client_type==='pro';
+  var navDisplayName = isPro
+    ? (co || (fn+' '+ln).trim() || currentUser?.email?.split('@')[0] || '—')
+    : ((fn || (fn+' '+ln).trim()) || currentUser?.email?.split('@')[0] || '—');
+  document.getElementById('nav-name').textContent = navDisplayName;
   var roleLabel = isAdmin ? (isAdminDriver ? 'Admin / Fleet' : 'Admin') : (role==='client' ? (currentProfile?.client_type==='pro' ? 'Client Pro' : 'Client') : t(role));
   document.getElementById('nav-role').textContent = roleLabel;
   // Show Passagers menu only for pro clients
@@ -2964,7 +2971,7 @@ function enterApp(){
   if(currentProfile?.avatar_url){
     avEl.innerHTML = `<img src="${currentProfile.avatar_url}" alt="">`;
   } else {
-    avEl.textContent = (fn[0] || '?').toUpperCase();
+    avEl.textContent = (navDisplayName[0] || '?').toUpperCase();
   }
 
   // Admin goes to admin-dashboard by default
@@ -5056,6 +5063,8 @@ window.editRide = async function(rideId){
   }
 
   openModal('m-new-ride');
+  // Init passenger selector for pro clients
+  if(currentProfile?.client_type==='pro') _initPaxSelector();
 };
 
 
@@ -5130,6 +5139,21 @@ window.submitRide = async function(){
   }
 
   // DEMO MODE
+  // Inject passenger info from selector into notes
+  if(window._rideSelectedPax && currentProfile?.client_type==='pro'){
+    var sp = window._rideSelectedPax;
+    var paxWrapId = sp.wrapId;
+    var paxName = '', paxTel = '';
+    if(sp.manual){
+      paxName = ((document.getElementById(paxWrapId+'-fname')?.value||'')+' '+(document.getElementById(paxWrapId+'-lname')?.value||'')).trim();
+      paxTel  = (document.getElementById(paxWrapId+'-phone')?.value||'').trim();
+    } else {
+      paxName = sp.name||''; paxTel = sp.tel||'';
+    }
+    if(paxName) notes = (notes||'') + '|pax:'+paxName;
+    if(paxTel)  notes = (notes||'') + '|tel:'+paxTel;
+  }
+
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
     closeModal('m-new-ride');
     cancelRideModal();
@@ -5137,8 +5161,6 @@ window.submitRide = async function(){
     await loadClientDashboard();
     return;
   }
-
-  if(!sb||!currentUser){ if(err){ err.textContent='Non connect\u00e9'; err.classList.add('show'); } return; }
 
   if(btn) setLoading(btn, true, t('btn_publish')+' \u2192');
 
@@ -5223,6 +5245,82 @@ window.cancelRideModal = function(){
   _segN=0;
   // Reset error
   var err=document.getElementById('ride-err');if(err)err.style.display='none';
+  // Reset passenger selector
+  window._rideSelectedPax = null;
+  ['ride-pax-selector-wrap','disp-pax-selector-wrap'].forEach(function(id){
+    var el=document.getElementById(id); if(el){el.innerHTML='';el.style.display='none';}
+  });
+};
+
+// Initialize passenger selector for pro clients
+window._rideSelectedPax = null;
+async function _initPaxSelector(){
+  var isPro = currentProfile?.client_type==='pro';
+  ['ride-pax-selector-wrap','disp-pax-selector-wrap'].forEach(function(wrapId){
+    var wrap = document.getElementById(wrapId);
+    if(!wrap) return;
+    if(!isPro){ wrap.style.display='none'; wrap.innerHTML=''; return; }
+    wrap.style.display='block';
+    if(!sb){ wrap.innerHTML=''; return; }
+    sb.from('passengers').select('*').eq('client_id',currentUser.id).order('last_name',{ascending:true}).then(function(res){
+      var passList = res.data||[];
+      var html = '<div style="border:1.5px solid var(--sand3);border-radius:var(--r);overflow:hidden;">'
+        +'<button type="button" id="'+wrapId+'-btn" onclick="_togglePaxDropdown(\''+wrapId+'\')" '
+        +'style="width:100%;padding:10px 12px;background:#fff;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-family:\'DM Sans\',sans-serif;color:var(--ink3);">'
+          +'<span id="'+wrapId+'-label">+ Ajouter un passager</span>'
+          +'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
+        +'</button>'
+        +'<div id="'+wrapId+'-list" style="display:none;border-top:1px solid var(--sand2);">';
+      if(passList.length > 0){
+        html += passList.map(function(p){
+          var name = ((p.first_name||'')+' '+(p.last_name||'')).trim();
+          var tel = p.phone||'';
+          var safeId = p.id.replace(/"/g,'');
+          return '<div onclick="_selectPax(\''+wrapId+'\',\''+safeId+'\',\''+name.replace(/'/g,'&#39;')+'\',\''+tel.replace(/'/g,'&#39;')+'\')" '
+            +'style="padding:9px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;" '
+            +'onmouseenter="this.style.background=\'var(--sand)\'" onmouseleave="this.style.background=\'\'">'
+            +'<span style="font-weight:500;">'+name+'</span>'
+            +(tel?'<span style="font-size:11px;color:var(--ink3);">'+tel+'</span>':'')
+            +'</div>';
+        }).join('<div style="height:1px;background:var(--sand2);"></div>');
+      }
+      html += '<div onclick="_selectPaxManual(\''+wrapId+'\')" '
+        +'style="padding:9px 14px;cursor:pointer;font-size:13px;color:var(--green);font-weight:500;" '
+        +'onmouseenter="this.style.background=\'var(--sand)\'" onmouseleave="this.style.background=\'\'">'
+        +'+ Saisir manuellement</div>';
+      html += '</div></div>';
+      // Manual fields (hidden by default)
+      html += '<div id="'+wrapId+'-manual" style="display:none;margin-top:8px;">'
+        +'<div class="form-grid">'
+          +'<div class="input-group"><label>Prénom</label><input id="'+wrapId+'-fname" placeholder="Marie"></div>'
+          +'<div class="input-group"><label>Nom</label><input id="'+wrapId+'-lname" placeholder="Dupont"></div>'
+        +'</div>'
+        +'<div class="input-group"><label>Téléphone</label><input id="'+wrapId+'-phone" type="tel" placeholder="+32 470 12 34 56"></div>'
+      +'</div>';
+      wrap.innerHTML = html;
+    });
+  });
+}
+
+window._togglePaxDropdown = function(wrapId){
+  var list = document.getElementById(wrapId+'-list');
+  if(list) list.style.display = list.style.display==='none' ? 'block' : 'none';
+};
+
+window._selectPax = function(wrapId, paxId, name, tel){
+  window._rideSelectedPax = {id:paxId, name:name, tel:tel, manual:false, wrapId:wrapId};
+  var btn = document.getElementById(wrapId+'-btn');
+  if(btn){ var span=btn.querySelector('span'); if(span) span.textContent = '👤 '+name+(tel?' · '+tel:''); btn.style.color='var(--ink)'; }
+  var list = document.getElementById(wrapId+'-list'); if(list) list.style.display='none';
+  var manual = document.getElementById(wrapId+'-manual'); if(manual) manual.style.display='none';
+};
+
+window._selectPaxManual = function(wrapId){
+  window._rideSelectedPax = {manual:true, wrapId:wrapId};
+  var btn = document.getElementById(wrapId+'-btn');
+  if(btn){ var span=btn.querySelector('span'); if(span) span.textContent = '✏ Saisir manuellement'; }
+  var list = document.getElementById(wrapId+'-list'); if(list) list.style.display='none';
+  var manual = document.getElementById(wrapId+'-manual'); if(manual) manual.style.display='block';
 };
 
 
