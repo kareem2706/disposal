@@ -1785,8 +1785,8 @@ body{background:var(--bg);}
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="ride-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="ride-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="ride-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
-          <div class="input-group full" id="ride-pax-selector-wrap" style="display:none;"></div>
           <div class="input-group full"><label>Instructions</label><textarea id="ride-notes" rows="2" placeholder="Bagages, enfants, acc&egrave;s PMR&hellip;"></textarea></div>
+          <div class="input-group full" id="ride-pax-selector-wrap" style="display:none;"></div>
         </div>
       </div>
       <div id="panel-disposal" style="display:none;">
@@ -1797,8 +1797,8 @@ body{background:var(--bg);}
           <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
           <div class="input-group"><label>Passagers</label><select id="disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="disp-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
-          <div class="input-group full" id="disp-pax-selector-wrap" style="display:none;"></div>
           <div class="input-group full"><label>Instructions</label><textarea id="disp-notes" rows="2" placeholder="It&eacute;n&eacute;raire, arr&ecirc;ts pr&eacute;vus&hellip;"></textarea></div>
+          <div class="input-group full" id="disp-pax-selector-wrap" style="display:none;"></div>
         </div>
       </div>
       <div id="panel-mixed" style="display:none;">
@@ -5063,8 +5063,8 @@ window.editRide = async function(rideId){
   }
 
   openModal('m-new-ride');
-  // Init passenger selector for pro clients
-  if(currentProfile?.client_type==='pro') _initPaxSelector();
+  // Init passenger selector for pro clients (after DOM renders)
+  if(currentProfile?.client_type==='pro') setTimeout(_initPaxSelector, 50);
 };
 
 
@@ -5139,19 +5139,22 @@ window.submitRide = async function(){
   }
 
   // DEMO MODE
-  // Inject passenger info from selector into notes
-  if(window._rideSelectedPax && currentProfile?.client_type==='pro'){
-    var sp = window._rideSelectedPax;
-    var paxWrapId = sp.wrapId;
-    var paxName = '', paxTel = '';
-    if(sp.manual){
-      paxName = ((document.getElementById(paxWrapId+'-fname')?.value||'')+' '+(document.getElementById(paxWrapId+'-lname')?.value||'')).trim();
-      paxTel  = (document.getElementById(paxWrapId+'-phone')?.value||'').trim();
-    } else {
-      paxName = sp.name||''; paxTel = sp.tel||'';
+  // Inject passenger info from selector into notes (pro clients)
+  if(currentProfile?.client_type==='pro' && window._rideSelectedPax){
+    var wrapKey = tripType==='disposal' ? 'disp-pax-selector-wrap' : 'ride-pax-selector-wrap';
+    var sp = window._rideSelectedPax[wrapKey];
+    if(sp){
+      var paxName='', paxTel='';
+      if(sp.manual){
+        var modal2 = document.getElementById('m-new-ride');
+        paxName = ((modal2?.querySelector('.pax-sel-fname[data-wid="'+wrapKey+'"]')?.value||'')+' '+(modal2?.querySelector('.pax-sel-lname[data-wid="'+wrapKey+'"]')?.value||'')).trim();
+        paxTel  = (modal2?.querySelector('.pax-sel-phone[data-wid="'+wrapKey+'"]')?.value||'').trim();
+      } else {
+        paxName = sp.name||''; paxTel = sp.tel||'';
+      }
+      if(paxName) notes = (notes||'') + '|pax:'+paxName;
+      if(paxTel)  notes = (notes||'') + '|tel:'+paxTel;
     }
-    if(paxName) notes = (notes||'') + '|pax:'+paxName;
-    if(paxTel)  notes = (notes||'') + '|tel:'+paxTel;
   }
 
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
@@ -5253,74 +5256,149 @@ window.cancelRideModal = function(){
 };
 
 // Initialize passenger selector for pro clients
-window._rideSelectedPax = null;
+window._rideSelectedPax = {};
 async function _initPaxSelector(){
   var isPro = currentProfile?.client_type==='pro';
+  if(!isPro || !sb) return;
+  var passList = [];
+  try{
+    var res = await sb.from('passengers').select('*').eq('client_id',currentUser.id).order('last_name',{ascending:true});
+    passList = res.data||[];
+    window._lastPassengerList = passList;
+  }catch(e){}
+
+  function _buildSelectorHtml(wrapId, label){
+    var opts = '';
+    if(passList.length > 0){
+      opts += passList.map(function(p){
+        var name = ((p.first_name||'')+' '+(p.last_name||'')).trim();
+        var tel = p.phone||'';
+        return '<div class="pax-sel-opt" data-wid="'+wrapId+'" data-name="'+name.replace(/"/g,'&quot;')+'" data-tel="'+tel.replace(/"/g,'&quot;')+'" '
+          +'style="padding:9px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;">'
+          +'<span style="font-weight:500;">'+name+'</span>'
+          +(tel?'<span style="font-size:11px;color:var(--ink3);">'+tel+'</span>':'')
+          +'</div><div style="height:1px;background:var(--sand2);"></div>';
+      }).join('');
+    }
+    opts += '<div class="pax-sel-manual" data-wid="'+wrapId+'" '
+      +'style="padding:9px 14px;cursor:pointer;font-size:13px;color:var(--green);font-weight:500;">'
+      +'+ Saisir manuellement</div>';
+
+    return '<div>'
+      +'<label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">'+label+'</label>'
+      +'<div style="border:1.5px solid var(--sand3);border-radius:var(--r);overflow:hidden;background:#fff;">'
+        +'<div class="pax-sel-btn" data-wid="'+wrapId+'" style="padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink3);">'
+          +'<span class="pax-sel-label">👤 Choisir un passager</span>'
+          +'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
+        +'</div>'
+        +'<div class="pax-sel-list" data-wid="'+wrapId+'" style="display:none;border-top:1px solid var(--sand2);">'+opts+'</div>'
+      +'</div>'
+      +'<div class="pax-sel-manual-fields" data-wid="'+wrapId+'" style="display:none;margin-top:8px;">'
+        +'<div class="form-grid">'
+          +'<div class="input-group"><label>Prénom</label><input class="pax-sel-fname" data-wid="'+wrapId+'" placeholder="Marie"></div>'
+          +'<div class="input-group"><label>Nom</label><input class="pax-sel-lname" data-wid="'+wrapId+'" placeholder="Dupont"></div>'
+        +'</div>'
+        +'<div class="input-group"><label>Téléphone</label><input class="pax-sel-phone" data-wid="'+wrapId+'" type="tel" placeholder="+32 470 12 34 56"></div>'
+      +'</div>'
+    +'</div>';
+  }
+
+  // AB and disposal wraps
   ['ride-pax-selector-wrap','disp-pax-selector-wrap'].forEach(function(wrapId){
     var wrap = document.getElementById(wrapId);
     if(!wrap) return;
-    if(!isPro){ wrap.style.display='none'; wrap.innerHTML=''; return; }
-    wrap.style.display='block';
-    if(!sb){ wrap.innerHTML=''; return; }
-    sb.from('passengers').select('*').eq('client_id',currentUser.id).order('last_name',{ascending:true}).then(function(res){
-      var passList = res.data||[];
-      var html = '<div style="border:1.5px solid var(--sand3);border-radius:var(--r);overflow:hidden;">'
-        +'<button type="button" id="'+wrapId+'-btn" onclick="_togglePaxDropdown(\''+wrapId+'\')" '
-        +'style="width:100%;padding:10px 12px;background:#fff;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-family:\'DM Sans\',sans-serif;color:var(--ink3);">'
-          +'<span id="'+wrapId+'-label">+ Ajouter un passager</span>'
-          +'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
-        +'</button>'
-        +'<div id="'+wrapId+'-list" style="display:none;border-top:1px solid var(--sand2);">';
-      if(passList.length > 0){
-        html += passList.map(function(p){
-          var name = ((p.first_name||'')+' '+(p.last_name||'')).trim();
-          var tel = p.phone||'';
-          var safeId = p.id.replace(/"/g,'');
-          return '<div onclick="_selectPax(\''+wrapId+'\',\''+safeId+'\',\''+name.replace(/'/g,'&#39;')+'\',\''+tel.replace(/'/g,'&#39;')+'\')" '
-            +'style="padding:9px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;" '
-            +'onmouseenter="this.style.background=\'var(--sand)\'" onmouseleave="this.style.background=\'\'">'
-            +'<span style="font-weight:500;">'+name+'</span>'
-            +(tel?'<span style="font-size:11px;color:var(--ink3);">'+tel+'</span>':'')
-            +'</div>';
-        }).join('<div style="height:1px;background:var(--sand2);"></div>');
-      }
-      html += '<div onclick="_selectPaxManual(\''+wrapId+'\')" '
-        +'style="padding:9px 14px;cursor:pointer;font-size:13px;color:var(--green);font-weight:500;" '
-        +'onmouseenter="this.style.background=\'var(--sand)\'" onmouseleave="this.style.background=\'\'">'
-        +'+ Saisir manuellement</div>';
-      html += '</div></div>';
-      // Manual fields (hidden by default)
-      html += '<div id="'+wrapId+'-manual" style="display:none;margin-top:8px;">'
-        +'<div class="form-grid">'
-          +'<div class="input-group"><label>Prénom</label><input id="'+wrapId+'-fname" placeholder="Marie"></div>'
-          +'<div class="input-group"><label>Nom</label><input id="'+wrapId+'-lname" placeholder="Dupont"></div>'
-        +'</div>'
-        +'<div class="input-group"><label>Téléphone</label><input id="'+wrapId+'-phone" type="tel" placeholder="+32 470 12 34 56"></div>'
-      +'</div>';
-      wrap.innerHTML = html;
-    });
+    wrap.innerHTML = _buildSelectorHtml(wrapId, 'Passager principal');
+    wrap.style.display = 'block';
   });
+
+  // Mixed segments — inject after each segment's notes field
+  document.querySelectorAll('.mixed-segment').forEach(function(seg){
+    _addPaxSelectorToSegment(seg, passList);
+  });
+
+  // Event delegation on the modal
+  var modal = document.getElementById('m-new-ride');
+  if(modal && !modal._paxSelBound){
+    modal._paxSelBound = true;
+    modal.addEventListener('click', function(e){
+      // Toggle dropdown
+      var btnEl = e.target.closest('.pax-sel-btn');
+      if(btnEl){
+        var wid = btnEl.dataset.wid;
+        var list = modal.querySelector('.pax-sel-list[data-wid="'+wid+'"]');
+        if(list) list.style.display = list.style.display==='none' ? 'block' : 'none';
+        return;
+      }
+      // Select existing passenger
+      var optEl = e.target.closest('.pax-sel-opt');
+      if(optEl){
+        var wid = optEl.dataset.wid;
+        var name = optEl.dataset.name; var tel = optEl.dataset.tel;
+        window._rideSelectedPax[wid] = {manual:false, name:name, tel:tel};
+        var lbl = modal.querySelector('.pax-sel-btn[data-wid="'+wid+'"] .pax-sel-label');
+        if(lbl) lbl.textContent = '👤 '+name+(tel?' · '+tel:'');
+        var list = modal.querySelector('.pax-sel-list[data-wid="'+wid+'"]');
+        if(list) list.style.display='none';
+        var mf = modal.querySelector('.pax-sel-manual-fields[data-wid="'+wid+'"]');
+        if(mf) mf.style.display='none';
+        return;
+      }
+      // Select manual
+      var manEl = e.target.closest('.pax-sel-manual');
+      if(manEl){
+        var wid = manEl.dataset.wid;
+        window._rideSelectedPax[wid] = {manual:true};
+        var lbl = modal.querySelector('.pax-sel-btn[data-wid="'+wid+'"] .pax-sel-label');
+        if(lbl) lbl.textContent = '✏ Saisir manuellement';
+        var list = modal.querySelector('.pax-sel-list[data-wid="'+wid+'"]');
+        if(list) list.style.display='none';
+        var mf = modal.querySelector('.pax-sel-manual-fields[data-wid="'+wid+'"]');
+        if(mf) mf.style.display='block';
+        return;
+      }
+    });
+  }
 }
 
-window._togglePaxDropdown = function(wrapId){
-  var list = document.getElementById(wrapId+'-list');
-  if(list) list.style.display = list.style.display==='none' ? 'block' : 'none';
-};
-
-window._selectPax = function(wrapId, paxId, name, tel){
-  window._rideSelectedPax = {id:paxId, name:name, tel:tel, manual:false, wrapId:wrapId};
-  var btn = document.getElementById(wrapId+'-btn');
-  if(btn){ var span=btn.querySelector('span'); if(span) span.textContent = '👤 '+name+(tel?' · '+tel:''); btn.style.color='var(--ink)'; }
-  var list = document.getElementById(wrapId+'-list'); if(list) list.style.display='none';
-  var manual = document.getElementById(wrapId+'-manual'); if(manual) manual.style.display='none';
-};
-
-window._selectPaxManual = function(wrapId){
-  window._rideSelectedPax = {manual:true, wrapId:wrapId};
-  var btn = document.getElementById(wrapId+'-btn');
-  if(btn){ var span=btn.querySelector('span'); if(span) span.textContent = '✏ Saisir manuellement'; }
-  var list = document.getElementById(wrapId+'-list'); if(list) list.style.display='none';
-  var manual = document.getElementById(wrapId+'-manual'); if(manual) manual.style.display='block';
+window._addPaxSelectorToSegment = function(seg, passList){
+  if(!seg || seg.querySelector('.pax-seg-wrap')) return;
+  var n = seg.id.replace('seg-','');
+  var wrapId = 'seg-pax-wrap-'+n;
+  var notesEl = seg.querySelector('[id^="snotes-"]');
+  if(!notesEl) return;
+  var div = document.createElement('div');
+  div.className = 'pax-seg-wrap input-group full';
+  div.style.marginTop = '8px';
+  // Build opts
+  var opts = '';
+  if(passList && passList.length > 0){
+    opts += passList.map(function(p){
+      var name = ((p.first_name||'')+' '+(p.last_name||'')).trim();
+      var tel = p.phone||'';
+      return '<div class="pax-sel-opt" data-wid="'+wrapId+'" data-name="'+name.replace(/"/g,'&quot;')+'" data-tel="'+tel.replace(/"/g,'&quot;')+'" '
+        +'style="padding:9px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;">'
+        +'<span style="font-weight:500;">'+name+'</span>'
+        +(tel?'<span style="font-size:11px;color:var(--ink3);">'+tel+'</span>':'')
+        +'</div><div style="height:1px;background:var(--sand2);"></div>';
+    }).join('');
+  }
+  opts += '<div class="pax-sel-manual" data-wid="'+wrapId+'" style="padding:9px 14px;cursor:pointer;font-size:13px;color:var(--green);font-weight:500;">+ Saisir manuellement</div>';
+  div.innerHTML = '<label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Passager principal <span style="font-size:10px;color:var(--ink3);font-weight:400;">(optionnel)</span></label>'
+    +'<div style="border:1.5px solid var(--sand3);border-radius:var(--r);overflow:hidden;background:#fff;">'
+      +'<div class="pax-sel-btn" data-wid="'+wrapId+'" style="padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink3);">'
+        +'<span class="pax-sel-label">👤 Choisir un passager</span>'
+        +'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
+      +'</div>'
+      +'<div class="pax-sel-list" data-wid="'+wrapId+'" style="display:none;border-top:1px solid var(--sand2);">'+opts+'</div>'
+    +'</div>'
+    +'<div class="pax-sel-manual-fields" data-wid="'+wrapId+'" style="display:none;margin-top:8px;">'
+      +'<div class="form-grid">'
+        +'<div class="input-group"><label>Prénom</label><input class="pax-sel-fname" data-wid="'+wrapId+'" placeholder="Marie"></div>'
+        +'<div class="input-group"><label>Nom</label><input class="pax-sel-lname" data-wid="'+wrapId+'" placeholder="Dupont"></div>'
+      +'</div>'
+      +'<div class="input-group"><label>Téléphone</label><input class="pax-sel-phone" data-wid="'+wrapId+'" type="tel" placeholder="+32 470 12 34 56"></div>'
+    +'</div>';
+  notesEl.closest('.input-group').insertAdjacentElement('afterend', div);
 };
 
 
@@ -7021,7 +7099,10 @@ window.addMixedSegment=function(){
   d._dispFields=dispFields;
   var dateEl=document.getElementById('sd8-'+n);
   if(dateEl){ dateEl.value=todayStr(); dateEl.min=todayStr(); }
-  setTimeout(function(){ window.attachGPToSeg(n); }, 50);
+  setTimeout(function(){
+    window.attachGPToSeg(n);
+    if(currentProfile?.client_type==='pro') _addPaxSelectorToSegment(d, window._lastPassengerList||[]);
+  }, 50);
 };
 window.setSegType=function(btn,n,t2){
   btn.closest('.seg-type-btns').querySelectorAll('.seg-type-btn').forEach(function(b){b.classList.remove('active');});
@@ -7033,10 +7114,12 @@ window.setSegType=function(btn,n,t2){
     fieldsEl.innerHTML=isD?seg._dispFields:seg._abFields;
     var dateEl=document.getElementById('sd8-'+n);
     if(dateEl){ dateEl.value=todayStr(); dateEl.min=todayStr(); }
-    setTimeout(function(){ window.attachGPToSeg(n); }, 50);
+    setTimeout(function(){
+      window.attachGPToSeg(n);
+      if(currentProfile?.client_type==='pro') _addPaxSelectorToSegment(document.getElementById('seg-'+n), window._lastPassengerList||[]);
+    }, 50);
   }
 };
-window.removeSeg=function(n){var el=document.getElementById('seg-'+n);if(el)el.remove();};
 window.removeSegSafe=function(n){
   var cont=document.getElementById('mixed-segments');
   if(!cont)return;
