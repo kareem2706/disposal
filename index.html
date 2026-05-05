@@ -1786,7 +1786,13 @@ body{background:var(--bg);}
           <div class="input-group"><label>Passagers</label><select id="ride-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="ride-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
           <div class="input-group full"><label>Instructions</label><textarea id="ride-notes" rows="2" placeholder="Bagages, enfants, acc&egrave;s PMR&hellip;"></textarea></div>
-          <div class="input-group full" id="ride-pax-selector-wrap" style="display:none;"></div>
+          <div style="border-top:1px solid var(--sand2);padding-top:12px;margin-top:4px;">
+            <div style="font-size:12px;font-weight:600;color:var(--ink3);margin-bottom:8px;">Passager principal <span style="font-weight:400;">(optionnel)</span></div>
+            <div class="form-grid">
+              <div class="input-group"><label>Nom &amp; Pr&eacute;nom</label><input id="ride-pax-name" placeholder="Marie Dupont"></div>
+              <div class="input-group"><label>T&eacute;l&eacute;phone</label><input id="ride-pax-tel" type="tel" placeholder="+32 470 12 34 56"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div id="panel-disposal" style="display:none;">
@@ -1798,7 +1804,13 @@ body{background:var(--bg);}
           <div class="input-group"><label>Passagers</label><select id="disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
           <div class="input-group"><label>V&eacute;hicule</label><select id="disp-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option></select></div>
           <div class="input-group full"><label>Instructions</label><textarea id="disp-notes" rows="2" placeholder="It&eacute;n&eacute;raire, arr&ecirc;ts pr&eacute;vus&hellip;"></textarea></div>
-          <div class="input-group full" id="disp-pax-selector-wrap" style="display:none;"></div>
+          <div style="border-top:1px solid var(--sand2);padding-top:12px;margin-top:4px;">
+            <div style="font-size:12px;font-weight:600;color:var(--ink3);margin-bottom:8px;">Passager principal <span style="font-weight:400;">(optionnel)</span></div>
+            <div class="form-grid">
+              <div class="input-group"><label>Nom &amp; Pr&eacute;nom</label><input id="disp-pax-name" placeholder="Marie Dupont"></div>
+              <div class="input-group"><label>T&eacute;l&eacute;phone</label><input id="disp-pax-tel" type="tel" placeholder="+32 470 12 34 56"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div id="panel-mixed" style="display:none;">
@@ -5139,23 +5151,13 @@ window.submitRide = async function(){
   }
 
   // DEMO MODE
-  // Inject passenger info from selector into notes (pro clients)
-  if((currentProfile?.role==='client' || currentRole==='client') && window._rideSelectedPax){
-    var wrapKey = tripType==='disposal' ? 'disp-pax-selector-wrap' : 'ride-pax-selector-wrap';
-    var sp = window._rideSelectedPax[wrapKey];
-    if(sp){
-      var paxName='', paxTel='';
-      if(sp.manual){
-        var modal2 = document.getElementById('m-new-ride');
-        paxName = ((modal2?.querySelector('.pax-sel-fname[data-wid="'+wrapKey+'"]')?.value||'')+' '+(modal2?.querySelector('.pax-sel-lname[data-wid="'+wrapKey+'"]')?.value||'')).trim();
-        paxTel  = (modal2?.querySelector('.pax-sel-phone[data-wid="'+wrapKey+'"]')?.value||'').trim();
-      } else {
-        paxName = sp.name||''; paxTel = sp.tel||'';
-      }
-      if(paxName) notes = (notes||'') + '|pax:'+paxName;
-      if(paxTel)  notes = (notes||'') + '|tel:'+paxTel;
-    }
-  }
+  // Inject passenger info from simple fields
+  var paxNameField = tripType==='disposal' ? 'disp-pax-name' : 'ride-pax-name';
+  var paxTelField  = tripType==='disposal' ? 'disp-pax-tel'  : 'ride-pax-tel';
+  var paxName = (document.getElementById(paxNameField)?.value||'').trim();
+  var paxTel  = (document.getElementById(paxTelField)?.value||'').trim();
+  if(paxName) notes = (notes||'') + '|pax:'+paxName;
+  if(paxTel)  notes = (notes||'') + '|tel:'+paxTel;
 
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
     closeModal('m-new-ride');
@@ -5238,8 +5240,8 @@ window.cancelRideModal = function(){
     var p=document.getElementById(id);if(p)p.style.display=id==='panel-ab'?'block':'none';
   });
   // Clear all form fields
-  ['ride-from','ride-to','ride-date','ride-time','ride-notes',
-   'disp-from','disp-date','disp-time','disp-notes'].forEach(function(id){
+  ['ride-from','ride-to','ride-date','ride-time','ride-notes','ride-pax-name','ride-pax-tel',
+   'disp-from','disp-date','disp-time','disp-notes','disp-pax-name','disp-pax-tel'].forEach(function(id){
     var e=document.getElementById(id);if(e)e.value='';
   });
   var dd=document.getElementById('disp-duration');if(dd)dd.value='2';
