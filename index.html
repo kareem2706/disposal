@@ -5262,81 +5262,87 @@ async function _initPaxSelector(){
   if(!sb || !currentUser) return;
   var isPro = currentProfile?.client_type === 'pro';
 
-  function _renderSection(sectionId){
-    var sec = document.getElementById(sectionId);
-    if(!sec) return;
-    sec.innerHTML = '<div style="border-top:1px solid var(--sand2);padding-top:12px;margin-top:4px;">'
-      +'<div style="font-size:12px;font-weight:600;color:var(--ink3);margin-bottom:8px;">Passager principal <span style="font-weight:400;font-size:11px;">(optionnel)</span></div>'
-      +'<div id="'+sectionId+'-fields" class="form-grid">'
-        +'<div class="input-group"><label>Nom &amp; Pr&eacute;nom</label><input id="'+sectionId+'-name" placeholder="Marie Dupont"></div>'
-        +'<div class="input-group"><label>T&eacute;l&eacute;phone</label><input id="'+sectionId+'-tel" type="tel" placeholder="+32 470 12 34 56"></div>'
-      +'</div>'
-    +'</div>';
-  }
+  var cardStyle = 'background:var(--sand);border-radius:var(--r);padding:12px 14px;margin-top:12px;border:1.5px solid var(--sand3);';
+  var labelStyle = 'font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:10px;display:flex;align-items:center;gap:6px;';
+  var iconPax = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
 
   if(!isPro){
-    // Client particulier: pre-fill with own name/phone
     var ownName = (((currentProfile?.first_name||'')+' '+(currentProfile?.last_name||'')).trim()) || '';
     var ownTel  = currentProfile?.phone || '';
-    ['ride-pax-section','disp-pax-section'].forEach(function(sectionId){
-      var sec = document.getElementById(sectionId);
-      if(!sec) return;
-      sec.innerHTML = '<div style="border-top:1px solid var(--sand2);padding-top:12px;margin-top:4px;">'
-        +'<div style="font-size:12px;font-weight:600;color:var(--ink3);margin-bottom:8px;">Passager principal <span style="font-weight:400;font-size:11px;">(optionnel)</span></div>'
-        +'<div class="form-grid">'
-          +'<div class="input-group"><label>Nom &amp; Pr&eacute;nom</label><input id="'+sectionId+'-name" value="'+ownName.replace(/"/g,'&quot;')+'" placeholder="Marie Dupont"></div>'
-          +'<div class="input-group"><label>T&eacute;l&eacute;phone</label><input id="'+sectionId+'-tel" type="tel" value="'+ownTel.replace(/"/g,'&quot;')+'" placeholder="+32 470 12 34 56"></div>'
+    ['ride-pax-section','disp-pax-section'].forEach(function(sid){
+      var sec = document.getElementById(sid); if(!sec) return;
+      sec.innerHTML = '<div style="'+cardStyle+'">'
+        +'<div style="'+labelStyle+'">'+iconPax+' Passager principal <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--ink4);">(optionnel)</span></div>'
+        +'<div class="form-grid" style="gap:8px;">'
+          +'<div class="input-group" style="margin:0;"><label style="font-size:12px;">Nom &amp; Pr&eacute;nom</label><input id="'+sid+'-name" value="'+ownName.replace(/"/g,'&quot;')+'" placeholder="Marie Dupont"></div>'
+          +'<div class="input-group" style="margin:0;"><label style="font-size:12px;">T&eacute;l&eacute;phone</label><input id="'+sid+'-tel" type="tel" value="'+ownTel.replace(/"/g,'&quot;')+'" placeholder="+32 470 12 34 56"></div>'
         +'</div>'
       +'</div>';
     });
     return;
   }
 
-  // Client pro: load passengers list
+  // Pro: load passengers
   var passList = [];
   try{
     var res = await sb.from('passengers').select('*').eq('client_id',currentUser.id).order('last_name',{ascending:true});
     passList = res.data||[];
   }catch(e){}
 
-  ['ride-pax-section','disp-pax-section'].forEach(function(sectionId){
-    var sec = document.getElementById(sectionId);
-    if(!sec) return;
+  ['ride-pax-section','disp-pax-section'].forEach(function(sid){
+    var sec = document.getElementById(sid); if(!sec) return;
 
-    var opts = '<option value="">— Choisir un passager —</option>'
-      + passList.map(function(p){
-          var n = ((p.first_name||'')+' '+(p.last_name||'')).trim();
-          var t = p.phone||'';
-          return '<option value="'+n.replace(/"/g,'&quot;')+'||'+t.replace(/"/g,'&quot;')+'">'+n+(t?' · '+t:'')+'</option>';
-        }).join('')
-      + '<option value="__manual__">✏ Autre passager (saisie manuelle)</option>';
+    // Build passenger pills
+    var pillsHtml = '';
+    if(passList.length > 0){
+      pillsHtml = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">'
+        + passList.map(function(p,i){
+            var n = ((p.first_name||'')+' '+(p.last_name||'')).trim();
+            var t = p.phone||'';
+            var val = (n+'||'+t).replace(/"/g,'&quot;');
+            return '<button type="button" class="pax-pill" data-sid="'+sid+'" data-val="'+val+'" '
+              +'style="padding:5px 12px;border:1.5px solid var(--sand3);border-radius:20px;background:#fff;font-size:12px;font-weight:500;color:var(--ink2);cursor:pointer;font-family:\'DM Sans\',sans-serif;transition:all .15s;">'
+              +n+'</button>';
+          }).join('')
+        +'<button type="button" class="pax-pill pax-pill-manual" data-sid="'+sid+'" data-val="__manual__" '
+          +'style="padding:5px 12px;border:1.5px dashed var(--green);border-radius:20px;background:transparent;font-size:12px;font-weight:500;color:var(--green);cursor:pointer;font-family:\'DM Sans\',sans-serif;">'
+          +'+ Autre</button>'
+        +'</div>';
+    }
 
-    sec.innerHTML = '<div style="border-top:1px solid var(--sand2);padding-top:12px;margin-top:4px;">'
-      +'<div style="font-size:12px;font-weight:600;color:var(--ink3);margin-bottom:8px;">Passager principal <span style="font-weight:400;font-size:11px;">(optionnel)</span></div>'
-      +'<div class="input-group" style="margin-bottom:8px;">'
-        +'<select id="'+sectionId+'-select" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:13px;background:#fff;font-family:\'DM Sans\',sans-serif;">'
-        +opts+'</select>'
-      +'</div>'
-      +'<div id="'+sectionId+'-manual" style="display:none;" class="form-grid">'
-        +'<div class="input-group"><label>Nom &amp; Pr&eacute;nom</label><input id="'+sectionId+'-name" placeholder="Marie Dupont"></div>'
-        +'<div class="input-group"><label>T&eacute;l&eacute;phone</label><input id="'+sectionId+'-tel" type="tel" placeholder="+32 470 12 34 56"></div>'
+    sec.innerHTML = '<div style="'+cardStyle+'">'
+      +'<div style="'+labelStyle+'">'+iconPax+' Passager principal <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--ink4);">(optionnel)</span></div>'
+      +pillsHtml
+      +'<div id="'+sid+'-manual" style="display:'+(passList.length===0?'grid':'none')+';" class="form-grid" style="gap:8px;">'
+        +'<div class="input-group" style="margin:0;"><label style="font-size:12px;">Nom &amp; Pr&eacute;nom</label><input id="'+sid+'-name" placeholder="Marie Dupont"></div>'
+        +'<div class="input-group" style="margin:0;"><label style="font-size:12px;">T&eacute;l&eacute;phone</label><input id="'+sid+'-tel" type="tel" placeholder="+32 470 12 34 56"></div>'
       +'</div>'
     +'</div>';
 
-    // On dropdown change
-    var sel = document.getElementById(sectionId+'-select');
-    var manual = document.getElementById(sectionId+'-manual');
-    if(sel && manual){
-      sel.addEventListener('change', function(){
-        if(sel.value === '__manual__'){
-          manual.style.display = 'grid';
-          var ni = document.getElementById(sectionId+'-name'); if(ni) ni.value='';
-          var ti = document.getElementById(sectionId+'-tel');  if(ti) ti.value='';
+    // Pill click handlers
+    sec.querySelectorAll('.pax-pill').forEach(function(pill){
+      pill.addEventListener('click', function(){
+        // Reset all pills
+        sec.querySelectorAll('.pax-pill').forEach(function(p){
+          p.style.background='#fff'; p.style.borderColor='var(--sand3)'; p.style.color='var(--ink2)';
+          if(p.classList.contains('pax-pill-manual')){ p.style.background='transparent'; p.style.borderColor='var(--green)'; p.style.color='var(--green)'; }
+        });
+        var val = pill.dataset.val;
+        var manualDiv = document.getElementById(sid+'-manual');
+        if(val==='__manual__'){
+          pill.style.background='var(--green)'; pill.style.color='#fff'; pill.style.borderColor='var(--green)';
+          if(manualDiv){ manualDiv.style.display='grid'; manualDiv.style.marginTop='8px'; }
+          var ni=document.getElementById(sid+'-name'); if(ni) ni.value='';
+          var ti=document.getElementById(sid+'-tel');  if(ti) ti.value='';
         } else {
-          manual.style.display = 'none';
+          pill.style.background='var(--green)'; pill.style.borderColor='var(--green)'; pill.style.color='#fff';
+          if(manualDiv) manualDiv.style.display='none';
+          var parts = val.split('||');
+          var ni=document.getElementById(sid+'-name'); if(ni) ni.value=parts[0]||'';
+          var ti=document.getElementById(sid+'-tel');  if(ti) ti.value=parts[1]||'';
         }
       });
-    }
+    });
   });
 }
 
