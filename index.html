@@ -5321,7 +5321,7 @@ function _openNewRidePaxEdit(sid){
       +'<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Choisir un passager</label>'
       +'<select id="pax-edit-select" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:13px;background:#fff;font-family:\'DM Sans\',sans-serif;">'
       +opts+'</select></div>'
-      +'<div id="pax-edit-manual" style="display:block;">';
+      +'<div id="pax-edit-manual" style="display:none;">';
   }
 
   var n = window._newRidePaxName||'';
@@ -5348,7 +5348,7 @@ function _openNewRidePaxEdit(sid){
           var pts=sel.value.split('||');
           document.getElementById('pax-edit-name').value=pts[0]||'';
           document.getElementById('pax-edit-phone').value=pts[1]||'';
-        } else { manDiv.style.display='block'; }
+        } else { manDiv.style.display='none'; }
       });
     }
     var btn = document.getElementById('btn-pax-save');
