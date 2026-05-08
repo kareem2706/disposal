@@ -8900,12 +8900,12 @@ window._dInvStep = function(dir){
   _dInvSelMonth += dir;
   if(_dInvSelMonth > 12){ _dInvSelMonth = 1; _dInvSelYear++; }
   if(_dInvSelMonth < 1){ _dInvSelMonth = 12; _dInvSelYear--; }
-  document.getElementById('d-inv-month-sel').value = _dInvSelMonth;
-  document.getElementById('d-inv-year-sel').value  = _dInvSelYear;
+  window._renderDriverInvoiceMonth();
+};
   _renderDriverInvoiceMonth();
 };
-window._dInvSetMonth = function(m){ _dInvSelMonth = parseInt(m); _renderDriverInvoiceMonth(); };
-window._dInvSetYear  = function(y){ _dInvSelYear  = parseInt(y); _renderDriverInvoiceMonth(); };
+window._dInvSetMonth = function(m){ _dInvSelMonth = parseInt(m); window._renderDriverInvoiceMonth(); };
+window._dInvSetYear  = function(y){ _dInvSelYear  = parseInt(y); window._renderDriverInvoiceMonth(); };
 
 async function loadDriverInvoices(){
   if(!sb||!currentUser) return;
