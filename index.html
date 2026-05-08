@@ -4942,12 +4942,14 @@ window.confirmDeleteRide = async function(){
     // Determine if ride was refundable at cancellation time
     var rideForCancel=_pendingDeleteRide||null;
     var cancelUpdate={status:'cancelled'};
-    if(rideForCancel&&rideForCancel.final_price){
+    if(rideForCancel && rideForCancel.final_price && rideForCancel.payment_method && rideForCancel.payment_method !== 'non_refundable'){
       var rideTime2=(rideForCancel.ride_time||'00:00').slice(0,5);
       var dtCancel=new Date(rideForCancel.ride_date+'T'+rideTime2+':00');
-      var minsLeft=!isNaN(dtCancel)?(dtCancel-new Date())/60000:Infinity;
-      if(minsLeft<2880) cancelUpdate.payment_method='non_refundable';
-      // >= 2880 min before departure = refundable, keep original payment_method (bank_transfer/stripe)
+      var minsLeft=!isNaN(dtCancel.getTime())?(dtCancel-new Date())/60000:Infinity;
+      if(minsLeft < 2880){
+        cancelUpdate.payment_method='non_refundable';
+      }
+      // >= 2880 min = remboursable, on garde le payment_method original (bank_transfer/stripe)
     }
     var res=await sb.from('rides').update(cancelUpdate).eq('id',rideId).eq('client_id',currentUser.id);
     _pendingDeleteId = null;
