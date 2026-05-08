@@ -3058,6 +3058,7 @@ window.showPage = function(pageId){
 
   const pageNames = { dashboard:t('dashboard'), rides:t('rides'), calendar:'Calendrier', 'd-calendar':'Calendrier', invoices:t('invoices'),
     profile:t('profile'), 'd-dashboard':t('d-dashboard'), marketplace:t('marketplace'), missions:t('missions'),
+    'd-invoices':'Factures', 'passengers':'Passagers',
     'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses' };
   var ptEl=document.getElementById('page-title');if(ptEl)ptEl.textContent=pageNames[pageId]||'';
 
@@ -8929,7 +8930,7 @@ async function loadDriverInvoices(){
   await _renderDriverInvoiceMonth();
 }
 
-async function _renderDriverInvoiceMonth(){
+window._renderDriverInvoiceMonth = async function(){
   if(!sb||!currentUser) return;
   var cont = document.getElementById('d-inv-month-content');
   if(!cont) return;
