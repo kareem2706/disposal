@@ -8970,10 +8970,11 @@ window._renderDriverInvoiceMonth = async function(){
     return;
   }
 
-  var totalBrut = monthRides.reduce(function(s,r){ return s+(parseFloat(r.final_price)||0); },0);
-  var htvaTotal = totalBrut/1.06;
-  var commission = htvaTotal*0.10;
-  var net = htvaTotal - commission;
+  var totalHtva = monthRides.reduce(function(s,r){ return s+(r.final_price?parseFloat((parseFloat(r.final_price)/1.06).toFixed(2)):0); },0);
+  var totalTvac = monthRides.reduce(function(s,r){ return s+(r.final_price?parseFloat(r.final_price):0); },0);
+  var totalTva  = totalTvac - totalHtva;
+  var commission = totalHtva * 0.10;
+  var net = totalHtva - commission;
 
   var rows = monthRides.map(function(r){
     var htva = parseFloat((parseFloat(r.final_price)/1.06).toFixed(2));
@@ -8997,12 +8998,22 @@ window._renderDriverInvoiceMonth = async function(){
 
   listEl.innerHTML = '<div class="card" style="padding:0;">'
     +header
-    +'<div style="padding:14px 18px;border-bottom:1px solid var(--sand2);display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">'
-      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Total brut HTVA</div><div style="font-size:17px;font-weight:700;">'+fmt(htvaTotal)+'</div></div>'
+    +'<div style="padding:14px 20px;border-bottom:1px solid var(--sand2);display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">'
+      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Total brut HTVA</div><div style="font-size:17px;font-weight:700;">'+fmt(totalHtva)+'</div></div>'
       +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Commission (10%)</div><div style="font-size:17px;font-weight:700;color:var(--red);">−'+fmt(commission)+'</div></div>'
       +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Net à percevoir</div><div style="font-size:17px;font-weight:700;color:var(--green);">'+fmt(net)+'</div></div>'
     +'</div>'
-    +'<div style="padding:0 18px;">'+rows+'</div>'
+    +'<div style="display:grid;grid-template-columns:130px 1fr auto;gap:4px 14px;padding:6px 20px;border-bottom:2px solid var(--sand3);">'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Code</div>'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Trajet</div>'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);text-align:right;">Prix HTVA</div>'
+    +'</div>'
+    +'<div style="padding:0 20px;">'+rows+'</div>'
+    +'<div style="padding:8px 20px 14px;border-top:1px solid var(--sand2);margin-top:4px;">'
+      +'<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink3);padding:3px 0;"><span>Sous-total HTVA</span><span>'+fmt(totalHtva)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink3);padding:3px 0;"><span>TVA 6%</span><span>'+fmt(totalTva)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:7px 0 2px;border-top:1.5px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(totalTvac)+'</span></div>'
+    +'</div>'
   +'</div>';
 };
 
