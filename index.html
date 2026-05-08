@@ -3085,6 +3085,7 @@ async function loadPageData(pageId){
     case 'admin-fleets':   await loadAdminFleets(); break;
     case 'admin-clients':  await loadAdminClients(); break;
     case 'admin-dashboard': await loadAdminDashboard(); break;
+    case 'passengers':    await loadPassengersList(); break;
     case 'd-invoices':    await loadDriverInvoices(); break;
     case 'admin-rides':    await loadAdminRides(); break;
   }
@@ -8891,31 +8892,82 @@ window.showPage_passengers_hook = async function(){
   await loadPassengersList();
 };
 
+var _dInvSelMonth = new Date().getMonth() + 1;
+var _dInvSelYear  = new Date().getFullYear();
+
+window._dInvStep = function(dir){
+  _dInvSelMonth += dir;
+  if(_dInvSelMonth > 12){ _dInvSelMonth = 1; _dInvSelYear++; }
+  if(_dInvSelMonth < 1){ _dInvSelMonth = 12; _dInvSelYear--; }
+  document.getElementById('d-inv-month-sel').value = _dInvSelMonth;
+  document.getElementById('d-inv-year-sel').value  = _dInvSelYear;
+  _renderDriverInvoiceMonth();
+};
+window._dInvSetMonth = function(m){ _dInvSelMonth = parseInt(m); _renderDriverInvoiceMonth(); };
+window._dInvSetYear  = function(y){ _dInvSelYear  = parseInt(y); _renderDriverInvoiceMonth(); };
+
 async function loadDriverInvoices(){
   if(!sb||!currentUser) return;
   var el = document.getElementById('d-invoices-list');
   if(!el) return;
-  el.innerHTML = '<div class="page-loading"><div class="page-spinner"></div></div>';
-  var {data,error} = await sb.from('rides').select('*').eq('driver_id',currentUser.id).in('status',['done','confirmed']).not('final_price','is',null).order('ride_date',{ascending:false});
-  if(error){ el.innerHTML='<div style="padding:24px;color:var(--red);">Erreur: '+error.message+'</div>'; return; }
+
+  var months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  var curY = new Date().getFullYear();
+  var monthOpts = months.map(function(m,i){ return '<option value="'+(i+1)+'"'+(i+1===_dInvSelMonth?' selected':'')+'>'+m+'</option>'; }).join('');
+  var yearOpts = [curY-1,curY,curY+1].map(function(y){ return '<option value="'+y+'"'+(y===_dInvSelYear?' selected':'')+'>'+y+'</option>'; }).join('');
+
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap;">'
+    +'<button onclick="_dInvStep(-1)" style="background:none;border:1.5px solid var(--sand3);border-radius:var(--r);width:30px;height:30px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;">&lt;</button>'
+    +'<select id="d-inv-month-sel" onchange="_dInvSetMonth(this.value)" style="padding:6px 10px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:13px;font-family:\'DM Sans\',sans-serif;">'+monthOpts+'</select>'
+    +'<select id="d-inv-year-sel" onchange="_dInvSetYear(this.value)" style="padding:6px 10px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:13px;font-family:\'DM Sans\',sans-serif;">'+yearOpts+'</select>'
+    +'<button onclick="_dInvStep(1)" style="background:none;border:1.5px solid var(--sand3);border-radius:var(--r);width:30px;height:30px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;">&gt;</button>'
+    +'<button onclick="generateDriverInvoicePdf()" style="margin-left:auto;background:none;border:1.5px solid var(--sand3);border-radius:var(--r);padding:6px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink2);font-family:\'DM Sans\',sans-serif;">'
+      +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>PDF</button>'
+    +'</div>'
+    +'<div id="d-inv-month-content"><div class="page-loading"><div class="page-spinner"></div></div></div>';
+
+  await _renderDriverInvoiceMonth();
+}
+
+async function _renderDriverInvoiceMonth(){
+  if(!sb||!currentUser) return;
+  var cont = document.getElementById('d-inv-month-content');
+  if(!cont) return;
+  cont.innerHTML = '<div class="page-loading"><div class="page-spinner"></div></div>';
+
+  var m = _dInvSelMonth < 10 ? '0'+_dInvSelMonth : ''+_dInvSelMonth;
+  var from = _dInvSelYear+'-'+m+'-01';
+  var lastDay = new Date(_dInvSelYear, _dInvSelMonth, 0).getDate();
+  var to = _dInvSelYear+'-'+m+'-'+(lastDay<10?'0'+lastDay:lastDay);
+
+  var {data,error} = await sb.from('rides').select('*')
+    .eq('driver_id',currentUser.id)
+    .in('status',['done','confirmed'])
+    .not('final_price','is',null)
+    .gte('ride_date',from).lte('ride_date',to)
+    .order('ride_date',{ascending:true});
+
   if(!data||data.length===0){
-    el.innerHTML='<div class="card" style="padding:40px;text-align:center;"><div style="font-size:32px;margin-bottom:12px;">📄</div><div style="font-size:14px;color:var(--ink3);">Aucune facture disponible</div></div>';
+    cont.innerHTML='<div class="card" style="padding:40px;text-align:center;color:var(--ink3);font-size:14px;">Aucune mission ce mois-ci</div>';
     return;
   }
-  var total = data.reduce(function(s,r){ return s + (parseFloat(r.final_price)||0); },0);
-  var commission = total * 0.10;
-  var net = total - commission;
+
   var fmt = function(v){ return parseFloat(v).toFixed(2).replace('.',',')+' €'; };
   var tLbl = {ab:'A → B', disposal:'Disposition', mixed:'Mixte'};
+  var totalBrut = data.reduce(function(s,r){ return s+(parseFloat(r.final_price)||0); },0);
+  var commission = totalBrut * 0.10;
+  var net = totalBrut - commission;
+
   var rows = data.map(function(r){
     var htva = parseFloat((parseFloat(r.final_price)/1.06).toFixed(2));
-    var code = r.booking_code || r.id.slice(0,8);
-    var timeStr = r.ride_time ? r.ride_time.slice(0,5) : '';
-    return '<div style="display:grid;grid-template-columns:120px 1fr auto;gap:6px 14px;align-items:start;padding:10px 0;border-bottom:1px solid var(--sand2);">'
+    var code = r.booking_code||r.id.slice(0,8);
+    var timeStr = r.ride_time?r.ride_time.slice(0,5):'';
+    var from2 = (r.from_address||'').split(',')[0];
+    return '<div style="display:grid;grid-template-columns:130px 1fr auto;gap:6px 14px;align-items:start;padding:10px 0;border-bottom:1px solid var(--sand2);">'
       +'<div style="font-size:11px;font-family:monospace;font-weight:600;color:var(--ink2);padding-top:2px;">'+code+'</div>'
       +'<div>'
         +'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:1px;">'+formatDate(r.ride_date||'')+(timeStr?' · '+timeStr:'')+'</div>'
-        +'<div style="font-size:12.5px;color:var(--ink);">'+(tLbl[r.trip_type]||r.trip_type||'—')+'</div>'
+        +'<div style="font-size:12.5px;color:var(--ink);">'+from2+' — '+(tLbl[r.trip_type]||r.trip_type||'—')+'</div>'
       +'</div>'
       +'<div style="text-align:right;white-space:nowrap;">'
         +'<div style="font-size:13px;font-weight:600;">'+fmt(htva)+'</div>'
@@ -8923,15 +8975,57 @@ async function loadDriverInvoices(){
       +'</div>'
     +'</div>';
   }).join('');
-  el.innerHTML = '<div class="card" style="padding:16px 18px;margin-bottom:12px;">'
+
+  cont.innerHTML = '<div class="card" style="padding:16px 18px;margin-bottom:12px;">'
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">'
-      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Total brut</div><div style="font-size:18px;font-weight:700;">'+fmt(total)+'</div></div>'
-      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Commission (10%)</div><div style="font-size:18px;font-weight:700;color:var(--red);">-'+fmt(commission)+'</div></div>'
-      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Net à percevoir</div><div style="font-size:18px;font-weight:700;color:var(--green);">'+fmt(net)+'</div></div>'
+      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Total brut HTVA</div><div style="font-size:18px;font-weight:700;">'+fmt(totalBrut/1.06)+'</div></div>'
+      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Commission (10%)</div><div style="font-size:18px;font-weight:700;color:var(--red);">-'+fmt(commission/1.06)+'</div></div>'
+      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Net à percevoir</div><div style="font-size:18px;font-weight:700;color:var(--green);">'+fmt(net/1.06)+'</div></div>'
     +'</div>'
   +'</div>'
   +'<div class="card" style="padding:0 18px;">'+rows+'</div>';
+
+  window._dInvCurrentData = data;
 }
+
+window.generateDriverInvoicePdf = function(){
+  var data = window._dInvCurrentData||[];
+  var months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  var mLabel = months[_dInvSelMonth-1]+' '+_dInvSelYear;
+  var fmt = function(v){ return parseFloat(v).toFixed(2).replace('.',',')+' \u20ac'; };
+  var tLbl = {ab:'A \u2192 B', disposal:'Mise \u00e0 disposition', mixed:'Course mixte'};
+  var totalBrut = data.reduce(function(s,r){ return s+(parseFloat(r.final_price)||0); },0);
+  var htvaTotal = totalBrut/1.06;
+  var commission = htvaTotal*0.10;
+  var net = htvaTotal - commission;
+
+  var rows = data.map(function(r){
+    var htva = parseFloat((parseFloat(r.final_price)/1.06).toFixed(2));
+    var code = r.booking_code||r.id.slice(0,8);
+    var timeStr = r.ride_time?r.ride_time.slice(0,5):'';
+    return '<tr style="border-bottom:1px solid #E8E8E8;">'
+      +'<td style="padding:8px 12px;font-size:12px;font-family:monospace;">'+code+'</td>'
+      +'<td style="padding:8px 12px;font-size:12px;">'+formatDate(r.ride_date||'')+(timeStr?' '+timeStr:'')+'</td>'
+      +'<td style="padding:8px 12px;font-size:12px;">'+(tLbl[r.trip_type]||r.trip_type||'\u2014')+'</td>'
+      +'<td style="padding:8px 12px;font-size:12px;text-align:right;font-weight:600;">'+fmt(htva)+'</td>'
+      +'</tr>';
+  }).join('');
+
+  var body = '<div style="font-size:12px;color:#888;margin-bottom:20px;">R\u00e9capitulatif des missions \u2014 '+mLabel+'</div>'
+    +'<div class="section"><div class="section-title">Missions</div>'
+    +'<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f5f5f5;">'
+      +'<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;color:#888;">Code</th>'
+      +'<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;color:#888;">Date</th>'
+      +'<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;color:#888;">Type</th>'
+      +'<th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;color:#888;">HTVA</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table></div>'
+    +'<div class="section"><div class="section-title">R\u00e9capitulatif</div><table style="width:100%;border-collapse:collapse;">'
+      +'<tr><td style="padding:7px 12px;font-size:13px;color:#555;">Total brut HTVA</td><td style="padding:7px 12px;text-align:right;font-weight:600;">'+fmt(htvaTotal)+'</td></tr>'
+      +'<tr><td style="padding:7px 12px;font-size:13px;color:#555;">Commission Bleenr (10%)</td><td style="padding:7px 12px;text-align:right;font-weight:600;color:#C0392B;">-'+fmt(commission)+'</td></tr>'
+      +'<tr style="border-top:2px solid #1A1A18;"><td style="padding:9px 12px;font-size:14px;font-weight:700;">Net \u00e0 percevoir</td><td style="padding:9px 12px;text-align:right;font-size:14px;font-weight:700;color:#1B5E3B;">'+fmt(net)+'</td></tr>'
+    +'</table></div>';
+  _buildPdfWindow(_pdfBase('Factures \u2014 '+mLabel, body));
+};
 
 async function loadPassengersList(){
   if(!sb||!currentUser) return;
