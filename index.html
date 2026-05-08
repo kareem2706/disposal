@@ -3157,11 +3157,12 @@ async function loadClientDashboard(){
   var pending=rides.filter(function(r){return r.status==='waiting';}).length;
   var withOffer=rides.filter(function(r){return r.status==='offers';}).length;
   var total=rides.filter(function(r){return r.status==='done'||r.status==='confirmed';}).reduce(function(s,r){return s+(r.final_price?parseFloat(r.final_price):0);},0);
-  // Add ALL cancelled rides with final_price that haven't been refunded yet
-  var paidCancelled=rides.filter(function(r){return r.status==='cancelled'&&r.final_price&&r.payment_method&&r.payment_method!=='refunded';}).reduce(function(s,r){return s+parseFloat(r.final_price);},0);
-  // Subtract refunded amounts
+  // Cancelled non-refundable: client paid and won't get refund → include in total payé
+  var paidCancelled=rides.filter(function(r){return r.status==='cancelled'&&r.final_price&&r.payment_method==='non_refundable';}).reduce(function(s,r){return s+parseFloat(r.final_price);},0);
+  // Refunded: was charged but refunded → deduct from total payé
   var refunded=rides.filter(function(r){return r.status==='cancelled'&&r.payment_method==='refunded'&&r.final_price;}).reduce(function(s,r){return s+parseFloat(r.final_price);},0);
-  var totalNet = total + paidCancelled - refunded;
+  // bank_transfer/stripe cancelled but NOT yet refunded (remboursement en attente) → don't count as paid yet, money not confirmed lost
+  var totalNet = total + paidCancelled; // refunded already excluded (those rides have payment_method='refunded', not in done/confirmed)
   document.getElementById('client-stats').innerHTML=
     '<div class="stat-card">'+_mkI(_s1,'var(--green-bg)')+'<div class="stat-label">Confirmées/terminées</div><div class="stat-val">'+confirmed+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s2,'#FFF3DC')+'<div class="stat-label">En attente</div><div class="stat-val">'+pending+'</div></div>'
@@ -3672,7 +3673,13 @@ async function loadDriverDashboard(){
     var d=new Date(r.ride_date||r.created_at);
     return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
   });
-  const revenueNet = monthMissions.reduce(function(a,r){var p=r.final_price||0;return a+p*0.9;},0);
+  // Revenue = HTVA of done missions (excl. refunded) minus 10% platform commission
+  const revenueNet = monthMissions.reduce(function(a,r){
+    if(r.payment_method==='refunded') return a; // refunded ride: don't count
+    var tvac = parseFloat(r.final_price||0);
+    var htva = tvac / 1.06;
+    return a + htva * 0.9; // net after 10% commission
+  },0);
   const upcomingMissions = missions.filter(function(r){return r.status==='confirmed'||r.status==='pending_payment';});
 
   // Compute live score directly from ratings table (bypasses stale currentProfile.rating)
@@ -8970,8 +8977,8 @@ window._renderDriverInvoiceMonth = async function(){
     return;
   }
 
-  var totalHtva = monthRides.reduce(function(s,r){ return s+(r.final_price?parseFloat((parseFloat(r.final_price)/1.06).toFixed(2)):0); },0);
-  var totalTvac = monthRides.reduce(function(s,r){ return s+(r.final_price?parseFloat(r.final_price):0); },0);
+  var totalHtva = monthRides.filter(function(r){return r.payment_method!=='refunded';}).reduce(function(s,r){ return s+(r.final_price?parseFloat((parseFloat(r.final_price)/1.06).toFixed(2)):0); },0);
+  var totalTvac = monthRides.filter(function(r){return r.payment_method!=='refunded';}).reduce(function(s,r){ return s+(r.final_price?parseFloat(r.final_price):0); },0);
   var totalTva  = totalTvac - totalHtva;
   var commission = totalHtva * 0.10;
   var net = totalHtva - commission;
