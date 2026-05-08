@@ -8911,64 +8911,84 @@ async function loadDriverInvoices(){
   if(!sb||!currentUser) return;
   var el = document.getElementById('d-invoices-list');
   if(!el) return;
-
-  var months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  var curY = new Date().getFullYear();
-  var monthOpts = months.map(function(m,i){ return '<option value="'+(i+1)+'"'+(i+1===_dInvSelMonth?' selected':'')+'>'+m+'</option>'; }).join('');
-  var yearOpts = [curY-1,curY,curY+1].map(function(y){ return '<option value="'+y+'"'+(y===_dInvSelYear?' selected':'')+'>'+y+'</option>'; }).join('');
-
-  el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap;">'
-    +'<button onclick="_dInvStep(-1)" style="background:none;border:1.5px solid var(--sand3);border-radius:var(--r);width:30px;height:30px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;">&lt;</button>'
-    +'<select id="d-inv-month-sel" onchange="_dInvSetMonth(this.value)" style="padding:6px 10px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:13px;font-family:\'DM Sans\',sans-serif;">'+monthOpts+'</select>'
-    +'<select id="d-inv-year-sel" onchange="_dInvSetYear(this.value)" style="padding:6px 10px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:13px;font-family:\'DM Sans\',sans-serif;">'+yearOpts+'</select>'
-    +'<button onclick="_dInvStep(1)" style="background:none;border:1.5px solid var(--sand3);border-radius:var(--r);width:30px;height:30px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;">&gt;</button>'
-    +'<button onclick="generateDriverInvoicePdf()" style="margin-left:auto;background:none;border:1.5px solid var(--sand3);border-radius:var(--r);padding:6px 14px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink2);font-family:\'DM Sans\',sans-serif;">'
-      +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>PDF</button>'
-    +'</div>'
-    +'<div id="d-inv-month-content"><div class="page-loading"><div class="page-spinner"></div></div></div>';
-
-  await _renderDriverInvoiceMonth();
+  el.innerHTML = '<div class="page-loading"><div class="page-spinner"></div></div>';
+  await window._renderDriverInvoiceMonth();
 }
 
 window._renderDriverInvoiceMonth = async function(){
   if(!sb||!currentUser) return;
-  var cont = document.getElementById('d-inv-month-content');
-  if(!cont) return;
-  cont.innerHTML = '<div class="page-loading"><div class="page-spinner"></div></div>';
+  var listEl = document.getElementById('d-invoices-list');
+  if(!listEl) return;
+
+  var monthLabels = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  var curY = new Date().getFullYear();
+  var minYear = Math.min(curY-2, _dInvSelYear);
+  var maxYear = Math.max(curY+1, _dInvSelYear);
+  var yearOpts = '';
+  for(var y=maxYear; y>=minYear; y--){
+    yearOpts += '<option value="'+y+'"'+(_dInvSelYear===y?' selected':'')+'>'+y+'</option>';
+  }
+  var monthOpts = monthLabels.map(function(ml,i){
+    return '<option value="'+(i+1)+'"'+(_dInvSelMonth===i+1?' selected':'')+'>'+ml+'</option>';
+  }).join('');
+
+  var btnStyle = 'background:none;border:1.5px solid var(--sand3);border-radius:6px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;font-family:inherit;';
+  var selStyle = 'font-size:13px;font-weight:600;border:1.5px solid var(--sand3);border-radius:6px;padding:3px 6px;background:var(--white);cursor:pointer;font-family:\'DM Sans\',sans-serif;color:var(--ink);';
 
   var m = _dInvSelMonth < 10 ? '0'+_dInvSelMonth : ''+_dInvSelMonth;
   var from = _dInvSelYear+'-'+m+'-01';
   var lastDay = new Date(_dInvSelYear, _dInvSelMonth, 0).getDate();
   var to = _dInvSelYear+'-'+m+'-'+(lastDay<10?'0'+lastDay:lastDay);
 
-  var {data,error} = await sb.from('rides').select('*')
+  var {data} = await sb.from('rides').select('*')
     .eq('driver_id',currentUser.id)
     .in('status',['done','confirmed'])
     .not('final_price','is',null)
     .gte('ride_date',from).lte('ride_date',to)
     .order('ride_date',{ascending:true});
-
-  if(!data||data.length===0){
-    cont.innerHTML='<div class="card" style="padding:40px;text-align:center;color:var(--ink3);font-size:14px;">Aucune mission ce mois-ci</div>';
-    return;
-  }
+  var monthRides = data||[];
+  window._dInvCurrentData = monthRides;
 
   var fmt = function(v){ return parseFloat(v).toFixed(2).replace('.',',')+' €'; };
   var tLbl = {ab:'A → B', disposal:'Disposition', mixed:'Mixte'};
-  var totalBrut = data.reduce(function(s,r){ return s+(parseFloat(r.final_price)||0); },0);
-  var commission = totalBrut * 0.10;
-  var net = totalBrut - commission;
 
-  var rows = data.map(function(r){
+  var header = '<div class="card-hd" style="display:flex;align-items:center;gap:8px;justify-content:space-between;">'
+    +'<div style="display:flex;align-items:center;gap:6px;">'
+      +'<button onclick="_dInvStep(-1)" style="'+btnStyle+'">&lt;</button>'
+      +'<select onchange="_dInvSetMonth(parseInt(this.value))" style="'+selStyle+'">'+monthOpts+'</select>'
+      +'<select onchange="_dInvSetYear(parseInt(this.value))" style="'+selStyle+'">'+yearOpts+'</select>'
+      +'<button onclick="_dInvStep(1)" style="'+btnStyle+'">&gt;</button>'
+    +'</div>'
+    +(monthRides.length
+      ? '<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;flex-shrink:0;" onclick="generateDriverInvoicePdf()">'
+          +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>PDF</button>'
+      : '')
+  +'</div>';
+
+  if(!monthRides.length){
+    listEl.innerHTML = '<div class="card" style="padding:0;">'+header
+      +'<div style="padding:40px 20px;text-align:center;color:var(--ink3);font-size:13px;">Aucune mission ce mois-ci</div>'
+    +'</div>';
+    return;
+  }
+
+  var totalBrut = monthRides.reduce(function(s,r){ return s+(parseFloat(r.final_price)||0); },0);
+  var htvaTotal = totalBrut/1.06;
+  var commission = htvaTotal*0.10;
+  var net = htvaTotal - commission;
+
+  var rows = monthRides.map(function(r){
     var htva = parseFloat((parseFloat(r.final_price)/1.06).toFixed(2));
     var code = r.booking_code||r.id.slice(0,8);
+    var from2 = (r.from_address||'—').split(',')[0];
+    var to2   = r.to_address||'—';
+    var route = r.trip_type==='disposal' ? from2+' (Disp.)' : from2+' → '+to2;
     var timeStr = r.ride_time?r.ride_time.slice(0,5):'';
-    var from2 = (r.from_address||'').split(',')[0];
     return '<div style="display:grid;grid-template-columns:130px 1fr auto;gap:6px 14px;align-items:start;padding:10px 0;border-bottom:1px solid var(--sand2);">'
       +'<div style="font-size:11px;font-family:monospace;font-weight:600;color:var(--ink2);padding-top:2px;">'+code+'</div>'
       +'<div>'
         +'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:1px;">'+formatDate(r.ride_date||'')+(timeStr?' · '+timeStr:'')+'</div>'
-        +'<div style="font-size:12.5px;color:var(--ink);">'+from2+' — '+(tLbl[r.trip_type]||r.trip_type||'—')+'</div>'
+        +'<div style="font-size:12.5px;color:var(--ink);">'+route+'</div>'
       +'</div>'
       +'<div style="text-align:right;white-space:nowrap;">'
         +'<div style="font-size:13px;font-weight:600;">'+fmt(htva)+'</div>'
@@ -8977,17 +8997,17 @@ window._renderDriverInvoiceMonth = async function(){
     +'</div>';
   }).join('');
 
-  cont.innerHTML = '<div class="card" style="padding:16px 18px;margin-bottom:12px;">'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">'
-      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Total brut HTVA</div><div style="font-size:18px;font-weight:700;">'+fmt(totalBrut/1.06)+'</div></div>'
-      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Commission (10%)</div><div style="font-size:18px;font-weight:700;color:var(--red);">-'+fmt(commission/1.06)+'</div></div>'
-      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Net à percevoir</div><div style="font-size:18px;font-weight:700;color:var(--green);">'+fmt(net/1.06)+'</div></div>'
+  listEl.innerHTML = '<div class="card" style="padding:0;">'
+    +header
+    +'<div style="padding:14px 18px;border-bottom:1px solid var(--sand2);display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">'
+      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Total brut HTVA</div><div style="font-size:17px;font-weight:700;">'+fmt(htvaTotal)+'</div></div>'
+      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Commission (10%)</div><div style="font-size:17px;font-weight:700;color:var(--red);">−'+fmt(commission)+'</div></div>'
+      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Net à percevoir</div><div style="font-size:17px;font-weight:700;color:var(--green);">'+fmt(net)+'</div></div>'
     +'</div>'
-  +'</div>'
-  +'<div class="card" style="padding:0 18px;">'+rows+'</div>';
+    +'<div style="padding:0 18px;">'+rows+'</div>'
+  +'</div>';
+};
 
-  window._dInvCurrentData = data;
-}
 
 window.generateDriverInvoicePdf = function(){
   var data = window._dInvCurrentData||[];
