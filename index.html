@@ -5316,7 +5316,7 @@ function _openNewRidePaxEdit(sid){
           var t=p.phone||'';
           return '<option value="'+n.replace(/"/g,'&quot;')+'||'+t.replace(/"/g,'&quot;')+'">'+n+(t?' · '+t:'')+'</option>';
         }).join('')
-      +'<option value="__manual__">✏ Autre passager</option>';
+      +'<option value="__manual__">Autre passager</option>';
     fields += '<div class="input-group" style="margin-bottom:10px;">'
       +'<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Choisir un passager</label>'
       +'<select id="pax-edit-select" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:13px;background:#fff;font-family:\'DM Sans\',sans-serif;">'
@@ -6807,7 +6807,7 @@ window.openPaxEdit = async function(rideId, currentName, currentPhone){
             var t = p.phone||'';
             return '<option value="'+n.replace(/"/g,'&quot;')+'||'+t.replace(/"/g,'&quot;')+'">'+n+(t?' · '+t:'')+'</option>';
           }).join('')
-        +'<option value="__manual__">✏ Autre passager</option>';
+        +'<option value="__manual__">Autre passager</option>';
 
       fields = '<div class="input-group" style="margin-bottom:10px;">'
         +'<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Choisir un passager</label>'
