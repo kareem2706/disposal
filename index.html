@@ -8977,53 +8977,41 @@ window._renderDriverInvoiceMonth = async function(){
     return;
   }
 
-  var totalHtva = monthRides.filter(function(r){return r.payment_method!=='refunded';}).reduce(function(s,r){ return s+(r.final_price?parseFloat((parseFloat(r.final_price)/1.06).toFixed(2)):0); },0);
-  var totalTvac = monthRides.filter(function(r){return r.payment_method!=='refunded';}).reduce(function(s,r){ return s+(r.final_price?parseFloat(r.final_price):0); },0);
-  var totalTva  = totalTvac - totalHtva;
-  var commission = totalHtva * 0.10;
-  var net = totalHtva - commission;
+  // NET CHAUFFEUR UNIQUEMENT = TVAC * 90%
+  var totalNet = monthRides.reduce(function(s,r){
+    return s + Math.round(parseFloat(r.final_price||0) * 0.9 * 100) / 100;
+  }, 0);
 
   var rows = monthRides.map(function(r){
-    var htva = parseFloat((parseFloat(r.final_price)/1.06).toFixed(2));
-    var code = r.booking_code||r.id.slice(0,8);
+    var net = Math.round(parseFloat(r.final_price||0) * 0.9 * 100) / 100;
+    var code = r.booking_code || r.id.slice(0,8);
     var from2 = (r.from_address||'—').split(',')[0];
-    var to2   = r.to_address||'—';
-    var route = r.trip_type==='disposal' ? from2+' (Disp.)' : from2+' → '+to2;
-    var timeStr = r.ride_time?r.ride_time.slice(0,5):'';
+    var route = r.trip_type==='disposal' ? from2+' (Disp.)' : from2+' → '+(r.to_address||'');
+    var timeStr = r.ride_time ? r.ride_time.slice(0,5) : '';
     return '<div style="display:grid;grid-template-columns:130px 1fr auto;gap:6px 14px;align-items:start;padding:10px 0;border-bottom:1px solid var(--sand2);">'
-      +'<div style="font-size:11px;font-family:monospace;font-weight:600;color:var(--ink2);padding-top:2px;">'+code+'</div>'
-      +'<div>'
-        +'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:1px;">'+formatDate(r.ride_date||'')+(timeStr?' · '+timeStr:'')+'</div>'
-        +'<div style="font-size:12.5px;color:var(--ink);">'+route+'</div>'
-      +'</div>'
-      +'<div style="text-align:right;white-space:nowrap;">'
-        +'<div style="font-size:13px;font-weight:600;">'+fmt(htva)+'</div>'
-        +'<div style="font-size:10px;color:var(--ink3);">HTVA</div>'
-      +'</div>'
+      +'<div style="font-size:11px;font-family:monospace;font-weight:600;color:var(--ink2);">'+code+'</div>'
+      +'<div><div style="font-size:12.5px;color:var(--ink3);">'+formatDate(r.ride_date||'')+(timeStr?' · '+timeStr:'')+'</div>'
+      +'<div style="font-size:12.5px;color:var(--ink);">'+route+'</div></div>'
+      +'<div style="text-align:right;font-size:13px;font-weight:600;white-space:nowrap;">'+fmt(net)+'</div>'
     +'</div>';
   }).join('');
 
   listEl.innerHTML = '<div class="card" style="padding:0;">'
-    +header
-    +'<div style="padding:14px 20px;border-bottom:1px solid var(--sand2);display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">'
-      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Total brut HTVA</div><div style="font-size:17px;font-weight:700;">'+fmt(totalHtva)+'</div></div>'
-      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Commission (10%)</div><div style="font-size:17px;font-weight:700;color:var(--red);">−'+fmt(commission)+'</div></div>'
-      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">Net à percevoir</div><div style="font-size:17px;font-weight:700;color:var(--green);">'+fmt(net)+'</div></div>'
-    +'</div>'
-    +'<div style="display:grid;grid-template-columns:130px 1fr auto;gap:4px 14px;padding:6px 20px;border-bottom:2px solid var(--sand3);">'
+    + header
+    + '<div style="display:grid;grid-template-columns:130px 1fr auto;gap:4px 14px;padding:6px 20px;border-bottom:2px solid var(--sand3);">'
       +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Code</div>'
       +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Trajet</div>'
-      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);text-align:right;">Prix HTVA</div>'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);text-align:right;">Net chauffeur</div>'
     +'</div>'
-    +'<div style="padding:0 20px;">'+rows+'</div>'
-    +'<div style="padding:8px 20px 14px;border-top:1px solid var(--sand2);margin-top:4px;">'
-      +'<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink3);padding:3px 0;"><span>Sous-total HTVA</span><span>'+fmt(totalHtva)+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink3);padding:3px 0;"><span>TVA 6%</span><span>'+fmt(totalTva)+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:7px 0 2px;border-top:1.5px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(totalTvac)+'</span></div>'
+    + '<div style="padding:0 20px;">'+rows+'</div>'
+    + '<div style="padding:8px 20px 14px;border-top:1px solid var(--sand2);margin-top:4px;">'
+      +'<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink3);padding:3px 0;"><span>Sous-total</span><span>'+fmt(totalNet)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink3);padding:3px 0;"><span>TVA 0% (autoliquidation)</span><span>0,00 €</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:7px 0 2px;border-top:1.5px solid var(--sand3);margin-top:4px;"><span>Total à facturer</span><span>'+fmt(totalNet)+'</span></div>'
     +'</div>'
   +'</div>';
-};
 
+};
 
 window.generateDriverInvoicePdf = function(){
   var data = window._dInvCurrentData||[];
