@@ -4450,8 +4450,10 @@ function _openRideDetailImpl(el){
         var notesRaw = r.notes||'';
         var paxMatch = notesRaw.match(/\|pax:([^|]+)/);
         var noteDrvMatch = notesRaw.match(/\|note_drv:([^|]+)/);
+        var telMatch = notesRaw.match(/\|tel:([^|]+)/);
         var cName = paxMatch ? paxMatch[1].trim() : (((cp.first_name||'')+' '+(cp.last_name||'')).trim() || '—');
         var noteDriver = noteDrvMatch ? noteDrvMatch[1].trim() : '';
+        var cPhone = telMatch ? telMatch[1].trim() : (cp.phone||'');
 
         // Initialize offer_note from offer message if not set yet
         var existingOfferNote = notesRaw.match(/\|offer_note:([^|]+)/);
@@ -4465,8 +4467,9 @@ function _openRideDetailImpl(el){
         var drvNoteId = 'drv-note-card-'+r.id;
 
         var contactBlock = '<div style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
-          +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Informations passager</div>'
-          +'<div style="font-weight:600;font-size:14px;'+(noteDriver?'margin-bottom:6px;':'')+'">'+cName+'</div>'
+          +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Informations du passager</div>'
+          +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+cName+'</div>'
+          +(cPhone?'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:'+(noteDriver?'6px':'2px')+';"><a href="tel:'+cPhone+'" style="color:var(--blue);text-decoration:none;">'+cPhone+'</a></div>':'')
           +(noteDriver?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;padding-top:4px;border-top:1px solid #d0e4f7;"><span style="font-style:normal;font-weight:600;color:var(--ink2);">Message du client\u00a0: </span>'+noteDriver+'</div>':'')
           +'</div>';
         // Note au client card (editable by driver)
@@ -4568,7 +4571,7 @@ function _openRideDetailImpl(el){
           var dispPhone = telMatch ? telMatch[1].trim() : (cp.phone||'');
           var paxHtml = '<div id="pax-info-block" style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
             +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-              +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Informations passager</div>'
+              +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Informations du passager</div>'
               +'<button id="btn-pax-edit" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;font-family:\'DM Sans\',sans-serif;display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/><path d="M10 4l2 2"/></svg> Modifier</button>'
             +'</div>'
             +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+dispName+'</div>'
@@ -5315,7 +5318,7 @@ function _renderNewRidePaxCard(sid){
   var pencilSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>';
   sec.innerHTML = '<div style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
-      +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Informations passager</div>'
+      +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Informations du passager</div>'
       +'<button id="'+sid+'-edit-btn" type="button" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;font-family:\'DM Sans\',sans-serif;">'+pencilSvg+' Modifier</button>'
     +'</div>'
     +'<div style="font-weight:600;font-size:14px;'+(n?'':'color:var(--ink3);font-weight:400;')+'">'+( n||'Non renseigné')+'</div>'
