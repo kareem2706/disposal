@@ -256,6 +256,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .modal-hd{padding:18px 22px;border-bottom:1px solid var(--sand3);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:1;flex-shrink:0;}
 .modal-title{font-size:15px;font-weight:600;}
 .modal-body{padding:20px 22px;overflow-y:auto;flex:1;}
+.rd-skel{background:#EEF4FB;border-radius:var(--r);}
 .modal-ft{padding:13px 22px;border-top:1px solid var(--sand3);display:flex;gap:9px;align-items:center;justify-content:flex-end;flex-shrink:0;}
 .close-btn{width:28px;height:28px;border-radius:50%;border:none;background:var(--sand2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink2);transition:all var(--t);}
 .close-btn:hover{background:var(--sand3);color:var(--ink);}
@@ -4222,20 +4223,27 @@ window._detailGen=0;
 window.openRideDetail=function(el){
   var r;
   try{ r=JSON.parse(el.dataset.ride.replace(/&#39;/g,"'")); }catch(e){return;}
-  // Always fetch fresh data from Supabase to ensure latest notes/status
+
+  // Render immediately from cached card data — no perceived delay, single modal open
+  _openRideDetailImpl(el);
+
+  // Then silently refresh from Supabase, and only re-render if something actually changed
   if(sb && r.id && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     sb.from('rides').select('*').eq('id',r.id).maybeSingle().then(function(res){
-      if(res.data){
-        var freshEl = document.createElement('div');
-        freshEl.dataset.ride = JSON.stringify(res.data).replace(/'/g,"&#39;");
-        _openRideDetailImpl(freshEl);
-      } else {
-        _openRideDetailImpl(el);
-      }
-    }, function(){ _openRideDetailImpl(el); });
-    return;
+      if(!res || !res.data) return;
+      // Ignore if the user already closed the modal or opened another ride
+      var stillOpen = document.getElementById('m-ride-detail');
+      if(!stillOpen || !stillOpen.classList.contains('open')) return;
+      if(!window._lastDetailRide || window._lastDetailRide.id !== r.id) return;
+      var fresh = res.data;
+      var changed = ['status','notes','final_price','driver_id','payment_method','ride_date','ride_time','from_address','to_address']
+        .some(function(k){ return String(fresh[k]==null?'':fresh[k]) !== String(r[k]==null?'':r[k]); });
+      if(!changed) return;
+      var freshEl = document.createElement('div');
+      freshEl.dataset.ride = JSON.stringify(fresh).replace(/'/g,"&#39;");
+      _openRideDetailImpl(freshEl);
+    }, function(){});
   }
-  _openRideDetailImpl(el);
 };
 
 function _openRideDetailImpl(el){
@@ -4426,12 +4434,29 @@ function _openRideDetailImpl(el){
       }
       if(!src){wrap.style.display='none';var sp2=document.getElementById('detail-map-spacer');if(sp2)sp2.style.height='0px';return;}
       var img=document.getElementById('detail-map-img');
-      if(img){img.src=src;wrap.style.display='block';var sp3=document.getElementById('detail-map-spacer');if(sp3)sp3.style.height='12px';}
+      if(img){
+        // Hide the stale image until the new one has loaded (no removeAttribute: it would fire onerror)
+        if(img.getAttribute('data-for')!==String(r.id)){
+          img.setAttribute('data-for',String(r.id));
+          img.style.visibility='hidden';
+          img.onload=function(){ img.style.visibility='visible'; };
+        }
+        img.src=src;
+        wrap.style.display='block';
+        var sp3=document.getElementById('detail-map-spacer');if(sp3)sp3.style.height='12px';
+      }
     }
   })();
 
   // ── Client contact info for driver (confirmed ride) — name only, no phone ──
   if(!isClient && (r.status==='confirmed'||r.status==='active') && r.client_id && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
+    var _drvBody=document.getElementById('detail-body');
+    if(_drvBody){
+      _drvBody.insertAdjacentHTML('beforeend',
+        '<div id="ph-drv-pax" class="rd-skel" style="height:82px;"></div>'
+        +'<div id="ph-drv-note" class="rd-skel" style="height:66px;"></div>'
+      );
+    }
     (async function(){
       var bodyEl3=document.getElementById('detail-body');
       if(!bodyEl3) return;
@@ -4485,7 +4510,10 @@ function _openRideDetailImpl(el){
             ? '<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+offerNote+'</div>'
             : '<div style="font-size:12px;color:var(--ink4);">Aucune note</div>')
           +'</div>';
-        bodyEl3.insertAdjacentHTML('beforeend', contactBlock + noteCard);
+        var _phPax=document.getElementById('ph-drv-pax');
+        var _phNote=document.getElementById('ph-drv-note');
+        if(_phPax){ _phPax.outerHTML = contactBlock; } else { bodyEl3.insertAdjacentHTML('beforeend', contactBlock); }
+        if(_phNote){ _phNote.outerHTML = noteCard; } else { bodyEl3.insertAdjacentHTML('beforeend', noteCard); }
         // Attach event via JS (safe for all characters including apostrophes)
         setTimeout(function(){
           var btn = bodyEl3.querySelector('.drv-note-btn');
@@ -4493,7 +4521,12 @@ function _openRideDetailImpl(el){
             openDriverNoteEdit(this.dataset.rid, this.dataset.note);
           });
         }, 10);
-      } catch(e){ console.warn('client contact fetch error:', e); }
+      } catch(e){
+        console.warn('client contact fetch error:', e);
+        ['ph-drv-pax','ph-drv-note'].forEach(function(pid){
+          var el=document.getElementById(pid); if(el) el.remove();
+        });
+      }
     })();
   }
 
@@ -4503,10 +4536,10 @@ function _openRideDetailImpl(el){
     var bodyElMain = document.getElementById('detail-body');
     if(bodyElMain){
       bodyElMain.insertAdjacentHTML('beforeend',
-        '<div id="ph-vehicle"></div>'
-        +'<div id="ph-passenger"></div>'
-        +'<div id="ph-note"></div>'
-        +'<div id="ph-price"></div>'
+        '<div id="ph-vehicle" class="rd-skel" style="height:86px;"></div>'
+        +'<div id="ph-passenger" class="rd-skel" style="height:74px;"></div>'
+        +'<div id="ph-note" class="rd-skel" style="height:62px;"></div>'
+        +'<div id="ph-price" class="rd-skel" style="height:92px;"></div>'
       );
     }
     var _rideIdForPax = r.id;
@@ -4619,7 +4652,12 @@ function _openRideDetailImpl(el){
             +'</div>';
         } else if(phPrice){ phPrice.remove(); }
 
-      } catch(e){ console.warn('confirmed client blocks error:', e); }
+      } catch(e){
+        console.warn('confirmed client blocks error:', e);
+        ['ph-vehicle','ph-passenger','ph-note','ph-price'].forEach(function(pid){
+          var el=document.getElementById(pid); if(el) el.remove();
+        });
+      }
     })();
   }
 
