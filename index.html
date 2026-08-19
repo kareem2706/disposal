@@ -4435,12 +4435,7 @@ function _openRideDetailImpl(el){
       if(!src){wrap.style.display='none';var sp2=document.getElementById('detail-map-spacer');if(sp2)sp2.style.height='0px';return;}
       var img=document.getElementById('detail-map-img');
       if(img){
-        // Hide the stale image until the new one has loaded (no removeAttribute: it would fire onerror)
-        if(img.getAttribute('data-for')!==String(r.id)){
-          img.setAttribute('data-for',String(r.id));
-          img.style.visibility='hidden';
-          img.onload=function(){ img.style.visibility='visible'; };
-        }
+        img.style.visibility='visible';
         img.src=src;
         wrap.style.display='block';
         var sp3=document.getElementById('detail-map-spacer');if(sp3)sp3.style.height='12px';
