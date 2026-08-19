@@ -970,7 +970,7 @@ body{background:var(--bg);}
     <nav class="app-nav">
       <!-- CLIENT nav -->
       <div id="nav-cta-client" style="padding:8px 10px 4px;">
-        <button class="sidebar-cta" onclick="cancelRideModal();openModal('m-new-ride');if(currentProfile?.role==='client'||currentRole==='client')setTimeout(_initPaxSelector,80);">
+        <button class="sidebar-cta" onclick="cancelRideModal();openModal('m-new-ride');if(currentProfile?.role==='client'||currentRole==='client')setTimeout(function(){try{_initPaxSelector();}catch(e){console.warn('paxSelector',e);}},80);">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="white" stroke-width="1.5"/><path d="M8 5v6M5 8h6" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
           Nouvelle demande
         </button>
@@ -5211,12 +5211,14 @@ window.submitRide = async function(){
 
   // DEMO MODE
   // Inject passenger info
-  if(currentProfile?.role==='client' || currentRole==='client'){
-    var paxName = (window._newRidePaxName||'').trim();
-    var paxTel  = (window._newRidePaxTel||'').trim();
-    if(paxName) notes = (notes||'') + '|pax:'+paxName;
-    if(paxTel)  notes = (notes||'') + '|tel:'+paxTel;
-  }
+  try{
+    if(currentProfile?.role==='client' || currentRole==='client'){
+      var paxName = (window._newRidePaxName||'').trim();
+      var paxTel  = (window._newRidePaxTel||'').trim();
+      if(paxName) notes = (notes||'') + '|pax:'+paxName;
+      if(paxTel)  notes = (notes||'') + '|tel:'+paxTel;
+    }
+  }catch(_e){ console.warn('pax inject skipped', _e); }
 
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
     closeModal('m-new-ride');
@@ -5277,8 +5279,10 @@ window.submitRide = async function(){
     _calCache={};
     if(typeof loadCalendar==='function'){try{await loadCalendar(true);}catch(e){}}
   } catch(e){
+    console.error('submitRide error:', e);
     if(err){ err.textContent=e.message||'Erreur'; err.classList.add('show'); }
-    if(btn) setLoading(btn, false, t('btn_publish')+' \u2192');
+  } finally {
+    if(btn){ setLoading(btn, false, t('btn_publish')+' \u2192'); btn.disabled=false; }
   }
 };
 
@@ -5290,7 +5294,7 @@ window.cancelRideModal = function(){
   var titleEl = document.getElementById('ride-modal-title');
   if(titleEl) titleEl.textContent = t('new_ride_title');
   var btn = document.getElementById('btn-submit-ride');
-  if(btn) btn.innerHTML = t('btn_publish')+' &rarr;';
+  if(btn){ btn.disabled = false; btn.innerHTML = t('btn_publish')+' &rarr;'; }
   // Reset trip type to A→B
   document.querySelectorAll('.trip-type').forEach(function(b){
     b.classList.toggle('active', b.dataset.val==='ab');
@@ -5654,8 +5658,10 @@ window.submitSubcontract = async function(){
     await loadDriverDashboard();
     if(typeof loadMarketplace==='function')await loadMarketplace();
   } catch(e){
+    console.error('submitRide error:', e);
     if(err){ err.textContent=e.message||'Erreur'; err.classList.add('show'); }
-    if(btn) setLoading(btn, false, t('btn_publish')+' \u2192');
+  } finally {
+    if(btn){ setLoading(btn, false, t('btn_publish')+' \u2192'); btn.disabled=false; }
   }
 };
 function getDemoRides(){
