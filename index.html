@@ -3021,6 +3021,7 @@ function enterApp(){
           await sb.from('offers').update({status:'rejected'}).eq('ride_id',_sr.ride).neq('id',_sr.offer);
           await sb.from('rides').update({status:'confirmed',payment_method:'stripe',final_price:tvac||null,driver_id:payDriverId}).eq('id',_sr.ride);
           await _promoteNotesToDriver(_sr.ride);
+          _notifyRideConfirmed(_sr.ride, payDriverId);
           if(typeof loadClientDashboard==='function') await loadClientDashboard();
           // Self-contained success overlay
           var _so=document.createElement('div');
@@ -4001,6 +4002,7 @@ window.acceptOffer = async function(offerId, driverId, price){
   await sb.from('offers').update({status:'rejected'}).eq('ride_id', currentRideId).neq('id', offerId);
   await sb.from('rides').update({status:'confirmed', driver_id: driverId, final_price: price}).eq('id', currentRideId);
   await _promoteNotesToDriver(currentRideId);
+  _notifyRideConfirmed(currentRideId, driverId);
   closeModal('m-view-offers');
   showToast(t('toast_offer_acc'));
   await loadClientDashboard();
@@ -4864,6 +4866,100 @@ window.generateRideVoucher = async function(rideId){
 };
 
 // Promote base notes to |note_drv: when a ride is confirmed
+// ── Email notifications (Supabase Edge Function "send-email") ──
+// Fire-and-forget: an email failure must never block a user action.
+window.sendMail = function(type, to, data){
+  if(!sb || !to || localStorage.getItem(DEMO_MODE_KEY)==='1') return Promise.resolve();
+  return sb.functions.invoke('send-email', {
+    body: { type: type, to: to, data: data || {} }
+  }).then(function(res){
+    if(res && res.error) console.warn('sendMail', type, res.error.message);
+    return res;
+  }).catch(function(e){ console.warn('sendMail', type, e); });
+};
+
+// Builds the data block shared by every ride email
+window._mailRideData = function(r, extra){
+  var tLbl = {ab:'A \u2192 B', disposal:'Mise \u00e0 disposition', mixed:'Course mixte'};
+  var d = {
+    code:  r.booking_code || (r.id ? String(r.id).slice(0,8) : ''),
+    date:  r.ride_date ? formatDate(r.ride_date) : '',
+    time:  r.ride_time ? String(r.ride_time).slice(0,5) : '',
+    from:  r.from_address || '',
+    to:    r.to_address || tLbl[r.trip_type] || '',
+    price: r.final_price ? (parseFloat(r.final_price).toFixed(2).replace('.',',')+' \u20ac') : ''
+  };
+  var pax = (r.notes||'').match(/\|pax:([^|]+)/);
+  if(pax) d.passenger = pax[1].trim();
+  if(extra) Object.keys(extra).forEach(function(k){ if(extra[k]) d[k]=extra[k]; });
+  return d;
+};
+
+// Resolves a user's email from their profile id
+window._mailEmailFor = async function(userId){
+  if(!sb || !userId) return null;
+  try{
+    var {data} = await sb.from('profiles').select('email,first_name,last_name,phone').eq('id',userId).maybeSingle();
+    return data || null;
+  }catch(e){ return null; }
+};
+
+// Sends the confirmation pair (client + driver) once a ride is confirmed
+window._notifyRideConfirmed = async function(rideId, driverId){
+  if(!sb || !rideId) return;
+  try{
+    var {data:r} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
+    if(!r) return;
+    var client = await window._mailEmailFor(r.client_id);
+    var driver = await window._mailEmailFor(driverId || r.driver_id);
+    var veh = '';
+    try{
+      var {data:off} = await sb.from('offers').select('vehicle_id').eq('ride_id',rideId).eq('status','accepted').maybeSingle();
+      if(off && off.vehicle_id){
+        var {data:v} = await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',off.vehicle_id).maybeSingle();
+        if(v) veh = ((v.brand||'')+' '+(v.model||'')+' '+(v.color||'')).trim() + (v.plate?' ('+v.plate+')':'');
+      }
+    }catch(e){}
+
+    var drvName = driver ? ((driver.first_name||'')+' '+(driver.last_name||'')).trim() : '';
+    var base = window._mailRideData(r, { vehicle: veh, driver: drvName });
+
+    if(client && client.email){
+      window.sendMail('ride_confirmed_client', client.email, Object.assign({}, base, {
+        clientName: client.first_name||'',
+        driverPhone: driver ? (driver.phone||'') : ''
+      }));
+    }
+    if(driver && driver.email){
+      window.sendMail('ride_confirmed_driver', driver.email, Object.assign({}, base, {
+        driverName: driver.first_name||''
+      }));
+    }
+  }catch(e){ console.warn('_notifyRideConfirmed', e); }
+};
+
+// Sends the cancellation notice to the client (and driver if one was assigned)
+window._notifyRideCancelled = async function(rideId, refundable){
+  if(!sb || !rideId) return;
+  try{
+    var {data:r} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
+    if(!r) return;
+    var base = window._mailRideData(r);
+    base.refund = refundable ? 'yes' : 'no';
+
+    var client = await window._mailEmailFor(r.client_id);
+    if(client && client.email){
+      window.sendMail('ride_cancelled', client.email, Object.assign({}, base, { name: client.first_name||'' }));
+    }
+    if(r.driver_id){
+      var driver = await window._mailEmailFor(r.driver_id);
+      if(driver && driver.email){
+        window.sendMail('ride_cancelled', driver.email, Object.assign({}, base, { name: driver.first_name||'' }));
+      }
+    }
+  }catch(e){ console.warn('_notifyRideCancelled', e); }
+};
+
 async function _promoteNotesToDriver(rideId){
   if(!sb||!rideId) return;
   try{
@@ -5009,7 +5105,9 @@ window.confirmDeleteRide = async function(){
       }
       // >= 2880 min = remboursable, on garde le payment_method original (bank_transfer/stripe)
     }
+    var _cancelRefundable = (cancelUpdate.payment_method!=='non_refundable');
     var res=await sb.from('rides').update(cancelUpdate).eq('id',rideId).eq('client_id',currentUser.id);
+    if(!res.error) _notifyRideCancelled(rideId, _cancelRefundable);
     _pendingDeleteId = null;
     if(btn){ btn.disabled=false; btn.textContent='Oui, annuler'; }
     if(res.error){
@@ -5269,6 +5367,15 @@ window.submitRide = async function(){
     if(result.error) throw result.error;
 
     if(btn) setLoading(btn, false, t('btn_publish')+' \u2192');
+
+    // Notify the client that the request is live
+    if(!editId && currentProfile?.email){
+      window.sendMail('ride_created', currentProfile.email, Object.assign(
+        window._mailRideData(rideData),
+        { clientName: (currentProfile.first_name||'') }
+      ));
+    }
+
     closeModal('m-new-ride');
     cancelRideModal();
     showToast(t('toast_ride'));
