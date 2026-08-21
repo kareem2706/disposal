@@ -5,6 +5,37 @@
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("MAIL_FROM") ?? "Bleenr <noreply@bleenr.com>";
 const APP_URL = Deno.env.get("APP_URL") ?? "https://kareem2706.github.io/disposal";
+const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SB_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+// Simple in-memory rate limit: max 30 sends per recipient per hour
+const sentLog = new Map<string, number[]>();
+function rateLimited(to: string) {
+  const now = Date.now();
+  const hourAgo = now - 3600_000;
+  const hits = (sentLog.get(to) ?? []).filter((t) => t > hourAgo);
+  if (hits.length >= 30) return true;
+  hits.push(now);
+  sentLog.set(to, hits);
+  return false;
+}
+
+// The recipient must be a known Bleenr user — blocks use as an open relay
+async function isKnownRecipient(email: string): Promise<boolean> {
+  if (!SB_URL || !SB_SERVICE_KEY) return false;
+  const res = await fetch(
+    `${SB_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=id&limit=1`,
+    {
+      headers: {
+        apikey: SB_SERVICE_KEY,
+        Authorization: `Bearer ${SB_SERVICE_KEY}`,
+      },
+    },
+  );
+  if (!res.ok) return false;
+  const rows = await res.json();
+  return Array.isArray(rows) && rows.length > 0;
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -161,6 +192,18 @@ Deno.serve(async (req: Request) => {
     const payload = (await req.json()) as Payload;
     if (!payload?.to) throw new Error("Destinataire manquant");
     if (!payload?.type) throw new Error("Type d'email manquant");
+
+    const to = String(payload.to).trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) {
+      throw new Error("Adresse email invalide");
+    }
+    if (rateLimited(to)) {
+      throw new Error("Trop d'envois pour ce destinataire, réessayez plus tard");
+    }
+    if (!(await isKnownRecipient(to))) {
+      throw new Error("Destinataire inconnu");
+    }
+    payload.to = to;
 
     const { subject, html } = build(payload);
 
