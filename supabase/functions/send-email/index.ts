@@ -164,6 +164,48 @@ function build({ type, data = {} }: Payload) {
         ),
       };
 
+    case "welcome_client":
+      return {
+        subject: "Bienvenue sur Bleenr",
+        html: layout(
+          `Bienvenue${data.name ? ", " + data.name : ""}`,
+          `Votre compte Bleenr est créé. Vous pouvez dès maintenant réserver un chauffeur privé en quelques clics.
+          <div style="background:#F6F5F2;border-radius:10px;padding:16px 18px;margin:18px 0;">
+            <div style="font-size:13px;font-weight:700;color:#1A1A18;margin-bottom:10px;">Comment ça marche</div>
+            <div style="font-size:13px;color:#4A4A46;line-height:1.9;">
+              <strong>1.</strong> Publiez votre demande de course<br>
+              <strong>2.</strong> Recevez les offres des chauffeurs partenaires<br>
+              <strong>3.</strong> Choisissez la vôtre et confirmez le paiement<br>
+              <strong>4.</strong> Votre chauffeur vous attend au point de départ
+            </div>
+          </div>
+          ${data.isPro === "yes"
+            ? `Votre compte professionnel vous donne accès au carnet de passagers et à la facturation mensuelle centralisée.`
+            : `Vous recevrez un email à chaque étape : offre reçue, course confirmée, rappel la veille du départ.`}`,
+          { label: "Réserver ma première course", url },
+        ),
+      };
+
+    case "welcome_driver":
+      return {
+        subject: "Bienvenue sur Bleenr — activation de votre compte",
+        html: layout(
+          `Bienvenue${data.name ? ", " + data.name : ""}`,
+          `Votre compte chauffeur Bleenr est créé. Avant d'accéder à la marketplace, votre flotte doit être validée par nos équipes.
+          <div style="background:#F6F5F2;border-radius:10px;padding:16px 18px;margin:18px 0;">
+            <div style="font-size:13px;font-weight:700;color:#1A1A18;margin-bottom:10px;">Prochaines étapes</div>
+            <div style="font-size:13px;color:#4A4A46;line-height:1.9;">
+              <strong>1.</strong> Complétez votre profil et vos coordonnées<br>
+              <strong>2.</strong> Ajoutez vos véhicules et vos chauffeurs<br>
+              <strong>3.</strong> Téléversez vos documents (licence, assurance, contrôle technique)<br>
+              <strong>4.</strong> Notre équipe valide votre dossier sous 48 h ouvrées
+            </div>
+          </div>
+          Une fois votre flotte validée, vous recevrez une alerte à chaque nouvelle course disponible et pourrez soumettre vos offres.`,
+          { label: "Compléter mon profil", url },
+        ),
+      };
+
     case "new_marketplace_ride":
       return {
         subject: `Nouvelle course disponible — ${data.code ?? ""}`,
