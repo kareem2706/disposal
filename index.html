@@ -4869,12 +4869,18 @@ window.generateRideVoucher = async function(rideId){
 // ── Email notifications (Supabase Edge Function "send-email") ──
 // Fire-and-forget: an email failure must never block a user action.
 window.sendMail = function(type, to, data){
-  if(!sb || !to || localStorage.getItem(DEMO_MODE_KEY)==='1') return Promise.resolve();
-  return sb.functions.invoke('send-email', {
-    body: { type: type, to: to, data: data || {} }
-  }).then(function(res){
-    if(res && res.error) console.warn('sendMail', type, res.error.message);
-    return res;
+  if(!to || localStorage.getItem(DEMO_MODE_KEY)==='1') return Promise.resolve();
+  // Same call pattern as create-checkout (plain fetch + explicit headers)
+  return fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/send-mail',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
+    body:JSON.stringify({ type: type, to: to, data: data || {} })
+  }).then(function(resp){
+    return resp.text().then(function(txt){
+      var parsed; try{ parsed=JSON.parse(txt); }catch(e){ parsed={raw:txt}; }
+      if(!resp.ok) console.warn('sendMail', type, resp.status, parsed);
+      return parsed;
+    });
   }).catch(function(e){ console.warn('sendMail', type, e); });
 };
 
