@@ -2537,6 +2537,13 @@ async function loadProfile(){
     try {
       var {data:created} = await sb.from('profiles').insert(newProfile).select().single();
       currentProfile = created || newProfile;
+      // First OAuth login = account creation → welcome email
+      if(created && created.email){
+        window.sendMail(metaRole2==='driver' ? 'welcome_driver' : 'welcome_client', created.email, {
+          name: created.first_name || '',
+          isPro: created.client_type==='pro' ? 'yes' : 'no'
+        });
+      }
     } catch(ex) {
       currentProfile = newProfile;
     }
@@ -2674,6 +2681,13 @@ window.submitEmailReg = async function(){
   if(data?.user){
     var profileData = {id:data.user.id, email:email, role:role, client_type:clientType||'perso', first_name:fname||null, last_name:lname||null, company_name:company||null};
     try{ await sb.from('profiles').upsert(profileData); }catch(ex){ console.warn('profile upsert error',ex); }
+    // Welcome email — sent after the profile exists so the recipient check passes
+    try{
+      window.sendMail(role==='driver' ? 'welcome_driver' : 'welcome_client', email, {
+        name: (fname||'').trim(),
+        isPro: clientType==='pro' ? 'yes' : 'no'
+      });
+    }catch(ex){ console.warn('welcome mail', ex); }
   }
   if(data?.user&&!data.session){
     showToast('✅ Vérifie ton email pour confirmer ton compte');
