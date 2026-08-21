@@ -4966,6 +4966,43 @@ window._notifyRideCancelled = async function(rideId, refundable){
   }catch(e){ console.warn('_notifyRideCancelled', e); }
 };
 
+// Tells the client a driver just sent an offer
+window._notifyOfferReceived = async function(rideId, price){
+  if(!sb || !rideId) return;
+  try{
+    var {data:r} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
+    if(!r) return;
+    var client = await window._mailEmailFor(r.client_id);
+    if(!client || !client.email) return;
+    var base = window._mailRideData(r);
+    if(price) base.price = (parseFloat(price)*1.06).toFixed(2).replace('.',',')+' \u20ac';
+    window.sendMail('offer_received', client.email, Object.assign({}, base, {
+      clientName: client.first_name||''
+    }));
+  }catch(e){ console.warn('_notifyOfferReceived', e); }
+};
+
+// Alerts verified fleet drivers that a new ride is on the marketplace
+window._notifyMarketplaceDrivers = async function(rideData){
+  if(!sb || !rideData) return;
+  try{
+    var {data:drivers} = await sb.from('profiles')
+      .select('email,first_name')
+      .eq('role','driver')
+      .eq('fleet_verified', true)
+      .not('email','is',null)
+      .limit(60);
+    if(!drivers || !drivers.length) return;
+    var base = window._mailRideData(rideData);
+    delete base.price;      // drivers must not see the client price
+    delete base.passenger;  // nor the passenger identity before accepting
+    drivers.forEach(function(d){
+      if(d.email) window.sendMail('new_marketplace_ride', d.email,
+        Object.assign({}, base, { driverName: d.first_name||'' }));
+    });
+  }catch(e){ console.warn('_notifyMarketplaceDrivers', e); }
+};
+
 async function _promoteNotesToDriver(rideId){
   if(!sb||!rideId) return;
   try{
@@ -5374,13 +5411,14 @@ window.submitRide = async function(){
 
     if(btn) setLoading(btn, false, t('btn_publish')+' \u2192');
 
-    // Notify the client that the request is live
+    // Notify the client that the request is live, and alert available drivers
     if(!editId && currentProfile?.email){
       window.sendMail('ride_created', currentProfile.email, Object.assign(
         window._mailRideData(rideData),
         { clientName: (currentProfile.first_name||'') }
       ));
     }
+    if(!editId) _notifyMarketplaceDrivers(rideData);
 
     closeModal('m-new-ride');
     cancelRideModal();
@@ -6364,6 +6402,9 @@ window.submitOffer = async function(){
       .eq('id', currentRideId)
       .in('status', ['waiting', 'offers']);
     if(rideUpdate.error) console.warn('ride status update error:', rideUpdate.error.message);
+
+    // Notify the client that a new offer arrived (only on first submission)
+    if(!hasExisting) _notifyOfferReceived(currentRideId, price);
 
     _myOffers[currentRideId] = { price: price, msg: msg };
     setLoading(btn, false, 'Soumettre →');
