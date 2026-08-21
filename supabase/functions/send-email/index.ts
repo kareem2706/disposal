@@ -10,6 +10,8 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400",
 };
 
 // ── Shared layout ────────────────────────────────────────────────
@@ -148,8 +150,9 @@ function build({ type, data = {} }: Payload) {
 
 // ── Handler ──────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
+  // Preflight must answer 200 with the CORS headers, before any other logic
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { status: 200, headers: corsHeaders });
   }
 
   try {
