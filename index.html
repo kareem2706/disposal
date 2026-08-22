@@ -4996,25 +4996,24 @@ window._notifyOfferReceived = async function(rideId, price){
   }catch(e){ console.warn('_notifyOfferReceived', e); }
 };
 
-// Alerts verified fleet drivers that a new ride is on the marketplace
-window._notifyMarketplaceDrivers = async function(rideData){
-  if(!sb || !rideData) return;
-  try{
-    var {data:drivers} = await sb.from('profiles')
-      .select('email,first_name')
-      .eq('role','driver')
-      .eq('fleet_verified', true)
-      .not('email','is',null)
-      .limit(60);
-    if(!drivers || !drivers.length) return;
-    var base = window._mailRideData(rideData);
-    delete base.price;      // drivers must not see the client price
-    delete base.passenger;  // nor the passenger identity before accepting
-    drivers.forEach(function(d){
-      if(d.email) window.sendMail('new_marketplace_ride', d.email,
-        Object.assign({}, base, { driverName: d.first_name||'' }));
+// Alerts verified fleet drivers that a new ride is on the marketplace.
+// Recipients are resolved server-side (RLS prevents a client from reading driver profiles).
+window._notifyMarketplaceDrivers = function(rideData){
+  if(!rideData || localStorage.getItem(DEMO_MODE_KEY)==='1') return;
+  var base = window._mailRideData(rideData);
+  delete base.price;      // drivers must not see the client price
+  delete base.passenger;  // nor the passenger identity before accepting
+  return fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/send-mail',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
+    body:JSON.stringify({ type:'new_marketplace_ride', broadcast:'verified_drivers', data: base })
+  }).then(function(resp){
+    return resp.text().then(function(txt){
+      var parsed; try{ parsed=JSON.parse(txt); }catch(e){ parsed={raw:txt}; }
+      console.log('marketplace alert:', parsed);
+      return parsed;
     });
-  }catch(e){ console.warn('_notifyMarketplaceDrivers', e); }
+  }).catch(function(e){ console.warn('_notifyMarketplaceDrivers', e); });
 };
 
 async function _promoteNotesToDriver(rideId){
