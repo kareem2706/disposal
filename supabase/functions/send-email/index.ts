@@ -97,7 +97,7 @@ function rideTable(d: Record<string, string>) {
 }
 
 // ── Templates ────────────────────────────────────────────────────
-type Payload = { type: string; to: string; data?: Record<string, string> };
+type Payload = { type: string; to?: string; data?: Record<string, string>; broadcast?: string };
 
 function build({ type, data = {} }: Payload) {
   const url = `${APP_URL}/`;
@@ -232,8 +232,43 @@ Deno.serve(async (req: Request) => {
     if (!RESEND_KEY) throw new Error("RESEND_API_KEY non configurée");
 
     const payload = (await req.json()) as Payload;
-    if (!payload?.to) throw new Error("Destinataire manquant");
     if (!payload?.type) throw new Error("Type d'email manquant");
+
+    // Broadcast mode: the function resolves the recipients itself (bypasses RLS)
+    if (payload.broadcast === "verified_drivers") {
+      if (!SB_URL || !SB_SERVICE_KEY) throw new Error("Configuration serveur incomplète");
+      const dRes = await fetch(
+        `${SB_URL}/rest/v1/profiles?role=eq.driver&fleet_verified=is.true&email=not.is.null&select=email,first_name&limit=200`,
+        { headers: { apikey: SB_SERVICE_KEY, Authorization: `Bearer ${SB_SERVICE_KEY}` } },
+      );
+      const drivers = dRes.ok ? await dRes.json() : [];
+      if (!Array.isArray(drivers) || drivers.length === 0) {
+        return new Response(JSON.stringify({ ok: true, sent: 0, note: "aucun chauffeur vérifié" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      let sent = 0;
+      for (const d of drivers) {
+        try {
+          const { subject, html } = build({
+            type: payload.type,
+            to: d.email,
+            data: { ...(payload.data ?? {}), driverName: d.first_name ?? "" },
+          });
+          const r = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ from: FROM, to: [d.email], subject, html }),
+          });
+          if (r.ok) sent++;
+        } catch (_) { /* one failure must not stop the batch */ }
+      }
+      return new Response(JSON.stringify({ ok: true, sent, total: drivers.length }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!payload?.to) throw new Error("Destinataire manquant");
 
     const to = String(payload.to).trim().toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) {
