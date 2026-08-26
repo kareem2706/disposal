@@ -238,7 +238,7 @@ Deno.serve(async (req: Request) => {
     if (payload.broadcast === "verified_drivers") {
       if (!SB_URL || !SB_SERVICE_KEY) throw new Error("Configuration serveur incomplète");
       const dRes = await fetch(
-        `${SB_URL}/rest/v1/profiles?role=eq.driver&fleet_verified=eq.true&select=email,first_name&limit=200`,
+        `${SB_URL}/rest/v1/profiles?role=eq.driver&fleet_verified=eq.validated&select=email,first_name&limit=200`,
         { headers: { apikey: SB_SERVICE_KEY, Authorization: `Bearer ${SB_SERVICE_KEY}` } },
       );
       const rawDrivers = dRes.ok ? await dRes.json() : [];
