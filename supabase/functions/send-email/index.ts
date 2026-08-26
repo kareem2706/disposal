@@ -238,14 +238,24 @@ Deno.serve(async (req: Request) => {
     if (payload.broadcast === "verified_drivers") {
       if (!SB_URL || !SB_SERVICE_KEY) throw new Error("Configuration serveur incomplète");
       const dRes = await fetch(
-        `${SB_URL}/rest/v1/profiles?role=eq.driver&fleet_verified=is.true&email=not.is.null&select=email,first_name&limit=200`,
+        `${SB_URL}/rest/v1/profiles?role=eq.driver&fleet_verified=eq.true&select=email,first_name&limit=200`,
         { headers: { apikey: SB_SERVICE_KEY, Authorization: `Bearer ${SB_SERVICE_KEY}` } },
       );
-      const drivers = dRes.ok ? await dRes.json() : [];
-      if (!Array.isArray(drivers) || drivers.length === 0) {
-        return new Response(JSON.stringify({ ok: true, sent: 0, note: "aucun chauffeur vérifié" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      const rawDrivers = dRes.ok ? await dRes.json() : [];
+      if (!dRes.ok) {
+        return new Response(
+          JSON.stringify({ ok: false, error: "Lecture profils échouée", status: dRes.status, detail: rawDrivers }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const drivers = (Array.isArray(rawDrivers) ? rawDrivers : []).filter(
+        (d: { email?: string }) => !!d.email,
+      );
+      if (drivers.length === 0) {
+        return new Response(
+          JSON.stringify({ ok: true, sent: 0, note: "aucun chauffeur vérifié", found: (rawDrivers as unknown[]).length }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       }
       let sent = 0;
       for (const d of drivers) {
