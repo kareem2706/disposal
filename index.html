@@ -356,9 +356,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
   font-family:'DM Sans',sans-serif;padding:0;flex-shrink:0;
   transition:all .18s var(--ease);
 }
-.veh-info:hover,.veh-info.on{border-color:var(--green);color:var(--green);background:var(--green-bg);}
-.veh-guide-box{margin-top:8px;padding:4px 12px;background:var(--sand);border:1px solid var(--sand3);border-radius:var(--r);animation:vgIn .18s var(--ease);}
-@keyframes vgIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:none;}}
+.veh-info:hover{border-color:var(--green);color:var(--green);background:var(--green-bg);}
+
 .vg-row{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--sand2);}
 .vg-row:last-child{border-bottom:none;}
 .vg-name{font-size:13px;font-weight:600;color:var(--ink);flex:0 0 88px;}
@@ -1941,7 +1940,7 @@ body{background:var(--bg);}
           <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="ride-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="ride-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="ride-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
-          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide(this)" title="Voir les gammes">i</button></label><select id="ride-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
+          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="ride-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
           <div class="input-group full"><label>Instructions</label><textarea id="ride-notes" rows="2" placeholder="Bagages, enfants, acc&egrave;s PMR&hellip;"></textarea></div>
           <div id="ride-pax-section" style="grid-column:1/-1;"></div>
         </div>
@@ -1953,7 +1952,7 @@ body{background:var(--bg);}
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="disp-time" type="time"></div>
           <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
           <div class="input-group"><label>Passagers</label><select id="disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
-          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide(this)" title="Voir les gammes">i</button></label><select id="disp-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
+          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="disp-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
           <div class="input-group full"><label>Instructions</label><textarea id="disp-notes" rows="2" placeholder="It&eacute;n&eacute;raire, arr&ecirc;ts pr&eacute;vus&hellip;"></textarea></div>
           <div id="disp-pax-section" style="grid-column:1/-1;"></div>
         </div>
@@ -2115,7 +2114,7 @@ body{background:var(--bg);}
           <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="sub-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="sub-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="sub-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option></select></div>
-          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide(this)" title="Voir les gammes">i</button></label><select id="sub-veh"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
+          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="sub-veh"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
           <div class="input-group full"><label>Instructions</label><textarea id="sub-notes" rows="2" placeholder="Bagages, enfants…"></textarea></div>
         </div>
       </div>
@@ -2127,7 +2126,7 @@ body{background:var(--bg);}
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="sub-disp-time" type="time"></div>
           <div class="input-group"><label>Dur&eacute;e (h)</label><input id="sub-disp-dur" type="number" min="1" max="24" value="2" placeholder="2"></div>
           <div class="input-group"><label>Passagers</label><select id="sub-disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option></select></div>
-          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide(this)" title="Voir les gammes">i</button></label><select id="sub-disp-veh"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
+          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="sub-disp-veh"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
           <div class="input-group full"><label>Instructions</label><textarea id="sub-disp-notes" rows="2" placeholder="It&eacute;n&eacute;raire, arr&ecirc;ts pr&eacute;vus…"></textarea></div>
         </div>
       </div>
@@ -6490,7 +6489,13 @@ function setLoading(btn, loading, text){
 window.openModal  = id => document.getElementById(id)?.classList.add('open');
 // Vehicle guide: re-parented to the end of <body> so it can never sit
 // behind the modal that opened it, whatever the DOM order or stacking context.
-window.openVehGuide = function(btn){
+window.openVehGuide = function(){
+  // Built in JS and appended straight to <body> with inline styles.
+  // Nothing here depends on the app's CSS, so no ancestor stacking context
+  // (e.g. the backdrop-filter on .modal-overlay) can push it behind.
+  var old = document.getElementById('vg-pop');
+  if(old){ old.remove(); return; }
+
   var GUIDE = [
     ['Low-cost', 'Tout type de v\u00e9hicule'],
     ['Business', 'Mercedes Classe E ou \u00e9quivalent'],
@@ -6498,19 +6503,51 @@ window.openVehGuide = function(btn){
     ['Van',      'Mercedes Classe V ou \u00e9quivalent'],
     ['Bus',      'V\u00e9hicule de type bus, minibus, autocar\u2026']
   ];
-  var host = (btn && btn.closest) ? btn.closest('.input-group') : null;
-  if(!host) return;
-  var already = host.querySelector('.veh-guide-box');
-  document.querySelectorAll('.veh-guide-box').forEach(function(b){ b.remove(); });
-  document.querySelectorAll('.veh-info.on').forEach(function(b){ b.classList.remove('on'); });
-  if(already) return;
-  var box = document.createElement('div');
-  box.className = 'veh-guide-box';
-  box.innerHTML = GUIDE.map(function(r){
-    return '<div class="vg-row"><div class="vg-name">'+r[0]+'</div><div class="vg-desc">'+r[1]+'</div></div>';
+
+  var ov = document.createElement('div');
+  ov.id = 'vg-pop';
+  ov.setAttribute('style',
+    'position:fixed;top:0;left:0;right:0;bottom:0;'+
+    'z-index:2147483647;'+
+    'background:rgba(14,14,12,.5);'+
+    'display:flex;align-items:center;justify-content:center;padding:20px;'+
+    'font-family:\'DM Sans\',sans-serif;'
+  );
+
+  var rows = GUIDE.map(function(r, k){
+    return '<div style="display:flex;gap:14px;padding:12px 0;'+
+           (k < GUIDE.length-1 ? 'border-bottom:1px solid #EFEDE8;' : '')+'">'+
+             '<div style="flex:0 0 86px;font-size:13px;font-weight:600;color:#1A1A18;">'+r[0]+'</div>'+
+             '<div style="font-size:12.5px;color:#6B6B68;line-height:1.5;">'+r[1]+'</div>'+
+           '</div>';
   }).join('');
-  host.appendChild(box);
-  if(btn) btn.classList.add('on');
+
+  ov.innerHTML =
+    '<div style="background:#fff;border-radius:14px;max-width:420px;width:100%;'+
+         'box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;'+
+           'padding:18px 22px;border-bottom:1px solid #EFEDE8;">'+
+        '<div style="font-size:15px;font-weight:700;color:#1A1A18;">Gammes de v\u00e9hicules</div>'+
+        '<button type="button" id="vg-x" aria-label="Fermer" style="background:#F2F2F0;border:none;'+
+          'width:26px;height:26px;border-radius:50%;cursor:pointer;color:#6B6B68;'+
+          'font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;">&times;</button>'+
+      '</div>'+
+      '<div style="padding:6px 22px 16px;">'+rows+'</div>'+
+      '<div style="padding:12px 22px 18px;display:flex;justify-content:flex-end;">'+
+        '<button type="button" id="vg-ok" style="background:#1B5E3B;color:#fff;border:none;'+
+          'padding:9px 22px;border-radius:6px;cursor:pointer;font-size:13.5px;font-weight:500;'+
+          'font-family:\'DM Sans\',sans-serif;">Compris</button>'+
+      '</div>'+
+    '</div>';
+
+  function close(){ ov.remove(); document.removeEventListener('keydown', onKey); }
+  function onKey(e){ if(e.key === 'Escape') close(); }
+
+  document.body.appendChild(ov);
+  ov.addEventListener('click', function(e){ if(e.target === ov) close(); });
+  ov.querySelector('#vg-x').addEventListener('click', close);
+  ov.querySelector('#vg-ok').addEventListener('click', close);
+  document.addEventListener('keydown', onKey);
 };
 window.closeModal = id => {
   document.getElementById(id)?.classList.remove('open');
@@ -7509,7 +7546,7 @@ window.addMixedSegment=function(){
     '<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="sd8-'+n+'"></div>'+
     '<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="sh-'+n+'" value="08:00"></div>'+
     '<div class="input-group"><label>Passagers</label><select id="spax-'+n+'">'+paxOpts+'</select></div>'+
-    '<div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide(this)" title="Voir les gammes">i</button></label><select id="sveh-'+n+'">'+vehOpts+'</select></div>'+
+    '<div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="sveh-'+n+'">'+vehOpts+'</select></div>'+
     '<div class="input-group full"><label>Instructions</label><textarea id="snotes-'+n+'" rows="2" placeholder="Bagages, enfants, acc&egrave;s PMR&hellip;"></textarea></div>';
 
   // Disposition fields (same as panel-disposal)
@@ -7519,7 +7556,7 @@ window.addMixedSegment=function(){
     '<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="sh-'+n+'" value="08:00"></div>'+
     '<div class="input-group"><label>Dur&eacute;e (heures)</label><input type="number" id="sdur-'+n+'" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>'+
     '<div class="input-group"><label>Passagers</label><select id="spax-'+n+'">'+paxOpts+'</select></div>'+
-    '<div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide(this)" title="Voir les gammes">i</button></label><select id="sveh-'+n+'">'+vehOpts+'</select></div>'+
+    '<div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="sveh-'+n+'">'+vehOpts+'</select></div>'+
     '<div class="input-group full"><label>Instructions</label><textarea id="snotes-'+n+'" rows="2" placeholder="It&eacute;n&eacute;raire, arr&ecirc;ts pr&eacute;vus&hellip;"></textarea></div>';
 
   d.innerHTML=
