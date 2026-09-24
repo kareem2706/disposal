@@ -543,7 +543,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ld-rail i b{position:absolute;inset:0;background:var(--lmi);transform-origin:left;transform:scaleX(0)}
 .ld-story-r{position:relative;overflow:hidden}
 .ld-frame{position:absolute;inset:0;will-change:clip-path}
-.ld-frame .ld-par{position:absolute;inset:-8%;will-change:transform}
+.ld-frame .ld-par{position:absolute;inset:-3% 0;will-change:transform}
+.ld-story-r .ld-img img{object-fit:contain;z-index:1}
+.ld-story-r .ld-img{background:#0C1F15}
 .ld-card{position:absolute;left:40px;bottom:48px;width:320px;background:rgba(245,241,232,.97);color:var(--lk);border-radius:18px;padding:18px 20px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);opacity:0;transform:translateY(20px);transition:opacity .5s,transform .6s cubic-bezier(.2,.7,.2,1);z-index:20;pointer-events:none}
 .ld-card.on{opacity:1;transform:none}
 .ld-card .k{font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--lg);display:flex;align-items:center;gap:8px}
@@ -709,7 +711,7 @@ body{background:var(--bg);}
 
   <section class="ld-hero">
     <div class="ld-hero-bg" id="ld-hero-bg">
-      <div class="ld-img"><div class="ld-ph"><span>Photo hero &mdash; chauffeur ouvrant la porti&egrave;re, de nuit</span></div><img src="assets/landing/hero.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+      <div class="ld-img"><div class="ld-ph"><span>Photo hero &mdash; chauffeur ouvrant la porti&egrave;re, de nuit</span></div><img src="assets/landing/hero.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
     </div>
     <div class="ld-hero-scrim"></div>
     <div class="ld-wrap ld-hero-in">
@@ -749,11 +751,11 @@ body{background:var(--bg);}
         <div class="ld-rail" id="ld-rail"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
       </div>
       <div class="ld-story-r">
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 01 &mdash; r&eacute;servation sur ordinateur</span></div><img src="assets/story/01-approche.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 02 &mdash; chauffeurs recevant la demande</span></div><img src="assets/story/02-portiere.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 03 &mdash; accueil devant l'h&ocirc;tel</span></div><img src="assets/story/03-installation.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 04 &mdash; le trajet</span></div><img src="assets/story/04-fermeture.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 05 &mdash; la berline s'&eacute;loigne, feux arri&egrave;re allum&eacute;s</span></div><img src="assets/story/05-depart.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
+        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 01 &mdash; r&eacute;servation sur ordinateur</span></div><img src="assets/story/01-approche.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
+        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 02 &mdash; chauffeurs recevant la demande</span></div><img src="assets/story/02-portiere.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
+        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 03 &mdash; accueil devant l'h&ocirc;tel</span></div><img src="assets/story/03-installation.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
+        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 04 &mdash; le trajet</span></div><img src="assets/story/04-fermeture.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
+        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 05 &mdash; la berline s'&eacute;loigne, feux arri&egrave;re allum&eacute;s</span></div><img src="assets/story/05-depart.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
         <div class="ld-card on"><div class="k">Course publi&eacute;e</div><div class="v">Bruxelles &rarr; Zaventem</div><div class="s">Ce soir, 19:40 &middot; Business</div></div>
         <div class="ld-card"><div class="k">Offres re&ccedil;ues</div><div class="v">3 chauffeurs</div><div class="s">Comparez prix, v&eacute;hicule et avis</div></div>
         <div class="ld-card"><div class="k">Chauffeur confirm&eacute;</div><div class="v">Mercedes Classe E</div><div class="s">Profil v&eacute;rifi&eacute; &middot; licence et assurance</div></div>
@@ -6810,7 +6812,7 @@ document.getElementById('screen-landing') && (function(){
         var rev = i===0 ? 1 : clamp((f - i + 0.35) / 0.35), loc = f - i;
         fr.style.clipPath = 'inset('+((1-rev)*100)+'% 0 0 0)';
         var q = clamp((loc + 0.4) / 1.4);
-        pars[i].style.transform = 'translateY('+(6 - q*12)+'%) scale('+(1.12 - q*0.12)+')';
+        pars[i].style.transform = 'translateY('+(2 - q*4)+'%) scale('+(1.04 - q*0.04)+')';
       });
     }
 
@@ -6829,7 +6831,7 @@ document.getElementById('screen-landing') && (function(){
   }
   function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(frame); } }
 
-  frames.forEach(function(fr,i){ fr.style.zIndex = i; });
+  frames.forEach(function(fr,i){ fr.style.zIndex = i; var im = fr.querySelector('img'), ph = fr.querySelector('.ld-ph'); if(im && ph && im.complete && im.naturalWidth) ph.style.display = 'none'; });
   L.addEventListener('scroll', onScroll, { passive:true });
   window.addEventListener('scroll', onScroll, { passive:true });
   window.addEventListener('resize', onScroll, { passive:true });
