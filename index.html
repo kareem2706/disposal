@@ -567,7 +567,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ld-cls{padding:140px 0;background:var(--lp2);flex-shrink:0}
 .ld-cls-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:60px;align-items:end;margin-bottom:48px}
 .ld-cls h2,.ld-inc h2,.ld-drv h2{font-size:clamp(46px,5.5vw,88px);line-height:.95;margin-top:14px}.ld-cls h2 em,.ld-inc h2 em{color:var(--lg)}
-.ld-cls-tabs{display:flex;gap:4px;background:#fff;border-radius:100px;padding:4px;width:fit-content;justify-self:end}
+.ld-cls-tabs{display:flex;flex-wrap:wrap;gap:4px;background:#fff;border-radius:100px;padding:4px;width:fit-content;justify-self:end}
 .ld-cls-tab{border:none;background:transparent;padding:10px 20px;border-radius:100px;font:500 13.5px 'DM Sans',sans-serif;color:var(--lm);cursor:pointer;transition:all .25s}
 .ld-cls-tab.on{background:var(--lg);color:#F5F1E8}
 .ld-cls-body{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:24px}
@@ -715,7 +715,6 @@ body{background:var(--bg);}
     </div>
     <div class="ld-hero-scrim"></div>
     <div class="ld-wrap ld-hero-in">
-      <span class="ld-eye" style="color:rgba(245,241,232,.8)">Chauffeurs priv&eacute;s &middot; Bruxelles et toute la Belgique</span>
       <h1 class="ld-serif">Arrivez<br><em>&agrave; votre fa&ccedil;on.</em></h1>
       <p class="ld-hero-lead">Publiez votre trajet, recevez les offres de chauffeurs et de flottes v&eacute;rifi&eacute;s, choisissez. Le prix est fix&eacute; avant le d&eacute;part.</p>
       <div class="ld-book">
@@ -724,8 +723,8 @@ body{background:var(--bg);}
           <button class="ld-book-tab" data-ld-mode="heure">&Agrave; l'heure</button>
         </div>
         <div class="ld-book-row">
-          <div class="ld-field"><label>D&eacute;part</label><input id="ld-from" placeholder="Adresse, gare, a&eacute;roport"></div>
-          <div class="ld-field" id="ld-to-wrap"><label>Arriv&eacute;e</label><input id="ld-to" placeholder="Destination"></div>
+          <div class="ld-field"><label>D&eacute;part</label><input id="ld-from" name="ld-trip-start" autocomplete="off" placeholder="Adresse, gare, a&eacute;roport"></div>
+          <div class="ld-field" id="ld-to-wrap"><label>Arriv&eacute;e</label><input id="ld-to" name="ld-trip-end" autocomplete="off" placeholder="Destination"></div>
           <div class="ld-field" id="ld-dur-wrap" style="display:none"><label>Dur&eacute;e</label><select id="ld-dur"><option value="2">2 heures</option><option value="3" selected>3 heures</option><option value="6">6 heures</option><option value="10">Journ&eacute;e &middot; 10 h</option></select></div>
           <div class="ld-field"><label>Date</label><input id="ld-date" type="date"></div>
           <div class="ld-field"><label>Heure</label><input id="ld-time" type="time" value="09:00"></div>
@@ -788,13 +787,15 @@ body{background:var(--bg);}
     <div class="ld-wrap">
       <div class="ld-cls-top">
         <div class="ld-rv"><span class="ld-eye">La flotte</span><h2 class="ld-serif">Choisissez votre<br><em>classe</em>.</h2></div>
-        <div class="ld-cls-tabs" id="ld-cls-tabs"><button class="ld-cls-tab on" data-k="0">Business</button><button class="ld-cls-tab" data-k="1">Premi&egrave;re</button><button class="ld-cls-tab" data-k="2">Van</button></div>
+        <div class="ld-cls-tabs" id="ld-cls-tabs"><button class="ld-cls-tab on" data-k="0">Low cost</button><button class="ld-cls-tab" data-k="1">Business</button><button class="ld-cls-tab" data-k="2">Premi&egrave;re</button><button class="ld-cls-tab" data-k="3">Van</button><button class="ld-cls-tab" data-k="4">Autocar</button></div>
       </div>
       <div class="ld-cls-body ld-rv">
         <div class="ld-cls-img" id="ld-cls-img">
-          <div class="ld-img on"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Business</span></div><img src="assets/landing/classe-business.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+          <div class="ld-img on"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Low cost</span></div><img src="assets/landing/classe-lowcost.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Business</span></div><img src="assets/landing/classe-business.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
           <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Premi&egrave;re</span></div><img src="assets/landing/classe-premiere.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
           <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; van</span></div><img src="assets/landing/classe-van.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; autocar</span></div><img src="assets/landing/classe-autocar.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
         </div>
         <div class="ld-cls-info" id="ld-cls-info"></div>
       </div>
@@ -6752,9 +6753,11 @@ document.getElementById('screen-landing') && (function(){
 
   // classes tabs
   var CLS = [
+    { c:'Low cost', m:'Toyota Prius, Skoda Octavia ou similaire', pax:3, bag:2, d:"Un voyage pour tous les budgets : le m\u00eame chauffeur v\u00e9rifi\u00e9 et le m\u00eame prix fixe, au tarif le plus doux." },
     { c:'Business', m:'Mercedes Classe E, BMW S\u00e9rie 5 ou similaire', pax:3, bag:2, d:"La r\u00e9f\u00e9rence pour les rendez-vous d'affaires et les transferts a\u00e9roport. Discr\u00e8te, confortable, toujours impeccable." },
     { c:'Premi\u00e8re', m:'Mercedes Classe S, BMW S\u00e9rie 7 ou similaire', pax:3, bag:2, d:"L'espace arri\u00e8re d'un salon et un silence de cabine, pour les occasions qui comptent." },
-    { c:'Van', m:'Mercedes Classe V ou similaire', pax:6, bag:6, d:"Pour les familles, les \u00e9quipes et les valises nombreuses \u2014 sans renoncer au confort." }
+    { c:'Van', m:'Mercedes Classe V ou similaire', pax:6, bag:6, d:"Pour les familles, les \u00e9quipes et les valises nombreuses \u2014 sans renoncer au confort." },
+    { c:'Autocar', m:'Minibus et autocars de 16 \u00e0 50 places', pax:50, bag:50, d:"Pour les groupes, s\u00e9minaires et \u00e9v\u00e9nements : un seul v\u00e9hicule, un seul chauffeur, tout le monde ensemble." }
   ];
   var tabs = [].slice.call($('ld-cls-tabs').children), imgs = [].slice.call($('ld-cls-img').children), info = $('ld-cls-info');
   function setCls(k){
@@ -6776,6 +6779,7 @@ document.getElementById('screen-landing') && (function(){
       $('ld-dur-wrap').style.display = mode==='heure' ? '' : 'none';
     };
   });
+  ['ld-from','ld-to'].forEach(function(id){ var el = $(id); if(!el) return; var clr = function(){ if(el.value.indexOf('@') > -1) el.value = ''; }; clr(); setTimeout(clr, 300); setTimeout(clr, 1200); el.addEventListener('focus', function(){ el.setAttribute('readonly',''); setTimeout(function(){ el.removeAttribute('readonly'); }, 0); }, { once:true }); });
   var d = $('ld-date'); if(d && !d.value){ var t = new Date(Date.now()+864e5); d.value = t.toISOString().slice(0,10); }
   $('ld-book-go').onclick = function(){
     try{ sessionStorage.setItem('bleenr_landing_draft', JSON.stringify({ mode:mode, from:$('ld-from').value, to:$('ld-to').value, duration:$('ld-dur').value, date:$('ld-date').value, time:$('ld-time').value })); }catch(e){}
