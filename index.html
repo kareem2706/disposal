@@ -104,12 +104,12 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 #auth-blob1,#auth-blob2,#auth-blob3{display:none;}
 /* ── side visual ── */
 .au-side{position:relative;flex:0 0 46%;min-height:100vh;background:#0C1F15;color:#F5F1E8;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:36px 48px 48px}
-.au-side-img{position:absolute;inset:0;background:repeating-linear-gradient(135deg,#1d2b22 0 14px,#213128 14px 28px)}
+.au-side-img{position:absolute;inset:0;background:#0C1F15}.au-side-img img{opacity:0;transition:opacity .7s}.au-side-img img.on{opacity:1}.au-side.is-login .au-side-img,.au-side.is-login .au-side-scrim{opacity:0}.au-side-img,.au-side-scrim{transition:opacity .6s}
 .au-side-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.06);animation:auZoom 18s ease-out forwards}
 @keyframes auZoom{to{transform:scale(1)}}
 .au-side-img span{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:11.5px;letter-spacing:.12em;line-height:1.9;color:rgba(169,212,176,.5);max-width:30ch;text-align:center;text-transform:uppercase}
 .au-side-scrim{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(12,31,21,.55) 0%,rgba(12,31,21,.1) 35%,rgba(12,31,21,.92) 100%)}
-.au-side>*{position:relative}
+.au-side>*{position:relative}.au-side>.au-side-img,.au-side>.au-side-scrim{position:absolute;inset:0}
 .au-side-top{display:flex;align-items:center;justify-content:space-between}
 .au-side-top img{height:26px;width:auto;display:block}
 .au-back{background:none;border:1px solid rgba(245,241,232,.35);color:#F5F1E8;border-radius:100px;padding:9px 16px;font:500 12.5px 'DM Sans',sans-serif;cursor:pointer;transition:all .25s}
@@ -864,8 +864,8 @@ body{background:var(--bg);}
   <div id="auth-blob1"></div>
   <div id="auth-blob2"></div>
   <div id="auth-blob3"></div>
-  <aside class="au-side">
-    <div class="au-side-img"><span>Photo &mdash; passag&egrave;re &agrave; l'arri&egrave;re d'une berline, lumi&egrave;re du soir</span><img src="assets/auth/side.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+  <aside class="au-side is-login" id="au-side">
+    <div class="au-side-img"><img data-au="client" src="assets/auth/client.png" alt=""><img data-au="driver" src="assets/auth/fleet.png" alt=""></div>
     <div class="au-side-scrim"></div>
     <div class="au-side-top"><img src="logo_text_light.png" alt="Bleenr"><button class="au-back" onclick="showScreen('landing')">&larr; Retour &agrave; l'accueil</button></div>
     <div>
@@ -6718,6 +6718,7 @@ window.showLandingAuth = function(mode){
   function sync(){
     var k = reg.classList.contains('active') ? (drv && drv.classList.contains('active') ? 'driver' : 'client') : 'login';
     msgs.forEach(function(m){ m.classList.toggle('on', m.getAttribute('data-au') === k); });
+    var side=document.getElementById('au-side'); if(side){ side.classList.toggle('is-login', k==='login'); [].forEach.call(side.querySelectorAll('.au-side-img img'),function(i){ i.classList.toggle('on', i.getAttribute('data-au')===k); }); }
     if(k === 'login'){ eye.textContent = 'Connexion'; ttl.innerHTML = 'Bon <em>retour</em>.'; }
     else { eye.textContent = k === 'driver' ? 'Inscription partenaire' : 'Inscription'; ttl.innerHTML = 'Cr\u00e9er un <em>compte</em>.'; }
   }
