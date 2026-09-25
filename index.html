@@ -571,9 +571,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ld-cls-tab{border:none;background:transparent;padding:10px 20px;border-radius:100px;font:500 13.5px 'DM Sans',sans-serif;color:var(--lm);cursor:pointer;transition:all .25s}
 .ld-cls-tab.on{background:var(--lg);color:#F5F1E8}
 .ld-cls-body{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:24px}
-.ld-cls-img{position:relative;height:520px;border-radius:22px;overflow:hidden}
+.ld-cls-img{position:relative;height:auto;aspect-ratio:3/2;align-self:start;border-radius:22px;overflow:hidden}
 .ld-cls-img>.ld-img{opacity:0;transform:scale(1.06);transition:opacity .7s,transform 1.2s cubic-bezier(.2,.7,.2,1)}
 .ld-cls-img>.ld-img.on{opacity:1;transform:none}
+.ld-cls-img .ld-img img{object-fit:cover}
 .ld-cls-info{background:#fff;border-radius:22px;padding:40px;display:flex;flex-direction:column;justify-content:space-between;gap:24px}
 .ld-cls-info h3{font-size:52px;line-height:1}
 .ld-cls-info .models{font-size:14px;color:var(--lm);margin-top:12px}
@@ -593,8 +594,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ld-inc-item p{font-size:14.5px;line-height:1.6;color:var(--lm);margin-top:8px;max-width:520px}
 .ld-drv{position:relative;background:var(--ld);color:#F5F1E8;padding:150px 0;overflow:hidden;flex-shrink:0}
 .ld-drv-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:80px;align-items:center}
-.ld-drv-img{position:relative;height:640px;border-radius:22px;overflow:hidden}
-.ld-drv-img .ld-par{position:absolute;inset:-8% 0;will-change:transform}
+.ld-drv-img{position:relative;height:auto;aspect-ratio:3/4;max-height:760px;border-radius:22px;overflow:hidden}
+.ld-drv-img .ld-par{position:absolute;inset:-3% 0;will-change:transform}
 .ld-drv h2 em{color:var(--lmi)}
 .ld-drv .lead{font-size:16px;line-height:1.7;color:rgba(245,241,232,.72);margin-top:24px;max-width:480px}
 .ld-drv-list{margin:36px 0 40px;border-top:1px solid rgba(169,212,176,.18)}
@@ -621,7 +622,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ld-wrap{padding:0 20px}.ld-nav,.ld-nav.solid{padding:14px 20px}.ld-nav-r .ln-link{display:none}
 .ld-book-row{grid-template-columns:1fr 1fr}.ld-book-row>.ld-field:nth-child(1),.ld-book-row>.ld-field:nth-child(2){grid-column:span 2}.ld-book .ld-btn{grid-column:span 2;padding:16px;justify-content:center}
 .ld-story-pin{grid-template-columns:1fr;grid-template-rows:45vh 55vh}.ld-story-r{order:-1}.ld-story-l{padding:24px 20px}.ld-clock{font-size:72px;margin-top:10px}.ld-chaps{min-height:210px;margin-top:10px}.ld-chap h3{font-size:30px}.ld-chap p{font-size:14px}.ld-card{left:16px;bottom:16px;width:240px;padding:14px}.ld-card .v{font-size:22px}
-.ld-cls-top,.ld-cls-body,.ld-inc-grid,.ld-drv-grid,.ld-foot-g{grid-template-columns:1fr;gap:32px}.ld-cls-tabs{justify-self:start}.ld-cls-img{height:320px}.ld-drv-img{height:420px}.ld-inc-h{position:static}.ld-city{font-size:40px}.ld-drv-list div{grid-template-columns:1fr;gap:4px}
+.ld-cls-top,.ld-cls-body,.ld-inc-grid,.ld-drv-grid,.ld-foot-g{grid-template-columns:1fr;gap:32px}.ld-cls-tabs{justify-self:start}.ld-cls-img{height:auto}.ld-drv-img{height:auto}.ld-inc-h{position:static}.ld-city{font-size:40px}.ld-drv-list div{grid-template-columns:1fr;gap:4px}
 }
 @media(prefers-reduced-motion:reduce){.ld-story,.ld-svc{height:auto}.ld-story-pin,.ld-svc-pin{position:relative;height:auto}.ld-track{flex-wrap:wrap;padding:0 40px}.ld-rv:not(.in){opacity:1;transform:none}.ld-cities-t{animation:none}}
 
@@ -791,11 +792,11 @@ body{background:var(--bg);}
       </div>
       <div class="ld-cls-body ld-rv">
         <div class="ld-cls-img" id="ld-cls-img">
-          <div class="ld-img on"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Low cost</span></div><img src="assets/landing/classe-lowcost.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
-          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Business</span></div><img src="assets/landing/classe-business.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
-          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Premi&egrave;re</span></div><img src="assets/landing/classe-premiere.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
-          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; van</span></div><img src="assets/landing/classe-van.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
-          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; autocar</span></div><img src="assets/landing/classe-autocar.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+          <div class="ld-img on"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Low cost</span></div><img src="assets/landing/classe-lowcost.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Business</span></div><img src="assets/landing/classe-business.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Premi&egrave;re</span></div><img src="assets/landing/classe-premiere.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; van</span></div><img src="assets/landing/classe-van.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; autocar</span></div><img src="assets/landing/classe-autocar.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
         </div>
         <div class="ld-cls-info" id="ld-cls-info"></div>
       </div>
@@ -817,7 +818,7 @@ body{background:var(--bg);}
 
   <section class="ld-drv" id="ld-drivers">
     <div class="ld-wrap ld-drv-grid">
-      <div class="ld-drv-img" id="ld-drv-img"><div class="ld-par" id="ld-drv-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; chauffeur au volant, lumi&egrave;re naturelle</span></div><img src="assets/landing/chauffeur.jpg" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
+      <div class="ld-drv-img" id="ld-drv-img"><div class="ld-par" id="ld-drv-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; chauffeur au volant, lumi&egrave;re naturelle</span></div><img src="assets/landing/chauffeur.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
       <div>
         <span class="ld-eye ld-rv" style="color:var(--lmi)">Chauffeurs &amp; flottes partenaires</span>
         <h2 class="ld-serif ld-rv">De l'autre c&ocirc;t&eacute;<br>de la <em>vitre</em>.</h2>
