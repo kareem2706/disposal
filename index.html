@@ -142,7 +142,7 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 #screen-auth .input-group label{font-size:10.5px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#5A7A5A;margin:0}
 #screen-auth .input-group input,#screen-auth .input-group select{border:none!important;box-shadow:none!important;background:transparent!important;padding:2px 0!important;font:500 15px 'DM Sans',sans-serif;color:#0E1410;width:100%;outline:none;border-radius:0}
 #screen-auth .input-group input::placeholder{color:#A8B3A9}
-#screen-auth .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#screen-auth .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}#screen-auth #reg-perso-fields{column-gap:14px!important;row-gap:10px!important}
 #screen-auth .form-grid .input-group{margin-bottom:0}
 #screen-auth #reg-perso-fields{margin-bottom:10px}
 #screen-auth .btn-primary{background:#1B5E3B;border:none;color:#F5F1E8;border-radius:100px;padding:16px 24px;font:600 14px 'DM Sans',sans-serif;letter-spacing:.02em;margin-top:8px;transition:background .25s,transform .25s}
@@ -574,7 +574,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ld-cls-img{position:relative;height:auto;aspect-ratio:3/2;align-self:start;border-radius:22px;overflow:hidden}
 .ld-cls-img>.ld-img{opacity:0;transform:scale(1.06);transition:opacity .7s,transform 1.2s cubic-bezier(.2,.7,.2,1)}
 .ld-cls-img>.ld-img.on{opacity:1;transform:none}
-.ld-cls-img .ld-img img{object-fit:cover}
+.ld-cls-img .ld-img img{object-fit:cover}.ld-cls-img .ld-img img[src*="classe-premiere"],.ld-cls-img .ld-img img[src*="classe-van"]{object-fit:contain;position:relative;z-index:1}.ld-cls-img .ld-img:has(img[src*="classe-premiere"])::before,.ld-cls-img .ld-img:has(img[src*="classe-van"])::before{content:"";position:absolute;inset:-30px;background:center/cover;filter:blur(24px) brightness(.85)}.ld-cls-img .ld-img:has(img[src*="classe-premiere"])::before{background-image:url(assets/landing/classe-premiere.png)}.ld-cls-img .ld-img:has(img[src*="classe-van"])::before{background-image:url(assets/landing/classe-van.png)}.ld-cls-img .ld-img{overflow:hidden}
 .ld-cls-info{background:#fff;border-radius:22px;padding:40px;display:flex;flex-direction:column;justify-content:space-between;gap:24px}
 .ld-cls-info h3{font-size:52px;line-height:1}
 .ld-cls-info .models{font-size:14px;color:var(--lm);margin-top:12px}
@@ -2748,9 +2748,9 @@ function _showRegStep(step){
     var cf=document.getElementById('reg-client-fields'); if(cf) cf.style.display=isDriver?'none':'block';
     var df=document.getElementById('reg-driver-fields'); if(df) df.style.display=isDriver?'block':'none';
     // For client: show perso fields (fname/lname) OR pro fields (company), not both
-    var pf=document.getElementById('reg-perso-fields'); if(pf) pf.style.display=(!isDriver && !isPro)?'block':'none';
+    var pf=document.getElementById('reg-perso-fields'); if(pf) pf.style.display=(!isDriver && !isPro)?'grid':'none';
     var prof=document.getElementById('reg-pro-fields'); if(prof) prof.style.display=(!isDriver && isPro)?'block':'none';
-    var vat=document.getElementById('reg-vat'); if(vat) vat.style.display=isDriver?'block':'none';
+    var vat=document.getElementById('reg-vat'); if(vat) vat.style.display=(isDriver||isPro)?'block':'none';
   }
 }
 
@@ -2860,7 +2860,7 @@ window.updateRegFields = function(){
   if(pdf2) pdf2.style.display=isDriver?'block':'none';
   // VAT only for driver
   var vat=document.getElementById('reg-vat');
-  if(vat) vat.style.display=isDriver?'block':'none';
+  if(vat) vat.style.display=(isDriver||_regClientType==='pro')?'block':'none';
 };
 
 window.toggleClientType = function(){
@@ -6756,10 +6756,10 @@ document.getElementById('screen-landing') && (function(){
 
   // classes tabs
   var CLS = [
-    { c:'Low cost', m:'Toyota Prius, Skoda Octavia ou similaire', pax:3, bag:2, d:"Un voyage pour tous les budgets : le m\u00eame chauffeur v\u00e9rifi\u00e9 et le m\u00eame prix fixe, au tarif le plus doux." },
-    { c:'Business', m:'Mercedes Classe E, BMW S\u00e9rie 5 ou similaire', pax:3, bag:2, d:"La r\u00e9f\u00e9rence pour les rendez-vous d'affaires et les transferts a\u00e9roport. Discr\u00e8te, confortable, toujours impeccable." },
-    { c:'Premi\u00e8re', m:'Mercedes Classe S, BMW S\u00e9rie 7 ou similaire', pax:3, bag:2, d:"L'espace arri\u00e8re d'un salon et un silence de cabine, pour les occasions qui comptent." },
-    { c:'Van', m:'Mercedes Classe V ou similaire', pax:6, bag:6, d:"Pour les familles, les \u00e9quipes et les valises nombreuses \u2014 sans renoncer au confort." },
+    { c:'Low cost', m:'Toyota Prius, Skoda Octavia ou similaire', pax:3, bag:3, d:"Un voyage pour tous les budgets : le m\u00eame chauffeur v\u00e9rifi\u00e9 et le m\u00eame prix fixe, au tarif le plus doux." },
+    { c:'Business', m:'Mercedes Classe E, BMW S\u00e9rie 5 ou similaire', pax:3, bag:3, d:"La r\u00e9f\u00e9rence pour les rendez-vous d'affaires et les transferts a\u00e9roport. Discr\u00e8te, confortable, toujours impeccable." },
+    { c:'Premi\u00e8re', m:'Mercedes Classe S, BMW S\u00e9rie 7 ou similaire', pax:3, bag:3, d:"L'espace arri\u00e8re d'un salon et un silence de cabine, pour les occasions qui comptent." },
+    { c:'Van', m:'Mercedes Classe V ou similaire', pax:7, bag:7, d:"Pour les familles, les \u00e9quipes et les valises nombreuses \u2014 sans renoncer au confort." },
     { c:'Autocar', m:'Minibus et autocars de 16 \u00e0 50 places', pax:50, bag:50, d:"Pour les groupes, s\u00e9minaires et \u00e9v\u00e9nements : un seul v\u00e9hicule, un seul chauffeur, tout le monde ensemble." }
   ];
   var tabs = [].slice.call($('ld-cls-tabs').children), imgs = [].slice.call($('ld-cls-img').children), info = $('ld-cls-info');
