@@ -1981,6 +1981,7 @@ body{background:var(--bg);}
         <div id="offer-vehicle-err" style="font-size:12px;color:var(--red);display:none;margin-top:4px;">Aucun v&eacute;hicule de cette gamme. Ajoutez-en un dans votre profil.</div>
       </div>
       <div class="input-group"><label>Votre prix (&euro; HTVA) <span style="color:var(--red)">*</span><span style="font-size:11px;font-weight:400;color:var(--ink3);display:block;margin-top:2px;">Le prix inclut la commission de la plateforme (10%)</span></label><input id="offer-price" type="number" min="1" step="1" placeholder="85" style="font-size:22px;font-weight:600;font-family:'DM Sans',sans-serif;"></div>
+      <div id="offer-km-wrap" style="display:none;"></div>
       <div class="input-group"><label>Message au client (optionnel)</label><textarea id="offer-msg" rows="2" placeholder="BMW 7 Series, disponible 15 min avant…"></textarea></div>
       <div id="offer-err" class="auth-error"></div>
     </div>
@@ -3080,13 +3081,13 @@ async function loadMyOffers(){
   _myOffers = {}; // reset before reload
   try {
     var result = await sb.from('offers')
-      .select('ride_id, price, message')
+      .select('ride_id, price, message, included_km')
       .eq('driver_id', currentUser.id)
       .in('status', ['pending', 'accepted']);
     if(result.error) return;
     var rows = result.data || [];
     rows.forEach(function(row){
-      _myOffers[row.ride_id] = { price: row.price, msg: row.message || '' };
+      _myOffers[row.ride_id] = { price: row.price, msg: row.message || '', km: row.included_km || null };
     });
   } catch(e){ console.warn('loadMyOffers error:', e); }
 }
@@ -4076,7 +4077,7 @@ async function openOffersModal(rideId){
 
     // Query offers by ride_id only - no status filter, no join
     const { data, error } = await sb.from('offers')
-      .select('id, ride_id, driver_id, price, message, status, created_at, vehicle_id')
+      .select('id, ride_id, driver_id, price, message, status, created_at, vehicle_id, included_km')
       .eq('ride_id', rideId)
       .neq('status', 'rejected');
     if(error){ console.error('offers error:', error.message, error.code); }
@@ -4154,6 +4155,55 @@ window.acceptOffer = async function(offerId, driverId, price){
   await loadClientDashboard();
 };
 
+// ── Km inclus (mise à disposition) ──
+// Returns the disposal segments of a ride: [{idx, label}]
+// disposal ride -> one entry (idx 0); mixed ride -> one entry per "Disposition" segment (idx = segment index)
+function _offerKmSegments(r){
+  if(!r) return [];
+  if(r.trip_type==='disposal') return [{idx:0, label:''}];
+  if(r.trip_type==='mixed'){
+    var segs=parseMixedNotes(r.notes||'');
+    var out=[];
+    segs.forEach(function(s,i){
+      if((s.type||'').toLowerCase().indexOf('disp')>=0){
+        out.push({idx:i, label:'Segment '+(i+1)+(s.from?' \u2014 '+cleanAddr(s.from):'')});
+      }
+    });
+    return out;
+  }
+  return [];
+}
+
+function _renderOfferKmFields(r, existing){
+  var wrap=document.getElementById('offer-km-wrap');
+  if(!wrap) return;
+  var segs=_offerKmSegments(r);
+  if(!segs.length){ wrap.innerHTML=''; wrap.style.display='none'; return; }
+  var prev=(existing&&existing.km)||{};
+  var dis=!!existing;
+  wrap.innerHTML=segs.map(function(s){
+    var val=(prev[String(s.idx)]!=null)?prev[String(s.idx)]:'';
+    var lbl=s.label?'Kilom\u00e8tres inclus \u2014 '+s.label.replace(/</g,'&lt;'):'Kilom\u00e8tres inclus';
+    return '<div class="input-group"><label>'+lbl+' <span style="color:var(--red)">*</span></label>'
+      +'<input class="offer-km-inp" data-seg="'+s.idx+'" type="number" min="1" step="1" inputmode="numeric" placeholder="ex. 150" value="'+val+'"'
+      +(dis?' disabled style="opacity:0.5;cursor:not-allowed;"':'')+'></div>';
+  }).join('');
+  wrap.style.display='block';
+}
+
+// Reads the km fields. Returns {ok:true, km:{idx:number}|null} or {ok:false}
+function _readOfferKm(){
+  var inps=document.querySelectorAll('#offer-km-wrap .offer-km-inp');
+  if(!inps.length) return {ok:true, km:null};
+  var km={}, ok=true;
+  inps.forEach(function(i){
+    var v=parseInt(i.value,10);
+    if(!(v>0)){ ok=false; return; }
+    km[i.dataset.seg]=v;
+  });
+  return ok?{ok:true, km:km}:{ok:false};
+}
+
 window.openOfferModal = function(rideId, summary, rideObj){
   currentRideId = rideId;
   var sumEl = document.getElementById('offer-ride-summary');
@@ -4180,6 +4230,8 @@ window.openOfferModal = function(rideId, summary, rideObj){
   var msgEl   = document.getElementById('offer-msg');
   if(priceEl){ priceEl.disabled = !!existing; priceEl.style.opacity = existing ? '0.5' : ''; priceEl.style.cursor = existing ? 'not-allowed' : ''; }
   if(msgEl){   msgEl.disabled   = !!existing; msgEl.style.opacity   = existing ? '0.5' : ''; msgEl.style.cursor   = existing ? 'not-allowed' : ''; }
+  // Km inclus fields (disposal ride / disposal segments of a mixed ride)
+  _renderOfferKmFields(rideObj, existing);
   // Hide submit button if offer already submitted (submitted offers cannot be modified)
   var offerBtnWrap = document.getElementById('offer-btn-wrap');
   if(offerBtnWrap){ offerBtnWrap.style.display = existing ? 'none' : ''; }
@@ -6019,11 +6071,33 @@ function renderOfferCard(o){
       }).join('')+'</div>'
     : '';
 
+  // Km inclus proposés par le chauffeur (mise à disposition / segments mise à disposition)
+  var kmHtml='';
+  if(o.included_km && typeof o.included_km==='object'){
+    var _kmSegs=_offerKmSegments(_currentPaymentRide);
+    var _kmIcon='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19L8 5M20 19L16 5M12 6v2M12 11v2M12 16v2"/></svg>';
+    var _kmLines=[];
+    if(_kmSegs.length){
+      _kmSegs.forEach(function(s){
+        var v=o.included_km[String(s.idx)];
+        if(v!=null) _kmLines.push((_kmSegs.length>1||s.label?'Segment '+(s.idx+1)+' : ':'')+v+' km inclus');
+      });
+    } else {
+      Object.keys(o.included_km).forEach(function(k){ _kmLines.push(o.included_km[k]+' km inclus'); });
+    }
+    if(_kmLines.length){
+      kmHtml='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">'+_kmLines.map(function(l){
+        return '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--sand2);border-radius:20px;font-size:10px;color:var(--ink);font-weight:600;">'+_kmIcon+' '+l+'</span>';
+      }).join('')+'</div>';
+    }
+  }
+
   return '<div class="offer-card" style="padding:16px 20px;">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;">'
       +'<div style="flex:1;min-width:0;">'
         +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;"><span style="font-weight:700;font-size:15px;">'+classBadge+vehName+'</span></div>'
         +amenities
+        +kmHtml
       +'</div>'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">'
         +'<div style="text-align:right;"><div style="font-size:10px;color:var(--ink4);font-weight:500;">Prix</div><div style="font-size:20px;font-weight:700;color:var(--ink);">'+priceDisplay+'</div></div>'
@@ -6557,6 +6631,11 @@ window.submitOffer = async function(){
 
   if(!price || price <= 0){ showError(err, t('err_required')); return; }
 
+  // Km inclus required for disposal ride / disposal segments
+  var _kmRes = _readOfferKm();
+  if(!_kmRes.ok){ showError(err, 'Veuillez indiquer le nombre de km inclus'); return; }
+  var includedKm = _kmRes.km;
+
   // Vehicle selection required for fleet
   var vehSel=document.getElementById('offer-vehicle-select');
   var selectedVehicleId=null;
@@ -6566,7 +6645,7 @@ window.submitOffer = async function(){
   }
 
   if(localStorage.getItem(DEMO_MODE_KEY) === '1'){
-    _myOffers[currentRideId] = {price: price, msg: msg};
+    _myOffers[currentRideId] = {price: price, msg: msg, km: includedKm};
     closeModal('m-submit-offer');
     showToast('✅ Offre soumise');
     if(typeof loadDriverDashboard === 'function') loadDriverDashboard();
@@ -6593,13 +6672,13 @@ window.submitOffer = async function(){
     var offerResult;
     if(hasExisting){
       offerResult = await sb.from('offers')
-        .update({ price: price, message: msg || null, vehicle_id: selectedVehicleId || null })
+        .update({ price: price, message: msg || null, vehicle_id: selectedVehicleId || null, included_km: includedKm })
         .eq('ride_id', currentRideId)
         .eq('driver_id', currentUser.id);
     } else {
       offerResult = await sb.from('offers')
         .insert({ ride_id: currentRideId, driver_id: currentUser.id,
-                  price: price, message: msg || null, status: 'pending', vehicle_id: selectedVehicleId || null });
+                  price: price, message: msg || null, status: 'pending', vehicle_id: selectedVehicleId || null, included_km: includedKm });
     }
     if(offerResult.error) throw offerResult.error;
 
@@ -6613,7 +6692,7 @@ window.submitOffer = async function(){
     // Notify the client that a new offer arrived (only on first submission)
     if(!hasExisting) _notifyOfferReceived(currentRideId, price);
 
-    _myOffers[currentRideId] = { price: price, msg: msg };
+    _myOffers[currentRideId] = { price: price, msg: msg, km: includedKm };
     setLoading(btn, false, 'Soumettre →');
     closeModal('m-submit-offer');
     showToast('✅ Offre soumise avec succès');
@@ -6650,6 +6729,7 @@ window._offerBtnClick = function(){
     var price = parseFloat(document.getElementById('offer-price').value);
     var err   = document.getElementById('offer-err');
     if(!price || price <= 0){ showError(err, t('err_required')); return; }
+    if(!_readOfferKm().ok){ showError(err, 'Veuillez indiquer le nombre de km inclus'); return; }
     // Start countdown
     _offerCounting = true;
     var btn = document.getElementById('btn-offer-submit');
