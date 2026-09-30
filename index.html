@@ -986,15 +986,11 @@ body{background:var(--bg);}
         </div>
 
         <!-- Step R4: email verification link sent -->
-        <div id="reg-done" style="display:none;text-align:center;padding:8px 0 4px;">
-          <div style="width:56px;height:56px;border-radius:50%;background:var(--sand2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1B5E3B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+        <div id="reg-done" style="display:none;padding:110px 0;">
+          <div style="display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap;text-align:center;">
+            <svg width="64" height="80" viewBox="0 0 64 80" fill="none" stroke="#1FA34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M4 50l18 20L60 4"/></svg>
+            <div style="font-size:17px;font-weight:700;color:#1FA34A;line-height:1.5;max-width:420px;">Un lien a &eacute;t&eacute; envoy&eacute; sur votre adresse email pour v&eacute;rification</div>
           </div>
-          <div style="font-size:17px;font-weight:700;margin-bottom:8px;">V&eacute;rifiez votre adresse email</div>
-          <p style="font-size:13.5px;color:var(--ink3);line-height:1.6;margin-bottom:6px;">Un lien de v&eacute;rification a &eacute;t&eacute; envoy&eacute; &agrave;</p>
-          <div id="reg-done-email" style="font-size:14px;font-weight:600;margin-bottom:14px;word-break:break-all;"></div>
-          <p style="font-size:13px;color:var(--ink3);line-height:1.6;margin-bottom:20px;">Cliquez sur ce lien pour confirmer votre adresse et activer votre compte. Pensez &agrave; v&eacute;rifier vos courriers ind&eacute;sirables.</p>
-          <button class="btn btn-primary btn-full" onclick="authMode('login')">Aller &agrave; la connexion &rarr;</button>
         </div>
 
       </div><!-- end register-panel -->
@@ -2839,7 +2835,6 @@ window.submitEmailReg = async function(){
     ['reg-step1','reg-step2-client','reg-step3'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.style.display='none';
     });
-    var doneEmailEl=document.getElementById('reg-done-email'); if(doneEmailEl) doneEmailEl.textContent=email;
     var doneEl=document.getElementById('reg-done'); if(doneEl) doneEl.style.display='block';
   } else if(data?.session){
     currentUser=data.user; await loadProfile(); enterApp();
