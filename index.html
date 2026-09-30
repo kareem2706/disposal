@@ -981,7 +981,7 @@ body{background:var(--bg);}
           <div class="input-group"><label>Mot de passe</label><input id="inp-pwd-reg" type="password" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitEmailReg()"></div>
           <div class="input-group" style="display:none;" id="inp-pwd2-wrap"><label>Confirmer le mot de passe</label><input id="inp-pwd2" type="password" placeholder="••••••••" autocomplete="new-password"></div>
           <div id="reg-vat" class="input-group" style="display:none;"><label>N° de TVA (optionnel)</label><input id="inp-vat" placeholder="BE 0000.000.000"></div>
-          <div id="auth-err-email" class="auth-error"></div>
+          <div id="auth-err-email-reg" class="auth-error"></div>
           <button class="btn btn-primary btn-full" onclick="submitEmailReg()">Créer le compte →</button>
         </div>
 
@@ -2737,7 +2737,7 @@ window.authMode = function(mode){
     _regCurrentStep = 1;
     _showRegStep(1);
   }
-  ['auth-err-email'].forEach(function(id){
+  ['auth-err-email','auth-err-email-reg'].forEach(function(id){
     var e=document.getElementById(id);if(e)e.classList.remove('show');
   });
 };
@@ -2794,7 +2794,7 @@ window.selectClientType = function(type){
 window.submitEmailReg = async function(){
   var email = (document.getElementById('inp-email-reg')?.value||'').trim();
   var pwd   = (document.getElementById('inp-pwd-reg')?.value||'').trim();
-  var errEl = document.getElementById('auth-err-email');
+  var errEl = document.getElementById('auth-err-email-reg');
   if(!email||!pwd){ if(errEl){errEl.textContent='Email et mot de passe requis';errEl.classList.add('show');} return; }
 
   var role = _authSelectedRole||'client';
