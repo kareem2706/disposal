@@ -8764,13 +8764,9 @@ window.filterAdminFleets=function(filter,btn){
 };
 
 function _computeFleetStatus(fleet, docs, vehicles, drivers){
-  var allItems=[].concat(docs||[],vehicles||[],drivers||[]);
-  if(allItems.length===0) return fleet.fleet_verified==='validated' ? 'validated' : 'pending';
-  var hasPending=allItems.some(function(i){return i.status==='pending';});
-  if(hasPending) return 'pending';
-  if(fleet.fleet_verified==='validated') return 'validated';
-  var allValidated=allItems.every(function(i){return i.status==='validated';});
-  return allValidated ? 'validated' : 'pending';
+  // The fleet status is the admin decision stored in profiles.fleet_verified
+  // (same source as the fleet detail header and the new-request email alerts)
+  return fleet.fleet_verified==='validated' ? 'validated' : 'pending';
 }
 
 async function loadAdminFleets(){
