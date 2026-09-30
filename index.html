@@ -5094,6 +5094,25 @@ window.sendMail = function(type, to, data){
   }).catch(function(e){ console.warn('sendMail', type, e); });
 };
 
+// Sends an email to users by profile id — the Edge Function resolves their address
+// server-side (a client cannot read a driver's profile and vice versa because of RLS)
+window.sendMailToUsers = function(type, userIds, data){
+  if(localStorage.getItem(DEMO_MODE_KEY)==='1') return Promise.resolve();
+  var ids = (Array.isArray(userIds)?userIds:[userIds]).filter(function(x,i,a){ return x && a.indexOf(x)===i; });
+  if(!ids.length) return Promise.resolve();
+  return fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/send-mail',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
+    body:JSON.stringify({ type: type, to_user_ids: ids, data: data || {} })
+  }).then(function(resp){
+    return resp.text().then(function(txt){
+      var parsed; try{ parsed=JSON.parse(txt); }catch(e){ parsed={raw:txt}; }
+      if(!resp.ok) console.warn('sendMailToUsers', type, resp.status, parsed);
+      return parsed;
+    });
+  }).catch(function(e){ console.warn('sendMailToUsers', type, e); });
+};
+
 // Builds the data block shared by every ride email
 window._mailRideData = function(r, extra){
   var tLbl = {ab:'A \u2192 B', disposal:'Mise \u00e0 disposition', mixed:'Course mixte'};
@@ -5107,6 +5126,7 @@ window._mailRideData = function(r, extra){
   };
   var pax = (r.notes||'').match(/\|pax:([^|]+)/);
   if(pax) d.passenger = pax[1].trim();
+  if(r.is_subcontract) d.subcontract = 'yes';
   if(extra) Object.keys(extra).forEach(function(k){ if(extra[k]) d[k]=extra[k]; });
   return d;
 };
@@ -5140,22 +5160,18 @@ window._notifyRideConfirmed = async function(rideId, driverId){
     var drvName = driver ? ((driver.first_name||'')+' '+(driver.last_name||'')).trim() : '';
     var base = window._mailRideData(r, { vehicle: veh, driver: drvName });
 
-    if(client && client.email){
-      window.sendMail('ride_confirmed_client', client.email, Object.assign({}, base, {
-        clientName: client.first_name||'',
-        driverPhone: driver ? (driver.phone||'') : ''
-      }));
-    }
-    if(driver && driver.email){
-      window.sendMail('ride_confirmed_driver', driver.email, Object.assign({}, base, {
-        driverName: driver.first_name||''
-      }));
-    }
+    window.sendMailToUsers('ride_confirmed_client', r.client_id, Object.assign({}, base, {
+      clientName: client ? (client.first_name||'') : '',
+      driverPhone: driver ? (driver.phone||'') : ''
+    }));
+    window.sendMailToUsers('ride_confirmed_driver', driverId || r.driver_id, Object.assign({}, base, {
+      driverName: driver ? (driver.first_name||'') : ''
+    }));
   }catch(e){ console.warn('_notifyRideConfirmed', e); }
 };
 
 // Sends the cancellation notice to the client (and driver if one was assigned)
-window._notifyRideCancelled = async function(rideId, refundable){
+window._notifyRideCancelled = async function(rideId, refundable, offerDriverIds){
   if(!sb || !rideId) return;
   try{
     var {data:r} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
@@ -5163,15 +5179,16 @@ window._notifyRideCancelled = async function(rideId, refundable){
     var base = window._mailRideData(r);
     base.refund = refundable ? 'yes' : 'no';
 
-    var client = await window._mailEmailFor(r.client_id);
-    if(client && client.email){
-      window.sendMail('ride_cancelled', client.email, Object.assign({}, base, { name: client.first_name||'' }));
-    }
-    if(r.driver_id){
-      var driver = await window._mailEmailFor(r.driver_id);
-      if(driver && driver.email){
-        window.sendMail('ride_cancelled', driver.email, Object.assign({}, base, { name: driver.first_name||'' }));
-      }
+    // Requester (client, or driver who posted a subcontract)
+    window.sendMailToUsers('ride_cancelled', r.client_id, base);
+    // Assigned driver + every driver who had sent an offer
+    var drvIds = (offerDriverIds||[]).slice();
+    if(r.driver_id) drvIds.push(r.driver_id);
+    drvIds = drvIds.filter(function(id){ return id && id !== r.client_id; });
+    if(drvIds.length){
+      var dBase = Object.assign({}, base, { audience: 'driver' });
+      delete dBase.passenger;
+      window.sendMailToUsers('ride_cancelled', drvIds, dBase);
     }
   }catch(e){ console.warn('_notifyRideCancelled', e); }
 };
@@ -5182,13 +5199,9 @@ window._notifyOfferReceived = async function(rideId, price){
   try{
     var {data:r} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
     if(!r) return;
-    var client = await window._mailEmailFor(r.client_id);
-    if(!client || !client.email) return;
     var base = window._mailRideData(r);
     if(price) base.price = (parseFloat(price)*1.06).toFixed(2).replace('.',',')+' \u20ac';
-    window.sendMail('offer_received', client.email, Object.assign({}, base, {
-      clientName: client.first_name||''
-    }));
+    window.sendMailToUsers('offer_received', r.client_id, base);
   }catch(e){ console.warn('_notifyOfferReceived', e); }
 };
 
@@ -5197,12 +5210,17 @@ window._notifyOfferReceived = async function(rideId, price){
 window._notifyMarketplaceDrivers = function(rideData){
   if(!rideData || localStorage.getItem(DEMO_MODE_KEY)==='1') return;
   var base = window._mailRideData(rideData);
-  delete base.price;      // drivers must not see the client price
+  var isSub = !!rideData.is_subcontract;
+  if(isSub && rideData.final_price){
+    base.price = parseFloat(rideData.final_price).toFixed(2).replace('.',',')+' \u20ac HTVA'; // subcontract: fixed price shown
+  } else {
+    delete base.price;      // drivers must not see the client price
+  }
   delete base.passenger;  // nor the passenger identity before accepting
   return fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/send-mail',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
-    body:JSON.stringify({ type:'new_marketplace_ride', broadcast:'verified_drivers', data: base })
+    body:JSON.stringify({ type:'new_marketplace_ride', broadcast:'verified_drivers', exclude_user_id: isSub ? rideData.client_id : undefined, data: base })
   }).then(function(resp){
     return resp.text().then(function(txt){
       var parsed; try{ parsed=JSON.parse(txt); }catch(e){ parsed={raw:txt}; }
@@ -5210,6 +5228,27 @@ window._notifyMarketplaceDrivers = function(rideData){
       return parsed;
     });
   }).catch(function(e){ console.warn('_notifyMarketplaceDrivers', e); });
+};
+
+// Tells the drivers concerned (assigned driver + drivers with an offer) that the requester changed the ride
+window._notifyRideUpdated = async function(rideId, changes, note){
+  if(!sb || !rideId) return;
+  try{
+    var {data:r} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
+    if(!r || r.status==='cancelled' || r.status==='done') return;
+    var ids = [];
+    if(r.driver_id) ids.push(r.driver_id);
+    try{
+      var {data:offs} = await sb.from('offers').select('driver_id,status').eq('ride_id',rideId);
+      (offs||[]).forEach(function(o){ if(o.status!=='rejected') ids.push(o.driver_id); });
+    }catch(e){}
+    ids = ids.filter(function(id){ return id && id !== r.client_id; });
+    if(!ids.length) return;
+    var base = window._mailRideData(r, { changes: (changes||[]).join(', '), note: note||'' });
+    delete base.price;
+    if(!r.driver_id) delete base.passenger;
+    window.sendMailToUsers('ride_updated', ids, base);
+  }catch(e){ console.warn('_notifyRideUpdated', e); }
 };
 
 async function _promoteNotesToDriver(rideId){
@@ -5359,7 +5398,7 @@ window.confirmDeleteRide = async function(){
     }
     var _cancelRefundable = (cancelUpdate.payment_method!=='non_refundable');
     var res=await sb.from('rides').update(cancelUpdate).eq('id',rideId).eq('client_id',currentUser.id);
-    if(!res.error) _notifyRideCancelled(rideId, _cancelRefundable);
+    if(!res.error) _notifyRideCancelled(rideId, _cancelRefundable, dIds);
     _pendingDeleteId = null;
     if(btn){ btn.disabled=false; btn.textContent='Oui, annuler'; }
     if(res.error){
@@ -5596,7 +5635,21 @@ window.submitRide = async function(){
   try {
     var result;
     if(editId){
+      var _prevRide = null;
+      try{ _prevRide = (await sb.from('rides').select('*').eq('id', editId).maybeSingle()).data; }catch(e){}
       result = await sb.from('rides').update(rideData).eq('id', editId).eq('client_id', currentUser.id);
+      if(!result.error && _prevRide){
+        var _chg = [];
+        if(_prevRide.ride_date !== rideData.ride_date) _chg.push('date');
+        if(String(_prevRide.ride_time||'').slice(0,5) !== String(rideData.ride_time||'').slice(0,5)) _chg.push('heure');
+        if((_prevRide.from_address||'') !== (rideData.from_address||'')) _chg.push('d\u00e9part');
+        if((_prevRide.to_address||'') !== (rideData.to_address||'')) _chg.push('arriv\u00e9e');
+        if((_prevRide.passengers||1) !== (rideData.passengers||1)) _chg.push('passagers');
+        if((_prevRide.vehicle_type||'') !== (rideData.vehicle_type||'')) _chg.push('v\u00e9hicule');
+        if((_prevRide.trip_type||'') !== (rideData.trip_type||'')) _chg.push('type de course');
+        if((_prevRide.notes||'') !== (rideData.notes||'')) _chg.push('note / d\u00e9tails');
+        if(_chg.length) _notifyRideUpdated(editId, _chg);
+      }
     } else {
       result = await sb.from('rides').insert(rideData).select('id').single();
       // Generate booking code after insert: BL + type(2 chars) + MMYY + counter 3 digits
@@ -5614,6 +5667,8 @@ window.submitRide = async function(){
         var counter = String((rideCount||1)).padStart(3,'0');
         var bookingCode = 'BL'+typeCode+'-'+mm+yy+counter;
         await sb.from('rides').update({booking_code: bookingCode}).eq('id', newId);
+        rideData.booking_code = bookingCode; // so the emails carry the request id
+        rideData.id = newId;
       }
     }
     if(result.error) throw result.error;
@@ -5850,6 +5905,7 @@ window.acceptSubcontract = async function(rideId){
       .eq('id', rideId)
       .in('status',['waiting','offers']);
     if(res.error) throw res.error;
+    _notifyRideConfirmed(rideId, currentUser.id);
     showToast('✅ Course acceptée !');
     if(typeof loadDriverDashboard==='function') await loadDriverDashboard();
     if(typeof loadMarketplace==='function') await loadMarketplace();
@@ -6010,8 +6066,29 @@ window.submitSubcontract = async function(){
   };
 
   try {
-    var result = await sb.from('rides').insert(rideData);
+    var result = await sb.from('rides').insert(rideData).select('id').single();
     if(result.error) throw result.error;
+    // Booking code (same scheme as client requests) so the emails carry the request id
+    if(result.data && result.data.id){
+      try{
+        var _sNow = new Date();
+        var _sMm = String(_sNow.getMonth()+1).padStart(2,'0');
+        var _sYy = String(_sNow.getFullYear()).slice(-2);
+        var {count:_sCount} = await sb.from('rides').select('id',{count:'exact',head:true}).gte('created_at',_sNow.getFullYear()+'-'+_sMm+'-01T00:00:00');
+        var _sType = tripType==='ab'?'AB':tripType==='disposal'?'DI':'MX';
+        var _sCode = 'BL'+_sType+'-'+_sMm+_sYy+String(_sCount||1).padStart(3,'0');
+        await sb.from('rides').update({booking_code:_sCode}).eq('id', result.data.id);
+        rideData.booking_code = _sCode;
+      }catch(e){ console.warn('subcontract booking code', e); }
+      rideData.id = result.data.id;
+    }
+    // Requester confirmation + alert to the other verified drivers
+    if(currentProfile?.email){
+      var _subMail = window._mailRideData(rideData, { clientName: currentProfile.first_name||'' });
+      if(rideData.final_price) _subMail.price = parseFloat(rideData.final_price).toFixed(2).replace('.',',')+' \u20ac HTVA';
+      window.sendMail('ride_created', currentProfile.email, _subMail);
+    }
+    _notifyMarketplaceDrivers(rideData);
     if(btn) setLoading(btn, false, t('btn_publish')+' \u2192');
     closeModal('m-subcontract');
     showToast(t('toast_subcontract'));
@@ -6494,6 +6571,20 @@ window.confirmPayment = async function(method){
     if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Paiement effectu\u00e9' : 'Payer \u2192');
     if(errEl){ showError(errEl, error.message); }
     return;
+  }
+
+  // Email the driver whose offer was accepted
+  if(method === 'bank_transfer'){
+    try{
+      var {data:_accR} = await sb.from('rides').select('*').eq('id', currentRideId).maybeSingle();
+      if(_accR){
+        var _accData = window._mailRideData(_accR, { payment: 'bank_transfer' });
+        delete _accData.price;
+        window.sendMailToUsers('offer_accepted_driver', _accR.driver_id || rideUpdates.driver_id, _accData);
+      }
+    }catch(e){ console.warn('offer accepted mail', e); }
+  } else {
+    _notifyRideConfirmed(currentRideId, rideUpdates.driver_id);
   }
 
   closeModal('m-payment');
@@ -7423,6 +7514,7 @@ window.saveDriverNote = async function(rideId){
   var note = (document.getElementById('drv-note-edit')?.value||'').trim();
   var {data:rd, error:fetchErr} = await sb.from('rides').select('notes').eq('id',rideId).maybeSingle();
   if(fetchErr){ showToast('Erreur: '+fetchErr.message); if(btn){btn.disabled=false;btn.textContent='Enregistrer';} return; }
+  var _hadNote = /\|offer_note:/.test(rd?.notes||'');
   var notes = (rd?.notes||'').replace(/\|offer_note:[^|]*/g,'').trimEnd();
   if(note) notes += '|offer_note:'+note;
   var {error} = await sb.from('rides').update({notes:notes}).eq('id',rideId);
@@ -7431,6 +7523,10 @@ window.saveDriverNote = async function(rideId){
   showToast('✅ Note mise à jour');
   // Reopen detail with updated data
   var {data:updated} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
+  // Email the requester about the driver's note
+  if(updated && updated.client_id && updated.client_id !== currentUser?.id){
+    window.sendMailToUsers('driver_note', updated.client_id, window._mailRideData(updated, { note: note, noteAction: _hadNote ? 'updated' : 'created' }));
+  }
   if(updated){ var tmp=document.createElement('div'); tmp.dataset.ride=JSON.stringify(updated).replace(/'/g,"&#39;"); openRideDetail(tmp); }
 };
 
@@ -7523,6 +7619,7 @@ window.savePaxInfo = async function(rideId){
   if(phone) notes += '|tel:'+phone;
   var {error} = await sb.from('rides').update({notes:notes}).eq('id',rideId);
   if(error){ console.error('savePaxInfo error:', error); showToast('Erreur: '+error.message); if(btn){btn.disabled=false;btn.textContent='Enregistrer';} return; }
+  _notifyRideUpdated(rideId, ['passager']);
   document.getElementById('m-pax-edit')?.remove();
   showToast('✅ Informations mises à jour');
   await loadClientDashboard();
@@ -7542,6 +7639,7 @@ window.saveNoteInfo = async function(rideId){
   if(note) notes += '|note_drv:'+note;
   var {error} = await sb.from('rides').update({notes:notes}).eq('id',rideId);
   if(error){ console.error('saveNoteInfo error:', error); showToast('Erreur: '+error.message); if(btn){btn.disabled=false;btn.textContent='Enregistrer';} return; }
+  _notifyRideUpdated(rideId, ['note au chauffeur'], note);
   document.getElementById('m-pax-edit')?.remove();
   showToast('✅ Note mise à jour');
   await loadClientDashboard();
@@ -9499,6 +9597,7 @@ window.adminConfirmPayment = async function(rideId){
     var { error } = await sb.from('rides').update({status:'confirmed'}).eq('id', rideId).eq('status','pending_payment');
     if(!error) await _promoteNotesToDriver(rideId);
     if(error) throw error;
+    _notifyRideConfirmed(rideId);
     closeModal('m-ar-detail');
     showToast('✅ Paiement confirmé — course confirmée');
     await loadAdminRides();
