@@ -8738,8 +8738,10 @@ window.adminSetStatus=async function(table, id, newStatus){
 window.adminSetFleetVerified=async function(fleetId, newStatus){
   if(!sb) return;
   try{
-    var {error}=await sb.from('profiles').update({fleet_verified:newStatus}).eq('id',fleetId);
+    var {data:updRows,error}=await sb.from('profiles').update({fleet_verified:newStatus}).eq('id',fleetId).select('id,fleet_verified');
     if(error) throw error;
+    // RLS silently filters the update (no error, 0 row) when the admin has no UPDATE right on profiles
+    if(!updRows||updRows.length===0) throw new Error('Mise \u00e0 jour refus\u00e9e par la base (droits RLS sur profiles)');
     showToast(newStatus==='validated'?'Fleet v\u00e9rifi\u00e9e !':'Statut mis \u00e0 jour');
     if(_adminFleetDetailId){
       await showFleetDetail(_adminFleetDetailId);
