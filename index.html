@@ -2021,7 +2021,8 @@ body{background:var(--bg);}
     <div class="modal-body" style="padding:20px 22px;">
       <div class="form-grid"><div class="input-group"><label>Marque <span style="color:var(--red)">*</span></label><select id="veh-brand" onchange="populateVehModels()"><option value="">-- Choisir --</option></select></div><div class="input-group"><label>Mod&egrave;le <span style="color:var(--red)">*</span></label><select id="veh-model"><option value="">-- Choisir une marque --</option></select></div></div>
       <div class="form-grid"><div class="input-group"><label>Ann&eacute;e</label><input id="veh-year" type="number" min="2000" max="2030" placeholder="2023"></div><div class="input-group"><label>Couleur</label><input id="veh-color" placeholder="Noir"></div></div>
-      <div class="form-grid"><div class="input-group"><label>Gamme <span style="color:var(--red)">*</span></label><select id="veh-class"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div><div class="input-group"><label>Plaque</label><input id="veh-plate" placeholder="T-ABC-123"></div></div>
+      <div class="form-grid"><div class="input-group"><label>Gamme <span style="color:var(--red)">*</span></label><select id="veh-class" onchange="_applyVehSeatsRule(true)"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div><div class="input-group"><label>Plaque</label><input id="veh-plate" placeholder="T-ABC-123"></div></div>
+      <div class="form-grid"><div class="input-group"><label>Places assises <span style="color:var(--red)">*</span></label><input id="veh-seats" type="number" min="1" step="1" inputmode="numeric" placeholder="ex. 3"></div><div></div></div>
       <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
         <div style="font-size:12px;font-weight:600;margin-bottom:10px;">&Eacute;quipements</div>
         <div style="display:flex;flex-wrap:wrap;gap:10px 18px;">
@@ -8078,6 +8079,30 @@ async function loadFleetVehicles(){
   }).join('');
 }
 
+// Seats rule per vehicle class:
+// lowcost: default 3, editable (min 3) | business/luxe: 3 fixed | van: 7 fixed | bus: free
+var _VEH_FIXED_SEATS={business:3, luxe:3, van:7};
+window._applyVehSeatsRule=function(reset){
+  var cls=document.getElementById('veh-class');
+  var seats=document.getElementById('veh-seats');
+  if(!cls||!seats)return;
+  var c=cls.value;
+  if(_VEH_FIXED_SEATS[c]){
+    seats.value=_VEH_FIXED_SEATS[c];
+    seats.readOnly=true; seats.min=_VEH_FIXED_SEATS[c];
+    seats.style.opacity='0.6'; seats.style.cursor='not-allowed';
+  } else {
+    seats.readOnly=false; seats.style.opacity=''; seats.style.cursor='';
+    if(c==='lowcost'){
+      seats.min=3;
+      if(reset || !(parseInt(seats.value,10)>=3)) seats.value=3;
+    } else {
+      seats.min=1;
+      if(reset) seats.value='';
+    }
+  }
+};
+
 window.openVehicleModal=function(){
   window._editVehicleId=null;
   window._editVehicleDocsOnly=false;
@@ -8091,6 +8116,8 @@ window.openVehicleModal=function(){
   var brand=document.getElementById('veh-brand');if(brand)brand.value='';
   populateVehModels();
   var cls=document.getElementById('veh-class');if(cls)cls.value='lowcost';
+  var seatsEl=document.getElementById('veh-seats');if(seatsEl){seatsEl.disabled=false;seatsEl.value='';}
+  _applyVehSeatsRule(true);
   ['veh-doc-cg','veh-doc-assurance','veh-doc-ct','veh-doc-vignette'].forEach(function(id){
     var e=document.getElementById(id);if(e){e.value='';e.style.display='';}
     if(e){var wrap=e.closest('.input-group');if(wrap){var tag=wrap.querySelector('.doc-exists-tag');if(tag)tag.remove();}}
@@ -8108,6 +8135,14 @@ window.saveVehicle=async function(){
   var vclass=document.getElementById('veh-class').value;
   var plate=(document.getElementById('veh-plate').value||'').trim();
   if(!brand||!model){showError(errEl,'Marque et mod\u00e8le sont requis');return;}
+  var seatsInp=document.getElementById('veh-seats');
+  var seatsLocked=!!(seatsInp&&seatsInp.disabled); // validated vehicle: seats not editable, keep stored value
+  var seats=parseInt(seatsInp?seatsInp.value:'',10);
+  if(!seatsLocked){
+    if(_VEH_FIXED_SEATS[vclass]) seats=_VEH_FIXED_SEATS[vclass];
+    if(!(seats>0)){showError(errEl,'Nombre de places assises requis');return;}
+    if(vclass==='lowcost'&&seats<3){showError(errEl,'Low-cost : minimum 3 places assises');return;}
+  }
   // Read amenities checkboxes
   var amenities=[];
   ['electric','hybrid','wifi','water','snacks'].forEach(function(a){
@@ -8117,10 +8152,12 @@ window.saveVehicle=async function(){
   try{
     var vehId=window._editVehicleId;
     if(vehId){
-      var {error}=await sb.from('fleet_vehicles').update({brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities}).eq('id',vehId);
+      var _vUpd={brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities};
+      if(!seatsLocked)_vUpd.seats=seats;
+      var {error}=await sb.from('fleet_vehicles').update(_vUpd).eq('id',vehId);
       if(error)throw error;
     } else {
-      var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities}).select().single();
+      var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities,seats:seats}).select().single();
       if(error)throw error;
       vehId=veh.id;
     }
@@ -8157,6 +8194,8 @@ window.editVehicle=async function(id, docsOnly){
   var setField=function(sid,val){var e=document.getElementById(sid);if(e){e.value=val||'';e.disabled=isValidated;}};
   setField('veh-year',v.year||'');setField('veh-color',v.color||'');setField('veh-plate',v.plate||'');
   var cls=document.getElementById('veh-class');if(cls){cls.value=v.vehicle_class||'lowcost';cls.disabled=isValidated;}
+  var seatsEl=document.getElementById('veh-seats');if(seatsEl){seatsEl.value=v.seats||'';seatsEl.disabled=isValidated;}
+  _applyVehSeatsRule(false);
   // Amenities
   var vAmen=v.amenities||[];
   ['electric','hybrid','wifi','water','snacks'].forEach(function(a){
