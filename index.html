@@ -9108,8 +9108,15 @@ window.saveAdminBilling=async function(){
     postal_code:v('bill-zip'), city:v('bill-city'), country:v('bill-country'),
     vat_number:v('bill-vat').replace(/[\s.]/g,'').toUpperCase()
   };
-  if(!row.company_name||!row.street||!row.postal_code||!row.city||!row.country||!row.vat_number){
-    showError(err,'Veuillez compl\u00e9ter les donn\u00e9es de facturation');return;
+  var _missing=[];
+  if(!row.company_name) _missing.push('raison sociale');
+  if(!row.street) _missing.push('rue et num\u00e9ro');
+  if(!row.postal_code) _missing.push('code postal');
+  if(!row.city) _missing.push('ville');
+  if(!row.country) _missing.push('pays');
+  if(!row.vat_number) _missing.push('num\u00e9ro de TVA');
+  if(_missing.length){
+    showError(err,'Donn\u00e9es de facturation Bleenr incompl\u00e8tes : '+_missing.join(', '));return;
   }
   // VAT per country
   var rates=[], seen={}, bad=false, dup=false;
