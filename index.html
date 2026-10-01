@@ -9032,10 +9032,21 @@ function _billingEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replac
 function _billingCountryOpts(sel){
   return _BILLING_COUNTRIES.map(function(c){return '<option value="'+c[0]+'"'+(c[0]===sel?' selected':'')+'>'+c[1]+'</option>';}).join('');
 }
-function _billingVatRow(country, rate){
-  return '<div class="billing-vat-row" style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">'
-    +'<select class="billing-vat-country" style="flex:1;">'+_billingCountryOpts(country||'BE')+'</select>'
-    +'<div style="display:flex;align-items:center;gap:6px;width:130px;"><input class="billing-vat-rate" type="number" min="0" max="100" step="0.01" value="'+(rate!=null?rate:'')+'" placeholder="6" style="width:90px;"><span style="font-size:13px;color:var(--ink3);">%</span></div>'
+function _billingRcLabel(cls, checked, onchange){
+  return '<label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink2);white-space:nowrap;cursor:pointer;">'
+    +'<input type="checkbox" class="'+cls+'"'+(checked?' checked':'')+' onchange="'+onchange+'"> Autoliquidation</label>';
+}
+// Reverse charge: rate forced to 0 % and locked
+window._billingApplyRc=function(cb, inp){
+  if(!cb||!inp)return;
+  if(cb.checked){ inp.value=0; inp.readOnly=true; inp.style.opacity='0.6'; }
+  else { inp.readOnly=false; inp.style.opacity=''; }
+};
+function _billingVatRow(country, rate, rc){
+  return '<div class="billing-vat-row" style="display:flex;gap:10px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">'
+    +'<select class="billing-vat-country" style="flex:1;min-width:140px;">'+_billingCountryOpts(country||'BE')+'</select>'
+    +'<div style="display:flex;align-items:center;gap:6px;width:130px;"><input class="billing-vat-rate" type="number" min="0" max="100" step="0.01" value="'+(rc?0:(rate!=null?rate:''))+'" placeholder="6" style="width:90px;'+(rc?'opacity:0.6;':'')+'"'+(rc?' readonly':'')+'><span style="font-size:13px;color:var(--ink3);">%</span></div>'
+    +_billingRcLabel('billing-vat-rc', rc, "_billingApplyRc(this,this.closest('.billing-vat-row').querySelector('.billing-vat-rate'))")
     +'<button type="button" class="btn btn-secondary btn-sm" onclick="this.closest(\'.billing-vat-row\').remove()" title="Supprimer" style="padding:6px 10px;">&times;</button>'
     +'</div>';
 }
@@ -9043,7 +9054,7 @@ window.addBillingVatRow=function(){
   var wrap=document.getElementById('billing-vat-rows'); if(!wrap)return;
   var used=Array.prototype.map.call(wrap.querySelectorAll('.billing-vat-country'),function(s){return s.value;});
   var next=_BILLING_COUNTRIES.find(function(c){return used.indexOf(c[0])<0;});
-  wrap.insertAdjacentHTML('beforeend',_billingVatRow(next?next[0]:'BE',''));
+  wrap.insertAdjacentHTML('beforeend',_billingVatRow(next?next[0]:'BE','',false));
 };
 
 async function loadAdminBilling(){
@@ -9070,13 +9081,14 @@ async function loadAdminBilling(){
       +'<div class="card" style="padding:22px;margin-bottom:16px;">'
         +'<div style="font-size:15px;font-weight:700;margin-bottom:4px;">TVA client \u2192 transporteur</div>'
         +'<div style="font-size:12px;color:var(--ink3);margin-bottom:16px;">Taux appliqu\u00e9 sur la facture du transporteur (chauffeur) au client, par pays.</div>'
-        +'<div id="billing-vat-rows">'+rates.map(function(r){return _billingVatRow(r.country,r.rate);}).join('')+'</div>'
+        +'<div id="billing-vat-rows">'+rates.map(function(r){return _billingVatRow(r.country,r.rate,!!r.reverse_charge);}).join('')+'</div>'
         +'<button type="button" class="btn btn-secondary btn-sm" onclick="addBillingVatRow()" style="margin-top:4px;">+ Ajouter un pays</button>'
       +'</div>'
       +'<div class="card" style="padding:22px;margin-bottom:16px;">'
         +'<div style="font-size:15px;font-weight:700;margin-bottom:4px;">TVA transporteur \u2192 Bleenr</div>'
         +'<div style="font-size:12px;color:var(--ink3);margin-bottom:16px;">Taux appliqu\u00e9 sur la facture de Bleenr au transporteur (chauffeur).</div>'
-        +'<div class="input-group" style="max-width:200px;"><label>Taux de TVA <span style="color:var(--red)">*</span></label><div style="display:flex;align-items:center;gap:6px;"><input id="bill-vat-platform" type="number" min="0" max="100" step="0.01" value="'+(s.vat_rate_carrier_platform!=null?s.vat_rate_carrier_platform:'')+'" placeholder="21" style="width:110px;"><span style="font-size:13px;color:var(--ink3);">%</span></div></div>'
+        +'<div class="input-group" style="max-width:200px;"><label>Taux de TVA <span style="color:var(--red)">*</span></label><div style="display:flex;align-items:center;gap:6px;"><input id="bill-vat-platform" type="number" min="0" max="100" step="0.01" value="'+(s.vat_reverse_charge_carrier_platform?0:(s.vat_rate_carrier_platform!=null?s.vat_rate_carrier_platform:''))+'" placeholder="21" style="width:110px;'+(s.vat_reverse_charge_carrier_platform?'opacity:0.6;':'')+'"'+(s.vat_reverse_charge_carrier_platform?' readonly':'')+'><span style="font-size:13px;color:var(--ink3);">%</span></div></div>'
+        +_billingRcLabel('', !!s.vat_reverse_charge_carrier_platform, "_billingApplyRc(this,document.getElementById('bill-vat-platform'))").replace('<input type="checkbox" class=""','<input type="checkbox" id="bill-vat-platform-rc"')
       +'</div>'
       +'<div id="billing-err" class="auth-error" style="margin-bottom:10px;"></div>'
       +'<button class="btn btn-primary" id="billing-save-btn" onclick="saveAdminBilling()">Enregistrer</button>';
@@ -9103,19 +9115,22 @@ window.saveAdminBilling=async function(){
   var rates=[], seen={}, bad=false, dup=false;
   document.querySelectorAll('#billing-vat-rows .billing-vat-row').forEach(function(r){
     var c=r.querySelector('.billing-vat-country').value;
-    var raw=r.querySelector('.billing-vat-rate').value;
+    var rc=!!r.querySelector('.billing-vat-rc')?.checked;
+    var raw=rc?'0':r.querySelector('.billing-vat-rate').value;
     var n=parseFloat(raw);
     if(raw===''||isNaN(n)||n<0||n>100){bad=true;return;}
     if(seen[c]){dup=true;return;}
-    seen[c]=1; rates.push({country:c, rate:n});
+    seen[c]=1; rates.push({country:c, rate:rc?0:n, reverse_charge:rc});
   });
   if(bad){showError(err,'Taux de TVA par pays : valeur entre 0 et 100 requise');return;}
   if(dup){showError(err,'Un pays est pr\u00e9sent plusieurs fois');return;}
   if(!rates.length){showError(err,'Ajoutez au moins un taux de TVA client \u2192 transporteur');return;}
   row.vat_rates_client_carrier=rates;
-  var pr=v('bill-vat-platform'), pn=parseFloat(pr);
+  var prc=!!document.getElementById('bill-vat-platform-rc')?.checked;
+  var pr=prc?'0':v('bill-vat-platform'), pn=parseFloat(pr);
   if(pr===''||isNaN(pn)||pn<0||pn>100){showError(err,'Taux de TVA transporteur \u2192 Bleenr : valeur entre 0 et 100 requise');return;}
-  row.vat_rate_carrier_platform=pn;
+  row.vat_rate_carrier_platform=prc?0:pn;
+  row.vat_reverse_charge_carrier_platform=prc;
   row.updated_at=new Date().toISOString();
   if(btn){btn.disabled=true;btn.textContent='Enregistrement...';}
   try{
