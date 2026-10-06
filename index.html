@@ -1768,8 +1768,8 @@ body{background:var(--bg);}
         <div><h1>Clients</h1><p>Tous les clients inscrits dans l&apos;application</p></div>
       </div>
       <div style="display:flex;gap:0;margin-bottom:16px;background:var(--sand2);border-radius:var(--r);padding:3px;width:fit-content;">
-        <button class="btn btn-sm admin-client-tab active" data-tab="pro" onclick="switchAdminClientTab('pro',this)" style="border:none;padding:7px 18px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);">Clients professionnels</button>
-        <button class="btn btn-sm admin-client-tab" data-tab="perso" onclick="switchAdminClientTab('perso',this)" style="border:none;padding:7px 18px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;background:transparent;color:var(--ink3);">Clients particuliers</button>
+        <button class="btn btn-sm admin-client-tab active" data-tab="pro" onclick="switchAdminClientTab('pro',this)" style="border:none;padding:7px 18px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);">Clients professionnels <span id="acl-count-pro" style="opacity:.7;"></span></button>
+        <button class="btn btn-sm admin-client-tab" data-tab="perso" onclick="switchAdminClientTab('perso',this)" style="border:none;padding:7px 18px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;background:transparent;color:var(--ink3);">Clients particuliers <span id="acl-count-perso" style="opacity:.7;"></span></button>
       </div>
       <div id="admin-clients-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
@@ -8944,6 +8944,71 @@ function renderAdminFleets(){
     +'</tbody></table></div></div>';
 }
 
+// ── Admin: edit fleet identity data (profiles) ──
+function _afEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+function _adminFleetEditForm(f){
+  var inp=function(id,label,val,ph,full){
+    return '<div class="input-group'+(full?' full':'')+'"><label>'+label+'</label><input id="'+id+'" value="'+_afEsc(val)+'" placeholder="'+ph+'"></div>';
+  };
+  return '<div id="af-edit" style="display:none;border-top:1px solid var(--sand2);padding-top:16px;">'
+    +'<div class="form-grid">'
+      +inp('af-company','Nom de soci\u00e9t\u00e9',f.company_name,'Goodrivers SRL')
+      +inp('af-vat','Num\u00e9ro de TVA',f.vat_number,'BE0123456789')
+      +inp('af-fname','Pr\u00e9nom (contact)',f.first_name,'Jean')
+      +inp('af-lname','Nom (contact)',f.last_name,'Dupont')
+      +inp('af-phone','T\u00e9l\u00e9phone',f.phone,'+32 4xx xx xx xx')
+      +'<div class="input-group"><label>Email</label><input value="'+_afEsc(f.email)+'" disabled style="opacity:.6;cursor:not-allowed;" title="L\u2019email de connexion ne peut pas \u00eatre modifi\u00e9 ici"></div>'
+      +inp('af-street','Rue et num\u00e9ro',f.address_street,'Avenue Louise 54',true)
+      +inp('af-postal','Code postal',f.address_postal,'1050')
+      +inp('af-city','Ville',f.address_city,'Bruxelles')
+      +'<div class="input-group"><label>Pays</label><select id="af-country" data-val="'+_afEsc(f.address_country)+'"></select></div>'
+    +'</div>'
+    +'<div id="af-err" class="auth-error" style="margin-bottom:10px;"></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+      +'<button class="btn btn-secondary btn-sm" onclick="adminToggleFleetEdit(false)">Annuler</button>'
+      +'<button class="btn btn-primary btn-sm" id="af-save" onclick="adminSaveFleetIdentity()">Enregistrer</button>'
+    +'</div></div>';
+}
+window.adminToggleFleetEdit=function(show){
+  var el=document.getElementById('af-edit'); if(!el) return;
+  var open = (show===undefined) ? el.style.display==='none' : !!show;
+  el.style.display = open ? 'block' : 'none';
+  if(open){
+    // Same country list as the profile screen
+    var sel=document.getElementById('af-country'), src=document.getElementById('pf-country');
+    if(sel && !sel.options.length){
+      sel.innerHTML='<option value="">\u2014</option>'+(src?src.innerHTML:'');
+      var v=sel.dataset.val||'';
+      if(v && !Array.prototype.some.call(sel.options,function(o){return o.value===v;})) sel.insertAdjacentHTML('beforeend','<option value="'+_afEsc(v)+'">'+_afEsc(v)+'</option>');
+      sel.value=v;
+    }
+  }
+};
+window.adminSaveFleetIdentity=async function(){
+  var id=_adminFleetDetailId; if(!id||!sb) return;
+  var err=document.getElementById('af-err'), btn=document.getElementById('af-save');
+  var g=function(k){return (document.getElementById(k)?.value||'').trim();};
+  if(err) err.classList.remove('show');
+  var upd={
+    company_name:g('af-company')||null, vat_number:g('af-vat')||null,
+    first_name:g('af-fname')||null, last_name:g('af-lname')||null, phone:g('af-phone')||null,
+    address_street:g('af-street')||null, address_postal:g('af-postal')||null,
+    address_city:g('af-city')||null, address_country:g('af-country')||null
+  };
+  if(!upd.company_name && !upd.first_name && !upd.last_name){ showError(err,'Indiquez au moins un nom de soci\u00e9t\u00e9 ou un contact'); return; }
+  if(btn){ btn.disabled=true; btn.textContent='Enregistrement...'; }
+  try{
+    var {data:rows,error}=await sb.from('profiles').update(upd).eq('id',id).select('id');
+    if(error) throw error;
+    if(!rows||!rows.length) throw new Error('Mise \u00e0 jour refus\u00e9e par la base (droits RLS sur profiles)');
+    showToast('\u2705 Donn\u00e9es de la fleet mises \u00e0 jour');
+    await showFleetDetail(id);
+  }catch(e){
+    showError(err,'Erreur : '+(e.message||e));
+    if(btn){ btn.disabled=false; btn.textContent='Enregistrer'; }
+  }
+};
+
 window.showFleetDetail=async function(fleetId){
   if(!sb) return;
   _adminFleetDetailId=fleetId;
@@ -8996,8 +9061,11 @@ window.showFleetDetail=async function(fleetId){
       +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">'
       +'<div><div style="font-size:18px;font-weight:700;color:var(--ink);">'+name+'</div>'
       +'<div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+(fleet.email||'\u2014')+' &middot; '+(fleet.phone||'\u2014')+'</div></div>'
-      +'<div style="display:flex;align-items:center;">'+globalStatusBadge+globalBtn+'</div>'
-      +'</div></div>';
+      +'<div style="display:flex;align-items:center;">'+globalStatusBadge+globalBtn
+        +'<button class="btn btn-secondary btn-sm" style="font-size:12px;padding:5px 14px;margin-left:8px;" onclick="adminToggleFleetEdit()">Modifier</button></div>'
+      +'</div>'
+      +_adminFleetEditForm(fleet)
+      +'</div>';
 
     var docLabels={licence_lvc:'Licence LVC',assurance_rc:'Assurance RC Pro',kbis:'Extrait Kbis/BCE',statuts:'Statuts',autre:'Autre'};
 
@@ -9256,6 +9324,9 @@ async function loadAdminClients(){
     var {data,error}=await sb.from('profiles').select('*').eq('role','client').order('created_at',{ascending:false});
     if(error) throw error;
     _adminClientsData=data||[];
+    var _nPro=_adminClientsData.filter(function(c){return c.client_type==='pro';}).length;
+    var _cp=document.getElementById('acl-count-pro'); if(_cp) _cp.textContent='('+_nPro+')';
+    var _cs=document.getElementById('acl-count-perso'); if(_cs) _cs.textContent='('+(_adminClientsData.length-_nPro)+')';
     renderAdminClients();
   }catch(e){el.innerHTML='<div class="card" style="padding:24px;color:var(--red);font-size:13px;">Erreur: '+(e.message||e)+'</div>';}
 }
