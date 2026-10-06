@@ -1992,6 +1992,17 @@ body{background:var(--bg);}
 </div>
 
 <!-- Submit Offer (driver) -->
+<div class="modal-overlay" id="m-admin-client">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-title" id="mac-title">Modifier le client</span><button class="close-btn" onclick="closeModal('m-admin-client')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+    <div class="modal-body" id="mac-body"></div>
+    <div class="modal-ft">
+      <button class="btn btn-secondary" onclick="closeModal('m-admin-client')">Annuler</button>
+      <button class="btn btn-primary" id="mac-save" onclick="adminSaveClient()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="m-submit-offer">
   <div class="modal">
     <div class="modal-hd"><span class="modal-title">Soumettre une offre</span><button class="close-btn" onclick="closeModal('m-submit-offer')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
@@ -9318,6 +9329,66 @@ window.saveAdminBilling=async function(){
   }
 };
 
+// ── Admin: edit client identity data ──
+var _adminEditClientId=null;
+window.adminEditClient=function(id){
+  var c=(_adminClientsData||[]).find(function(x){return x.id===id;}); if(!c) return;
+  _adminEditClientId=id;
+  var isPro=c.client_type==='pro';
+  var inp=function(fid,label,val,ph,full,req){
+    return '<div class="input-group'+(full?' full':'')+'"><label>'+label+(req?' <span style="color:var(--red)">*</span>':'')+'</label><input id="'+fid+'" value="'+_afEsc(val)+'" placeholder="'+ph+'"></div>';
+  };
+  document.getElementById('mac-title').textContent='Modifier le client '+(isPro?'professionnel':'particulier');
+  document.getElementById('mac-body').innerHTML=
+    '<div class="form-grid">'
+      +(isPro?inp('mac-company','Nom de soci\u00e9t\u00e9',c.company_name,'Acme SA',false,true)+inp('mac-vat','Num\u00e9ro de TVA',c.vat_number,'BE0123456789'):'')
+      +inp('mac-fname',isPro?'Pr\u00e9nom (contact)':'Pr\u00e9nom',c.first_name,'Jean',false,!isPro)
+      +inp('mac-lname',isPro?'Nom (contact)':'Nom',c.last_name,'Dupont')
+      +inp('mac-phone','T\u00e9l\u00e9phone',c.phone,'+32 4xx xx xx xx')
+      +'<div class="input-group"><label>Email</label><input value="'+_afEsc(c.email)+'" disabled style="opacity:.6;cursor:not-allowed;" title="L\u2019email de connexion ne peut pas \u00eatre modifi\u00e9 ici"></div>'
+      +inp('mac-street','Rue et num\u00e9ro',c.address_street,'Avenue Louise 54',true)
+      +inp('mac-postal','Code postal',c.address_postal,'1050')
+      +inp('mac-city','Ville',c.address_city,'Bruxelles')
+      +'<div class="input-group"><label>Pays</label><select id="mac-country"></select></div>'
+    +'</div>'
+    +'<div id="mac-err" class="auth-error"></div>';
+  var sel=document.getElementById('mac-country'), src=document.getElementById('pf-country');
+  sel.innerHTML='<option value="">\u2014</option>'+(src?src.innerHTML:'');
+  var v=c.address_country||'';
+  if(v && !Array.prototype.some.call(sel.options,function(o){return o.value===v;})) sel.insertAdjacentHTML('beforeend','<option value="'+_afEsc(v)+'">'+_afEsc(v)+'</option>');
+  sel.value=v;
+  var b=document.getElementById('mac-save'); if(b){ b.disabled=false; b.textContent='Enregistrer'; }
+  openModal('m-admin-client');
+};
+window.adminSaveClient=async function(){
+  var id=_adminEditClientId; if(!id||!sb) return;
+  var c=(_adminClientsData||[]).find(function(x){return x.id===id;})||{};
+  var isPro=c.client_type==='pro';
+  var err=document.getElementById('mac-err'), btn=document.getElementById('mac-save');
+  var g=function(k){return (document.getElementById(k)?.value||'').trim();};
+  if(err) err.classList.remove('show');
+  var upd={
+    first_name:g('mac-fname')||null, last_name:g('mac-lname')||null, phone:g('mac-phone')||null,
+    address_street:g('mac-street')||null, address_postal:g('mac-postal')||null,
+    address_city:g('mac-city')||null, address_country:g('mac-country')||null
+  };
+  if(isPro){ upd.company_name=g('mac-company')||null; upd.vat_number=g('mac-vat')||null; }
+  if(isPro && !upd.company_name){ showError(err,'Nom de soci\u00e9t\u00e9 requis'); return; }
+  if(!isPro && !upd.first_name){ showError(err,'Pr\u00e9nom requis'); return; }
+  if(btn){ btn.disabled=true; btn.textContent='Enregistrement...'; }
+  try{
+    var {data:rows,error}=await sb.from('profiles').update(upd).eq('id',id).select('id');
+    if(error) throw error;
+    if(!rows||!rows.length) throw new Error('Mise \u00e0 jour refus\u00e9e par la base (droits RLS sur profiles)');
+    closeModal('m-admin-client');
+    showToast('\u2705 Donn\u00e9es du client mises \u00e0 jour');
+    await loadAdminClients();
+  }catch(e){
+    showError(err,'Erreur : '+(e.message||e));
+    if(btn){ btn.disabled=false; btn.textContent='Enregistrer'; }
+  }
+};
+
 async function loadAdminClients(){
   var el=document.getElementById('admin-clients-list');if(!el||!sb)return;
   try{
@@ -9355,7 +9426,7 @@ function renderAdminClients(){
     +filtered.map(function(c){
       var fullName=((c.first_name||'')+' '+(c.last_name||'')).trim()||'\u2014';
       var dateStr=c.created_at?new Date(c.created_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'\u2014';
-      return '<tr style="border-bottom:1px solid var(--sand2);">'
+      return '<tr style="border-bottom:1px solid var(--sand2);cursor:pointer;" onclick="adminEditClient(\''+c.id+'\')" title="Modifier les donn\u00e9es du client" onmouseover="this.style.background=\'var(--sand2)\'" onmouseout="this.style.background=\'\'">'
         +(isPro?'<td style="padding:10px 14px;font-weight:500;">'+(c.company_name||'\u2014')+'</td>':'')
         +'<td style="padding:10px 14px;'+(isPro?'font-size:12px;color:var(--ink3);':'font-weight:500;')+'">'+fullName+'</td>'
         +'<td style="padding:10px 14px;font-size:12px;color:var(--ink3);">'+(c.email||'\u2014')+'</td>'
