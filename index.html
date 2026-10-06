@@ -2668,6 +2668,11 @@ async function loadProfile(){
     if(currentUser.phone && data.phone !== currentUser.phone){ updates.phone = currentUser.phone; currentProfile.phone = currentUser.phone; }
     var meta2 = currentUser.user_metadata || {};
     if(!data.role && meta2.role){ updates.role = meta2.role; currentProfile.role = meta2.role; }
+    // Admin account is never a client (an admin acting as fleet keeps role "driver")
+    if(currentUser.email === ADMIN_EMAIL && (!currentProfile.role || currentProfile.role === 'client')){
+      updates.role = 'admin'; updates.client_type = null;
+      currentProfile.role = 'admin'; currentProfile.client_type = null;
+    }
     if(!data.client_type && meta2.client_type){ updates.client_type = meta2.client_type; currentProfile.client_type = meta2.client_type; }
     if(!data.first_name && meta2.first_name){ updates.first_name = meta2.first_name; currentProfile.first_name = meta2.first_name; }
     if(!data.last_name && meta2.last_name){ updates.last_name = meta2.last_name; currentProfile.last_name = meta2.last_name; }
@@ -2678,7 +2683,8 @@ async function loadProfile(){
   } else {
     // Profile doesn't exist — create it (e.g. Google OAuth first login)
     var meta = currentUser.user_metadata || {};
-    var metaRole2 = meta.role || 'client';
+    var _isAdminAcc = currentUser.email === ADMIN_EMAIL;
+    var metaRole2 = _isAdminAcc ? 'admin' : (meta.role || 'client');
     var newProfile = {
       id: currentUser.id,
       email: currentUser.email || null,
@@ -2693,7 +2699,7 @@ async function loadProfile(){
       var {data:created} = await sb.from('profiles').insert(newProfile).select().single();
       currentProfile = created || newProfile;
       // First OAuth login = account creation → welcome email
-      if(created && created.email){
+      if(created && created.email && !_isAdminAcc){
         window.sendMail(metaRole2==='driver' ? 'welcome_driver' : 'welcome_client', created.email, {
           name: created.first_name || '',
           isPro: created.client_type==='pro' ? 'yes' : 'no'
@@ -9032,35 +9038,23 @@ function _billingEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replac
 function _billingCountryOpts(sel){
   return _BILLING_COUNTRIES.map(function(c){return '<option value="'+c[0]+'"'+(c[0]===sel?' selected':'')+'>'+c[1]+'</option>';}).join('');
 }
-function _billingRcLabel(cls, checked, onchange){
-  return '<label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink2);white-space:nowrap;cursor:pointer;margin:0;">'
-    +'<input type="checkbox" class="'+cls+'"'+(checked?' checked':'')+' onchange="'+onchange+'" style="width:16px;height:16px;padding:0;margin:0;flex-shrink:0;cursor:pointer;"> Autoliquidation</label>';
-}
-// Reverse charge: rate forced to 0 % and locked
 // Bleenr -> carrier VAT: checked = 0 % locked ; unchecked = editable, a non-zero rate is required
 window._billingApplyPlatformRc=function(cb){
   var inp=document.getElementById('bill-vat-platform'); if(!cb||!inp)return;
   if(cb.checked){ inp.value=0; inp.readOnly=true; inp.style.opacity='0.6'; inp.style.cursor='not-allowed'; }
   else { inp.readOnly=false; inp.style.opacity=''; inp.style.cursor=''; if(parseFloat(inp.value)===0) inp.value=''; inp.focus(); }
 };
-window._billingApplyRc=function(cb, inp){
-  if(!cb||!inp)return;
-  if(cb.checked){ inp.value=0; inp.readOnly=true; inp.style.opacity='0.6'; }
-  else { inp.readOnly=false; inp.style.opacity=''; }
-};
-function _billingVatRow(country, rate, rc){
+function _billingVatRow(country, rate){
   return '<div class="billing-vat-row" style="display:flex;gap:10px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">'
     +'<select class="billing-vat-country" style="flex:1;min-width:140px;">'+_billingCountryOpts(country||'BE')+'</select>'
-    +'<div style="display:flex;align-items:center;gap:6px;width:130px;"><input class="billing-vat-rate" type="number" min="0" max="100" step="0.01" value="'+(rc?0:(rate!=null?rate:''))+'" placeholder="6" style="width:90px;'+(rc?'opacity:0.6;':'')+'"'+(rc?' readonly':'')+'><span style="font-size:13px;color:var(--ink3);">%</span></div>'
-    +_billingRcLabel('billing-vat-rc', rc, "_billingApplyRc(this,this.closest('.billing-vat-row').querySelector('.billing-vat-rate'))")
-    +'<button type="button" class="btn btn-secondary btn-sm" onclick="this.closest(\'.billing-vat-row\').remove()" title="Supprimer" style="padding:6px 10px;">&times;</button>'
+    +'<div style="display:flex;align-items:center;gap:6px;width:130px;"><input class="billing-vat-rate" type="number" min="0" max="100" step="0.01" value="'+(rate!=null?rate:'')+'" placeholder="6" style="width:90px;"><span style="font-size:13px;color:var(--ink3);">%</span></div>'
     +'</div>';
 }
 window.addBillingVatRow=function(){
   var wrap=document.getElementById('billing-vat-rows'); if(!wrap)return;
   var used=Array.prototype.map.call(wrap.querySelectorAll('.billing-vat-country'),function(s){return s.value;});
   var next=_BILLING_COUNTRIES.find(function(c){return used.indexOf(c[0])<0;});
-  wrap.insertAdjacentHTML('beforeend',_billingVatRow(next?next[0]:'BE','',false));
+  wrap.insertAdjacentHTML('beforeend',_billingVatRow(next?next[0]:'BE',''));
 };
 
 async function loadAdminBilling(){
@@ -9087,7 +9081,7 @@ async function loadAdminBilling(){
       +'<div class="card" style="padding:22px;margin-bottom:16px;">'
         +'<div style="font-size:15px;font-weight:700;margin-bottom:4px;">TVA client \u2192 transporteur</div>'
         +'<div style="font-size:12px;color:var(--ink3);margin-bottom:16px;">Taux appliqu\u00e9 sur la facture du transporteur (chauffeur) au client, par pays.</div>'
-        +'<div id="billing-vat-rows">'+rates.map(function(r){return _billingVatRow(r.country,r.rate,!!r.reverse_charge);}).join('')+'</div>'
+        +'<div id="billing-vat-rows">'+rates.map(function(r){return _billingVatRow(r.country,r.rate);}).join('')+'</div>'
         +'<button type="button" class="btn btn-secondary btn-sm" onclick="addBillingVatRow()" style="margin-top:4px;">+ Ajouter un pays</button>'
       +'</div>'
       +'<div class="card" style="padding:22px;margin-bottom:16px;">'
@@ -9132,12 +9126,11 @@ window.saveAdminBilling=async function(){
   var rates=[], seen={}, bad=false, dup=false;
   document.querySelectorAll('#billing-vat-rows .billing-vat-row').forEach(function(r){
     var c=r.querySelector('.billing-vat-country').value;
-    var rc=!!r.querySelector('.billing-vat-rc')?.checked;
-    var raw=rc?'0':r.querySelector('.billing-vat-rate').value;
+    var raw=r.querySelector('.billing-vat-rate').value;
     var n=parseFloat(raw);
     if(raw===''||isNaN(n)||n<0||n>100){bad=true;return;}
     if(seen[c]){dup=true;return;}
-    seen[c]=1; rates.push({country:c, rate:rc?0:n, reverse_charge:rc});
+    seen[c]=1; rates.push({country:c, rate:n});
   });
   if(bad){showError(err,'Taux de TVA par pays : valeur entre 0 et 100 requise');return;}
   if(dup){showError(err,'Un pays est pr\u00e9sent plusieurs fois');return;}
