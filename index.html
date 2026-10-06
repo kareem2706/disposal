@@ -3247,7 +3247,8 @@ function enterApp(){
   const ln = currentProfile?.last_name || '';
   const co = currentProfile?.company_name || '';
   var isPro = role==='client' && currentProfile?.client_type==='pro';
-  var navDisplayName = isPro
+  // Pro clients and fleets are shown by their company name
+  var navDisplayName = (isPro || role==='driver')
     ? (co || (fn+' '+ln).trim() || currentUser?.email?.split('@')[0] || '—')
     : ((fn || (fn+' '+ln).trim()) || currentUser?.email?.split('@')[0] || '—');
   document.getElementById('nav-name').textContent = navDisplayName;
