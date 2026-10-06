@@ -2658,6 +2658,16 @@ async function checkSession(){
   }
 }
 
+// Role chosen before an OAuth sign-up (valid 30 min)
+function _takePendingRole(){
+  try{
+    var p = JSON.parse(localStorage.getItem('bleenr_pending_role')||'null');
+    localStorage.removeItem('bleenr_pending_role');
+    if(p && p.role && (Date.now()-(p.ts||0)) < 30*60*1000) return p;
+  }catch(e){}
+  return null;
+}
+
 async function loadProfile(){
   if(!sb || !currentUser) return;
   const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
@@ -2668,6 +2678,30 @@ async function loadProfile(){
     if(currentUser.phone && data.phone !== currentUser.phone){ updates.phone = currentUser.phone; currentProfile.phone = currentUser.phone; }
     var meta2 = currentUser.user_metadata || {};
     if(!data.role && meta2.role){ updates.role = meta2.role; currentProfile.role = meta2.role; }
+    // ── Sign-up choice (client perso / client pro / fleet), applied once ──
+    // Covers a profile pre-created with defaults (DB trigger) for email, Google or Microsoft sign-ups.
+    var _pend = _takePendingRole();
+    var _intent = meta2.role ? { role: meta2.role, client_type: meta2.client_type, company_name: meta2.company_name }
+                             : (_pend ? { role: _pend.role, client_type: _pend.client_type, company_name: _pend.company_name } : null);
+    var _ageMs = data.created_at ? (Date.now() - new Date(data.created_at).getTime()) : 0;
+    if(currentUser.email !== ADMIN_EMAIL && !meta2.signup_synced && _ageMs < 7*24*3600*1000){
+      if(_intent && (_intent.role === 'client' || _intent.role === 'driver')){
+        var _ct = _intent.role === 'driver' ? null : (_intent.client_type === 'pro' ? 'pro' : 'perso');
+        if(currentProfile.role !== _intent.role){ updates.role = _intent.role; currentProfile.role = _intent.role; }
+        if(currentProfile.client_type !== _ct){ updates.client_type = _ct; currentProfile.client_type = _ct; }
+        if(!data.company_name && _intent.company_name){ updates.company_name = _intent.company_name; currentProfile.company_name = _intent.company_name; }
+        try{ sb.auth.updateUser({ data: { role: _intent.role, client_type: _ct, signup_synced: true } }); }catch(e){}
+        // OAuth sign-up on a pre-created profile: welcome email not sent yet
+        if(!meta2.role && _pend && _ageMs < 30*60*1000 && currentUser.email){
+          window.sendMail(_intent.role==='driver' ? 'welcome_driver' : 'welcome_client', currentUser.email, {
+            name: currentProfile.first_name || '', isPro: _ct==='pro' ? 'yes' : 'no'
+          });
+        }
+      } else if(!_intent && _ageMs < 30*60*1000){
+        // Brand-new account with no choice made (e.g. Google from the login tab): ask before entering
+        window._needsRoleChoice = true;
+      }
+    }
     // Admin account is never a client (an admin acting as fleet keeps role "driver")
     if(currentUser.email === ADMIN_EMAIL && (!currentProfile.role || currentProfile.role === 'client')){
       updates.role = 'admin'; updates.client_type = null;
@@ -2684,6 +2718,19 @@ async function loadProfile(){
     // Profile doesn't exist — create it (e.g. Google OAuth first login)
     var meta = currentUser.user_metadata || {};
     var _isAdminAcc = currentUser.email === ADMIN_EMAIL;
+    var _pendNew = _takePendingRole();
+    if(!meta.role && _pendNew){
+      meta = Object.assign({}, meta, { role: _pendNew.role, client_type: _pendNew.client_type, company_name: meta.company_name || _pendNew.company_name });
+    }
+    if(!_isAdminAcc && !meta.role){
+      // No sign-up choice known: let the user pick client perso / client pro / fleet first
+      window._needsRoleChoice = true;
+      currentProfile = { id: currentUser.id, email: currentUser.email || null };
+      return;
+    }
+    if(!_isAdminAcc){
+      try{ sb.auth.updateUser({ data: { role: meta.role, client_type: meta.role==='driver' ? null : (meta.client_type||'perso'), signup_synced: true } }); }catch(e){}
+    }
     var metaRole2 = _isAdminAcc ? 'admin' : (meta.role || 'client');
     var newProfile = {
       id: currentUser.id,
@@ -2691,7 +2738,7 @@ async function loadProfile(){
       first_name: meta.first_name || (meta.full_name ? meta.full_name.split(' ')[0] : (meta.name||'').split(' ')[0]) || null,
       last_name: meta.last_name || (meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : (meta.name||'').split(' ').slice(1).join(' ')) || null,
       role: metaRole2,
-      client_type: meta.client_type || (metaRole2==='client' ? 'perso' : null),
+      client_type: metaRole2==='client' ? (meta.client_type==='pro' ? 'pro' : 'perso') : null,
       company_name: meta.company_name || null,
       avatar_url: meta.avatar_url || meta.picture || null,
     };
@@ -2710,6 +2757,70 @@ async function loadProfile(){
     }
   }
 }
+
+// ── FIRST LOGIN WITHOUT SIGN-UP CHOICE: client perso / client pro / fleet ──
+var _rcChoice = null;
+function _showRoleChoice(){
+  var _l=document.getElementById('app-loader');if(_l)_l.style.display='none';
+  if(document.getElementById('role-choice-overlay')) return;
+  var card=function(id,label,sub){
+    return '<div class="role-opt" id="rc-'+id+'" onclick="_pickRoleChoice(\''+id+'\')" style="cursor:pointer;">'
+      +'<div class="role-opt-label">'+label+'</div><div style="font-size:12px;color:var(--ink3);margin-top:4px;">'+sub+'</div></div>';
+  };
+  var ov=document.createElement('div');
+  ov.id='role-choice-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:10000;background:var(--sand,#F4F0E8);display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto;';
+  ov.innerHTML='<div style="width:100%;max-width:520px;">'
+    +'<div style="font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#5A7A5A;margin-bottom:10px;">Finaliser votre inscription</div>'
+    +'<div style="font-size:26px;font-weight:600;margin-bottom:18px;">Vous &ecirc;tes</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">'
+      +card('perso','Particulier','Client')+card('pro','Professionnel','Client')+card('driver','Fleet','Chauffeur / flotte')
+    +'</div>'
+    +'<div id="rc-company-wrap" class="input-group" style="display:none;"><label>Nom de soci\u00e9t\u00e9</label><input id="rc-company" placeholder="Acme SA" autocomplete="organization"></div>'
+    +'<div id="rc-err" class="auth-error" style="margin-bottom:10px;"></div>'
+    +'<button class="btn btn-primary btn-full" id="rc-btn" onclick="_submitRoleChoice()">Continuer \u2192</button>'
+    +'<div style="text-align:center;margin-top:14px;"><button onclick="window._needsRoleChoice=false;document.getElementById(\'role-choice-overlay\')?.remove();signOut();" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink3);text-decoration:underline;">Se d\u00e9connecter</button></div>'
+    +'</div>';
+  document.body.appendChild(ov);
+}
+window._pickRoleChoice=function(id){
+  _rcChoice=id;
+  ['perso','pro','driver'].forEach(function(k){ var e=document.getElementById('rc-'+k); if(e) e.classList.toggle('active', k===id); });
+  var w=document.getElementById('rc-company-wrap'); if(w) w.style.display=(id==='pro'||id==='driver')?'block':'none';
+};
+window._submitRoleChoice=async function(){
+  var err=document.getElementById('rc-err'), btn=document.getElementById('rc-btn');
+  if(err) err.classList.remove('show');
+  if(!_rcChoice){ showError(err,'Choisissez un type de compte'); return; }
+  var role=_rcChoice==='driver'?'driver':'client';
+  var ct=role==='driver'?null:_rcChoice;
+  var company=(document.getElementById('rc-company')?.value||'').trim();
+  if(ct==='pro' && !company){ showError(err,'Nom de soci\u00e9t\u00e9 requis'); return; }
+  if(btn){ btn.disabled=true; btn.textContent='Enregistrement...'; }
+  try{
+    var meta=currentUser.user_metadata||{};
+    var row={ id:currentUser.id, email:currentUser.email||null, role:role, client_type:ct, company_name:company||null };
+    if(role==='driver' || ct==='pro'){ row.first_name=company||null; row.last_name=null; }
+    else {
+      row.first_name=meta.first_name || (meta.full_name ? meta.full_name.split(' ')[0] : (meta.name||'').split(' ')[0]) || null;
+      row.last_name=meta.last_name || (meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : (meta.name||'').split(' ').slice(1).join(' ')) || null;
+    }
+    if(meta.avatar_url||meta.picture) row.avatar_url=meta.avatar_url||meta.picture;
+    var {data:saved,error}=await sb.from('profiles').upsert(row).select().single();
+    if(error) throw error;
+    currentProfile=saved||row;
+    try{ await sb.auth.updateUser({ data:{ role:role, client_type:ct, company_name:company||null, signup_synced:true } }); }catch(e){}
+    if(currentUser.email){
+      window.sendMail(role==='driver'?'welcome_driver':'welcome_client', currentUser.email, { name: currentProfile.first_name||'', isPro: ct==='pro'?'yes':'no' });
+    }
+    window._needsRoleChoice=false;
+    document.getElementById('role-choice-overlay')?.remove();
+    enterApp();
+  }catch(e){
+    showError(err,'Erreur : '+(e.message||e));
+    if(btn){ btn.disabled=false; btn.textContent='Continuer \u2192'; }
+  }
+};
 
 // ── SCREENS ───────────────────────────────────────────
 function showScreen(name){
@@ -2840,7 +2951,7 @@ window.submitEmailReg = async function(){
   if(btn) setLoading(btn,false,'Créer le compte →');
   if(error){ if(errEl){errEl.textContent=error.message;errEl.classList.add('show');} return; }
   if(data?.user){
-    var profileData = {id:data.user.id, email:email, role:role, client_type:clientType||'perso', first_name:fname||null, last_name:lname||null, company_name:company||null};
+    var profileData = {id:data.user.id, email:email, role:role, client_type:role==='driver' ? null : (clientType||'perso'), first_name:fname||null, last_name:lname||null, company_name:company||null};
     try{ await sb.from('profiles').upsert(profileData); }catch(ex){ console.warn('profile upsert error',ex); }
     // Welcome email — sent after the profile exists so the recipient check passes
     try{
@@ -2970,6 +3081,21 @@ window.ssoAuth = async function(provider){
   document.getElementById('auth-main').style.display = 'none';
   document.getElementById('auth-sso').style.display = 'block';
   document.getElementById('sso-msg').textContent = 'Redirection vers ' + provider.charAt(0).toUpperCase() + provider.slice(1) + '…';
+  // OAuth sign-up: the provider returns no role, so keep the choice made on the register screen
+  try{
+    if(_authCurrentMode==='register'){
+      localStorage.setItem('bleenr_pending_role', JSON.stringify({
+        role: _authSelectedRole||'client',
+        client_type: (_authSelectedRole==='driver') ? null : (_regClientType||'perso'),
+        company_name: ((_authSelectedRole==='driver'
+          ? document.getElementById('inp-company-driver')?.value
+          : (_regClientType==='pro' ? document.getElementById('inp-company-client')?.value : '')) || '').trim() || null,
+        ts: Date.now()
+      }));
+    } else {
+      localStorage.removeItem('bleenr_pending_role');
+    }
+  }catch(e){}
 
   const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + window.location.pathname, ...(provider==='azure' ? {scopes:'email profile openid'} : {}) }});
   if(error){
@@ -3125,6 +3251,7 @@ async function loadMyOffers(){
 
 function enterApp(){
   console.log('[enterApp] called, _entering=',_entering);
+  if(window._needsRoleChoice){ _showRoleChoice(); return; }
   if(_entering)return; _entering=true;
   var _l=document.getElementById('app-loader');if(_l)_l.style.display='none';
   showScreen('app');
