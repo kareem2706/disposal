@@ -2659,13 +2659,34 @@ async function checkSession(){
 }
 
 // Role chosen before an OAuth sign-up (valid 30 min)
+// Read only: loadProfile can run twice during a login, the value is cleared once applied
 function _takePendingRole(){
   try{
     var p = JSON.parse(localStorage.getItem('bleenr_pending_role')||'null');
-    localStorage.removeItem('bleenr_pending_role');
     if(p && p.role && (Date.now()-(p.ts||0)) < 30*60*1000) return p;
+    localStorage.removeItem('bleenr_pending_role');
   }catch(e){}
   return null;
+}
+function _clearPendingRole(){ try{ localStorage.removeItem('bleenr_pending_role'); }catch(e){} }
+
+// Persists the sign-up role and checks it really landed in the database.
+// RPC apply_signup_role (security definer) bypasses RLS rules that block a user from changing his own role.
+async function _applySignupRole(role, clientType, company){
+  var ct = role==='driver' ? null : (clientType==='pro' ? 'pro' : 'perso');
+  try{
+    var r = await sb.rpc('apply_signup_role', { p_role: role, p_client_type: ct, p_company: company||null });
+    if(!r.error && r.data === role) return true;
+    if(r.error) console.warn('[signup role] rpc', r.error.message);
+  }catch(e){ console.warn('[signup role] rpc', e); }
+  try{
+    var upd = { role: role, client_type: ct };
+    if(company) upd.company_name = company;
+    var u = await sb.from('profiles').update(upd).eq('id', currentUser.id).select('role').maybeSingle();
+    if(!u.error && u.data && u.data.role === role) return true;
+    console.warn('[signup role] update refused', u.error ? u.error.message : 'role unchanged (RLS)');
+  }catch(e){ console.warn('[signup role] update', e); }
+  return false;
 }
 
 async function loadProfile(){
@@ -2687,19 +2708,19 @@ async function loadProfile(){
     if(currentUser.email !== ADMIN_EMAIL && !meta2.signup_synced && _ageMs < 7*24*3600*1000){
       if(_intent && (_intent.role === 'client' || _intent.role === 'driver')){
         var _ct = _intent.role === 'driver' ? null : (_intent.client_type === 'pro' ? 'pro' : 'perso');
-        if(currentProfile.role !== _intent.role){ updates.role = _intent.role; currentProfile.role = _intent.role; }
-        if(currentProfile.client_type !== _ct){ updates.client_type = _ct; currentProfile.client_type = _ct; }
-        if(!data.company_name && _intent.company_name){ updates.company_name = _intent.company_name; currentProfile.company_name = _intent.company_name; }
-        try{ sb.auth.updateUser({ data: { role: _intent.role, client_type: _ct, signup_synced: true } }); }catch(e){}
+        var _okRole = (currentProfile.role === _intent.role && currentProfile.client_type === _ct)
+          || await _applySignupRole(_intent.role, _ct, data.company_name ? null : _intent.company_name);
+        currentProfile.role = _intent.role; currentProfile.client_type = _ct;
+        if(!data.company_name && _intent.company_name) currentProfile.company_name = _intent.company_name;
+        // Mark as synced only once the database holds the right role (otherwise retried at next login)
+        try{ sb.auth.updateUser({ data: _okRole ? { role: _intent.role, client_type: _ct, signup_synced: true } : { role: _intent.role, client_type: _ct } }); }catch(e){}
         // OAuth sign-up on a pre-created profile: welcome email not sent yet
         if(!meta2.role && _pend && _ageMs < 30*60*1000 && currentUser.email){
           window.sendMail(_intent.role==='driver' ? 'welcome_driver' : 'welcome_client', currentUser.email, {
             name: currentProfile.first_name || '', isPro: _ct==='pro' ? 'yes' : 'no'
           });
         }
-      } else if(!_intent && _ageMs < 30*60*1000){
-        // Brand-new account with no choice made (e.g. Google from the login tab): ask before entering
-        window._needsRoleChoice = true;
+        _clearPendingRole();
       }
     }
     // Admin account is never a client (an admin acting as fleet keeps role "driver")
@@ -2722,14 +2743,9 @@ async function loadProfile(){
     if(!meta.role && _pendNew){
       meta = Object.assign({}, meta, { role: _pendNew.role, client_type: _pendNew.client_type, company_name: meta.company_name || _pendNew.company_name });
     }
-    if(!_isAdminAcc && !meta.role){
-      // No sign-up choice known: let the user pick client perso / client pro / fleet first
-      window._needsRoleChoice = true;
-      currentProfile = { id: currentUser.id, email: currentUser.email || null };
-      return;
-    }
-    if(!_isAdminAcc){
-      try{ sb.auth.updateUser({ data: { role: meta.role, client_type: meta.role==='driver' ? null : (meta.client_type||'perso'), signup_synced: true } }); }catch(e){}
+    if(!_isAdminAcc && meta.role){
+      // Keep the choice in the account metadata (so a later login can still repair the profile)
+      try{ sb.auth.updateUser({ data: { role: meta.role, client_type: meta.role==='driver' ? null : (meta.client_type||'perso') } }); }catch(e){}
     }
     var metaRole2 = _isAdminAcc ? 'admin' : (meta.role || 'client');
     var newProfile = {
@@ -2745,6 +2761,15 @@ async function loadProfile(){
     try {
       var {data:created} = await sb.from('profiles').insert(newProfile).select().single();
       currentProfile = created || newProfile;
+      // Insert refused (profile pre-created by a trigger) or stored with another role → force the chosen one
+      if(!_isAdminAcc && meta.role){
+        var _okNew = (created && created.role === metaRole2) || await _applySignupRole(metaRole2, newProfile.client_type, newProfile.company_name);
+        currentProfile.role = metaRole2; currentProfile.client_type = newProfile.client_type;
+        if(_okNew){
+          _clearPendingRole();
+          try{ sb.auth.updateUser({ data: { role: metaRole2, client_type: newProfile.client_type, signup_synced: true } }); }catch(e){}
+        }
+      }
       // First OAuth login = account creation → welcome email
       if(created && created.email && !_isAdminAcc){
         window.sendMail(metaRole2==='driver' ? 'welcome_driver' : 'welcome_client', created.email, {
@@ -2757,70 +2782,6 @@ async function loadProfile(){
     }
   }
 }
-
-// ── FIRST LOGIN WITHOUT SIGN-UP CHOICE: client perso / client pro / fleet ──
-var _rcChoice = null;
-function _showRoleChoice(){
-  var _l=document.getElementById('app-loader');if(_l)_l.style.display='none';
-  if(document.getElementById('role-choice-overlay')) return;
-  var card=function(id,label,sub){
-    return '<div class="role-opt" id="rc-'+id+'" onclick="_pickRoleChoice(\''+id+'\')" style="cursor:pointer;">'
-      +'<div class="role-opt-label">'+label+'</div><div style="font-size:12px;color:var(--ink3);margin-top:4px;">'+sub+'</div></div>';
-  };
-  var ov=document.createElement('div');
-  ov.id='role-choice-overlay';
-  ov.style.cssText='position:fixed;inset:0;z-index:10000;background:var(--sand,#F4F0E8);display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto;';
-  ov.innerHTML='<div style="width:100%;max-width:520px;">'
-    +'<div style="font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#5A7A5A;margin-bottom:10px;">Finaliser votre inscription</div>'
-    +'<div style="font-size:26px;font-weight:600;margin-bottom:18px;">Vous &ecirc;tes</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px;">'
-      +card('perso','Particulier','Client')+card('pro','Professionnel','Client')+card('driver','Fleet','Chauffeur / flotte')
-    +'</div>'
-    +'<div id="rc-company-wrap" class="input-group" style="display:none;"><label>Nom de soci\u00e9t\u00e9</label><input id="rc-company" placeholder="Acme SA" autocomplete="organization"></div>'
-    +'<div id="rc-err" class="auth-error" style="margin-bottom:10px;"></div>'
-    +'<button class="btn btn-primary btn-full" id="rc-btn" onclick="_submitRoleChoice()">Continuer \u2192</button>'
-    +'<div style="text-align:center;margin-top:14px;"><button onclick="window._needsRoleChoice=false;document.getElementById(\'role-choice-overlay\')?.remove();signOut();" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink3);text-decoration:underline;">Se d\u00e9connecter</button></div>'
-    +'</div>';
-  document.body.appendChild(ov);
-}
-window._pickRoleChoice=function(id){
-  _rcChoice=id;
-  ['perso','pro','driver'].forEach(function(k){ var e=document.getElementById('rc-'+k); if(e) e.classList.toggle('active', k===id); });
-  var w=document.getElementById('rc-company-wrap'); if(w) w.style.display=(id==='pro'||id==='driver')?'block':'none';
-};
-window._submitRoleChoice=async function(){
-  var err=document.getElementById('rc-err'), btn=document.getElementById('rc-btn');
-  if(err) err.classList.remove('show');
-  if(!_rcChoice){ showError(err,'Choisissez un type de compte'); return; }
-  var role=_rcChoice==='driver'?'driver':'client';
-  var ct=role==='driver'?null:_rcChoice;
-  var company=(document.getElementById('rc-company')?.value||'').trim();
-  if(ct==='pro' && !company){ showError(err,'Nom de soci\u00e9t\u00e9 requis'); return; }
-  if(btn){ btn.disabled=true; btn.textContent='Enregistrement...'; }
-  try{
-    var meta=currentUser.user_metadata||{};
-    var row={ id:currentUser.id, email:currentUser.email||null, role:role, client_type:ct, company_name:company||null };
-    if(role==='driver' || ct==='pro'){ row.first_name=company||null; row.last_name=null; }
-    else {
-      row.first_name=meta.first_name || (meta.full_name ? meta.full_name.split(' ')[0] : (meta.name||'').split(' ')[0]) || null;
-      row.last_name=meta.last_name || (meta.full_name ? meta.full_name.split(' ').slice(1).join(' ') : (meta.name||'').split(' ').slice(1).join(' ')) || null;
-    }
-    if(meta.avatar_url||meta.picture) row.avatar_url=meta.avatar_url||meta.picture;
-    var {data:saved,error}=await sb.from('profiles').upsert(row).select().single();
-    if(error) throw error;
-    currentProfile=saved||row;
-    try{ await sb.auth.updateUser({ data:{ role:role, client_type:ct, company_name:company||null, signup_synced:true } }); }catch(e){}
-    if(currentUser.email){
-      window.sendMail(role==='driver'?'welcome_driver':'welcome_client', currentUser.email, { name: currentProfile.first_name||'', isPro: ct==='pro'?'yes':'no' });
-    }
-    window._needsRoleChoice=false;
-    document.getElementById('role-choice-overlay')?.remove();
-    enterApp();
-  }catch(e){
-    showError(err,'Erreur : '+(e.message||e));
-    if(btn){ btn.disabled=false; btn.textContent='Continuer \u2192'; }
-  }
-};
 
 // ── SCREENS ───────────────────────────────────────────
 function showScreen(name){
@@ -3251,7 +3212,6 @@ async function loadMyOffers(){
 
 function enterApp(){
   console.log('[enterApp] called, _entering=',_entering);
-  if(window._needsRoleChoice){ _showRoleChoice(); return; }
   if(_entering)return; _entering=true;
   var _l=document.getElementById('app-loader');if(_l)_l.style.display='none';
   showScreen('app');
