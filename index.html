@@ -1176,9 +1176,9 @@ body{background:var(--bg);}
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 7h6M5 10h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           Courses
         </button>
-        <button class="nav-item" data-page="admin-fleets" onclick="showPage('admin-fleets')">
+        <button class="nav-item" data-page="admin-fleets" onclick="showPage('admin-fleets')" style="position:relative;">
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="1" y="5" width="14" height="7" rx="2" stroke="currentColor" stroke-width="1.3"/><circle cx="4.5" cy="12" r="1.5" stroke="currentColor" stroke-width="1.2"/><circle cx="11.5" cy="12" r="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 5V4a2 2 0 012-2h6a2 2 0 012 2v1" stroke="currentColor" stroke-width="1.3"/></svg>
-          Fleets
+          Fleets <span class="nav-badge" id="badge-admin-fleets" style="display:none;background:#C0392B;" title="Fleets avec des éléments à valider"></span>
         </button>
         <button class="nav-item" data-page="admin-clients" onclick="showPage('admin-clients')">
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="currentColor" stroke-width="1.3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
@@ -3352,6 +3352,7 @@ window.showPage = function(pageId){
 
 // ── PAGE DATA ─────────────────────────────────────────
 async function loadPageData(pageId){
+  if(currentUser?.email===ADMIN_EMAIL) _refreshAdminFleetsBadge();
   switch(pageId){
     case 'dashboard':     await loadClientDashboard(); break;
     case 'rides':         await loadRides(); break;
@@ -8870,6 +8871,7 @@ window.adminSetStatus=async function(table, id, newStatus){
     var {error}=await sb.from(table).update({status:newStatus}).eq('id',id);
     if(error) throw error;
     showToast(newStatus==='validated'?'V\u00e9rifi\u00e9 !':newStatus==='rejected'?'Rejet\u00e9':'Statut mis \u00e0 jour');
+    _refreshAdminFleetsBadge();
     // Reload the current detail if viewing a fleet, otherwise reload the list
     if(_adminFleetDetailId){
       await showFleetDetail(_adminFleetDetailId);
@@ -8912,6 +8914,25 @@ function _computeFleetStatus(fleet, docs, vehicles, drivers){
   // The fleet status is the admin decision stored in profiles.fleet_verified
   // (same source as the fleet detail header and the new-request email alerts)
   return fleet.fleet_verified==='validated' ? 'validated' : 'pending';
+}
+
+// Number of fleets with something waiting for the admin (documents, vehicles, drivers pending)
+async function _refreshAdminFleetsBadge(){
+  var b=document.getElementById('badge-admin-fleets'); if(!b||!sb) return;
+  if(currentUser?.email!==ADMIN_EMAIL){ b.style.display='none'; return; }
+  // Keep it fresh while the admin stays on a page (every 60 s)
+  if(!window._adminBadgeTimer) window._adminBadgeTimer=setInterval(_refreshAdminFleetsBadge, 60000);
+  try{
+    var r=await Promise.all([
+      sb.from('fleet_documents').select('fleet_id').eq('status','pending'),
+      sb.from('fleet_vehicles').select('fleet_id').eq('status','pending'),
+      sb.from('fleet_drivers').select('fleet_id').eq('status','pending')
+    ]);
+    var ids={};
+    r.forEach(function(x){ (x.data||[]).forEach(function(row){ if(row.fleet_id) ids[row.fleet_id]=1; }); });
+    var n=Object.keys(ids).length;
+    b.textContent=n; b.style.display=n>0?'inline-block':'none';
+  }catch(e){ console.warn('admin fleets badge', e); }
 }
 
 async function loadAdminFleets(){
@@ -8967,9 +8988,11 @@ function renderAdminFleets(){
       var name=f.company_name||((f.first_name||'')+' '+(f.last_name||'')).trim()||'\u2014';
       var totalDocs=f._docs.length+f._vehicles.length+f._drivers.length;
       var pendingDocs=f._docs.concat(f._vehicles,f._drivers).filter(function(d){return d.status==='pending';}).length;
-      var docsInfo=totalDocs>0?(pendingDocs>0?pendingDocs+' en attente / '+totalDocs:totalDocs+' valid\u00e9(s)'):'Aucun';
+      var docsInfo=totalDocs>0?(pendingDocs>0
+        ?'<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-weight:700;"><span style="width:7px;height:7px;border-radius:50%;background:#C0392B;"></span>'+pendingDocs+' \u00e0 valider / '+totalDocs+'</span>'
+        :totalDocs+' valid\u00e9(s)'):'Aucun';
       var clickable=f._computed_status==='pending'||totalDocs>0;
-      return '<tr style="border-bottom:1px solid var(--sand2);'+(clickable?'cursor:pointer;':'')
+      return '<tr style="border-bottom:1px solid var(--sand2);'+(pendingDocs>0?'background:#FFFBF2;':'')+(clickable?'cursor:pointer;':'')
         +'" '+(clickable?'onclick="showFleetDetail(\''+f.id+'\')"':'')+'>'
         +'<td style="padding:10px 14px;font-weight:500;">'+name+'</td>'
         +'<td style="padding:10px 14px;font-size:12px;color:var(--ink3);">'+(f.email||'\u2014')+'</td>'
