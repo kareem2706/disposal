@@ -1349,6 +1349,7 @@ body{background:var(--bg);}
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
         <div><h1>Tableau de bord</h1><p>Vos missions et activités</p></div>
       </div>
+      <div id="driver-verify-banner" style="display:none;"></div>
       <div class="stats-row" id="driver-stats"></div>
       <div class="section-hd">
         <div style="display:flex;align-items:center;gap:8px;">
@@ -3875,9 +3876,33 @@ function _driverCanHandleRide(r){
   });
 }
 
+// Banner shown to a fleet that is not verified yet
+async function _renderDriverVerifyBanner(){
+  var el=document.getElementById('driver-verify-banner'); if(!el) return;
+  if(!currentProfile || currentUser?.email===ADMIN_EMAIL || localStorage.getItem(DEMO_MODE_KEY)==='1'){ el.style.display='none'; return; }
+  // Refresh the status: the admin may have validated the fleet during the session
+  if(sb && currentUser?.id){
+    try{
+      var {data:fv}=await sb.from('profiles').select('fleet_verified').eq('id',currentUser.id).maybeSingle();
+      if(fv) currentProfile.fleet_verified=fv.fleet_verified;
+    }catch(e){}
+  }
+  if(currentProfile.fleet_verified==='validated'){ el.style.display='none'; el.innerHTML=''; return; }
+  el.innerHTML='<div style="display:flex;align-items:flex-start;gap:14px;padding:16px 18px;margin-bottom:18px;border-radius:14px;background:var(--amber-bg);border:1px solid rgba(180,120,20,.25);">'
+    +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>'
+    +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px;">Votre compte n\u2019est pas encore v\u00e9rifi\u00e9</div>'
+      +'<div style="font-size:13px;color:var(--ink2);line-height:1.55;">Pour recevoir des demandes, vous devez d\u2019abord faire v\u00e9rifier votre compte : ajoutez vos documents soci\u00e9t\u00e9, vos v\u00e9hicules et vos chauffeurs dans votre profil. Bleenr les validera ensuite.</div>'
+    +'</div>'
+    +'<button class="btn btn-primary btn-sm" style="flex-shrink:0;align-self:center;" onclick="showPage(\'profile\')">Compl\u00e9ter mon profil</button>'
+    +'</div>';
+  el.style.display='block';
+}
+
 async function loadDriverDashboard(){
   const uid = currentUser?.id;
   let missions = [], pending = [];
+  _renderDriverVerifyBanner();
 
   // Always refresh own offers so dashboard shows current driver's offer state
   await loadMyOffers();
