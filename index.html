@@ -9085,6 +9085,11 @@ async function loadAdminBilling(){
         +'<button type="button" class="btn btn-secondary btn-sm" onclick="addBillingVatRow()" style="margin-top:4px;">+ Ajouter un pays</button>'
       +'</div>'
       +'<div class="card" style="padding:22px;margin-bottom:16px;">'
+        +'<div style="font-size:15px;font-weight:700;margin-bottom:4px;">Commission plateforme</div>'
+        +'<div style="font-size:12px;color:var(--ink3);margin-bottom:16px;">Pourcentage pr\u00e9lev\u00e9 par Bleenr sur les courses des chauffeurs. Base de calcul des commissions.</div>'
+        +'<div class="input-group" style="margin-bottom:0;"><label>Commission <span style="color:var(--red)">*</span></label><div style="display:flex;align-items:center;gap:6px;"><input id="bill-commission" type="number" min="0" max="100" step="0.01" value="'+(s.platform_commission_rate!=null?s.platform_commission_rate:'')+'" placeholder="10" style="width:110px;"><span style="font-size:13px;color:var(--ink3);">%</span></div></div>'
+      +'</div>'
+      +'<div class="card" style="padding:22px;margin-bottom:16px;">'
         +'<div style="font-size:15px;font-weight:700;margin-bottom:4px;">TVA transporteur \u2192 Bleenr</div>'
         +'<div style="font-size:12px;color:var(--ink3);margin-bottom:16px;">Taux appliqu\u00e9 sur la facture de Bleenr au transporteur (chauffeur).</div>'
         +'<label style="display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:500;color:var(--ink);cursor:pointer;margin:0 0 14px;"><input type="checkbox" id="bill-vat-platform-rc"'+(s.vat_reverse_charge_carrier_platform?' checked':'')+' onchange="_billingApplyPlatformRc(this)" style="width:16px;height:16px;padding:0;margin:0;flex-shrink:0;cursor:pointer;"> Autoliquidation</label>'
@@ -9140,6 +9145,9 @@ window.saveAdminBilling=async function(){
   var pr=prc?'0':v('bill-vat-platform'), pn=parseFloat(pr);
   if(!prc && (pr===''||isNaN(pn)||pn<=0||pn>100)){showError(err,'Taux de TVA transporteur \u2192 Bleenr : indiquez un taux sup\u00e9rieur \u00e0 0 (ou cochez Autoliquidation)');return;}
   row.vat_rate_carrier_platform=prc?0:pn;
+  var cr=v('bill-commission'), cn=parseFloat(cr);
+  if(cr===''||isNaN(cn)||cn<0||cn>100){showError(err,'Commission plateforme : valeur entre 0 et 100 requise');return;}
+  row.platform_commission_rate=cn;
   row.vat_reverse_charge_carrier_platform=prc;
   row.updated_at=new Date().toISOString();
   if(btn){btn.disabled=true;btn.textContent='Enregistrement...';}
