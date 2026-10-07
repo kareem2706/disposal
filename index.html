@@ -1188,6 +1188,10 @@ body{background:var(--bg);}
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M3.5 1.5h6l3 3v10h-9z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M5.5 7.5h5M5.5 10h5M5.5 12.5h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           Facturation
         </button>
+        <button class="nav-item" data-page="admin-reports" onclick="showPage('admin-reports')">
+          <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M2.5 13.5V8.5M6.5 13.5V4.5M10.5 13.5V6.5M14 13.5H1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Rapports
+        </button>
       </div>
     </nav>
 
@@ -1773,6 +1777,15 @@ body{background:var(--bg);}
         <button class="btn btn-sm admin-client-tab" data-tab="perso" onclick="switchAdminClientTab('perso',this)" style="border:none;padding:7px 18px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;background:transparent;color:var(--ink3);">Clients particuliers <span id="acl-count-perso" style="opacity:.7;"></span></button>
       </div>
       <div id="admin-clients-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
+    </div>
+
+    <!-- Admin: Rapports -->
+    <div id="page-admin-reports" class="page">
+      <div class="pg-head">
+        <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V12M10 20V5M16 20V9M21 20H3"/></svg></div>
+        <div><h1>Rapports</h1><p>G&eacute;n&eacute;rez les rapports et factures de la plateforme</p></div>
+      </div>
+      <div id="admin-reports-content"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
 
     <!-- Admin: Facturation -->
@@ -3339,7 +3352,7 @@ window.showPage = function(pageId){
   const pageNames = { dashboard:t('dashboard'), rides:t('rides'), calendar:'Calendrier', 'd-calendar':'Calendrier', invoices:t('invoices'),
     profile:t('profile'), 'd-dashboard':t('d-dashboard'), marketplace:t('marketplace'), missions:t('missions'),
     'd-invoices':'Factures', 'passengers':'Passagers',
-    'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses', 'admin-billing':'Facturation' };
+    'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses', 'admin-billing':'Facturation', 'admin-reports':'Rapports' };
   var ptEl=document.getElementById('page-title');if(ptEl)ptEl.textContent=pageNames[pageId]||'';
 
   // Mark nav item active
@@ -3371,6 +3384,7 @@ async function loadPageData(pageId){
     case 'd-invoices':    await loadDriverInvoices(); break;
     case 'admin-rides':    await loadAdminRides(); break;
     case 'admin-billing':  await loadAdminBilling(); break;
+    case 'admin-reports':  await loadAdminReports(); break;
   }
 }
 
@@ -9437,6 +9451,233 @@ window.adminSaveClient=async function(){
     showError(err,'Erreur : '+(e.message||e));
     if(btn){ btn.disabled=false; btn.textContent='Enregistrer'; }
   }
+};
+
+// ── ADMIN: RAPPORTS ───────────────────────────────────
+// Report "Paiements fleets": per fleet and per month
+//   prestation invoice  : fleet -> Bleenr (self-billing), HTVA of the rides + VAT client->carrier (fleet country)
+//   commission invoice  : Bleenr -> fleet, commission % of HTVA + VAT carrier->Bleenr (or reverse charge)
+//   amount to pay fleet : prestation TVAC - commission TVAC
+var _rptYear = new Date().getFullYear(), _rptMonth = new Date().getMonth()+1;
+var _rptData = null, _rptSettings = null;
+var _RPT_MONTHS = ['Janvier','F\u00e9vrier','Mars','Avril','Mai','Juin','Juillet','Ao\u00fbt','Septembre','Octobre','Novembre','D\u00e9cembre'];
+function _rptMoney(v){ return (Math.round((v||0)*100)/100).toFixed(2).replace('.',',')+' \u20ac'; }
+function _rptR2(v){ return Math.round((v||0)*100)/100; }
+function _rptPeriod(){ return _rptYear+'-'+String(_rptMonth).padStart(2,'0'); }
+
+// Fleet country (stored as full name, e.g. "Belgique") -> VAT rate from Facturation settings
+function _rptVatForCountry(countryName){
+  var rates = (_rptSettings && Array.isArray(_rptSettings.vat_rates_client_carrier)) ? _rptSettings.vat_rates_client_carrier : [];
+  var code = null;
+  if(countryName && typeof _BILLING_COUNTRIES!=='undefined'){
+    var m = _BILLING_COUNTRIES.find(function(c){ return c[1].toLowerCase()===String(countryName).toLowerCase() || c[0]===countryName; });
+    if(m) code = m[0];
+  }
+  var hit = rates.find(function(r){ return r.country===(code||'BE'); }) || rates.find(function(r){ return r.country==='BE'; });
+  return hit ? parseFloat(hit.rate) : TVA_RATE*100;
+}
+
+async function loadAdminReports(){
+  var el=document.getElementById('admin-reports-content'); if(!el||!sb) return;
+  el.innerHTML='<div class="page-loading"><div class="page-spinner"></div></div>';
+  try{
+    var st=await sb.from('billing_settings').select('*').eq('id',1).maybeSingle();
+    _rptSettings=st.data||null;
+  }catch(e){ _rptSettings=null; }
+  await _rptRender();
+}
+
+window._rptSet=function(y,m){ _rptYear=y; _rptMonth=m; _rptRender(); };
+window._rptStep=function(d){ var m=_rptMonth+d, y=_rptYear; if(m<1){m=12;y--;} if(m>12){m=1;y++;} _rptSet(y,m); };
+
+async function _rptRender(){
+  var el=document.getElementById('admin-reports-content'); if(!el) return;
+  var period=_rptPeriod();
+  var from=period+'-01', to=period+'-'+String(new Date(_rptYear,_rptMonth,0).getDate()).padStart(2,'0');
+  var commissionRate = (_rptSettings && _rptSettings.platform_commission_rate!=null) ? parseFloat(_rptSettings.platform_commission_rate) : 10;
+  var rc = !!(_rptSettings && _rptSettings.vat_reverse_charge_carrier_platform);
+  var commVat = rc ? 0 : ((_rptSettings && _rptSettings.vat_rate_carrier_platform!=null) ? parseFloat(_rptSettings.vat_rate_carrier_platform) : 21);
+
+  var yOpts='', curY=new Date().getFullYear();
+  for(var y=curY+1;y>=curY-3;y--) yOpts+='<option value="'+y+'"'+(y===_rptYear?' selected':'')+'>'+y+'</option>';
+  var mOpts=_RPT_MONTHS.map(function(l,i){ return '<option value="'+(i+1)+'"'+(i+1===_rptMonth?' selected':'')+'>'+l+'</option>'; }).join('');
+  var sel='font-size:13px;font-weight:600;border:1.5px solid var(--sand3);border-radius:6px;padding:4px 8px;background:var(--white);cursor:pointer;';
+  var nb='background:none;border:1.5px solid var(--sand3);border-radius:6px;width:30px;height:30px;cursor:pointer;';
+
+  var head='<div class="card" style="padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
+    +'<div style="font-size:12px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Rapport</div>'
+    +'<select style="'+sel+'"><option>Paiements fleets &amp; factures (mensuel)</option></select>'
+    +'<div style="display:flex;align-items:center;gap:6px;margin-left:auto;">'
+      +'<button style="'+nb+'" onclick="_rptStep(-1)">&lt;</button>'
+      +'<select style="'+sel+'" onchange="_rptSet(_rptYear,parseInt(this.value))">'+mOpts+'</select>'
+      +'<select style="'+sel+'" onchange="_rptSet(parseInt(this.value),_rptMonth)">'+yOpts+'</select>'
+      +'<button style="'+nb+'" onclick="_rptStep(1)">&gt;</button>'
+    +'</div></div>';
+  el.innerHTML=head+'<div class="page-loading"><div class="page-spinner"></div></div>';
+
+  try{
+    var rr=await sb.from('rides').select('*').in('status',['done','confirmed']).not('driver_id','is',null).not('final_price','is',null)
+      .gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true});
+    if(rr.error) throw rr.error;
+    var rides=rr.data||[];
+    var ids=[...new Set(rides.map(function(r){return r.driver_id;}))];
+    var fleets={};
+    if(ids.length){
+      var pr=await sb.from('profiles').select('id,email,company_name,first_name,last_name,vat_number,address_street,address_postal,address_city,address_country,phone').in('id',ids);
+      (pr.data||[]).forEach(function(p){ fleets[p.id]=p; });
+    }
+    var byFleet={};
+    rides.forEach(function(r){ (byFleet[r.driver_id]=byFleet[r.driver_id]||[]).push(r); });
+    _rptData=Object.keys(byFleet).map(function(fid){
+      var f=fleets[fid]||{id:fid};
+      var list=byFleet[fid];
+      var htva=_rptR2(list.reduce(function(s,r){ return s+_rptR2(parseFloat(r.final_price)/(1+TVA_RATE)); },0));
+      var pVat=_rptVatForCountry(f.address_country);
+      var pVatAmt=_rptR2(htva*pVat/100);
+      var cHt=_rptR2(htva*commissionRate/100);
+      var cVatAmt=_rptR2(cHt*commVat/100);
+      return { fleet:f, rides:list, htva:htva, pVat:pVat, pVatAmt:pVatAmt, pTvac:_rptR2(htva+pVatAmt),
+               commRate:commissionRate, cHt:cHt, cVat:commVat, cRc:rc, cVatAmt:cVatAmt, cTvac:_rptR2(cHt+cVatAmt),
+               net:_rptR2(htva+pVatAmt-cHt-cVatAmt) };
+    }).sort(function(a,b){ return _rptFleetName(a.fleet).localeCompare(_rptFleetName(b.fleet)); });
+  }catch(e){
+    el.innerHTML=head+'<div class="card" style="padding:24px;color:var(--red);font-size:13px;">Erreur : '+_billingEsc(e.message||e)+'</div>';
+    return;
+  }
+
+  if(!_rptData.length){
+    el.innerHTML=head+'<div class="card" style="padding:40px;text-align:center;color:var(--ink3);font-size:13px;">Aucune course r\u00e9alis\u00e9e en '+_RPT_MONTHS[_rptMonth-1]+' '+_rptYear+'</div>';
+    return;
+  }
+  var tot=_rptData.reduce(function(t,d){ ['htva','pVatAmt','pTvac','cHt','cVatAmt','cTvac','net'].forEach(function(k){ t[k]=(t[k]||0)+d[k]; }); t.n=(t.n||0)+d.rides.length; return t; },{});
+  var th=function(l,r){ return '<th style="padding:10px 12px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:600;text-align:'+(r?'right':'left')+';white-space:nowrap;">'+l+'</th>'; };
+  var td=function(v,r,b){ return '<td style="padding:10px 12px;font-size:12.5px;text-align:'+(r?'right':'left')+';white-space:nowrap;'+(b?'font-weight:700;':'')+'">'+v+'</td>'; };
+  var rows=_rptData.map(function(d,i){
+    return '<tr style="border-bottom:1px solid var(--sand2);">'
+      +td('<div style="font-weight:600;">'+_billingEsc(_rptFleetName(d.fleet))+'</div><div style="font-size:11px;color:var(--ink3);">'+_billingEsc(d.fleet.email||'')+'</div>')
+      +td(d.rides.length,true)
+      +td(_rptMoney(d.htva),true)
+      +td(_rptMoney(d.pTvac)+'<div style="font-size:10.5px;color:var(--ink3);">TVA '+d.pVat+'%</div>',true)
+      +td('\u2212'+_rptMoney(d.cTvac)+'<div style="font-size:10.5px;color:var(--ink3);">'+d.commRate+'% \u00b7 '+(d.cRc?'autoliq.':'TVA '+d.cVat+'%')+'</div>',true)
+      +td('<span style="color:var(--green);">'+_rptMoney(d.net)+'</span>',true,true)
+      +'<td style="padding:8px 12px;text-align:right;white-space:nowrap;">'
+        +'<button class="btn btn-secondary btn-sm" style="font-size:11px;padding:4px 10px;" onclick="rptInvoice('+i+',\'prestation\')">Facture prestation</button> '
+        +'<button class="btn btn-secondary btn-sm" style="font-size:11px;padding:4px 10px;" onclick="rptInvoice('+i+',\'commission\')">Facture commission</button>'
+      +'</td></tr>';
+  }).join('');
+  el.innerHTML=head
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px;">'
+      +[['Courses',tot.n],['Total HTVA',_rptMoney(tot.htva)],['Commissions TVAC',_rptMoney(tot.cTvac)],['\u00c0 payer aux fleets',_rptMoney(tot.net)]].map(function(k){
+        return '<div class="card" style="padding:14px 16px;"><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">'+k[0]+'</div><div style="font-size:18px;font-weight:700;">'+k[1]+'</div></div>';
+      }).join('')
+    +'</div>'
+    +'<div class="card" style="padding:0;overflow:hidden;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--sand2);">'
+        +'<div style="font-size:14px;font-weight:700;">Paiements \u00e0 effectuer \u2014 '+_RPT_MONTHS[_rptMonth-1]+' '+_rptYear+'</div>'
+        +'<button class="btn btn-secondary btn-sm" onclick="rptExportCsv()">Exporter CSV</button>'
+      +'</div>'
+      +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;">'
+        +'<thead><tr style="background:var(--sand2);">'+th('Fleet')+th('Courses',1)+th('Total HTVA',1)+th('Prestation TVAC',1)+th('Commission TVAC',1)+th('Net \u00e0 payer',1)+th('Factures',1)+'</tr></thead>'
+        +'<tbody>'+rows+'</tbody>'
+        +'<tfoot><tr style="background:var(--sand2);">'+td('<b>Total</b>')+td(tot.n,true,true)+td(_rptMoney(tot.htva),true,true)+td(_rptMoney(tot.pTvac),true,true)+td('\u2212'+_rptMoney(tot.cTvac),true,true)+td(_rptMoney(tot.net),true,true)+'<td></td></tr></tfoot>'
+      +'</table></div>'
+    +'</div>'
+    +(!_rptSettings?'<div style="margin-top:10px;font-size:12px;color:var(--amber);">Param\u00e8tres de facturation non renseign\u00e9s : valeurs par d\u00e9faut utilis\u00e9es (commission 10 %, TVA 6 % / 21 %). Compl\u00e9tez Admin \u2192 Facturation.</div>':'');
+}
+
+function _rptFleetName(f){ return (f && (f.company_name || ((f.first_name||'')+' '+(f.last_name||'')).trim() || f.email)) || '\u2014'; }
+
+window.rptExportCsv=function(){
+  if(!_rptData||!_rptData.length) return;
+  var n=function(v){ return String(_rptR2(v)).replace('.',','); };
+  var lines=[['Fleet','Email','TVA fleet','Courses','Total HTVA','TVA prestation %','TVA prestation','Prestation TVAC','Commission %','Commission HTVA','TVA commission %','TVA commission','Commission TVAC','Net a payer'].join(';')];
+  _rptData.forEach(function(d){
+    lines.push(['"'+_rptFleetName(d.fleet).replace(/"/g,'""')+'"',d.fleet.email||'',d.fleet.vat_number||'',d.rides.length,n(d.htva),d.pVat,n(d.pVatAmt),n(d.pTvac),d.commRate,n(d.cHt),d.cRc?'autoliquidation':d.cVat,n(d.cVatAmt),n(d.cTvac),n(d.net)].join(';'));
+  });
+  var blob=new Blob(['\ufeff'+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='paiements-fleets-'+_rptPeriod()+'.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+};
+
+// Persisted, sequential invoice number (table fleet_invoices); same number when re-generated
+async function _rptInvoiceNumber(d, kind){
+  var period=_rptPeriod(), year=String(_rptYear), pre='BL-'+(kind==='prestation'?'P':'C')+'-'+year+'-';
+  var amounts = kind==='prestation'
+    ? { amount_htva:d.htva, vat_rate:d.pVat, vat_amount:d.pVatAmt, amount_tvac:d.pTvac, reverse_charge:false }
+    : { amount_htva:d.cHt, vat_rate:d.cVat, vat_amount:d.cVatAmt, amount_tvac:d.cTvac, reverse_charge:d.cRc };
+  try{
+    var ex=await sb.from('fleet_invoices').select('id,number').eq('fleet_id',d.fleet.id).eq('period',period).eq('kind',kind).maybeSingle();
+    if(ex.error) throw ex.error;
+    if(ex.data){
+      await sb.from('fleet_invoices').update(Object.assign({rides_count:d.rides.length},amounts)).eq('id',ex.data.id);
+      return { number:ex.data.number };
+    }
+    var cnt=await sb.from('fleet_invoices').select('id',{count:'exact',head:true}).like('number',pre+'%');
+    var num=pre+String((cnt.count||0)+1).padStart(4,'0');
+    var ins=await sb.from('fleet_invoices').insert(Object.assign({fleet_id:d.fleet.id,period:period,kind:kind,number:num,rides_count:d.rides.length},amounts)).select('number').single();
+    if(ins.error) throw ins.error;
+    return { number:ins.data.number };
+  }catch(e){
+    console.warn('fleet_invoices', e);
+    return { number:'PROVISOIRE', warn:'Num\u00e9ro non enregistr\u00e9 (table fleet_invoices absente ou droits insuffisants) : facture provisoire.' };
+  }
+}
+
+window.rptInvoice=async function(i, kind){
+  var d=_rptData && _rptData[i]; if(!d) return;
+  var win=window.open('','_blank');
+  if(!win){ showToast('Autorisez les fen\u00eatres pop-up pour g\u00e9n\u00e9rer la facture'); return; }
+  win.document.write('<p style="font-family:sans-serif;padding:30px;">G\u00e9n\u00e9ration de la facture\u2026</p>');
+  var num=await _rptInvoiceNumber(d, kind);
+  var s=_rptSettings||{};
+  var e=_billingEsc;
+  var bleenr={ name:s.company_name||'Bleenr', l1:[s.street,s.box?'bte '+s.box:''].filter(Boolean).join(' '), l2:[s.postal_code,s.city].filter(Boolean).join(' '), l3:s.country||'', vat:s.vat_number||'' };
+  var f=d.fleet;
+  var fleet={ name:_rptFleetName(f), l1:f.address_street||'', l2:[f.address_postal,f.address_city].filter(Boolean).join(' '), l3:f.address_country||'', vat:f.vat_number||'' };
+  var party=function(t,p){ return '<div style="flex:1;"><div class="lbl">'+t+'</div><div style="font-weight:700;font-size:14px;">'+e(p.name)+'</div>'
+    +[p.l1,p.l2,p.l3].filter(Boolean).map(function(x){return '<div>'+e(x)+'</div>';}).join('')
+    +(p.vat?'<div>TVA : '+e(p.vat)+'</div>':'<div style="color:#C0392B;">TVA : non renseign\u00e9e</div>')+'</div>'; };
+  var tl={ab:'Course A \u2192 B',disposal:'Mise \u00e0 disposition',mixed:'Course mixte'};
+  var issuer, receiver, title, lines, base, rate, vatAmt, total, mention;
+  var pLabel=_RPT_MONTHS[_rptMonth-1]+' '+_rptYear;
+  if(kind==='prestation'){
+    title='Facture de prestation'; issuer=fleet; receiver=bleenr;
+    lines=d.rides.map(function(r){
+      return '<tr><td>'+e(r.booking_code||r.id.slice(0,8))+'</td><td>'+e(r.ride_date||'')+'</td><td>'+e(tl[r.trip_type]||r.trip_type||'')+'</td><td>'+e((r.from_address||'').split(',')[0])+(r.to_address?' \u2192 '+e((r.to_address||'').split(',')[0]):'')+'</td><td class="r">'+_rptMoney(_rptR2(parseFloat(r.final_price)/(1+TVA_RATE)))+'</td></tr>';
+    }).join('');
+    base=d.htva; rate=d.pVat; vatAmt=d.pVatAmt; total=d.pTvac;
+    mention='Autofacturation \u2014 facture \u00e9tablie par '+e(bleenr.name)+' au nom et pour le compte de '+e(fleet.name)+'.';
+  } else {
+    title='Facture de commission'; issuer=bleenr; receiver=fleet;
+    lines='<tr><td colspan="4">Commission plateforme ('+d.commRate+' %) sur '+d.rides.length+' course(s) \u2014 '+pLabel+' (base HTVA '+_rptMoney(d.htva)+')</td><td class="r">'+_rptMoney(d.cHt)+'</td></tr>';
+    base=d.cHt; rate=d.cVat; vatAmt=d.cVatAmt; total=d.cTvac;
+    mention=d.cRc?'Autoliquidation \u2014 TVA due par le cocontractant.':'';
+  }
+  var today=new Date().toISOString().slice(0,10);
+  var html='<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>'+title+' '+e(num.number)+'</title><style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Helvetica Neue",Arial,sans-serif;color:#1A1A18;padding:40px;font-size:12.5px;line-height:1.5}'
+    +'h1{font-size:22px;margin-bottom:4px}.lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:4px}'
+    +'table{width:100%;border-collapse:collapse;margin-top:22px}th{background:#F4F2EE;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:#777;padding:8px 10px}'
+    +'td{padding:8px 10px;border-bottom:1px solid #EEE}.r{text-align:right;white-space:nowrap}.tot td{border:none;padding:5px 10px}'
+    +'.warn{background:#FEF3DC;color:#92650A;padding:10px 12px;border-radius:6px;margin-bottom:16px}@media print{.np{display:none}}'
+    +'</style></head><body>'
+    +(num.warn?'<div class="warn np">'+num.warn+'</div>':'')
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;">'
+      +'<div><h1>'+title+'</h1><div>N\u00b0 <b>'+e(num.number)+'</b></div><div>Date : '+today+'</div><div>P\u00e9riode : '+pLabel+'</div></div>'
+      +'<div style="font-family:Georgia,serif;font-size:24px;letter-spacing:.08em;">BLEENR</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:40px;">'+party('\u00c9metteur',issuer)+party('Destinataire',receiver)+'</div>'
+    +'<table><thead><tr><th>R\u00e9f.</th><th>Date</th><th>Type</th><th>Trajet</th><th class="r">Montant HTVA</th></tr></thead><tbody>'+lines+'</tbody></table>'
+    +'<table class="tot" style="width:320px;margin-left:auto;margin-top:14px;">'
+      +'<tr><td>Total HTVA</td><td class="r">'+_rptMoney(base)+'</td></tr>'
+      +'<tr><td>TVA '+(kind==='commission'&&d.cRc?'0 % (autoliquidation)':rate+' %')+'</td><td class="r">'+_rptMoney(vatAmt)+'</td></tr>'
+      +'<tr style="font-size:15px;font-weight:700;border-top:2px solid #1A1A18;"><td>Total TVAC</td><td class="r">'+_rptMoney(total)+'</td></tr>'
+    +'</table>'
+    +(mention?'<div style="margin-top:22px;font-size:11.5px;color:#555;">'+mention+'</div>':'')
+    +(kind==='prestation'?'<div style="margin-top:8px;font-size:11.5px;color:#555;">Net vers\u00e9 au prestataire apr\u00e8s d\u00e9duction de la commission ('+_rptMoney(d.cTvac)+') : <b>'+_rptMoney(d.net)+'</b></div>':'')
+    +'<div class="np" style="text-align:center;margin-top:30px;"><button onclick="window.print()" style="padding:9px 24px;background:#1A1A18;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">Imprimer / PDF</button></div>'
+    +'</body></html>';
+  win.document.open(); win.document.write(html); win.document.close();
 };
 
 async function loadAdminClients(){
