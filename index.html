@@ -3365,6 +3365,7 @@ window.showPage = function(pageId){
 
 // ── PAGE DATA ─────────────────────────────────────────
 async function loadPageData(pageId){
+  _loadRefundRules();
   if(currentUser?.email===ADMIN_EMAIL) _refreshAdminFleetsBadge();
   switch(pageId){
     case 'dashboard':     await loadClientDashboard(); break;
@@ -5049,7 +5050,11 @@ function _openRideDetailImpl(el){
       ft=closeBtn;
     } else if(r.status==='confirmed'){
       var pdfVoucherBtn = '<button onclick="generateRideVoucher(\''+rId+'\')" class="btn btn-secondary" style="display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Voucher</button>';
-      ft=trashBtn+pdfVoucherBtn+closeBtn;
+      if(_rideCancelLocked(r)){
+        ft='<div style="margin-right:auto;font-size:12px;color:var(--ink3);">Annulation impossible \u00e0 moins de '+_refundDelayHours(r)+' h du d\u00e9part</div>'+pdfVoucherBtn+closeBtn;
+      } else {
+        ft=trashBtn+pdfVoucherBtn+closeBtn;
+      }
     } else if(r.status==='done'){
       var priceTagDone = r.final_price
         ? '<div style="margin-right:auto;padding:6px 12px;background:var(--green-bg);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--green);">Montant pay\u00e9\u00a0: '+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</div>'
@@ -5441,14 +5446,56 @@ window.completeRide=async function(rideId){
   }catch(e){showToast('Erreur: '+(e.message||e));}
 };
 
+// ── Refund / cancellation delay per country (Admin → Facturation) ──
+var _refundRules=null, _refundRulesP=null;
+var _COUNTRY_ALIASES={BE:['belgique','belgium','belgi\u00eb','belgien'],FR:['france','frankrijk'],NL:['pays-bas','netherlands','nederland'],LU:['luxembourg','luxemburg'],DE:['allemagne','germany','deutschland'],ES:['espagne','spain','espa\u00f1a'],IT:['italie','italy','italia'],PT:['portugal'],AT:['autriche','austria','\u00f6sterreich'],IE:['irlande','ireland'],DK:['danemark','denmark'],SE:['su\u00e8de','sweden'],FI:['finlande','finland'],PL:['pologne','poland','polska'],CZ:['tch\u00e9quie','czechia','czech republic'],GR:['gr\u00e8ce','greece'],CH:['suisse','switzerland','schweiz'],GB:['royaume-uni','united kingdom','uk'],MC:['monaco']};
+function _loadRefundRules(force){
+  if(!sb) return Promise.resolve();
+  if(_refundRulesP && !force) return _refundRulesP;
+  _refundRulesP=sb.from('billing_settings').select('refund_delays').eq('id',1).maybeSingle()
+    .then(function(r){ _refundRules=(r.data&&Array.isArray(r.data.refund_delays))?r.data.refund_delays:[]; })
+    .catch(function(){ _refundRules=[]; });
+  return _refundRulesP;
+}
+// Country of the ride = last part of the departure address ("…, Bruxelles, Belgique")
+function _rideCountryCode(r){
+  var parts=String((r&&r.from_address)||'').split(',');
+  var last=(parts[parts.length-1]||'').trim().toLowerCase();
+  for(var k in _COUNTRY_ALIASES){ if(_COUNTRY_ALIASES[k].indexOf(last)>=0) return k; }
+  return 'BE';
+}
+// Hours before departure under which a confirmed ride is no longer refundable / cancellable
+function _refundDelayHours(r){
+  var rules=_refundRules||[];
+  var code=_rideCountryCode(r);
+  var hit=rules.find(function(x){return x.country===code;})||rules.find(function(x){return x.country==='BE';});
+  return hit&&!isNaN(parseInt(hit.hours,10)) ? parseInt(hit.hours,10) : 48;
+}
+function _minsUntilRide(r){
+  if(!r||!r.ride_date) return Infinity;
+  var d=new Date(r.ride_date+'T'+(r.ride_time||'00:00').slice(0,5)+':00');
+  return isNaN(d.getTime()) ? Infinity : (d-new Date())/60000;
+}
+// Confirmed ride inside the delay → cannot be cancelled anymore
+function _rideCancelLocked(r){
+  return !!r && (r.status==='confirmed'||r.status==='pending_payment') && _minsUntilRide(r) < _refundDelayHours(r)*60;
+}
+
 window.deleteRide = async function(rideId){
   _pendingDeleteId=rideId;
   _pendingDeleteRide=null;
   var ride=null;
   if(sb&&localStorage.getItem(DEMO_MODE_KEY)!=='1'){
-    var r=await sb.from('rides').select('id,ride_date,ride_time,status,final_price,payment_method').eq('id',rideId).maybeSingle();
+    var r=await sb.from('rides').select('id,ride_date,ride_time,status,final_price,payment_method,from_address').eq('id',rideId).maybeSingle();
     ride=r.data;
     _pendingDeleteRide=ride;
+  }
+  await _loadRefundRules();
+  var _delayH=_refundDelayHours(ride);
+  if(_rideCancelLocked(ride)){
+    showToast('Cette demande ne peut plus \u00eatre annul\u00e9e (moins de '+_delayH+' h avant le d\u00e9part)');
+    _pendingDeleteId=null; _pendingDeleteRide=null;
+    return;
   }
 
   var titleEl  = document.getElementById('confirm-delete-title');
@@ -5478,8 +5525,8 @@ window.deleteRide = async function(rideId){
     // waiting / offers — simple confirmation, no refund logic
     if(msgEl) msgEl.textContent = 'Êtes-vous sûr(e) de vouloir annuler cette demande ?';
     if(warnEl) warnEl.style.display = 'none';
-  } else if(minsUntil >= 2880){
-    // ≥ 48h — cancellation allowed, refund possible
+  } else if(minsUntil >= _delayH*60){
+    // beyond the country delay — cancellation allowed, refund possible
     if(msgEl) msgEl.textContent = 'Êtes-vous sûr(e) de vouloir annuler votre demande ?';
     if(warnEl){
       if(isPaid){
@@ -5508,7 +5555,7 @@ window.deleteRide = async function(rideId){
       warnEl.style.background='var(--red-bg)';
       warnEl.style.borderColor='var(--red)';
       warnEl.style.color='var(--red)';
-      warnEl.innerHTML='⚠️ <strong>Attention</strong> — L\'annulation de votre demande à moins de 48h du départ <strong>n\'est pas remboursable</strong>. Êtes-vous sûr(e) de vouloir annuler ?';
+      warnEl.innerHTML='⚠️ <strong>Attention</strong> — L\'annulation de votre demande à moins de '+_delayH+'h du départ <strong>n\'est pas remboursable</strong>. Êtes-vous sûr(e) de vouloir annuler ?';
     }
   }
 
@@ -5551,10 +5598,10 @@ window.confirmDeleteRide = async function(){
       var rideTime2=(rideForCancel.ride_time||'00:00').slice(0,5);
       var dtCancel=new Date(rideForCancel.ride_date+'T'+rideTime2+':00');
       var minsLeft=!isNaN(dtCancel.getTime())?(dtCancel-new Date())/60000:Infinity;
-      if(minsLeft < 2880){
+      if(minsLeft < _refundDelayHours(rideForCancel)*60){
         cancelUpdate.payment_method='non_refundable';
       }
-      // >= 2880 min = remboursable, on garde le payment_method original (bank_transfer/stripe)
+      // beyond the delay = refundable, keep the original payment_method (bank_transfer/stripe)
     }
     var _cancelRefundable = (cancelUpdate.payment_method!=='non_refundable');
     var res=await sb.from('rides').update(cancelUpdate).eq('id',rideId).eq('client_id',currentUser.id);
@@ -9280,6 +9327,18 @@ function _billingVatRow(country, rate){
     +'<div style="display:flex;align-items:center;gap:6px;width:130px;"><input class="billing-vat-rate" type="number" min="0" max="100" step="0.01" value="'+(rate!=null?rate:'')+'" placeholder="6" style="width:90px;"><span style="font-size:13px;color:var(--ink3);">%</span></div>'
     +'</div>';
 }
+function _billingRefundRow(country, hours){
+  return '<div class="billing-refund-row" style="display:flex;gap:10px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">'
+    +'<select class="billing-refund-country" style="flex:1;min-width:140px;">'+_billingCountryOpts(country||'BE')+'</select>'
+    +'<div style="display:flex;align-items:center;gap:6px;width:150px;"><input class="billing-refund-hours" type="number" min="0" step="1" value="'+(hours!=null?hours:'')+'" placeholder="48" style="width:90px;"><span style="font-size:13px;color:var(--ink3);">heures</span></div>'
+    +'</div>';
+}
+window.addBillingRefundRow=function(){
+  var wrap=document.getElementById('billing-refund-rows'); if(!wrap)return;
+  var used=Array.prototype.map.call(wrap.querySelectorAll('.billing-refund-country'),function(s){return s.value;});
+  var next=_BILLING_COUNTRIES.find(function(c){return used.indexOf(c[0])<0;});
+  wrap.insertAdjacentHTML('beforeend',_billingRefundRow(next?next[0]:'BE',''));
+};
 window.addBillingVatRow=function(){
   var wrap=document.getElementById('billing-vat-rows'); if(!wrap)return;
   var used=Array.prototype.map.call(wrap.querySelectorAll('.billing-vat-country'),function(s){return s.value;});
@@ -9295,6 +9354,8 @@ async function loadAdminBilling(){
     s=s||{};
     var rates=Array.isArray(s.vat_rates_client_carrier)?s.vat_rates_client_carrier:[];
     if(!rates.length) rates=[{country:'BE',rate:''}];
+    var refundRows=Array.isArray(s.refund_delays)?s.refund_delays:[];
+    if(!refundRows.length) refundRows=[{country:'BE',hours:48}];
     var f=function(id,label,val,ph,req){
       return '<div class="input-group"><label>'+label+(req?' <span style="color:var(--red)">*</span>':'')+'</label><input id="'+id+'" value="'+_billingEsc(val)+'" placeholder="'+ph+'"></div>';
     };
@@ -9313,6 +9374,12 @@ async function loadAdminBilling(){
         +'<div style="font-size:12px;color:var(--ink3);margin-bottom:16px;">Taux appliqu\u00e9 sur la facture du transporteur (chauffeur) au client, par pays.</div>'
         +'<div id="billing-vat-rows">'+rates.map(function(r){return _billingVatRow(r.country,r.rate);}).join('')+'</div>'
         +'<button type="button" class="btn btn-secondary btn-sm" onclick="addBillingVatRow()" style="margin-top:4px;">+ Ajouter un pays</button>'
+      +'</div>'
+      +'<div class="card" style="padding:22px;margin-bottom:16px;">'
+        +'<div style="font-size:15px;font-weight:700;margin-bottom:4px;">D\u00e9lai de remboursement</div>'
+        +'<div style="font-size:12px;color:var(--ink3);margin-bottom:16px;">Par pays : une demande confirm\u00e9e qui commence dans plus de ce nombre d\u2019heures est remboursable et peut \u00eatre annul\u00e9e. En de\u00e7\u00e0, le bouton \u00ab Annuler la demande \u00bb n\u2019est plus affich\u00e9.</div>'
+        +'<div id="billing-refund-rows">'+refundRows.map(function(r){return _billingRefundRow(r.country,r.hours);}).join('')+'</div>'
+        +'<button type="button" class="btn btn-secondary btn-sm" onclick="addBillingRefundRow()" style="margin-top:4px;">+ Ajouter un pays</button>'
       +'</div>'
       +'<div class="card" style="padding:22px;margin-bottom:16px;">'
         +'<div style="font-size:15px;font-weight:700;margin-bottom:4px;">Commission plateforme</div>'
@@ -9371,6 +9438,20 @@ window.saveAdminBilling=async function(){
   if(dup){showError(err,'Un pays est pr\u00e9sent plusieurs fois');return;}
   if(!rates.length){showError(err,'Ajoutez au moins un taux de TVA client \u2192 transporteur');return;}
   row.vat_rates_client_carrier=rates;
+  // Refund delay per country
+  var rds=[], rseen={}, rbad=false, rdup=false;
+  document.querySelectorAll('#billing-refund-rows .billing-refund-row').forEach(function(r){
+    var c=r.querySelector('.billing-refund-country').value;
+    var raw=r.querySelector('.billing-refund-hours').value;
+    var n=parseInt(raw,10);
+    if(raw===''||isNaN(n)||n<0||String(n)!==String(raw).trim()){rbad=true;return;}
+    if(rseen[c]){rdup=true;return;}
+    rseen[c]=1; rds.push({country:c, hours:n});
+  });
+  if(rbad){showError(err,'D\u00e9lai de remboursement : nombre d\u2019heures entier (0 ou plus) requis');return;}
+  if(rdup){showError(err,'D\u00e9lai de remboursement : un pays est pr\u00e9sent plusieurs fois');return;}
+  if(!rds.length){showError(err,'Ajoutez au moins un d\u00e9lai de remboursement');return;}
+  row.refund_delays=rds;
   var prc=!!document.getElementById('bill-vat-platform-rc')?.checked;
   var pr=prc?'0':v('bill-vat-platform'), pn=parseFloat(pr);
   if(!prc && (pr===''||isNaN(pn)||pn<=0||pn>100)){showError(err,'Taux de TVA transporteur \u2192 Bleenr : indiquez un taux sup\u00e9rieur \u00e0 0 (ou cochez Autoliquidation)');return;}
@@ -9385,6 +9466,7 @@ window.saveAdminBilling=async function(){
     var {data,error}=await sb.from('billing_settings').upsert(row,{onConflict:'id'}).select('id');
     if(error) throw error;
     if(!data||!data.length) throw new Error('Enregistrement refus\u00e9 par la base (droits RLS)');
+    _refundRules=rds; // apply immediately in this session
     showToast('\u2705 Donn\u00e9es de facturation enregistr\u00e9es');
   }catch(e){
     showError(err,'Erreur : '+(e.message||e));
