@@ -3679,16 +3679,15 @@ window._invoiceNav = function(dir){ window._invoiceStep(dir); };
 window._invoiceGoTo = function(idx){ _invoiceCurrentIdx = parseInt(idx); _renderInvoiceMonth(); };
 
 window.generateMonthInvoice = async function(monthKey){
-  // Collect rides for this month from DOM or re-query
+  // Collect rides for this month
   var rides = [];
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     var from = monthKey+'-01';
-    // Last day of month
     var d = new Date(parseInt(monthKey.slice(0,4)), parseInt(monthKey.slice(5,7)), 0);
     var to = monthKey+'-'+String(d.getDate()).padStart(2,'0');
     const [doneRes, cancelledRes] = await Promise.all([
-      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status').eq('client_id', currentUser.id).eq('status','done').gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:false}),
-      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,payment_method').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:false})
+      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes').eq('client_id', currentUser.id).eq('status','done').gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true}),
+      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,payment_method,notes').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true})
     ]);
     rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'))];
     rides.sort(function(a,b){ return (a.ride_date||'').localeCompare(b.ride_date||''); });
@@ -3696,108 +3695,49 @@ window.generateMonthInvoice = async function(monthKey){
     rides = getDemoRides().filter(r=>(r.ride_date||'').slice(0,7)===monthKey&&(r.status==='done'||(r.status==='cancelled'&&r.final_price)));
   }
 
-  var monthLabels = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  var parts = monthKey.split('-');
-  var monthLabel = monthLabels[parseInt(parts[1])-1]+' '+parts[0];
-  var clientName = ((currentProfile?.first_name||'')+' '+(currentProfile?.last_name||currentProfile?.company_name||'')).trim() || 'Client';
+  var e=_billingEsc;
+  var s=await _docBilling();
+  var parts=monthKey.split('-');
+  var monthLabel=_RPT_MONTHS[parseInt(parts[1])-1]+' '+parts[0];
+  var lastDay=new Date(parseInt(parts[0]),parseInt(parts[1]),0).getDate();
+  var periodRange='01-'+parts[1]+'-'+parts[0]+' — '+String(lastDay).padStart(2,'0')+'-'+parts[1]+'-'+parts[0];
+  var isPro=currentProfile?.client_type==='pro';
+  var vatPct=Math.round(TVA_RATE*100);
 
-  var totalHtva = rides.reduce(function(s,r){ return s+(r.final_price?parseFloat((parseFloat(r.final_price)/(1+TVA_RATE)).toFixed(2)):0); },0);
-  var totalTva  = rides.reduce(function(s,r){ var tvac=r.final_price?parseFloat(r.final_price):0; var htva=parseFloat((tvac/(1+TVA_RATE)).toFixed(2)); return s+(tvac-htva); },0);
-  var totalTvac = rides.reduce(function(s,r){ return s+(r.final_price?parseFloat(r.final_price):0); },0);
-  var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
-
-  var rows = rides.map(function(r,i){
-    var htva = r.final_price ? parseFloat((parseFloat(r.final_price)/(1+TVA_RATE)).toFixed(2)) : 0;
-    var code = r.booking_code || r.id.slice(0,8);
-    var from = cleanAddr(r.from_address||'—');
-    var to   = r.to_address||'—';
-    var dispDurPdf = '';
-    if(r.trip_type==='disposal'){
-      var dm2=(r.notes||'').match(/Durée:([^\s|,]+)/);
-      var dr2=dm2?dm2[1].replace(/h$/,''):'';
-      dispDurPdf=dr2?' '+dr2+'h':'';
-    }
-    var route = r.trip_type==='disposal' ? from+' (Mise à disposition'+dispDurPdf+')' : from+' → '+to;
-    var timeStrPdf = r.ride_time ? r.ride_time.slice(0,5) : '';
-    var cancelled = r.status==='cancelled' ? ' <em style="color:#C0392B;">(Annulée)</em>' : '';
-    return '<tr style="border-bottom:1px solid #E8E8E8;">'
-      +'<td style="padding:9px 12px;font-size:12px;font-family:monospace;color:#555;">'+code+'</td>'
-      +'<td style="padding:9px 12px;font-size:12px;color:#333;">'+formatDate(r.ride_date||'')+(timeStrPdf?' '+timeStrPdf:'')+'</td>'
-      +'<td style="padding:9px 12px;font-size:12px;color:#333;">'+route+cancelled+'</td>'
-      +'<td style="padding:9px 12px;font-size:12px;text-align:right;font-weight:600;">'+htva.toFixed(2).replace('.',',')+' €</td>'
-    +'</tr>';
+  var base=0, vat=0, total=0;
+  var rows=rides.map(function(r){
+    var tvac=r.final_price?parseFloat(r.final_price):0;
+    var htva=_rptR2(tvac/(1+TVA_RATE)), tva=_rptR2(tvac-htva);
+    base+=htva; vat+=tva; total+=tvac;
+    var code=r.booking_code||r.id.slice(0,8);
+    var dur=r.trip_type==='disposal'?((r.notes||'').match(/Durée:(\d+)/)||[])[1]:'';
+    var route=e(cleanAddr(r.from_address||'—'))+(r.to_address?' → '+e(cleanAddr(r.to_address)):'');
+    return '<tr><td><b>'+e(_DOC_TYPES[r.trip_type]||'Course')+(dur?' ('+dur+' h)':'')+'</b> — '+e(code)
+        +(r.status==='cancelled'?' <span class="cx">(annulée, non remboursée)</span>':'')
+        +'<div class="sub">'+_docIso(r.ride_date)+(r.ride_time?' · '+String(r.ride_time).slice(0,5):'')+' · '+route+'</div></td>'
+      +'<td class="c">1</td><td class="r">'+_rptMoney(htva)+'</td><td class="r">'+_rptMoney(htva)+'</td><td class="r">'+_rptMoney(tva)+'</td><td class="r b">'+_rptMoney(tvac)+'</td></tr>';
   }).join('');
+  base=_rptR2(base); vat=_rptR2(vat); total=_rptR2(total);
 
-  var invoiceNum = 'BL-'+monthKey.replace('-','/')+'-'+String(currentUser?.id||'').slice(0,4).toUpperCase();
-  var today = new Date().toLocaleDateString('fr-BE',{day:'2-digit',month:'long',year:'numeric'});
-
-  var html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
-<title>Facture ${monthLabel} — Bleenr</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1A1A18;background:#fff;padding:40px;}
-  .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;padding-bottom:20px;border-bottom:2px solid #1A1A18;}
-  .logo{font-family:Georgia,serif;font-size:28px;letter-spacing:.12em;color:#1A1A18;}
-  .invoice-meta{text-align:right;font-size:12px;color:#555;}
-  .invoice-meta strong{font-size:14px;color:#1A1A18;}
-  .parties{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:36px;}
-  .party-block{font-size:12px;line-height:1.7;}
-  .party-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:6px;}
-  table{width:100%;border-collapse:collapse;margin-bottom:24px;}
-  thead tr{background:#1A1A18;color:#fff;}
-  th{padding:10px 12px;font-size:11px;text-align:left;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
-  th:last-child{text-align:right;}
-  tbody tr:nth-child(even){background:#F7F7F7;}
-  .totals{margin-left:auto;width:280px;}
-  .total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;color:#555;border-bottom:1px solid #E8E8E8;}
-  .total-final{display:flex;justify-content:space-between;padding:10px 0 4px;font-size:15px;font-weight:700;color:#1A1A18;border-top:2px solid #1A1A18;margin-top:4px;}
-  .footer{margin-top:50px;padding-top:16px;border-top:1px solid #E8E8E8;font-size:10.5px;color:#888;text-align:center;}
-  @media print{body{padding:20px;} button{display:none!important;}}
-</style></head><body>
-<div class="header">
-  <div class="logo">BLEENR</div>
-  <div class="invoice-meta">
-    <div><strong>Récapitulatif mensuel</strong></div>
-    <div>N° ${invoiceNum}</div>
-    <div>Période : ${monthLabel}</div>
-    <div>Émis le ${today}</div>
-  </div>
-</div>
-<div class="parties">
-  <div class="party-block">
-    <div class="party-label">Prestataire</div>
-    <strong>DISPOSAL SRL</strong><br>
-    IBAN : BE68 5390 0754 7034<br>
-    BIC : TRIOBEBB
-  </div>
-  <div class="party-block">
-    <div class="party-label">Client</div>
-    <strong>${clientName}</strong><br>
-    ${currentUser?.email||''}
-  </div>
-</div>
-<table>
-  <thead><tr>
-    <th style="width:130px;">Réf.</th>
-    <th style="width:100px;">Date</th>
-    <th>Trajet</th>
-    <th style="width:100px;text-align:right;">HTVA</th>
-  </tr></thead>
-  <tbody>${rows}</tbody>
-</table>
-<div class="totals">
-  <div class="total-row"><span>Sous-total HTVA</span><span>${fmt(totalHtva)}</span></div>
-  <div class="total-row"><span>TVA 6%</span><span>${fmt(totalTva)}</span></div>
-  <div class="total-final"><span>Total TVAC</span><span>${fmt(totalTvac)}</span></div>
-</div>
-<div class="footer">DISPOSAL SRL — TVA BE XXXX.XXX.XXX — Conditions de paiement : 14 jours</div>
-<div style="text-align:center;margin-top:24px;">
-  <button onclick="window.print()" style="padding:10px 28px;background:#1A1A18;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit;">🖨 Imprimer / Enregistrer en PDF</button>
-</div>
-</body></html>`;
-
-  var win = window.open('','_blank');
-  if(win){ win.document.write(html); win.document.close(); }
+  var invoiceNum='BL-'+monthKey.replace('-','/')+'-'+String(currentUser?.id||'').slice(0,4).toUpperCase();
+  var page='<div class="page">'
+    +_docTop('Récapitulatif mensuel', invoiceNum, ['Date : '+_docDate(), 'Période : '+periodRange])
+    +'<div class="parties">'+_docParty('Client',_docProfileParty(Object.assign({email:currentUser?.email},currentProfile||{}),isPro),false)
+      +_docParty('Plateforme',_docBleenrParty(s),true)+'</div>'
+    +(rides.length
+      ?'<table class="lines"><thead><tr><th>Description</th><th class="c">Qté</th><th class="r">Prix unitaire HTVA</th><th class="r">Sous-total</th><th class="r">TVA '+vatPct+' %</th><th class="r">Total</th></tr></thead><tbody>'+rows+'</tbody></table>'
+      :'<div class="box" style="margin-top:8px;"><div>Aucune course facturée pour '+monthLabel+'.</div></div>')
+    +'<div class="sum"><table>'
+      +'<tr><td>Sous-total HTVA</td><td class="r">'+_rptMoney(base)+'</td></tr>'
+      +'<tr><td>TVA '+vatPct+' %</td><td class="r">'+_rptMoney(vat)+'</td></tr>'
+      +'<tr class="grand"><td>Montant total TVAC (EUR)</td><td class="r">'+_rptMoney(total)+'</td></tr>'
+    +'</table></div>'
+    +'<div class="box"><div class="boxt">Réglé : '+_rptMoney(total)+'</div>'
+      +'<div>Courses réglées via la plateforme Bleenr — aucun montant supplémentaire n’est dû.</div>'
+      +'<div class="muted">Les prestations de transport sont réalisées par les transporteurs partenaires de Bleenr.</div></div>'
+    +'<div class="foot">'+e(_docFooter(s))+'</div>'
+    +'</div>';
+  _docOpen(_bleenrDocHtml('Récapitulatif '+monthLabel+' — Bleenr', page));
 };
 
 // DRIVER DASHBOARD
@@ -5153,92 +5093,174 @@ function _pdfBase(title,bodyHtml){
     +'<div class="footer">DISPOSAL SRL — bleenr.com</div></body></html>';
 }
 
-window.generateMissionPdf = async function(rideId){
-  if(!sb) return;
-  var {data:r} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
-  if(!r) return;
-  var {data:clientP} = await sb.from('profiles').select('first_name,last_name,phone').eq('id',r.client_id).maybeSingle();
-  var {data:ofr} = await sb.from('offers').select('vehicle_id').eq('ride_id',rideId).eq('status','accepted').maybeSingle();
-  var veh=null; if(ofr&&ofr.vehicle_id){var vr=await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',ofr.vehicle_id).maybeSingle();veh=vr.data;}
-  var nR=r.notes||'';
-  var paxN=(nR.match(/\|pax:([^|]+)/)||[])[1]||''; var paxT=(nR.match(/\|tel:([^|]+)/)||[])[1]||'';
-  var noteD=(nR.match(/\|note_drv:([^|]+)/)||[])[1]||'';
-  var cln=nR.replace(/\|pax:[^|]*/g,'').replace(/\|tel:[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').trim();
-  var cName=paxN||(clientP?(((clientP.first_name||'')+' '+(clientP.last_name||'')).trim()):'');
-  var cTel=paxT||(clientP&&clientP.phone?clientP.phone:'');
-  var htva=r.final_price?parseFloat((parseFloat(r.final_price)/1.06).toFixed(2)):0;
-  var fmt=function(v){return v.toFixed(2).replace('.',',')+' \u20ac';};
-  var tLbl={ab:'Course A \u2192 B',disposal:'Mise \u00e0 disposition',mixed:'Course mixte'};
-  var body='<div class="section"><div class="section-title">Mission</div><table>'
-    +'<tr><td>R\u00e9f.</td><td>'+(r.booking_code||r.id.slice(0,8))+'</td></tr>'
-    +'<tr><td>Date</td><td>'+(r.ride_date||'')+(r.ride_time?' \u00e0 '+r.ride_time:'')+'</td></tr>'
-    +'<tr><td>Type</td><td>'+(tLbl[r.trip_type]||r.trip_type||'\u2014')+'</td></tr>'
-    +'<tr><td>D\u00e9part</td><td>'+(r.from_address||'\u2014')+'</td></tr>'
-    +(r.to_address?'<tr><td>Arriv\u00e9e</td><td>'+r.to_address+'</td></tr>':'')
-    +'<tr><td>Passagers</td><td>'+(r.passengers||1)+'</td></tr>'
-    +'<tr><td>Gamme</td><td>'+(r.vehicle_type||'\u2014')+'</td></tr>'
-    +'</table></div>'
-    +'<div class="section"><div class="section-title">Passager</div><table>'
-    +(cName?'<tr><td>Nom</td><td>'+cName+'</td></tr>':'')
-    +(cTel?'<tr><td>T\u00e9l\u00e9phone</td><td>'+cTel+'</td></tr>':'')
-    +(cln?'<tr><td>Note client</td><td>'+cln+'</td></tr>':'')
-    +(noteD?'<tr><td>Note sp\u00e9ciale</td><td>'+noteD+'</td></tr>':'')
-    +'</table></div>'
-    +(veh?'<div class="section"><div class="section-title">V\u00e9hicule</div><table>'
-      +'<tr><td>V\u00e9hicule</td><td>'+(veh.brand||'')+' '+(veh.model||'')+'</td></tr>'
-      +(veh.color?'<tr><td>Couleur</td><td>'+veh.color+'</td></tr>':'')
-      +(veh.plate?'<tr><td>Plaque</td><td>'+veh.plate+'</td></tr>':'')
-      +'</table></div>':'')
-    +(r.final_price?'<div class="section"><div class="section-title">Prix</div><table>'
-      +'<tr><td>Prix HTVA</td><td>'+fmt(htva)+'</td></tr>'
-      +'<tr><td>TVA 6%</td><td>'+fmt(parseFloat(r.final_price)-htva)+'</td></tr>'
-      +'<tr><td>Total TVAC</td><td>'+fmt(parseFloat(r.final_price))+'</td></tr>'
-      +'</table></div>':'');
-  _buildPdfWindow(_pdfBase('Mission \u2014 '+(r.booking_code||rideId.slice(0,8)),body));
-};
+// ── Shared Bleenr document template (invoices, vouchers, mission orders) ──
+var _BLEENR_DOC_CSS='*{box-sizing:border-box;margin:0;padding:0}'
+  +'body{font-family:"Helvetica Neue",Arial,sans-serif;color:#1A1A18;background:#fff;padding:44px 48px;font-size:12.5px;line-height:1.5}'
+  +'.page{max-width:820px;margin:0 auto}.page+.page{margin-top:60px;padding-top:44px;border-top:1px dashed #CCC}'
+  +'.top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:34px}'
+  +'.logo{height:46px;width:auto}.meta{text-align:right;font-size:12px;color:#444}'
+  +'.kind{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#1B5E3B;font-weight:700}'
+  +'.num{font-size:21px;font-weight:800;color:#1A1A18;margin:2px 0 8px}'
+  +'.parties{display:flex;justify-content:space-between;gap:40px;margin-bottom:22px}.party{flex:1}.party.r{text-align:right}'
+  +'.lbl{font-size:12px;color:#666;margin-bottom:2px}.pname{font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:.01em}'
+  +'.miss{color:#C0392B}'
+  +'table.lines{width:100%;border-collapse:collapse;margin-top:8px}'
+  +'table.lines th{background:#F2F7F4;color:#1B5E3B;font-size:11.5px;font-weight:700;padding:10px;border:1px solid #CFE0D6}'
+  +'table.lines td{padding:10px;border:1px solid #E1E6E3;vertical-align:top}'
+  +'table.kv{width:100%;border-collapse:collapse;margin-top:8px}'
+  +'table.kv th{width:190px;background:#F2F7F4;color:#1B5E3B;font-size:11.5px;font-weight:700;padding:10px;border:1px solid #CFE0D6;text-align:left;vertical-align:top}'
+  +'table.kv td{padding:10px;border:1px solid #E1E6E3;vertical-align:top}'
+  +'.sect{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#1B5E3B;font-weight:700;margin:22px 0 4px}'
+  +'.c{text-align:center}.r{text-align:right;white-space:nowrap}.b{font-weight:700}.sub{font-size:11px;color:#777;margin-top:2px}'
+  +'.cx{color:#C0392B;font-style:italic}'
+  +'.sum{display:flex;justify-content:flex-end;margin-top:22px}.sum table{width:340px;border-collapse:collapse}'
+  +'.sum td{padding:4px 0}.sum .grand td{font-weight:800;font-size:14px;padding-top:8px;border-top:2px solid #1A1A18}'
+  +'.sum .note{font-weight:700;text-align:right;padding-top:6px}'
+  +'.box{margin-top:34px;border:1.5px solid #1A1A18;padding:18px 20px}'
+  +'.boxt{color:#1FA34A;font-size:19px;font-weight:800;margin-bottom:8px}.box div{margin-bottom:4px}.muted{color:#666;font-size:11.5px}'
+  +'.foot{margin-top:26px;text-align:center;font-size:10.5px;color:#999}'
+  +'.warn{background:#FEF3DC;color:#92650A;padding:10px 12px;border-radius:6px;margin-bottom:16px}'
+  +'@media print{body{padding:24px}.np{display:none}.page+.page{page-break-before:always;border:none;margin:0;padding:0}'
+  +'table.lines th,table.kv th,.box{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
 
-window.generateRideVoucher = async function(rideId){
+function _bleenrDocHtml(title, inner){
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>'+_billingEsc(title)+'</title><style>'+_BLEENR_DOC_CSS+'</style></head><body>'
+    +inner
+    +'<div class="np" style="text-align:center;margin-top:30px;"><button onclick="window.print()" style="padding:10px 26px;background:#1B5E3B;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Imprimer / PDF</button></div>'
+    +'</body></html>';
+}
+function _docDate(d){ d=d||new Date(); var p=function(n){return String(n).padStart(2,'0');}; return p(d.getDate())+'-'+p(d.getMonth()+1)+'-'+d.getFullYear(); }
+function _docIso(iso){ var x=String(iso||'').split('-'); return x.length===3?x[2]+'-'+x[1]+'-'+x[0]:(iso||''); }
+function _docParty(t,p,right){
+  var e=_billingEsc;
+  return '<div class="party'+(right?' r':'')+'"><div class="lbl">'+t+'</div><div class="pname">'+e(p.name)+'</div>'
+    +[p.l1,p.l2,p.l3].filter(Boolean).map(function(x){return '<div>'+e(x)+'</div>';}).join('')
+    +(p.extra||[]).map(function(x){return '<div>'+e(x)+'</div>';}).join('')
+    +(p.vat?'<div>N° de TVA : '+e(p.vat)+'</div>':(p.business?'<div class="miss">N° de TVA : non renseigné</div>':''))+'</div>';
+}
+function _docTop(kind, number, metaLines){
+  return '<div class="top"><img class="logo" src="'+_BLEENR_LOGO+'" alt="Bleenr">'
+    +'<div class="meta"><div class="kind">'+kind+'</div><div class="num">N° '+_billingEsc(number)+'</div>'
+    +metaLines.map(function(l){return '<div>'+l+'</div>';}).join('')+'</div></div>';
+}
+// Bleenr company data (Admin → Facturation), cached
+var _docBillingP=null;
+function _docBilling(){
+  if(!_docBillingP){
+    _docBillingP = sb ? sb.from('billing_settings').select('*').eq('id',1).maybeSingle().then(function(r){return r.data||{};}).catch(function(){return {};}) : Promise.resolve({});
+  }
+  return _docBillingP;
+}
+function _docBleenrParty(s){
+  return { name:s.company_name||'Bleenr', l1:[s.street,s.box?'bte '+s.box:''].filter(Boolean).join(' '), l2:[s.postal_code,s.city].filter(Boolean).join(' '), l3:s.country||'', vat:s.vat_number||'', business:true };
+}
+function _docFooter(s){
+  var b=_docBleenrParty(s);
+  return [b.name,[b.l1,b.l2,b.l3].filter(Boolean).join(', '),b.vat?'TVA '+b.vat:''].filter(Boolean).join(' · ');
+}
+function _docProfileParty(p, isBiz){
+  p=p||{};
+  var name = isBiz ? (p.company_name || ((p.first_name||'')+' '+(p.last_name||'')).trim()) : (((p.first_name||'')+' '+(p.last_name||'')).trim() || p.company_name);
+  return { name:name||p.email||'—', l1:p.address_street||'', l2:[p.address_postal,p.address_city].filter(Boolean).join(' '),
+           l3:p.address_country||'', vat:isBiz?(p.vat_number||''):'', business:!!isBiz };
+}
+function _docOpen(html){
+  var win=window.open('','_blank');
+  if(!win){ showToast('Autorisez les fenêtres pop-up pour afficher le document'); return; }
+  win.document.open(); win.document.write(html); win.document.close();
+}
+var _DOC_TYPES={ab:'Course A → B',disposal:'Mise à disposition',mixed:'Course mixte'};
+var _DOC_CLASSES={lowcost:'Low-cost',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'};
+
+// Shared body of a ride voucher / mission order
+async function _docRideDocument(rideId, mode){
   if(!sb) return;
+  var e=_billingEsc;
   var {data:r} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
   if(!r) return;
+  var s=await _docBilling();
   var {data:ofr} = await sb.from('offers').select('vehicle_id').eq('ride_id',rideId).eq('status','accepted').maybeSingle();
-  var veh=null; if(ofr&&ofr.vehicle_id){var vr=await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',ofr.vehicle_id).maybeSingle();veh=vr.data;}
-  var {data:dP} = r.driver_id ? await sb.from('profiles').select('first_name,last_name').eq('id',r.driver_id).maybeSingle() : {data:null};
+  var veh=null; if(ofr&&ofr.vehicle_id){ var vr=await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',ofr.vehicle_id).maybeSingle(); veh=vr.data; }
   var nR=r.notes||'';
-  var paxN=(nR.match(/\|pax:([^|]+)/)||[])[1]||''; var paxT=(nR.match(/\|tel:([^|]+)/)||[])[1]||'';
+  var paxN=(nR.match(/\|pax:([^|]+)/)||[])[1]||'', paxT=(nR.match(/\|tel:([^|]+)/)||[])[1]||'';
   var noteD=(nR.match(/\|note_drv:([^|]+)/)||[])[1]||'';
-  var cName=paxN||(currentProfile?(((currentProfile.first_name||'')+' '+(currentProfile.last_name||'')).trim()):'');
-  var cTel=paxT||(currentProfile&&currentProfile.phone?currentProfile.phone:'');
-  var htva=r.final_price?parseFloat((parseFloat(r.final_price)/1.06).toFixed(2)):0;
-  var fmt=function(v){return v.toFixed(2).replace('.',',')+' \u20ac';};
-  var tLbl={ab:'Course A \u2192 B',disposal:'Mise \u00e0 disposition',mixed:'Course mixte'};
-  var body='<div style="font-size:12px;color:#888;margin-bottom:20px;">Voucher de transport \u2014 '+(new Date().toLocaleDateString('fr-BE',{day:'2-digit',month:'long',year:'numeric'}))+'</div>'
-    +'<div class="section"><div class="section-title">R\u00e9servation</div><table>'
-    +'<tr><td>R\u00e9f.</td><td>'+(r.booking_code||r.id.slice(0,8))+'</td></tr>'
-    +'<tr><td>Date</td><td>'+(r.ride_date||'')+(r.ride_time?' \u00e0 '+r.ride_time:'')+'</td></tr>'
-    +'<tr><td>Type</td><td>'+(tLbl[r.trip_type]||r.trip_type||'\u2014')+'</td></tr>'
-    +'<tr><td>D\u00e9part</td><td>'+(r.from_address||'\u2014')+'</td></tr>'
-    +(r.to_address?'<tr><td>Arriv\u00e9e</td><td>'+r.to_address+'</td></tr>':'')
-    +'<tr><td>Passagers</td><td>'+(r.passengers||1)+'</td></tr>'
-    +'<tr><td>Gamme</td><td>'+(r.vehicle_type||'\u2014')+'</td></tr>'
-    +'</table></div>'
-    +'<div class="section"><div class="section-title">Passager</div><table>'
-    +(cName?'<tr><td>Nom</td><td>'+cName+'</td></tr>':'')
-    +(cTel?'<tr><td>T\u00e9l\u00e9phone</td><td>'+cTel+'</td></tr>':'')
-    +(noteD?'<tr><td>Note au chauffeur</td><td>'+noteD+'</td></tr>':'')
-    +'</table></div>'
-    +(dP||veh?'<div class="section"><div class="section-title">Chauffeur &amp; V\u00e9hicule</div><table>'
-      +(dP?'<tr><td>Chauffeur</td><td>'+(((dP.first_name||'')+' '+(dP.last_name||'')).trim()||'\u2014')+'</td></tr>':'')
-      +(veh?'<tr><td>V\u00e9hicule</td><td>'+(veh.brand||'')+' '+(veh.model||'')+(veh.color?' \u2014 '+veh.color:'')+'</td></tr>':'')
-      +(veh&&veh.plate?'<tr><td>Plaque</td><td>'+veh.plate+'</td></tr>':'')
-      +'</table></div>':'')
-    +(r.final_price?'<div class="section"><div class="section-title">Prix</div><table>'
-      +'<tr><td>Prix HTVA</td><td>'+fmt(htva)+'</td></tr>'
-      +'<tr><td>TVA 6%</td><td>'+fmt(parseFloat(r.final_price)-htva)+'</td></tr>'
-      +'<tr><td>Total TVAC</td><td>'+fmt(parseFloat(r.final_price))+'</td></tr>'
-      +'</table></div>':'');
-  _buildPdfWindow(_pdfBase('Voucher \u2014 '+(r.booking_code||rideId.slice(0,8)),body));
-};
+  var dur=(nR.match(/Durée:(\d+)/)||[])[1]||'';
+  var cln=nR.replace(/\|pax:[^|]*/g,'').replace(/\|tel:[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').trim();
+  var code=r.booking_code||r.id.slice(0,8);
+  var left, right, kind, boxTitle, boxBody;
+
+  if(mode==='voucher'){
+    // Client voucher: passenger on the left, driver & vehicle on the right
+    var {data:dP} = r.driver_id ? await sb.from('profiles').select('first_name,last_name,company_name,phone').eq('id',r.driver_id).maybeSingle() : {data:null};
+    var cName=paxN||(currentProfile?(((currentProfile.first_name||'')+' '+(currentProfile.last_name||'')).trim()||currentProfile.company_name):'');
+    var cTel=paxT||(currentProfile&&currentProfile.phone?currentProfile.phone:'');
+    kind='Voucher de transport';
+    left={ name:cName||'Passager', extra:[cTel?'Tél. : '+cTel:'', (r.passengers||1)+' passager(s)'].filter(Boolean) };
+    right={ name:dP?((dP.company_name||((dP.first_name||'')+' '+(dP.last_name||'')).trim())||'Chauffeur'):'Chauffeur à confirmer',
+            extra:[veh?((veh.brand||'')+' '+(veh.model||'')+(veh.color?' — '+veh.color:'')).trim():'', veh&&veh.plate?'Plaque : '+veh.plate:'', dP&&dP.phone?'Tél. : '+dP.phone:''].filter(Boolean) };
+    boxTitle='Réservation confirmée';
+    boxBody='<div>Présentez ce voucher à votre chauffeur le jour du départ.</div>'
+      +'<div class="muted">Référence à communiquer : <b>'+e(code)+'</b></div>';
+  } else {
+    // Driver mission order: client / passenger on the left, assigned vehicle on the right
+    var {data:clientP} = await sb.from('profiles').select('first_name,last_name,company_name,phone').eq('id',r.client_id).maybeSingle();
+    var pName=paxN||(clientP?(((clientP.first_name||'')+' '+(clientP.last_name||'')).trim()||clientP.company_name):'');
+    var pTel=paxT||(clientP&&clientP.phone?clientP.phone:'');
+    kind='Ordre de mission';
+    left={ name:pName||'Passager', extra:[pTel?'Tél. : '+pTel:'', (r.passengers||1)+' passager(s)'].filter(Boolean) };
+    right={ name:veh?((veh.brand||'')+' '+(veh.model||'')).trim():'Véhicule', extra:[veh&&veh.color?'Couleur : '+veh.color:'', veh&&veh.plate?'Plaque : '+veh.plate:''].filter(Boolean) };
+    boxTitle='Mission confirmée';
+    boxBody='<div>Prise en charge au point de départ à l’heure indiquée.</div>'
+      +'<div class="muted">Référence de la mission : <b>'+e(code)+'</b></div>';
+  }
+
+  // Trip details
+  var kv=[['Date et heure', _docIso(r.ride_date)+(r.ride_time?' à '+String(r.ride_time).slice(0,5):'')],
+          ['Type', (_DOC_TYPES[r.trip_type]||r.trip_type||'—')+(r.trip_type==='disposal'&&dur?' — '+dur+' h':'')],
+          ['Départ', r.from_address||'—']];
+  if(r.to_address) kv.push(['Arrivée', r.to_address]);
+  kv.push(['Gamme', _DOC_CLASSES[r.vehicle_type]||r.vehicle_type||'—']);
+  var segHtml='';
+  if(r.trip_type==='mixed' && typeof parseMixedNotes==='function'){
+    var segs=parseMixedNotes(nR);
+    if(segs.length){
+      segHtml='<div class="sect">Segments</div><table class="lines"><thead><tr><th>#</th><th>Type</th><th>Date / heure</th><th>Trajet</th></tr></thead><tbody>'
+        +segs.map(function(sg,i){
+          var isD=(sg.type||'').toLowerCase().indexOf('disp')>=0;
+          return '<tr><td class="c">'+(i+1)+'</td><td>'+(isD?'Mise à disposition'+(sg.dur?' ('+e(sg.dur)+')':''):'Course A → B')+'</td><td>'+e(_docIso(sg.date||r.ride_date))+(sg.time?' · '+e(sg.time):'')+'</td><td>'+e(sg.from)+(sg.to?' → '+e(sg.to):'')+(sg.note?'<div class="sub">'+e(sg.note)+'</div>':'')+'</td></tr>';
+        }).join('')+'</tbody></table>';
+    }
+  }
+  var notes=[];
+  if(cln) notes.push(['Note du client', cln]);
+  if(noteD) notes.push([mode==='voucher'?'Note au chauffeur':'Note spéciale', noteD]);
+
+  var sum='';
+  if(r.final_price){
+    var tvac=parseFloat(r.final_price), htva=_rptR2(tvac/(1+TVA_RATE)), tva=_rptR2(tvac-htva);
+    sum='<div class="sum"><table>'
+      +'<tr><td>Prix HTVA</td><td class="r">'+_rptMoney(htva)+'</td></tr>'
+      +'<tr><td>TVA '+Math.round(TVA_RATE*100)+' %</td><td class="r">'+_rptMoney(tva)+'</td></tr>'
+      +'<tr class="grand"><td>Total TVAC (EUR)</td><td class="r">'+_rptMoney(tvac)+'</td></tr>'
+      +'</table></div>';
+  }
+
+  var page='<div class="page">'
+    +_docTop(kind, code, ['Émis le : '+_docDate(), 'Départ : '+_docIso(r.ride_date)+(r.ride_time?' · '+String(r.ride_time).slice(0,5):'')])
+    +'<div class="parties">'+_docParty('Passager',left,false)+_docParty(mode==='voucher'?'Chauffeur & véhicule':'Véhicule assigné',right,true)+'</div>'
+    +'<div class="sect">Détails du trajet</div>'
+    +'<table class="kv">'+kv.map(function(x){return '<tr><th>'+x[0]+'</th><td>'+e(x[1])+'</td></tr>';}).join('')+'</table>'
+    +segHtml
+    +(notes.length?'<div class="sect">Notes</div><table class="kv">'+notes.map(function(x){return '<tr><th>'+x[0]+'</th><td>'+e(x[1])+'</td></tr>';}).join('')+'</table>':'')
+    +sum
+    +'<div class="box"><div class="boxt">'+boxTitle+'</div>'+boxBody+'</div>'
+    +'<div class="foot">'+e(_docFooter(s))+'</div>'
+    +'</div>';
+  _docOpen(_bleenrDocHtml((mode==='voucher'?'Voucher':'Mission')+' — '+code, page));
+}
+
+window.generateMissionPdf = function(rideId){ return _docRideDocument(rideId,'mission'); };
+window.generateRideVoucher = function(rideId){ return _docRideDocument(rideId,'voucher'); };
 
 // Promote base notes to |note_drv: when a ride is confirmed
 // ── Email notifications (Supabase Edge Function "send-email") ──
@@ -9827,33 +9849,7 @@ window.rptInvoice=async function(i, kind){
     }));
   }
 
-  var css='*{box-sizing:border-box;margin:0;padding:0}'
-    +'body{font-family:"Helvetica Neue",Arial,sans-serif;color:#1A1A18;background:#fff;padding:44px 48px;font-size:12.5px;line-height:1.5}'
-    +'.page{max-width:820px;margin:0 auto}.page+.page{margin-top:60px;padding-top:44px;border-top:1px dashed #CCC}'
-    +'.top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:34px}'
-    +'.logo{height:46px;width:auto}.meta{text-align:right;font-size:12px;color:#444}'
-    +'.kind{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#1B5E3B;font-weight:700}'
-    +'.num{font-size:21px;font-weight:800;color:#1A1A18;margin:2px 0 8px}'
-    +'.parties{display:flex;justify-content:space-between;gap:40px;margin-bottom:22px}.party{flex:1}.party.r{text-align:right}'
-    +'.lbl{font-size:12px;color:#666;margin-bottom:2px}.pname{font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:.01em}'
-    +'.miss{color:#C0392B}'
-    +'table.lines{width:100%;border-collapse:collapse;margin-top:8px}'
-    +'table.lines th{background:#F2F7F4;color:#1B5E3B;font-size:11.5px;font-weight:700;padding:10px;border:1px solid #CFE0D6}'
-    +'table.lines td{padding:10px;border:1px solid #E1E6E3;vertical-align:top}'
-    +'.c{text-align:center}.r{text-align:right;white-space:nowrap}.b{font-weight:700}.sub{font-size:11px;color:#777;margin-top:2px}'
-    +'.sum{display:flex;justify-content:flex-end;margin-top:22px}.sum table{width:340px;border-collapse:collapse}'
-    +'.sum td{padding:4px 0}.sum .grand td{font-weight:800;font-size:14px;padding-top:8px;border-top:2px solid #1A1A18}'
-    +'.sum .note{font-weight:700;text-align:right;padding-top:6px}'
-    +'.box{margin-top:34px;border:1.5px solid #1A1A18;padding:18px 20px}'
-    +'.boxt{color:#1FA34A;font-size:19px;font-weight:800;margin-bottom:8px}.box div{margin-bottom:4px}.muted{color:#666;font-size:11.5px}'
-    +'.foot{margin-top:26px;text-align:center;font-size:10.5px;color:#999}'
-    +'.warn{background:#FEF3DC;color:#92650A;padding:10px 12px;border-radius:6px;margin-bottom:16px}'
-    +'@media print{body{padding:24px}.np{display:none}.page+.page{page-break-before:always;border:none;margin:0;padding:0}'
-    +'table.lines th,.box{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
-  var html='<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>'+e(docTitle)+'</title><style>'+css+'</style></head><body>'
-    +pages.join('')
-    +'<div class="np" style="text-align:center;margin-top:30px;"><button onclick="window.print()" style="padding:10px 26px;background:#1B5E3B;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Imprimer / PDF</button></div>'
-    +'</body></html>';
+  var html=_bleenrDocHtml(docTitle, pages.join(''));
   win.document.open(); win.document.write(html); win.document.close();
 };
 
