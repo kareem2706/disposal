@@ -9616,11 +9616,13 @@ async function _rptRender(){
       var htva=_rptR2(list.reduce(function(s,r){ return s+_rptR2(parseFloat(r.final_price)/(1+TVA_RATE)); },0));
       var pVat=_rptVatForCountry(f.address_country);
       var pVatAmt=_rptR2(htva*pVat/100);
+      // Commission computed on the HTVA amount
       var cHt=_rptR2(htva*commissionRate/100);
       var cVatAmt=_rptR2(cHt*commVat/100);
       return { fleet:f, rides:list, htva:htva, pVat:pVat, pVatAmt:pVatAmt, pTvac:_rptR2(htva+pVatAmt),
                commRate:commissionRate, cHt:cHt, cVat:commVat, cRc:rc, cVatAmt:cVatAmt, cTvac:_rptR2(cHt+cVatAmt),
-               net:_rptR2(htva+pVatAmt-cHt-cVatAmt) };
+               // Net paid to the fleet = total HTVA - commission TVAC
+               net:_rptR2(htva-cHt-cVatAmt) };
     }).sort(function(a,b){ return _rptFleetName(a.fleet).localeCompare(_rptFleetName(b.fleet)); });
   }catch(e){
     el.innerHTML=head+'<div class="card" style="padding:24px;color:var(--red);font-size:13px;">Erreur : '+_billingEsc(e.message||e)+'</div>';
@@ -9756,7 +9758,7 @@ window.rptInvoice=async function(i, kind){
       +'<tr style="font-size:15px;font-weight:700;border-top:2px solid #1A1A18;"><td>Total TVAC</td><td class="r">'+_rptMoney(total)+'</td></tr>'
     +'</table>'
     +(mention?'<div style="margin-top:22px;font-size:11.5px;color:#555;">'+mention+'</div>':'')
-    +(kind==='prestation'?'<div style="margin-top:8px;font-size:11.5px;color:#555;">Net vers\u00e9 au prestataire apr\u00e8s d\u00e9duction de la commission ('+_rptMoney(d.cTvac)+') : <b>'+_rptMoney(d.net)+'</b></div>':'')
+    +(kind==='prestation'?'<div style="margin-top:8px;font-size:11.5px;color:#555;">Net vers\u00e9 au prestataire : total HTVA '+_rptMoney(d.htva)+' \u2212 commission '+_rptMoney(d.cTvac)+' = <b>'+_rptMoney(d.net)+'</b></div>':'')
     +'<div class="np" style="text-align:center;margin-top:30px;"><button onclick="window.print()" style="padding:9px 24px;background:#1A1A18;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">Imprimer / PDF</button></div>'
     +'</body></html>';
   win.document.open(); win.document.write(html); win.document.close();
