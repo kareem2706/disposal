@@ -3679,65 +3679,19 @@ window._invoiceNav = function(dir){ window._invoiceStep(dir); };
 window._invoiceGoTo = function(idx){ _invoiceCurrentIdx = parseInt(idx); _renderInvoiceMonth(); };
 
 window.generateMonthInvoice = async function(monthKey){
-  // Collect rides for this month
-  var rides = [];
-  if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
-    var from = monthKey+'-01';
-    var d = new Date(parseInt(monthKey.slice(0,4)), parseInt(monthKey.slice(5,7)), 0);
-    var to = monthKey+'-'+String(d.getDate()).padStart(2,'0');
-    const [doneRes, cancelledRes] = await Promise.all([
-      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes').eq('client_id', currentUser.id).eq('status','done').gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true}),
-      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,payment_method,notes').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true})
-    ]);
-    rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'))];
-    rides.sort(function(a,b){ return (a.ride_date||'').localeCompare(b.ride_date||''); });
-  } else {
-    rides = getDemoRides().filter(r=>(r.ride_date||'').slice(0,7)===monthKey&&(r.status==='done'||(r.status==='cancelled'&&r.final_price)));
-  }
-
-  var e=_billingEsc;
-  var s=await _docBilling();
-  var parts=monthKey.split('-');
-  var monthLabel=_RPT_MONTHS[parseInt(parts[1])-1]+' '+parts[0];
-  var lastDay=new Date(parseInt(parts[0]),parseInt(parts[1]),0).getDate();
-  var periodRange='01-'+parts[1]+'-'+parts[0]+' — '+String(lastDay).padStart(2,'0')+'-'+parts[1]+'-'+parts[0];
-  var isPro=currentProfile?.client_type==='pro';
-  var vatPct=Math.round(TVA_RATE*100);
-
-  var base=0, vat=0, total=0;
-  var rows=rides.map(function(r){
-    var tvac=r.final_price?parseFloat(r.final_price):0;
-    var htva=_rptR2(tvac/(1+TVA_RATE)), tva=_rptR2(tvac-htva);
-    base+=htva; vat+=tva; total+=tvac;
-    var code=r.booking_code||r.id.slice(0,8);
-    var dur=r.trip_type==='disposal'?((r.notes||'').match(/Durée:(\d+)/)||[])[1]:'';
-    var route=e(cleanAddr(r.from_address||'—'))+(r.to_address?' → '+e(cleanAddr(r.to_address)):'');
-    return '<tr><td><b>'+e(_DOC_TYPES[r.trip_type]||'Course')+(dur?' ('+dur+' h)':'')+'</b> — '+e(code)
-        +(r.status==='cancelled'?' <span class="cx">(annulée, non remboursée)</span>':'')
-        +'<div class="sub">'+_docIso(r.ride_date)+(r.ride_time?' · '+String(r.ride_time).slice(0,5):'')+' · '+route+'</div></td>'
-      +'<td class="c">1</td><td class="r">'+_rptMoney(htva)+'</td><td class="r">'+_rptMoney(htva)+'</td><td class="r">'+_rptMoney(tva)+'</td><td class="r b">'+_rptMoney(tvac)+'</td></tr>';
-  }).join('');
-  base=_rptR2(base); vat=_rptR2(vat); total=_rptR2(total);
-
-  var invoiceNum='BL-'+monthKey.replace('-','/')+'-'+String(currentUser?.id||'').slice(0,4).toUpperCase();
-  var page='<div class="page">'
-    +_docTop('Récapitulatif mensuel', invoiceNum, ['Date : '+_docDate(), 'Période : '+periodRange])
-    +'<div class="parties">'+_docParty('Client',_docProfileParty(Object.assign({email:currentUser?.email},currentProfile||{}),isPro),false)
-      +_docParty('Plateforme',_docBleenrParty(s),true)+'</div>'
-    +(rides.length
-      ?'<table class="lines"><thead><tr><th>Description</th><th class="c">Qté</th><th class="r">Prix unitaire HTVA</th><th class="r">Sous-total</th><th class="r">TVA '+vatPct+' %</th><th class="r">Total</th></tr></thead><tbody>'+rows+'</tbody></table>'
-      :'<div class="box" style="margin-top:8px;"><div>Aucune course facturée pour '+monthLabel+'.</div></div>')
-    +'<div class="sum"><table>'
-      +'<tr><td>Sous-total HTVA</td><td class="r">'+_rptMoney(base)+'</td></tr>'
-      +'<tr><td>TVA '+vatPct+' %</td><td class="r">'+_rptMoney(vat)+'</td></tr>'
-      +'<tr class="grand"><td>Montant total TVAC (EUR)</td><td class="r">'+_rptMoney(total)+'</td></tr>'
-    +'</table></div>'
-    +'<div class="box"><div class="boxt">Réglé : '+_rptMoney(total)+'</div>'
-      +'<div>Courses réglées via la plateforme Bleenr — aucun montant supplémentaire n’est dû.</div>'
-      +'<div class="muted">Les prestations de transport sont réalisées par les transporteurs partenaires de Bleenr.</div></div>'
-    +'<div class="foot">'+e(_docFooter(s))+'</div>'
-    +'</div>';
-  _docOpen(_bleenrDocHtml('Récapitulatif '+monthLabel+' — Bleenr', page));
+  // Client space: one invoice per fleet (the fleet invoices the client)
+  if(!sb || localStorage.getItem(DEMO_MODE_KEY)){ showToast('Indisponible en mode démo'); return; }
+  var from=monthKey+'-01';
+  var d=new Date(parseInt(monthKey.slice(0,4)), parseInt(monthKey.slice(5,7)), 0);
+  var to=monthKey+'-'+String(d.getDate()).padStart(2,'0');
+  var res=await Promise.all([
+    sb.from('rides').select('*').eq('client_id', currentUser.id).eq('status','done').gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true}),
+    sb.from('rides').select('*').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true})
+  ]);
+  var rides=(res[0].data||[]).concat((res[1].data||[]).filter(function(r){ return r.payment_method && r.payment_method!=='refunded'; }));
+  rides.sort(function(a,b){ return (a.ride_date||'').localeCompare(b.ride_date||''); });
+  var people={}; if(currentProfile) people[currentUser.id]=Object.assign({email:currentUser.email},currentProfile);
+  _invOpen({ rides:rides, kind:'prestation', year:parseInt(monthKey.slice(0,4)), month:parseInt(monthKey.slice(5,7)), people:people });
 };
 
 // DRIVER DASHBOARD
@@ -9723,6 +9677,7 @@ async function _rptRender(){
       .gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true});
     if(rr.error) throw rr.error;
     var rides=rr.data||[];
+    _rptRides=rides;
     var ids=[...new Set(rides.map(function(r){return r.driver_id;}).concat(rides.map(function(r){return r.client_id;})).filter(Boolean))];
     var people={};
     if(ids.length){
@@ -9784,7 +9739,11 @@ async function _rptRender(){
     +'<div class="card" style="padding:0;overflow:hidden;">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--sand2);">'
         +'<div style="font-size:14px;font-weight:700;">Paiements à effectuer — '+_RPT_MONTHS[_rptMonth-1]+' '+_rptYear+'</div>'
-        +'<button class="btn btn-secondary btn-sm" onclick="rptExportCsv()">Exporter CSV</button>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">'
+          +'<button class="btn btn-secondary btn-sm" onclick="rptInvoiceAll(\'prestation\')">Toutes les factures de prestation</button>'
+          +'<button class="btn btn-secondary btn-sm" onclick="rptInvoiceAll(\'commission\')">Commissions \u2014 toutes les fleets</button>'
+          +'<button class="btn btn-secondary btn-sm" onclick="rptExportCsv()">Exporter CSV</button>'
+        +'</div>'
       +'</div>'
       +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;">'
         +'<thead><tr style="background:var(--sand2);">'+th('Fleet')+th('Courses',1)+th('Prestation HTVA',1)+th('Prestation TVAC',1)+th('Commission HTVA',1)+th('Commission TVAC',1)+th('Net à payer',1)+th('Factures',1)+'</tr></thead>'
@@ -9792,10 +9751,32 @@ async function _rptRender(){
         +'<tfoot><tr style="background:var(--sand2);">'+td('<b>Total</b>')+td(tot.n,true,true)+td(_rptMoney(tot.htva),true,true)+td(_rptMoney(tot.pTvac),true,true)+td('−'+_rptMoney(tot.cHt),true,true)+td('−'+_rptMoney(tot.cTvac),true,true)+td(_rptMoney(tot.net),true,true)+'<td></td></tr></tfoot>'
       +'</table></div>'
     +'</div>'
+    +_rptClientsCard()
     +(!_rptSettings?'<div style="margin-top:10px;font-size:12px;color:var(--amber);">Paramètres de facturation non renseignés : valeurs par défaut utilisées (commission 10 %, TVA 6 % / 21 %). Complétez Admin → Facturation.</div>':'');
 }
 
 var _rptPeople={};
+// Admin: one line per client with its prestation invoices (one per fleet)
+function _rptClientsCard(){
+  var by={};
+  (_rptRides||[]).forEach(function(r){ if(!r.client_id) return; var c=by[r.client_id]=by[r.client_id]||{n:0,tvac:0,fleets:{}}; c.n++; c.tvac+=parseFloat(r.final_price)||0; c.fleets[r.driver_id]=1; });
+  var ids=Object.keys(by); if(!ids.length) return '';
+  ids.sort(function(a,b){ return _rptFleetName(_rptPeople[a]).localeCompare(_rptFleetName(_rptPeople[b])); });
+  var th=function(l,r){ return '<th style="padding:10px 12px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:600;text-align:'+(r?'right':'left')+';white-space:nowrap;">'+l+'</th>'; };
+  var td=function(v,r){ return '<td style="padding:10px 12px;font-size:12.5px;text-align:'+(r?'right':'left')+';white-space:nowrap;">'+v+'</td>'; };
+  return '<div class="card" style="padding:0;overflow:hidden;margin-top:14px;">'
+    +'<div style="padding:12px 16px;border-bottom:1px solid var(--sand2);font-size:14px;font-weight:700;">Factures par client — '+_RPT_MONTHS[_rptMonth-1]+' '+_rptYear+'</div>'
+    +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr style="background:var(--sand2);">'+th('Client')+th('Type')+th('Courses',1)+th('Fleets',1)+th('Total payé TVAC',1)+th('Factures',1)+'</tr></thead><tbody>'
+    +ids.map(function(id){
+      var p=_rptPeople[id]||{}, c=by[id];
+      var type=p.role==='driver'?'Fleet (sous-traitance)':(p.client_type==='pro'?'Professionnel':'Particulier');
+      return '<tr style="border-bottom:1px solid var(--sand2);">'
+        +td('<div style="font-weight:600;">'+_billingEsc(_rptFleetName(p))+'</div><div style="font-size:11px;color:var(--ink3);">'+_billingEsc(p.email||'')+'</div>')
+        +td(type)+td(c.n,1)+td(Object.keys(c.fleets).length,1)+td(_rptMoney(c.tvac),1)
+        +'<td style="padding:8px 12px;text-align:right;"><button class="btn btn-secondary btn-sm" style="font-size:11px;padding:4px 10px;" onclick="rptInvoiceClient(\''+id+'\')">Factures de prestation</button></td></tr>';
+    }).join('')
+    +'</tbody></table></div></div>';
+}
 function _rptFleetName(f){ return (f && (f.company_name || ((f.first_name||'')+' '+(f.last_name||'')).trim() || f.email)) || '—'; }
 
 window.rptExportCsv=function(){
@@ -9810,58 +9791,89 @@ window.rptExportCsv=function(){
   document.body.appendChild(a); a.click(); a.remove();
 };
 
-// Persisted, sequential invoice number (table fleet_invoices); same number when re-generated.
-// Prestation: one invoice per fleet + client + month. Commission: one per fleet + month.
-async function _rptInvoiceNumber(fleetId, kind, clientId, amounts, ridesCount){
-  var period=_rptPeriod(), pre='BL-'+(kind==='prestation'?'P':'C')+'-'+_rptYear+'-';
+// Bleenr wordmark embedded so the printed invoice never depends on a relative URL
+var _BLEENR_LOGO='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWgAAABWBAMAAAAQzBGPAAAAMFBMVEX///////7//v7+/v3z+PSj1bhFbFMpWDsnWDsnWDonWDklWDknVzknVjkkVjgdTC/sHJedAAAaFElEQVR42s2bbXQc1Znnf7eqbZNlpLqlNgkMyCq1DTFgqUtqOGSXAWQcQ04SgmwCBLKZODNgSNjDy+wk1s4kvGTOJnZ2Zw0mk7ENM5gwYeBgwMTsBCYGy/GGnAFaKsk4ZNdWd0kCQsBS3ZIwfpGq7n6oftMbkA9z4vrUp+pW1VP3/u//+T8vLVyPj3S4n7RKv97xP+It/25HyszNdjruLf8y4tKPkzZIANTX+EMfqfzs59MOAwo7IK6c2qABUin+8EZ/evbzk93kIi+oPWU2ZvuVPHPPCWD0A4uUUFJJLaon1bFtwZnBwf5cdRkMgB2imRPhSFkaJJKSzZ4LeVeuszl6a/PTrq/KIAdAgjwRjFYfywcNaKFD6g0l7bzvjHoFp0d9YuuRP326tbdmrB1gByfETJM6Lw8CIbEDSYBDA+2cb8h3Pv7IV54Wlqqixm4IUCeE0ZNbP53X7tNLiNsLQueIPJVAIE49/OPrh/NChiUG0QSVKf8DG02wS9BtiMiK0XhEWkoFkN+V3fCTC11P6Qo8tACN0H/gmTbARiMWt5jvma7L5KFAqRIEwtSF/3rePgCEBJGcFycCPMBG6DoPM+96CLvmYmHl7zYVAqWCkqlSnBCMh4EBhSKYccv0aw679m9orpBcBCfENgSDWGpkoJTxrGuC1lorJUqGjg18/rv9UJ79EOcEMVpgNyCoQ5uRi7BR0opLM1rXNG50VAdLfE4EWKfQBFYIZ7oAZ5bATMmBiwN9jSqoNTvhvn+3Q84EoONPV5yJZrNCVbcV0KVbzrokraJEJakfWlKVtMeHHh9C4NXXz3nMsmmqN8U17IHvKMm6mnH6r63lHoBedZ/AGfyozuRDxs1hs7HIB6r0XzvbU7/TiIVOjNYCIetT11SvidM2qkLy62lHSPFBtmRGFaU4Yg5pjtCmm/CPN+taxH5ikB3kAPJqzu+MsRTpxhSAo8B5t7t6ceXXN5/RowGiobBlvKSnZ7HHdNVi4pK1OUb8WaI31yRKRpg57S8emHJ72Zgh5fqOziePGaiYbYdZH8cnsJ2i4xmxnRnxR0ZSyUxc6JGuibte2X3Sf7iqZMpjMqyB07QjQpJPfdoGCHaRkzNtNs3IS62UgD7Ubbpx7WKXPgajrSnGSR4U7BLtlTVTTlERAKo3PUhMZmDJEkghBHREDUTRYCDQIMPM4ujvwzcBdIgCodGJc5nF7H0rm0+7G+DorcH23MyZdvPnXWNvBmDdKe9214ak7sLKZgiMyEse9PrGYHsl+hDV0Go0QFl9y2WJ8gBGgSD5rfDdfW7XXYnmOGVQDkqFANMccHAPA0KqZIuI9oHDVz1OsF6BuGzrEXHAbO+ZanMuv3LpJt75X8BZG7hpYdUgBKffHcO2NfL7G2l57ZoNzmgX3Lz1CJVB8VBFV0ziN72xqobyZtJl9BvpO2UxXYLYRdE0KhDt0fmZzW9vuurSHgOef37BYze/Yk6Z67TTc82Gpi6uXi16mexiwwKedvurENl9ZV90x8uXgdu3+vG3uzIZ9GY+9fhND+XyxjREikL2tVXV2E+T3zHd6uHdNdjTumL71NWP5p2zKVjwTW22A6uvvuKhrefnRQ2lC/JXP17/1E1rZXqnb7L2xs3HHlm1r8Ya9Wp9z4AG8tc93DP/m50gMtec/sz9V3jOjF20uGwzBiCmu+W4oJwspq8ru1griMyp44Rs3/+fNh6WwWgYAXiYq4OtN/TXV8NIo/GyxwO7DS1EJy3uIXUZJ/34olyVh5R8peNFCS2X/fhI82RhB0Bvf8djj14kZwqO5bXSVCdiQlRIXWvpj4mo05/in8y8QMmaWRzPf/V/9gSiLXBUHnA5ED9hbDk0HJRvy0X7n+66oSAJJRNf8IiN1r+dOOkni9yosmBe4lJeu6VrdV+yRGbkbmDDkocSeFUtiBpkjdFqpkxWDUJjmo43bU/VxuLabvr4QyqjLCGCCOCpqxfLtbr/rGGrEli+dsupa0WzAliooH3HG1/TcnjNthqxKPrkngu4dP1bumO37wCRGZ9/unQOhr3TVJKsjVyEAj3F6QsEQks5TQ5M47yx/c+HMoj9AhITyOQnHgjCpo+5RhlW0aUbFwAqtNBEYMZrUOGO+y+qq/U8ylKcfYTJotuU3GWqeb9cv8SYBhAxJXKxROVMCSCauGGM5ZiALyqirgJFPQYNuil7NC4kLG66KDniG3gT+c9kLyoRiLn/ym2f2+WOCmXZgU6tUFyjpK2tLUt2VzSFByr2jfWHdwkdlGR8j3hBnrqursUDFg1PFZgVTCtLlOZTlUy3kenSOKdYCWzzZcNFvbKFvb+nJz/cqSSqIXQHHfBxDtCZ2tA4jLCUO9z4ie+MjboqLVyQWgQJDEXr6TddYdWweeeOiS997wwlq5JXS+ZvuMJHWAyJ2WNENV0UKqHNaJno7tSA/vpLpQXQAO5YyYXZddeTVTl8V/NKGBWRgfDO99lx5i0n16MViv1fGFeCtJBB0VKBUxSLJaDtIxsaR8vvunjeC55Mj1wpX9CqVt+JpjeHQaVlOEdgK5Q9VYdr0exdEnSgXQ9hdbeqWrFRRnRKdrc6785r0cbY1aP9GdeMiz2vAq6ad1HoWWM0Zu9mMkx3Z61kL77XEShAWA23LahHaDkOHI5AqtQfKUIhW+cltBJiT8T31WNEc0fj5VVZXHJ1OZi89AfvyQDPbNmvp8jDfZlk+9pG/8sjfc4pgZcTdWF6OehDZudO1sJxf0mvWxTpvivv/qoWgWsPOsIGluu+pmQhxcc6RqHXBGfER6o87mAAqX9ZMwlaCEsARsdI3wekEBKMV1yHExfVysf3J1t53uB/ae2dqYARjdnQdEDkxLGlC9YqaNj8t6vpBOYtuK++TplcepciwFYc23P5bQrE2V3fWwNIVNg4CnIc/FbpoYXpoYU4fnzr6jKq4WjdyFzZzlSFUKJCxSec13C2tUhhB2Qnbr1mZtymQxmmmmQR8Nwz5n+/sB1IBY/d2Thv2xpgrGPEIzr7mUs0YB0/+sk/3Q6wsqvrfUBg2X9X78bKBOfkMRREqLH6YN56/bzvlNjNQIJK6zmMloBDfNZZlZMLNh3d1tr8boq2uP14d90Mm4W1mP69waiNcjPPXPtydw6Inrxu25FCJwi9uXEU9r88HgCkabp+Rw7g52pzR6svgd81ubE2AP9sEwTk+v580/qjN4nNnxkZtP7BATmqF+4DxxNzz7Tv9G2pnhztWtJm+/KQqc1/2uMWpqp+ADEir3sfWwPHrr1+b65AGKfdJ091EslwXWM92dNLj9YnXb8z1+MyRG7iV3cntHHKscZhYhPgaQdgR9PEHWuDQFx2zvpQXpWHcTV5z0ZLfSA8OhnuqrDNEvdbgiIBHgfu+mE8ywrpsbTUfQ5K2Zvf3OmSKcSm4y/71cbREMASuHGm9JXh2p1u3B7jUMj865qNjgKK56UHh+Q4MG9NN0Dj5Oa3XvHSjV43FxeXAZwSCZpn7iatypSnMaORa6uCIC6S0UT73Ik/X4Uv7GBGqqO5/9URV0HDaes+29LTPqCcoYIz1HjHoisFMCYvGu9P3IdYuOCptkJG+zjFsJB79MHxJNXw3UWtRYCJckz2rQuHcwUzF/3q3tFDQBT3XXKxmhG/j75QqaUI8vvoOfDEEweeOPDUE089kfei7YBbt3TtzphKssatfO44QqNAOyfdudfXPQo/Vl6T+fo3bAWk1kuWa6WAbeLLbT4UNX6zNLjwL5MnTMhyjuUffYDWq75sRgVDx+bx20ted/AxSzM61eZ3X8hJYeeMKlb7cqRz6WyuLScZbI8iD3/BARes2eqMl4fJLvcOti6W2DZCNgh2G0WpAJfotHsUwHXzn40xkncbDuOvS7TWDIUXJ0JDrgEQ0fydsTAWqbGC+Zsk5gvVzCxJvNfNK4K8gSESSRHpvKt6QxsdEWW8cYF/ShHP0LPtBt2wQyBjhwt24jcTBEjlwLnf2oGE45cPp759uwXw2C1Zg2RDGY7G3x1pgRoR/2aVnjvvC4B+7lbXD2Igw4sn1wikhikvfarFw9DYKWItKMkyT7RrBSZpne0BNbLwfMYzurwdvAqnx6ZsApWetA+7XqvRLHQiBAz/oaJESO2ZZ7ylBeGyrs/HQwSZGD8TC4Ej/rK1Q2FGHkKOA2z7HKJu3OmLAwKtwGz7fqeSoM0ZrkW35yGGwCjJ0uSzMyW7pBA5Fzdd/4PzIz3oTMc0Rt+9LtgIdVtcb2DLkngRP5MCwXO3tly3AAG8951uP3YyGIZIlnRS+bqQJ1GRwPw183x9uOXa4aG2ctQd7pjDe48OmJUgQIPpdpjQjnSRiHJIKSy7+IPz+rU/LR8EiKRW6nvKyNQ+N4sEJUeSMEMX9hx0M8mAUtnUVLepGIys3S9LkWYnwtHelBykStJDUx2L/kUpKUoKBBpMXC9eoWQYoht821J4TAahw/0HQ2caPrQyibTXVFwkGJmawEvdkb24sGLpF429AKLhU1+c5k9N82SpBOLkezb6JoCyPCZ/9msZV/bd2xufUCA1IKmRprryqBRo0YaZP5+rhGhIkN8QaADPbCsWf/rDbP00TAMixonpbXi7xvknSWNtZMWd7h8feQtgz7+4Rtu0RR5D0N1REkwgNaa789CiYlkYj8+XSdESDOKafMRIJWRNAfSexwr1yuPOUHYsHmuKwyLzOiMzAi3kl5xLglKhyK2ZVROEliz50jSTDvXTlzoYZe79KuiQg3XZe6dlg3scd1+HfOXi6uJHXhkSgEpMk8HMBKJXdeMCRHeH4uYp+NkyLzLdvJCBWJ/prYQt5dvqLjDQaIN9uRC0XY2LzWz4R9nx/b1BgOaddXXGbjXNmbpRdwSuIEgnvOb2RhJjrMwGvq7W4I3ae/fUli8EdBDNv6Y28rU3ax4k9yrEJ91X3zw2AuAP2E2+uwdw5msY8cDo0aGGcoaaaFDbn9Td6ci3IPpUwU0fj0Upxo57aVZaeBGmLFeilFR0S6NmVqUcq07daG1IVY1jUpWUbW1+moWj53w9o6zFAxjLj3aMJo7ccXpkaY0MkC8AsefW6T3S/cdSOclblhoZfrglO96kEIfv7as77b9/VaFBxD3nFXIjZkFVuVM1glJWB/2tz8TlOkBNOmhqRkvPDAJ6r02vqA0Fn1i5phibLWCKn9aNiOSRkcZ2+kruKvnuKA8deLZs6GnQtl7+wNWGHkpJ+aKDPrbuov6fPyKcJCxevOsSdcb/SfZFjTVSm9Gic9AymKVSJNFzS9MnOzUjykNoSgFa7pWuv58YelES+87C4QRbwnTLD1WVbIjQeNA6GGbNQENKvnPBL8Re7Wg1drb2clEnAUKjlbUi0mEtQ8pShcGLHC0qm0K5/aI2k1S7G7yaBCRcVfL12gaBVsSFJU+pdJ+EICPv86opnkBNc66GKzFNQ2JiERxfpZ67K/uZ93ol0v3NLS1nz+9VoAOtEBNmvdmRyyVLrcpAUAqzWlabu5o0raAPRGZStBfYUiuhwdAX3jO2HJAFDSOU8pSmK8vFsTfKfKWIRnq1LowMBLyv4WBdZmezEDpqHU5JLB0kfOb1R17ey+en54slkUbIDzc18mZsRNACK7AREhsjZvzt+qI5IhkLhRv1WQDdf1J+4fGYQ4keKFU3dsnADusRCy9cVy92B3hNcrJ+j/glmYJUuwoZf5FPsQrQZZU8l9RuXkhj9oLO1PmNpxptRq5KdH2lYlYw9k1IF9D7ltaFVgjQUb7NuxwWLgS9ZOYMHc4u1J7rBmH61mXZw4hclRBrjyNuMSm7Aq6KpxBFCYImGErMKH1CKsG3GcsZuNFIrSKMjudkmFQMhLAPoRCYvSBVtDD0/nmGNe9GS7d1BgAjpvTcozfNVQm1hhrBawbXu2iKF0EmVkcf0O/h5by568bFOuH7oASYQgYKdw8g1QS+NIH/1z2jBGe8OgbYv1vwrHg1wJo5olySloCjweucYZ+Ss9VQa4yOZ620xpl+AxHIKj1FlT44G23g+spWIj1j6eOPJwBdcGc2reFIeta+UGJfmY20KQmuwBRlno4BhZwGiGkeURrz5lgGAVpoImcPhjITL6hAgmogBVjHo5Q9jaF8x1iaMPnDB6PTFBh1AAXHx2CRX612O0gTehtDq1ppLjs+qVDWB1GeijFnKyCP4cYqlGCoKal4D5Cx9V0VCnHYd++bBi1H9G+sRwM3jaeaJEHwQ1UAx3eIY19hZIachGmNJDTW1UbGmrfMBo+4tkllogz5KXK9lbMXFCXC9mpOa6mSUU1qB5og9sY6Yh+/pgFh8vpnxgBGrO7+byvEhOFTKPiUIhzNon5HoRkMLAV6smSdDmolhpYf1qQyb+JNWrylSthaAM5Q7Bi+Q51UbQqJO17CdAwCeTihUOVaATZ1mxtVXKBAkHSUkdn/ajL3z25pyf7N7QpzwxWhBxQAGhyf4YuVRAdJIVAAygv/pNo3Zyab5kM94jwnAqTWSoH2Y/yCg/zlbZV1UZXeJSVKa/t2ZySEdIZu/ru+ptJSCAMy/vUiA8jAPZSSqwCx5ie/qMrtnjjKLB5CY0utgKYlIdBGjUt0PpIbj6KIHYAec4AxDU6GeM83tpUxcywRBIYPVgMSMMRuy0T4UqWOf36fTMARN9IQ5R4SPojJdy97tm+jA2h59IrFQelVscy89h83tTjV4pOvBXizmJrkCOIPzE/DuNlGulzwV6nVG30UKO2vWNrilOdABO4ecHw/FhDLfMbLPfrZ8Xw6N6Cgrz3af4nnOMD/XnVbdmHoNYHQgz85OddT2kiZkdXrn1vydIV05aGFWrljTO+SAi0+CNMVT1+la7HCtrc81KkSGSoshSoTTD1OX+xrlt3e0mYXXcZ37T/zgRyx47n73Oi1b/y1SDa+PISWTQCjx47f8GAu9gHDya/c8L2vXH5wvFjvowHvs0LJKK7Rdmpm2XAuo51Y1cbVCzYRdCI1ASjvFGjrh1hJGHvDB0Rs+t8JkXhNuZalPCDayeHmU9dteF9YAOe8v1P2H5VKC8TH9f1qu2gHovzKc6zb1b8teajel0poECmkon0uEz+kfGHoLdN7zbQOCezIfe3HblXFxu4eEE2+33+yEnbgGoHQWynuAsyVSzcpgQC8PZvdQmvXspwFBA1HH7ELLwCpq/94o8jbSzcdVATCGoesstFGz0X692qbS5Xd+vNTXFtGqpyESTEpvPeCyBMNpe82vBKXZrvu8i09miY/kN/627sU2Kfd9Vf/1QDQrZ+6IiZWi5wAEAMTP9u6LqPA3vL2nZ87RQWbz9tYh1YmqHoLEbm/dzMhsYEMMJqrSivnuWBrEUiZd5dl/6kEeulXlstwJgu2ikmDzhhdXVsBfnPnN5VEC8Sel7otw3h08xGVJAMu7vpvEtDrL1+FkPqWuleVV1r/0Jqtf8+MPjxyCVCBmtLQZ9tKYKsI87ex5yHLwbEs93cNP4dsEEhysbpcB0EQFD7xF4kn65lYfrDVdvxzb+5O6nrauFwHwWivWrvIkSDeOLqkohysUkIxnNK0E83ZWlg1Gl3rhSSuKG+CXL/9n7NOuWhe20p37podZJoFGFHBB7A9LQAR5X49f6cP0ny9s/T4+nofhIMSClAyus9zyxyhMOKP6lIq8DDcflCIqkapQkz+ouW0C3YmDYpESFUKtzRGnPrnre+F9Qqhc96BVzVOusQBQl98VVJ5i+/IXoKSCFg0ICKz+xIgkDK+v681wWLwsZAIA/F7bkTtGSBk1Wbhq1xJ0qpz87/d7mJ51mhjqXPC3QPaSzvoc9aeemOfAwFusMKIzKBcz7r/zZ2xBkn8+vq3kIAdhLYI4z8LAMIdx++sr1O5POAv0uCpFu1XJL6fNHK63nTKm6Ly2jGRgQTTxQXTUCbaSsLvw9eu86K8l2yXpBDpoGHEjwfMR7//07ZBCUh7MBgLyvgy1h1sscyBqOCLF7ssWyTuT2DJAoAtv3Hzl11KW00CtMtp5bPYnwXOumamzYWrx7DzaRrHuFrPi5v9ZqWFJYQW2s4vX8VgGVAuUqkhH4RUsa8K5173mHaVjRbVhqLIfPKGL+6NQHl2XGh5Kd2dJZDJBwmpDRmZwUmjO1tUgjPHW65fUNMtzNSPyaS2pIzZ4i2DSWnCaENUL7BRlhQCbKmlLNgD/3DjjTvjarNtPJhkmrQiwGb8yduPAXbiUAYTZfnyF9fuaC1RkjE0ce0lO7QoXdP2mMTUDy+4pWOwHCgSjNA+pTUKgDApPwjZOCumt/1VryYWAoUYHR1yVTFJzYhscddnvr32wVzSKBtDXSEuNg2eqSt9ZbLuR/LmF7NkVGn7xob3f7/0vQOtQ4lBSmI+9bUHH7nYd4OknUvl09a2u6/aW18OCHVjXgs/aq1tkTHwsfoa4rdANQyLWfCR+tqCFbPuUC1u5MhXaposuaHELX9WaUk0zn2Juwmi0Eo6zkyrbfmvX9k3Um6+yRT8ZY/Ke9XiwA4SfsvZ6rs3/tQtNwMZy5PazNFq3lFU3qT+Aq1mFXvGXAQpeH3tFdtzAzUl6fKKohUEVqBHh3/+0u3s6rOS9Y2LoVx7y95FlaR/gXj43B/dJnWPkoCkcbs6ae2D2Z4K6cqyoc7MtNLcIVdqrlxKwOgLZm5AVVrFj5RHquQLfJCO83Nu2sLI/wC4vK3tyNoDe7PFSmN3YOvIPPdHb29YEWxRwLXNN75+5/ZcQUo/4a/fzvr2m6o9jePT3PsM2WobMJr1bC2SKFW0V/60KhVVnBiLwgBwfCkCcgPvrbKTVmTdFQTb002jg9WOB6lgcZ23svnUe0ojDnTn4mItWZj1ENQ8HUjHmQGFHG/xEE1+JW1SbQUXs/+5YLGckqacmv+b2hYZeanl0gatgl3kohnZKkO4efPS8gjTHZktmTvn35NrLlR//n8jUMJsHqDY5AAAAABJRU5ErkJggg==';
+
+// ══ Invoice engine shared by the client, fleet and admin spaces ══
+//   prestation : the fleet invoices the client (one invoice per fleet + client + month)
+//   commission : Bleenr invoices the fleet (one invoice per fleet + month)
+
+// Settings derived from Admin → Facturation
+function _invCfg(s){
+  s=s||{};
+  var rates=Array.isArray(s.vat_rates_client_carrier)?s.vat_rates_client_carrier:[];
+  var rc=!!s.vat_reverse_charge_carrier_platform;
+  return {
+    commRate: s.platform_commission_rate!=null?parseFloat(s.platform_commission_rate):10,
+    rc: rc,
+    cVat: rc?0:(s.vat_rate_carrier_platform!=null?parseFloat(s.vat_rate_carrier_platform):21),
+    // VAT client -> carrier, by the fleet's country (stored as a full name, e.g. "Belgique")
+    vatFor: function(countryName){
+      var code=null;
+      if(countryName && typeof _BILLING_COUNTRIES!=='undefined'){
+        var m=_BILLING_COUNTRIES.find(function(c){ return c[1].toLowerCase()===String(countryName).toLowerCase() || c[0]===countryName; });
+        if(m) code=m[0];
+      }
+      var hit=rates.find(function(r){return r.country===(code||'BE');})||rates.find(function(r){return r.country==='BE';});
+      return hit?parseFloat(hit.rate):TVA_RATE*100;
+    }
+  };
+}
+
+// Identity of the parties. RPC invoice_parties lets a client read its fleets (and vice-versa) despite RLS.
+async function _invPeople(ids){
+  var map={}; ids=ids.filter(Boolean);
+  if(!ids.length||!sb) return map;
+  try{
+    var r=await sb.rpc('invoice_parties',{ p_ids: ids });
+    if(!r.error && Array.isArray(r.data)){ r.data.forEach(function(p){ map[p.id]=p; }); }
+  }catch(e){}
+  var missing=ids.filter(function(id){ return !map[id]; });
+  if(missing.length){
+    try{
+      var q=await sb.from('profiles').select('id,email,role,client_type,company_name,first_name,last_name,vat_number,address_street,address_postal,address_city,address_country').in('id',missing);
+      (q.data||[]).forEach(function(p){ map[p.id]=p; });
+    }catch(e){}
+  }
+  return map;
+}
+
+// Sequential number, stored in fleet_invoices (same number when re-generated).
+// RPC invoice_number works for the admin, the fleet and the client; direct table access as fallback (admin).
+async function _invNumber(fleetId, kind, clientId, period, a, count){
+  try{
+    var r=await sb.rpc('invoice_number',{ p_fleet:fleetId, p_client:clientId||null, p_period:period, p_kind:kind,
+      p_htva:a.htva, p_vat_rate:a.vatRate, p_vat:a.vat, p_tvac:a.tvac, p_rc:!!a.rc, p_count:count });
+    if(!r.error && r.data) return { number:r.data };
+  }catch(e){}
+  var amounts={ amount_htva:a.htva, vat_rate:a.vatRate, vat_amount:a.vat, amount_tvac:a.tvac, reverse_charge:!!a.rc };
+  var pre='BL-'+(kind==='prestation'?'P':'C')+'-'+period.slice(0,4)+'-';
   try{
     var q=sb.from('fleet_invoices').select('id,number').eq('fleet_id',fleetId).eq('period',period).eq('kind',kind);
     q = clientId ? q.eq('client_id',clientId) : q.is('client_id',null);
     var ex=await q.maybeSingle();
     if(ex.error) throw ex.error;
-    if(ex.data){
-      await sb.from('fleet_invoices').update(Object.assign({rides_count:ridesCount},amounts)).eq('id',ex.data.id);
-      return { number:ex.data.number };
-    }
+    if(ex.data){ await sb.from('fleet_invoices').update(Object.assign({rides_count:count},amounts)).eq('id',ex.data.id); return { number:ex.data.number }; }
     var cnt=await sb.from('fleet_invoices').select('id',{count:'exact',head:true}).like('number',pre+'%');
-    var num=pre+String((cnt.count||0)+1).padStart(4,'0');
-    var ins=await sb.from('fleet_invoices').insert(Object.assign({fleet_id:fleetId,client_id:clientId||null,period:period,kind:kind,number:num,rides_count:ridesCount},amounts)).select('number').single();
+    var ins=await sb.from('fleet_invoices').insert(Object.assign({fleet_id:fleetId,client_id:clientId||null,period:period,kind:kind,number:pre+String((cnt.count||0)+1).padStart(4,'0'),rides_count:count},amounts)).select('number').single();
     if(ins.error) throw ins.error;
     return { number:ins.data.number };
   }catch(e){
-    console.warn('fleet_invoices', e);
-    return { number:'PROVISOIRE', warn:'Numéro non enregistré (table fleet_invoices non à jour ou droits insuffisants) : facture provisoire.' };
+    console.warn('invoice number', e);
+    return { number:'PROVISOIRE', warn:'Numéro de facture non enregistré (fonction invoice_number absente ou droits insuffisants) : document provisoire.' };
   }
 }
 
-function _rptParty(p, isBusiness){
-  return { name:_rptFleetName(p), l1:p.address_street||p.street||'', l2:[p.address_postal||p.postal_code,p.address_city||p.city].filter(Boolean).join(' '),
-           l3:p.address_country||p.country||'', vat:p.vat_number||'', business:isBusiness };
-}
-
-// Bleenr wordmark embedded so the printed invoice never depends on a relative URL
-var _BLEENR_LOGO='data:image/png;base64,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';
-
-function _rptInvoicePage(o){
+function _invPage(o){
   var e=_billingEsc;
-  var party=function(t,p,right){
-    return '<div class="party'+(right?' r':'')+'"><div class="lbl">'+t+'</div><div class="pname">'+e(p.name)+'</div>'
-      +[p.l1,p.l2,p.l3].filter(Boolean).map(function(x){return '<div>'+e(x)+'</div>';}).join('')
-      +(p.vat?'<div>N° de TVA : '+e(p.vat)+'</div>':(p.business?'<div class="miss">N° de TVA : non renseigné</div>':''))+'</div>';
-  };
   var rows=o.rows.map(function(r){
-    return '<tr><td>'+r.desc+'</td><td class="c">'+(r.qty||1)+'</td><td class="r">'+_rptMoney(r.unit)+'</td><td class="r">'+_rptMoney(r.unit*(r.qty||1))+'</td><td class="r">'+_rptMoney(r.vat)+'</td><td class="r b">'+_rptMoney(r.total)+'</td></tr>';
+    return '<tr><td>'+r.desc+'</td><td class="c">1</td><td class="r">'+_rptMoney(r.unit)+'</td><td class="r">'+_rptMoney(r.unit)+'</td><td class="r">'+_rptMoney(r.vat)+'</td><td class="r b">'+_rptMoney(r.total)+'</td></tr>';
   }).join('');
   return '<div class="page">'
     +(o.warn?'<div class="warn np">'+o.warn+'</div>':'')
-    +'<div class="top">'
-      +'<img class="logo" src="'+_BLEENR_LOGO+'" alt="Bleenr">'
-      +'<div class="meta"><div class="kind">'+o.title+'</div><div class="num">N° '+e(o.number)+'</div>'
-        +'<div>Date : '+o.date+'</div><div>Période : '+o.periodRange+'</div></div>'
-    +'</div>'
-    +'<div class="parties">'+party('Acheteur',o.receiver,false)+party('Vendeur',o.issuer,true)+'</div>'
-    +'<table class="lines"><thead><tr><th>Description</th><th class="c">Qté</th><th class="r">Prix unitaire HTVA</th><th class="r">Sous-total</th><th class="r">'+o.vatHead+'</th><th class="r">Total</th></tr></thead>'
-    +'<tbody>'+rows+'</tbody></table>'
+    +_docTop(o.title, o.number, ['Date : '+_docDate(), 'Période : '+o.periodRange])
+    +'<div class="parties">'+_docParty('Acheteur',o.receiver,false)+_docParty('Vendeur',o.issuer,true)+'</div>'
+    +'<table class="lines"><thead><tr><th>Description</th><th class="c">Qté</th><th class="r">Prix unitaire HTVA</th><th class="r">Sous-total</th><th class="r">'+o.vatHead+'</th><th class="r">Total</th></tr></thead><tbody>'+rows+'</tbody></table>'
     +'<div class="sum"><table>'
       +'<tr><td>Sous-total HTVA</td><td class="r">'+_rptMoney(o.base)+'</td></tr>'
       +'<tr><td>'+o.vatHead+'</td><td class="r">'+_rptMoney(o.vatAmt)+'</td></tr>'
@@ -9873,74 +9885,97 @@ function _rptInvoicePage(o){
     +'</div>';
 }
 
-window.rptInvoice=async function(i, kind){
-  var d=_rptData && _rptData[i]; if(!d) return;
+// o = { rides, kind:'prestation'|'commission', year, month, title, settings?, people? }
+async function _invOpen(o){
   var win=window.open('','_blank');
-  if(!win){ showToast('Autorisez les fenêtres pop-up pour générer la facture'); return; }
-  win.document.write('<p style="font-family:sans-serif;padding:30px;">Génération de la facture…</p>');
-  var s=_rptSettings||{}, e=_billingEsc;
-  var bleenr={ name:s.company_name||'Bleenr', l1:[s.street,s.box?'bte '+s.box:''].filter(Boolean).join(' '), l2:[s.postal_code,s.city].filter(Boolean).join(' '), l3:s.country||'', vat:s.vat_number||'', business:true };
-  var fleet=_rptParty(d.fleet, true);
-  var pLabel=_RPT_MONTHS[_rptMonth-1]+' '+_rptYear;
-  var p2=function(n){return String(n).padStart(2,'0');};
-  var lastDay=new Date(_rptYear,_rptMonth,0).getDate();
-  var periodRange='01-'+p2(_rptMonth)+'-'+_rptYear+' — '+p2(lastDay)+'-'+p2(_rptMonth)+'-'+_rptYear;
-  var now=new Date(), today=p2(now.getDate())+'-'+p2(now.getMonth()+1)+'-'+now.getFullYear();
-  var fmtD=function(iso){ var x=String(iso||'').split('-'); return x.length===3?x[2]+'-'+x[1]+'-'+x[0]:(iso||''); };
-  var tl={ab:'Course A → B',disposal:'Mise à disposition',mixed:'Course mixte'};
-  var footer=[bleenr.name,[bleenr.l1,bleenr.l2,bleenr.l3].filter(Boolean).join(', '),bleenr.vat?'TVA '+bleenr.vat:''].filter(Boolean).join(' · ');
-  var pages=[], docTitle;
+  if(!win){ showToast('Autorisez les fenêtres pop-up pour générer les factures'); return; }
+  win.document.write('<p style="font-family:sans-serif;padding:30px;">Génération des factures…</p>');
+  try{
+    var e=_billingEsc;
+    var rides=(o.rides||[]).filter(function(r){ return r.driver_id && r.final_price; });
+    var s=o.settings||await _docBilling();
+    var cfg=_invCfg(s);
+    var people=Object.assign({}, o.people||{});
+    var need=[...new Set(rides.map(function(r){return r.driver_id;}).concat(rides.map(function(r){return r.client_id;})))].filter(function(id){ return id && !people[id]; });
+    if(need.length) Object.assign(people, await _invPeople(need));
+    var p2=function(n){return String(n).padStart(2,'0');};
+    var period=o.year+'-'+p2(o.month);
+    var lastDay=p2(new Date(o.year,o.month,0).getDate());
+    var periodRange='01-'+p2(o.month)+'-'+o.year+' — '+lastDay+'-'+p2(o.month)+'-'+o.year;
+    var pLabel=_RPT_MONTHS[o.month-1]+' '+o.year;
+    var bleenr=_docBleenrParty(s), footer=_docFooter(s);
+    var fleetParty=function(id){ return _docProfileParty(people[id]||{company_name:'Transporteur'}, true); };
+    var clientParty=function(id){ var p=people[id]||{first_name:'Client'}; return _docProfileParty(p, p.role==='driver'||p.client_type==='pro'); };
+    var rideRow=function(r,vatPct){
+      var h=_rptRideHtva(r), v=_rptR3(h*vatPct/100);
+      var dur=r.trip_type==='disposal'?((r.notes||'').match(/Durée:(\d+)/)||[])[1]:'';
+      return { unit:h, vat:v, total:_rptR3(h+v),
+        desc:'<b>'+e(_DOC_TYPES[r.trip_type]||'Course')+(dur?' ('+dur+' h)':'')+'</b> — '+e(r.booking_code||String(r.id).slice(0,8))
+          +(r.status==='cancelled'?' <span class="cx">(annulée, non remboursée)</span>':'')
+          +'<div class="sub">'+_docIso(r.ride_date)+(r.ride_time?' · '+String(r.ride_time).slice(0,5):'')+' · '+e((r.from_address||'').split(',')[0])+(r.to_address?' → '+e((r.to_address||'').split(',')[0]):'')+'</div>' };
+    };
+    var pages=[];
 
-  if(kind==='prestation'){
-    // Fleet invoices each client: one invoice per client for the month
-    docTitle='Factures de prestation — '+_rptFleetName(d.fleet)+' — '+pLabel;
-    var byClient={};
-    d.rides.forEach(function(r){ (byClient[r.client_id||'?']=byClient[r.client_id||'?']||[]).push(r); });
-    var cids=Object.keys(byClient);
-    for(var k=0;k<cids.length;k++){
-      var cid=cids[k], list=byClient[cid];
-      var cp=_rptPeople[cid]||{first_name:'Client',last_name:''};
-      var isBiz = cp.role==='driver' || cp.client_type==='pro';
-      var base=_rptR2(list.reduce(function(s2,r){ return s2+_rptRideHtva(r); },0));
-      var vatAmt=_rptR3(base*d.pVat/100), total=_rptR3(base+vatAmt);
-      var num=await _rptInvoiceNumber(d.fleet.id,'prestation',cid==='?'?null:cid,
-        { amount_htva:base, vat_rate:d.pVat, vat_amount:vatAmt, amount_tvac:total, reverse_charge:false }, list.length);
-      pages.push(_rptInvoicePage({
-        title:'Facture de prestation', number:num.number, warn:num.warn, date:today, periodRange:periodRange,
-        issuer:fleet, receiver:_rptParty(cp,isBiz),
-        rows:list.map(function(r){
-          var h=_rptRideHtva(r), v=_rptR3(h*d.pVat/100);
-          return { desc:'<b>'+e(tl[r.trip_type]||r.trip_type||'Course')+'</b> — '+e(r.booking_code||r.id.slice(0,8))+'<div class="sub">'+fmtD(r.ride_date)+(r.ride_time?' · '+String(r.ride_time).slice(0,5):'')+' · '+e((r.from_address||'').split(',')[0])+(r.to_address?' → '+e((r.to_address||'').split(',')[0]):'')+'</div>',
-                   qty:1, unit:h, vat:v, total:_rptR3(h+v) };
-        }),
-        vatHead:'TVA '+d.pVat+' %', base:base, vatAmt:vatAmt, total:total, vatNote:'',
-        boxTitle:'Réglé : '+_rptMoney(total),
-        boxBody:'<div>Paiement effectué via la plateforme Bleenr — aucun montant supplémentaire n’est dû.</div>'
-          +'<div class="muted">Prestation de transport réalisée par '+e(fleet.name)+' via la plateforme Bleenr.</div>',
-        footer:footer
-      }));
+    if(o.kind==='prestation'){
+      var groups={};
+      rides.forEach(function(r){ var k=r.driver_id+'|'+(r.client_id||''); (groups[k]=groups[k]||[]).push(r); });
+      var keys=Object.keys(groups).sort();
+      for(var i=0;i<keys.length;i++){
+        var list=groups[keys[i]], fid=list[0].driver_id, cid=list[0].client_id||null;
+        var vatPct=cfg.vatFor((people[fid]||{}).address_country);
+        var rows=list.map(function(r){ return rideRow(r,vatPct); });
+        var base=_rptR2(rows.reduce(function(a,x){return a+x.unit;},0)), vat=_rptR3(base*vatPct/100), total=_rptR3(base+vat);
+        var num=await _invNumber(fid,'prestation',cid,period,{htva:base,vatRate:vatPct,vat:vat,tvac:total,rc:false},list.length);
+        pages.push(_invPage({ title:'Facture de prestation', number:num.number, warn:num.warn, periodRange:periodRange,
+          issuer:fleetParty(fid), receiver:clientParty(cid), rows:rows,
+          vatHead:'TVA '+vatPct+' %', base:base, vatAmt:vat, total:total,
+          boxTitle:'Réglé : '+_rptMoney(total),
+          boxBody:'<div>Paiement effectué via la plateforme Bleenr — aucun montant supplémentaire n’est dû.</div>'
+            +'<div class="muted">Prestation de transport réalisée par '+e(fleetParty(fid).name)+' via la plateforme Bleenr.</div>',
+          footer:footer }));
+      }
+    } else {
+      var byFleet={};
+      rides.forEach(function(r){ (byFleet[r.driver_id]=byFleet[r.driver_id]||[]).push(r); });
+      var fids=Object.keys(byFleet).sort(function(a,b){ return fleetParty(a).name.localeCompare(fleetParty(b).name); });
+      for(var j=0;j<fids.length;j++){
+        var fl=byFleet[fids[j]];
+        var htva=_rptR2(fl.reduce(function(a,r){return a+_rptRideHtva(r);},0));
+        var pv=cfg.vatFor((people[fids[j]]||{}).address_country);
+        var pTvac=_rptR3(htva+_rptR3(htva*pv/100));
+        var cHt=_rptR3(htva*cfg.commRate/100), cVatAmt=_rptR3(cHt*cfg.cVat/100), cTvac=_rptR3(cHt+cVatAmt);
+        var numC=await _invNumber(fids[j],'commission',null,period,{htva:cHt,vatRate:cfg.cVat,vat:cVatAmt,tvac:cTvac,rc:cfg.rc},fl.length);
+        pages.push(_invPage({ title:'Facture de commission', number:numC.number, warn:numC.warn, periodRange:periodRange,
+          issuer:bleenr, receiver:fleetParty(fids[j]),
+          rows:[{ desc:'<b>Commission plateforme ('+cfg.commRate+' %)</b><div class="sub">'+fl.length+' course(s) — '+pLabel+' — base HTVA '+_rptMoney(htva)+'</div>', unit:cHt, vat:cVatAmt, total:cTvac }],
+          vatHead:'TVA '+cfg.cVat+' %', base:cHt, vatAmt:cVatAmt, total:cTvac, vatNote:cfg.rc?'Autoliquidation de la TVA':'',
+          boxTitle:'Retenu : '+_rptMoney(cTvac),
+          boxBody:'<div>Montant déduit du versement de la période — aucun virement à effectuer.</div>'
+            +'<div class="muted">Prestations TVAC '+_rptMoney(pTvac)+' − commission TVAC '+_rptMoney(cTvac)+' = <b>net versé '+_rptMoney(_rptR3(pTvac-cTvac))+'</b></div>',
+          footer:footer }));
+      }
     }
-  } else {
-    // Bleenr invoices the fleet: commission % (admin setting) of the prestation HTVA + VAT
-    docTitle='Facture de commission — '+_rptFleetName(d.fleet)+' — '+pLabel;
-    var numC=await _rptInvoiceNumber(d.fleet.id,'commission',null,
-      { amount_htva:d.cHt, vat_rate:d.cVat, vat_amount:d.cVatAmt, amount_tvac:d.cTvac, reverse_charge:d.cRc }, d.rides.length);
-    pages.push(_rptInvoicePage({
-      title:'Facture de commission', number:numC.number, warn:numC.warn, date:today, periodRange:periodRange,
-      issuer:bleenr, receiver:fleet,
-      rows:[{ desc:'<b>Commission plateforme ('+d.commRate+' %)</b><div class="sub">'+d.rides.length+' course(s) — '+pLabel+' — base HTVA '+_rptMoney(d.htva)+'</div>',
-              qty:1, unit:d.cHt, vat:d.cVatAmt, total:d.cTvac }],
-      vatHead:'TVA '+(d.cRc?'0':d.cVat)+' %', base:d.cHt, vatAmt:d.cVatAmt, total:d.cTvac,
-      vatNote:d.cRc?'Autoliquidation de la TVA':'',
-      boxTitle:'Retenu : '+_rptMoney(d.cTvac),
-      boxBody:'<div>Montant déduit du versement de la période — aucun virement à effectuer.</div>'
-        +'<div class="muted">Prestations TVAC '+_rptMoney(d.pTvac)+' − commission TVAC '+_rptMoney(d.cTvac)+' = <b>net versé '+_rptMoney(d.net)+'</b></div>',
-      footer:footer
-    }));
+    if(!pages.length) pages.push('<div class="page"><div class="box"><div>Aucune course facturée pour '+pLabel+'.</div></div></div>');
+    win.document.open(); win.document.write(_bleenrDocHtml(o.title||((o.kind==='prestation'?'Factures de prestation':'Factures de commission')+' — '+pLabel), pages.join(''))); win.document.close();
+  }catch(err){
+    console.error('invoices', err);
+    win.document.open(); win.document.write('<p style="font-family:sans-serif;padding:30px;color:#C0392B;">Erreur : '+_billingEsc(err.message||err)+'</p>'); win.document.close();
   }
+}
 
-  var html=_bleenrDocHtml(docTitle, pages.join(''));
-  win.document.open(); win.document.write(html); win.document.close();
+// ── Admin: per fleet, per client, or all at once ──
+var _rptRides=[];
+window.rptInvoice=function(i, kind){
+  var d=_rptData&&_rptData[i]; if(!d) return;
+  _invOpen({ rides:d.rides, kind:kind, year:_rptYear, month:_rptMonth, settings:_rptSettings, people:_rptPeople,
+    title:(kind==='prestation'?'Factures de prestation':'Facture de commission')+' — '+_rptFleetName(d.fleet)+' — '+_RPT_MONTHS[_rptMonth-1]+' '+_rptYear });
+};
+window.rptInvoiceClient=function(clientId){
+  _invOpen({ rides:_rptRides.filter(function(r){return r.client_id===clientId;}), kind:'prestation', year:_rptYear, month:_rptMonth, settings:_rptSettings, people:_rptPeople,
+    title:'Factures de prestation — '+_rptFleetName(_rptPeople[clientId])+' — '+_RPT_MONTHS[_rptMonth-1]+' '+_rptYear });
+};
+window.rptInvoiceAll=function(kind){
+  _invOpen({ rides:_rptRides, kind:kind, year:_rptYear, month:_rptMonth, settings:_rptSettings, people:_rptPeople });
 };
 
 async function loadAdminClients(){
@@ -10705,8 +10740,8 @@ window._renderDriverInvoiceMonth = async function(){
       +'<button onclick="_dInvStep(1)" style="'+btnStyle+'">&gt;</button>'
     +'</div>'
     +(monthRides.length
-      ? '<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;flex-shrink:0;" onclick="generateDriverInvoicePdf()">'
-          +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>PDF</button>'
+      ? '<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;flex-shrink:0;" onclick="generateDriverInvoices(\'prestation\')">Factures prestation</button>'
+          +'<button class="btn btn-secondary btn-sm" style="flex-shrink:0;margin-left:6px;" onclick="generateDriverInvoices(\'commission\')">Facture commission</button>'
       : '')
   +'</div>';
 
@@ -10758,65 +10793,11 @@ window._renderDriverInvoiceMonth = async function(){
 
 };
 
-window.generateDriverInvoicePdf = async function(){
-  var data = window._dInvCurrentData||[];
-  var e=_billingEsc;
-  var s=await _docBilling();
-  // Same rules as Admin → Rapports: VAT client->carrier by fleet country, commission % and its VAT from Admin → Facturation
-  var countryName=currentProfile?.address_country||'';
-  var rates=Array.isArray(s.vat_rates_client_carrier)?s.vat_rates_client_carrier:[];
-  var code=null;
-  if(countryName && typeof _BILLING_COUNTRIES!=='undefined'){
-    var m=_BILLING_COUNTRIES.find(function(c){ return c[1].toLowerCase()===String(countryName).toLowerCase() || c[0]===countryName; });
-    if(m) code=m[0];
-  }
-  var hit=rates.find(function(r){return r.country===(code||'BE');})||rates.find(function(r){return r.country==='BE';});
-  var pVat=hit?parseFloat(hit.rate):TVA_RATE*100;
-  var commRate=s.platform_commission_rate!=null?parseFloat(s.platform_commission_rate):10;
-  var rc=!!s.vat_reverse_charge_carrier_platform;
-  var cVat=rc?0:(s.vat_rate_carrier_platform!=null?parseFloat(s.vat_rate_carrier_platform):21);
-
-  var htva=0;
-  var rows=data.map(function(r){
-    var h=_rptRideHtva(r), v=_rptR3(h*pVat/100);
-    htva+=h;
-    var dur=r.trip_type==='disposal'?((r.notes||'').match(/Durée:(\d+)/)||[])[1]:'';
-    return '<tr><td><b>'+e(_DOC_TYPES[r.trip_type]||'Course')+(dur?' ('+dur+' h)':'')+'</b> — '+e(r.booking_code||r.id.slice(0,8))
-        +'<div class="sub">'+_docIso(r.ride_date)+(r.ride_time?' · '+String(r.ride_time).slice(0,5):'')+' · '+e((r.from_address||'').split(',')[0])+(r.to_address?' → '+e((r.to_address||'').split(',')[0]):'')+'</div></td>'
-      +'<td class="c">1</td><td class="r">'+_rptMoney(h)+'</td><td class="r">'+_rptMoney(h)+'</td><td class="r">'+_rptMoney(v)+'</td><td class="r b">'+_rptMoney(_rptR3(h+v))+'</td></tr>';
-  }).join('');
-  htva=_rptR2(htva);
-  var pVatAmt=_rptR3(htva*pVat/100), pTvac=_rptR3(htva+pVatAmt);
-  var cHt=_rptR3(htva*commRate/100), cVatAmt=_rptR3(cHt*cVat/100), cTvac=_rptR3(cHt+cVatAmt);
-  var net=_rptR3(pTvac-cTvac);
-
-  var mLabel=_RPT_MONTHS[_dInvSelMonth-1]+' '+_dInvSelYear;
-  var mm=String(_dInvSelMonth).padStart(2,'0');
-  var lastDay=String(new Date(_dInvSelYear,_dInvSelMonth,0).getDate()).padStart(2,'0');
-  var periodRange='01-'+mm+'-'+_dInvSelYear+' — '+lastDay+'-'+mm+'-'+_dInvSelYear;
-  var number='REL-'+_dInvSelYear+'-'+mm+'-'+String(currentUser?.id||'').slice(0,4).toUpperCase();
-
-  var page='<div class="page">'
-    +_docTop('Relevé mensuel des missions', number, ['Date : '+_docDate(), 'Période : '+periodRange])
-    +'<div class="parties">'+_docParty('Transporteur',_docProfileParty(Object.assign({email:currentUser?.email},currentProfile||{}),true),false)
-      +_docParty('Plateforme',_docBleenrParty(s),true)+'</div>'
-    +(data.length
-      ?'<table class="lines"><thead><tr><th>Description</th><th class="c">Qté</th><th class="r">Prix unitaire HTVA</th><th class="r">Sous-total</th><th class="r">TVA '+pVat+' %</th><th class="r">Total</th></tr></thead><tbody>'+rows+'</tbody></table>'
-      :'<div class="box" style="margin-top:8px;"><div>Aucune mission pour '+mLabel+'.</div></div>')
-    +'<div class="sum"><table>'
-      +'<tr><td>Prestations HTVA</td><td class="r">'+_rptMoney(htva)+'</td></tr>'
-      +'<tr><td>TVA '+pVat+' %</td><td class="r">'+_rptMoney(pVatAmt)+'</td></tr>'
-      +'<tr><td><b>Prestations TVAC</b></td><td class="r"><b>'+_rptMoney(pTvac)+'</b></td></tr>'
-      +'<tr><td>Commission Bleenr ('+commRate+' %) HTVA</td><td class="r">−'+_rptMoney(cHt)+'</td></tr>'
-      +'<tr><td>TVA commission '+(rc?'0 % (autoliquidation)':cVat+' %')+'</td><td class="r">−'+_rptMoney(cVatAmt)+'</td></tr>'
-      +'<tr class="grand"><td>Net à percevoir (EUR)</td><td class="r">'+_rptMoney(net)+'</td></tr>'
-    +'</table></div>'
-    +'<div class="box"><div class="boxt">Net à percevoir : '+_rptMoney(net)+'</div>'
-      +'<div>Prestations TVAC '+_rptMoney(pTvac)+' − commission TVAC '+_rptMoney(cTvac)+'.</div>'
-      +'<div class="muted">Montant versé par Bleenr pour '+data.length+' mission(s) réalisée(s) en '+mLabel+'.</div></div>'
-    +'<div class="foot">'+e(_docFooter(s))+'</div>'
-    +'</div>';
-  _docOpen(_bleenrDocHtml('Relevé '+mLabel+' — Bleenr', page));
+window.generateDriverInvoices = function(kind){
+  // Fleet space: prestation invoices (fleet -> each client) or the commission invoice (Bleenr -> fleet)
+  var people={}; if(currentProfile) people[currentUser.id]=Object.assign({email:currentUser.email},currentProfile);
+  _invOpen({ rides:(window._dInvCurrentData||[]).filter(function(r){ return r.driver_id===currentUser.id; }), kind:kind,
+    year:_dInvSelYear, month:_dInvSelMonth, people:people });
 };
 
 async function loadPassengersList(){
