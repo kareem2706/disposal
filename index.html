@@ -10614,8 +10614,15 @@ window.refreshAdminDashboard = async function() {
 
     // All-time totals for top stat cards
     var totalRides = allRides.length;
-    var totalRefunded = allRides.filter(function(r){ return !r.is_subcontract && r.payment_method==='refunded' && r.final_price; }).reduce(function(s,r){ return s+parseFloat(r.final_price); },0);
-    var totalCA    = allRides.filter(function(r){ return !r.is_subcontract; }).reduce(function(s,r){ return s + (r.final_price ? parseFloat(r.final_price) : 0); }, 0) - totalRefunded;
+    // Revenue = money actually received and kept: confirmed / in progress / done rides,
+    // plus cancelled rides that are not refundable. Bank transfers awaiting the admin's
+    // confirmation (pending_payment) are NOT counted until the admin confirms them.
+    var _isRevenue = function(r){
+      if(r.is_subcontract || !r.final_price) return false;
+      if(r.status==='confirmed' || r.status==='active' || r.status==='done') return true;
+      return r.status==='cancelled' && r.payment_method==='non_refundable';
+    };
+    var totalCA    = allRides.filter(_isRevenue).reduce(function(s,r){ return s + parseFloat(r.final_price); }, 0);
 
     // Set top stat cards
     var set = function(id,val){ var el=document.getElementById(id); if(el) el.textContent=val; };
@@ -10634,9 +10641,8 @@ window.refreshAdminDashboard = async function() {
       return true;
     });
 
-    var periodRides = filteredRides.filter(function(r){ return !r.is_subcontract && r.final_price && (r.status==='confirmed'||r.status==='done'||r.status==='pending_payment'); });
-    var periodRefunded = filteredRides.filter(function(r){ return !r.is_subcontract && r.payment_method==='refunded' && r.final_price; }).reduce(function(s,r){ return s+parseFloat(r.final_price); },0);
-    var periodTvac   = periodRides.reduce(function(s,r){ return s + parseFloat(r.final_price); }, 0) - periodRefunded;
+    var periodRides = filteredRides.filter(_isRevenue);
+    var periodTvac   = periodRides.reduce(function(s,r){ return s + parseFloat(r.final_price); }, 0);
     var periodHtva   = parseFloat((periodTvac / (1 + TVA_RATE)).toFixed(2));
     var periodTva    = parseFloat((periodTvac - periodHtva).toFixed(2));
     var periodProfit = parseFloat((periodHtva * 0.10).toFixed(2));
