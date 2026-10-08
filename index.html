@@ -1675,6 +1675,7 @@ body{background:var(--bg);}
           <div style="margin-bottom:14px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
           <div class="stat-label">Nombre de courses</div>
           <div class="stat-val" id="admin-stat-rides">—</div>
+          <div id="admin-stat-rides-pending" style="display:none;margin-top:8px;font-size:12px;font-weight:600;color:#1E4D7B;background:#EAF1FB;border-radius:8px;padding:4px 10px;width:fit-content;cursor:pointer;" onclick="showPage('admin-rides');setTimeout(function(){var f=document.getElementById('ar-filter-status');if(f){f.value='pending_payment';if(typeof loadAdminRides==='function')loadAdminRides();}},50);" title="Voir les courses en attente de confirmation"></div>
         </div>
         <div class="stat-card">
           <div style="margin-bottom:14px;color:var(--red);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M12 12v4M10 14h4"/></svg></div>
@@ -10629,6 +10630,13 @@ window.refreshAdminDashboard = async function() {
     set('admin-stat-clients', totalClients);
     set('admin-stat-fleets',  totalFleets);
     set('admin-stat-rides',   totalRides);
+    // Bank transfers waiting for the admin's payment confirmation
+    var _pendingPay = allRides.filter(function(r){ return r.status==='pending_payment'; }).length;
+    var _ppEl = document.getElementById('admin-stat-rides-pending');
+    if(_ppEl){
+      _ppEl.textContent = _pendingPay+' course'+(_pendingPay>1?'s':'')+' en attente de confirmation de paiement';
+      _ppEl.style.display = _pendingPay>0 ? 'block' : 'none';
+    }
     set('admin-stat-ca',      totalCA > 0 ? totalCA.toFixed(2).replace('.',',')+' €' : '0,00 €');
 
     // Filtered rides for summary cards
