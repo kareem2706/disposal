@@ -5060,10 +5060,12 @@ function _openRideDetailImpl(el){
       var _endTime=_getRideEndTime(r);
       var _isOverdue=_endTime&&new Date()>_endTime;
       var _missionBtn='<button onclick="generateMissionPdf(\''+rId+'\')" style="background:none;border:1.5px solid var(--sand3);border-radius:var(--r);padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);font-family:\'DM Sans\',sans-serif;margin-right:auto;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>T\u00e9l\u00e9charger mission</button>';
+      var _assignBtn=(currentUser&&r.driver_id===currentUser.id&&!_isOverdue)
+        ?'<button class="btn btn-secondary btn-sm" style="margin-left:6px;" onclick="openMissionAssignment(\''+rId+'\')">Modifier véhicule / chauffeur</button>':'';
       if(_isOverdue){
         ft=_missionBtn+closeBtn+'<button class="btn btn-green" onclick="completeRide(\''+rId+'\')" style="margin-left:8px;">Terminer la course</button>';
       } else {
-        ft=_missionBtn+closeBtn;
+        ft=_missionBtn+_assignBtn+closeBtn;
       }
     } else {
       // For subcontract rides (done/cancelled etc.) — show price left
@@ -5179,8 +5181,10 @@ async function _docRideDocument(rideId, mode){
   var {data:r} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
   if(!r) return;
   var s=await _docBilling();
-  var {data:ofr} = await sb.from('offers').select('vehicle_id').eq('ride_id',rideId).eq('status','accepted').maybeSingle();
+  var {data:ofr} = await sb.from('offers').select('*').eq('ride_id',rideId).eq('status','accepted').maybeSingle();
   var veh=null; if(ofr&&ofr.vehicle_id){ var vr=await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',ofr.vehicle_id).maybeSingle(); veh=vr.data; }
+  var fdrv=null; if(ofr&&ofr.fleet_driver_id){ try{ fdrv=(await sb.from('fleet_drivers').select('first_name,last_name,phone').eq('id',ofr.fleet_driver_id).maybeSingle()).data; }catch(_e){} }
+  var fdrvName=fdrv?((fdrv.first_name||'')+' '+(fdrv.last_name||'')).trim():'';
   var nR=r.notes||'';
   var paxN=(nR.match(/\|pax:([^|]+)/)||[])[1]||'', paxT=(nR.match(/\|tel:([^|]+)/)||[])[1]||'';
   var noteD=(nR.match(/\|note_drv:([^|]+)/)||[])[1]||'';
@@ -5197,7 +5201,7 @@ async function _docRideDocument(rideId, mode){
     kind='Voucher de transport';
     left={ name:cName||'Passager', extra:[cTel?'Tél. : '+cTel:'', (r.passengers||1)+' passager(s)'].filter(Boolean) };
     right={ name:dP?((dP.company_name||((dP.first_name||'')+' '+(dP.last_name||'')).trim())||'Chauffeur'):'Chauffeur à confirmer',
-            extra:[veh?((veh.brand||'')+' '+(veh.model||'')+(veh.color?' — '+veh.color:'')).trim():'', veh&&veh.plate?'Plaque : '+veh.plate:'', dP&&dP.phone?'Tél. : '+dP.phone:''].filter(Boolean) };
+            extra:[fdrvName?'Chauffeur : '+fdrvName:'', veh?((veh.brand||'')+' '+(veh.model||'')+(veh.color?' — '+veh.color:'')).trim():'', veh&&veh.plate?'Plaque : '+veh.plate:'', (fdrv&&fdrv.phone)?'Tél. : '+fdrv.phone:(dP&&dP.phone?'Tél. : '+dP.phone:'')].filter(Boolean) };
     boxTitle='Réservation confirmée';
     boxBody='<div>Présentez ce voucher à votre chauffeur le jour du départ.</div>'
       +'<div class="muted">Référence à communiquer : <b>'+e(code)+'</b></div>';
@@ -5208,7 +5212,7 @@ async function _docRideDocument(rideId, mode){
     var pTel=paxT||(clientP&&clientP.phone?clientP.phone:'');
     kind='Ordre de mission';
     left={ name:pName||'Passager', extra:[pTel?'Tél. : '+pTel:'', (r.passengers||1)+' passager(s)'].filter(Boolean) };
-    right={ name:veh?((veh.brand||'')+' '+(veh.model||'')).trim():'Véhicule', extra:[veh&&veh.color?'Couleur : '+veh.color:'', veh&&veh.plate?'Plaque : '+veh.plate:''].filter(Boolean) };
+    right={ name:veh?((veh.brand||'')+' '+(veh.model||'')).trim():'Véhicule', extra:[veh&&veh.color?'Couleur : '+veh.color:'', veh&&veh.plate?'Plaque : '+veh.plate:'', fdrvName?'Chauffeur : '+fdrvName:''].filter(Boolean) };
     boxTitle='Mission confirmée';
     boxBody='<div>Prise en charge au point de départ à l’heure indiquée.</div>'
       +'<div class="muted">Référence de la mission : <b>'+e(code)+'</b></div>';
@@ -8625,6 +8629,92 @@ window.deleteVehicle=function(id){
     await sb.from('fleet_vehicles').delete().eq('id',id);
     await loadFleetVehicles();showToast('V\u00e9hicule supprim\u00e9');
   });
+};
+
+// ── Confirmed mission: fleet changes the vehicle and/or the driver, client is emailed ──
+var _maRide=null, _maOffer=null;
+window.openMissionAssignment=async function(rideId){
+  if(!sb||!currentUser) return;
+  var {data:r}=await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
+  if(!r||r.driver_id!==currentUser.id){ showToast('Mission introuvable'); return; }
+  var {data:of}=await sb.from('offers').select('*').eq('ride_id',rideId).eq('driver_id',currentUser.id).eq('status','accepted').maybeSingle();
+  var res=await Promise.all([
+    sb.from('fleet_vehicles').select('*').eq('fleet_id',currentUser.id).eq('active',true),
+    sb.from('fleet_drivers').select('*').eq('fleet_id',currentUser.id).eq('active',true)
+  ]);
+  _maRide=r; _maOffer=of||null;
+  var e=_billingEsc;
+  var allowed=(typeof _classCompat!=='undefined'&&_classCompat[r.vehicle_type])||null;
+  var vehicles=(res[0].data||[]).filter(function(v){ return v.status==='validated' && (!allowed || allowed.indexOf(v.vehicle_class)>=0); });
+  var drivers=(res[1].data||[]).filter(function(d){ return d.status==='validated'; });
+  var curV=of?of.vehicle_id:null, curD=of?of.fleet_driver_id:null;
+  var vOpts=vehicles.map(function(v){ return '<option value="'+v.id+'"'+(v.id===curV?' selected':'')+'>'+e(((v.brand||'')+' '+(v.model||'')).trim())+(v.plate?' — '+e(v.plate):'')+' ('+e(_DOC_CLASSES[v.vehicle_class]||v.vehicle_class||'')+')</option>'; }).join('');
+  if(curV && !vehicles.some(function(v){return v.id===curV;})) vOpts='<option value="'+curV+'" selected>Véhicule actuel</option>'+vOpts;
+  var dOpts='<option value="">— Non assigné —</option>'+drivers.map(function(d){ return '<option value="'+d.id+'"'+(d.id===curD?' selected':'')+'>'+e(((d.first_name||'')+' '+(d.last_name||'')).trim())+(d.phone?' — '+e(d.phone):'')+'</option>'; }).join('');
+  if(curD && !drivers.some(function(d){return d.id===curD;})) dOpts+='<option value="'+curD+'" selected>Chauffeur actuel</option>';
+  document.getElementById('m-mission-assign')?.remove();
+  document.body.insertAdjacentHTML('beforeend',
+    '<div class="modal-overlay open" id="m-mission-assign" style="z-index:950;" onclick="if(event.target===this)this.remove()"><div class="modal">'
+    +'<div class="modal-hd"><span class="modal-title">Modifier véhicule / chauffeur</span><button class="close-btn" onclick="document.getElementById(\'m-mission-assign\').remove()"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>'
+    +'<div class="modal-body">'
+      +'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:14px;">Mission '+e(r.booking_code||r.id.slice(0,8))+' — '+_docIso(r.ride_date)+(r.ride_time?' à '+String(r.ride_time).slice(0,5):'')+'. Le client sera prévenu par email de toute modification.</div>'
+      +'<div class="input-group"><label>Véhicule <span style="color:var(--red)">*</span></label><select id="ma-vehicle">'+(vOpts||'<option value="">Aucun véhicule validé compatible</option>')+'</select>'
+        +'<div style="font-size:11px;color:var(--ink3);margin-top:4px;">Véhicules validés compatibles avec la gamme demandée ('+e(_DOC_CLASSES[r.vehicle_type]||r.vehicle_type||'—')+').</div></div>'
+      +'<div class="input-group"><label>Chauffeur</label><select id="ma-driver">'+dOpts+'</select></div>'
+      +'<div id="ma-err" class="auth-error"></div>'
+    +'</div>'
+    +'<div class="modal-ft"><button class="btn btn-secondary" onclick="document.getElementById(\'m-mission-assign\').remove()">Annuler</button>'
+    +'<button class="btn btn-primary" id="ma-save" onclick="saveMissionAssignment()">Enregistrer</button></div>'
+    +'</div></div>');
+};
+
+window.saveMissionAssignment=async function(){
+  var r=_maRide; if(!r) return;
+  var err=document.getElementById('ma-err'), btn=document.getElementById('ma-save');
+  var vId=document.getElementById('ma-vehicle')?.value||'';
+  var dId=document.getElementById('ma-driver')?.value||'';
+  if(err) err.classList.remove('show');
+  if(!vId){ showError(err,'Choisissez un véhicule'); return; }
+  var oldV=_maOffer?_maOffer.vehicle_id:null, oldD=_maOffer?_maOffer.fleet_driver_id:null;
+  var vChanged=vId!==(oldV||''), dChanged=(dId||null)!==(oldD||null);
+  if(!vChanged && !dChanged){ document.getElementById('m-mission-assign')?.remove(); return; }
+  if(btn){ btn.disabled=true; btn.textContent='Enregistrement...'; }
+  try{
+    // Server-side function first (checks ownership, bypasses offer RLS), direct update as fallback
+    var ok=false;
+    var rpc=await sb.rpc('fleet_update_assignment',{ p_ride:r.id, p_vehicle:vId, p_driver:dId||null });
+    if(!rpc.error) ok=true;
+    else {
+      console.warn('[assignment] rpc', rpc.error.message);
+      if(_maOffer){
+        var u=await sb.from('offers').update({ vehicle_id:vId, fleet_driver_id:dId||null }).eq('id',_maOffer.id).select('id');
+        if(u.error) throw u.error;
+        ok=!!(u.data&&u.data.length);
+      }
+    }
+    if(!ok) throw new Error('Modification refusée par la base (droits insuffisants)');
+    // Email the client (or the driver who posted the subcontract)
+    var veh=null, drv=null;
+    try{
+      veh=(await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',vId).maybeSingle()).data;
+      if(dId) drv=(await sb.from('fleet_drivers').select('first_name,last_name,phone').eq('id',dId).maybeSingle()).data;
+    }catch(_e){}
+    var chg=[]; if(vChanged) chg.push('véhicule'); if(dChanged) chg.push('chauffeur');
+    var mail=window._mailRideData(r,{
+      vehicle: veh?(((veh.brand||'')+' '+(veh.model||'')+' '+(veh.color||'')).trim()+(veh.plate?' ('+veh.plate+')':'')):'',
+      driver: drv?((drv.first_name||'')+' '+(drv.last_name||'')).trim():'',
+      driverPhone: drv&&drv.phone?drv.phone:'',
+      changes: chg.join(' et ')
+    });
+    delete mail.price;
+    window.sendMailToUsers('assignment_changed', r.client_id, mail);
+    document.getElementById('m-mission-assign')?.remove();
+    showToast('✅ Mission mise à jour — le client a été prévenu');
+    if(typeof loadMissions==='function') loadMissions();
+  }catch(e){
+    showError(err,'Erreur : '+(e.message||e));
+    if(btn){ btn.disabled=false; btn.textContent='Enregistrer'; }
+  }
 };
 
 // ── Fleet Drivers ──
