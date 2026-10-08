@@ -1832,9 +1832,9 @@ body{background:var(--bg);}
             </select>
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;">
-            <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Chauffeur</label>
+            <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Fleet</label>
             <select id="ar-filter-driver" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;min-width:160px;">
-              <option value="">Tous les chauffeurs</option>
+              <option value="">Toutes les fleets</option>
             </select>
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;">
@@ -10170,6 +10170,14 @@ window.loadAdminRides = async function(){
     if(error) throw error;
     _arAllRides = rides || [];
 
+    // Confirmed / finished rides whose driver_id was not set: take the fleet from the accepted offer
+    var _noDrv=_arAllRides.filter(function(r){ return !r.driver_id && ['confirmed','pending_payment','active','done'].indexOf(r.status)>=0; });
+    if(_noDrv.length){
+      var { data: accOf } = await sb.from('offers').select('ride_id,driver_id').eq('status','accepted').in('ride_id', _noDrv.map(function(r){ return r.id; }));
+      var _accMap={}; (accOf||[]).forEach(function(o){ _accMap[o.ride_id]=o.driver_id; });
+      _noDrv.forEach(function(r){ if(_accMap[r.id]) r.driver_id=_accMap[r.id]; });
+    }
+
     // Collect all profile ids (clients + drivers)
     var profileIds = [];
     _arAllRides.forEach(function(r){
@@ -10179,7 +10187,7 @@ window.loadAdminRides = async function(){
     profileIds = [...new Set(profileIds)].filter(Boolean);
 
     if(profileIds.length > 0){
-      var { data: pData } = await sb.from('profiles').select('id,first_name,last_name,role').in('id', profileIds);
+      var { data: pData } = await sb.from('profiles').select('id,first_name,last_name,company_name,client_type,role,email').in('id', profileIds);
       _arProfiles = {};
       (pData||[]).forEach(function(p){ _arProfiles[p.id] = p; });
     } else {
@@ -10227,21 +10235,25 @@ function _arPopulateDropdowns(){
 
   clientSel.innerHTML = '<option value="">Tous les clients</option>'
     + Object.values(clients).map(function(p){
-        var name = ((p.first_name||'')+ ' '+(p.last_name||'')).trim()||p.id;
+        var name = _arDisplayName(p);
         return '<option value="'+p.id+'"'+(prevClient===p.id?' selected':'')+'>'+name+'</option>';
       }).join('');
 
-  driverSel.innerHTML = '<option value="">Tous les chauffeurs</option>'
+  driverSel.innerHTML = '<option value="">Toutes les fleets</option>'
     + Object.values(drivers).map(function(p){
-        var name = ((p.first_name||'')+ ' '+(p.last_name||'')).trim()||p.id;
+        var name = _arDisplayName(p);
         return '<option value="'+p.id+'"'+(prevDriver===p.id?' selected':'')+'>'+name+'</option>';
       }).join('');
 }
 
-function _arName(profileId){
-  var p = _arProfiles[profileId];
+function _arDisplayName(p){
   if(!p) return '—';
-  return ((p.first_name||'')+' '+(p.last_name||'')).trim() || '—';
+  var person=((p.first_name||'')+' '+(p.last_name||'')).trim();
+  if(p.role==='driver' || p.client_type==='pro') return p.company_name || person || p.email || '—';
+  return person || p.company_name || p.email || '—';
+}
+function _arName(profileId){
+  return _arDisplayName(_arProfiles[profileId]);
 }
 
 function _arRenderTable(rides, el){
@@ -10308,7 +10320,7 @@ function _arRenderTable(rides, el){
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Type</th>'
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Code</th>'
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Client</th>'
-      +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Chauffeur</th>'
+      +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Fleet</th>'
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Statut</th>'
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Paiement</th>'
       +'<th style="padding:10px 14px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Prix</th>'
@@ -10331,7 +10343,7 @@ window.arOpenDetail = async function(row){
   var clientName = _arName(r.client_id);
   var driverName = r.driver_id ? _arName(r.driver_id) : '—';
   if(clientName!=='—') infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Client</span><span style="font-size:12px;font-weight:600;" id="ar-client-name-row">'+clientName+'</span></div>';
-  infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Chauffeur</span><span style="font-size:12px;font-weight:600;" id="ar-driver-name-row">'+driverName+'</span></div>';
+  infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Fleet</span><span style="font-size:12px;font-weight:600;" id="ar-driver-name-row">'+driverName+'</span></div>';
   if(r.payment_method){
     var pmMap={'stripe':'💳 Stripe','bank_transfer':'🏦 Virement bancaire','non_refundable':'Non remboursable','refunded':'✅ Remboursé','cash':'💵 Espèces'};
     var pmLabel = pmMap[r.payment_method]||r.payment_method;
