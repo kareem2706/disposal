@@ -10758,43 +10758,65 @@ window._renderDriverInvoiceMonth = async function(){
 
 };
 
-window.generateDriverInvoicePdf = function(){
+window.generateDriverInvoicePdf = async function(){
   var data = window._dInvCurrentData||[];
-  var months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  var mLabel = months[_dInvSelMonth-1]+' '+_dInvSelYear;
-  var fmt = function(v){ return parseFloat(v).toFixed(2).replace('.',',')+' \u20ac'; };
-  var tLbl = {ab:'A \u2192 B', disposal:'Mise \u00e0 disposition', mixed:'Course mixte'};
-  var totalBrut = data.reduce(function(s,r){ return s+(parseFloat(r.final_price)||0); },0);
-  var htvaTotal = totalBrut/1.06;
-  var commission = htvaTotal*0.10;
-  var net = htvaTotal - commission;
+  var e=_billingEsc;
+  var s=await _docBilling();
+  // Same rules as Admin → Rapports: VAT client->carrier by fleet country, commission % and its VAT from Admin → Facturation
+  var countryName=currentProfile?.address_country||'';
+  var rates=Array.isArray(s.vat_rates_client_carrier)?s.vat_rates_client_carrier:[];
+  var code=null;
+  if(countryName && typeof _BILLING_COUNTRIES!=='undefined'){
+    var m=_BILLING_COUNTRIES.find(function(c){ return c[1].toLowerCase()===String(countryName).toLowerCase() || c[0]===countryName; });
+    if(m) code=m[0];
+  }
+  var hit=rates.find(function(r){return r.country===(code||'BE');})||rates.find(function(r){return r.country==='BE';});
+  var pVat=hit?parseFloat(hit.rate):TVA_RATE*100;
+  var commRate=s.platform_commission_rate!=null?parseFloat(s.platform_commission_rate):10;
+  var rc=!!s.vat_reverse_charge_carrier_platform;
+  var cVat=rc?0:(s.vat_rate_carrier_platform!=null?parseFloat(s.vat_rate_carrier_platform):21);
 
-  var rows = data.map(function(r){
-    var htva = parseFloat((parseFloat(r.final_price)/1.06).toFixed(2));
-    var code = r.booking_code||r.id.slice(0,8);
-    var timeStr = r.ride_time?r.ride_time.slice(0,5):'';
-    return '<tr style="border-bottom:1px solid #E8E8E8;">'
-      +'<td style="padding:8px 12px;font-size:12px;font-family:monospace;">'+code+'</td>'
-      +'<td style="padding:8px 12px;font-size:12px;">'+formatDate(r.ride_date||'')+(timeStr?' '+timeStr:'')+'</td>'
-      +'<td style="padding:8px 12px;font-size:12px;">'+(tLbl[r.trip_type]||r.trip_type||'\u2014')+'</td>'
-      +'<td style="padding:8px 12px;font-size:12px;text-align:right;font-weight:600;">'+fmt(htva)+'</td>'
-      +'</tr>';
+  var htva=0;
+  var rows=data.map(function(r){
+    var h=_rptRideHtva(r), v=_rptR3(h*pVat/100);
+    htva+=h;
+    var dur=r.trip_type==='disposal'?((r.notes||'').match(/Durée:(\d+)/)||[])[1]:'';
+    return '<tr><td><b>'+e(_DOC_TYPES[r.trip_type]||'Course')+(dur?' ('+dur+' h)':'')+'</b> — '+e(r.booking_code||r.id.slice(0,8))
+        +'<div class="sub">'+_docIso(r.ride_date)+(r.ride_time?' · '+String(r.ride_time).slice(0,5):'')+' · '+e((r.from_address||'').split(',')[0])+(r.to_address?' → '+e((r.to_address||'').split(',')[0]):'')+'</div></td>'
+      +'<td class="c">1</td><td class="r">'+_rptMoney(h)+'</td><td class="r">'+_rptMoney(h)+'</td><td class="r">'+_rptMoney(v)+'</td><td class="r b">'+_rptMoney(_rptR3(h+v))+'</td></tr>';
   }).join('');
+  htva=_rptR2(htva);
+  var pVatAmt=_rptR3(htva*pVat/100), pTvac=_rptR3(htva+pVatAmt);
+  var cHt=_rptR3(htva*commRate/100), cVatAmt=_rptR3(cHt*cVat/100), cTvac=_rptR3(cHt+cVatAmt);
+  var net=_rptR3(pTvac-cTvac);
 
-  var body = '<div style="font-size:12px;color:#888;margin-bottom:20px;">R\u00e9capitulatif des missions \u2014 '+mLabel+'</div>'
-    +'<div class="section"><div class="section-title">Missions</div>'
-    +'<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:#f5f5f5;">'
-      +'<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;color:#888;">Code</th>'
-      +'<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;color:#888;">Date</th>'
-      +'<th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;color:#888;">Type</th>'
-      +'<th style="padding:8px 12px;text-align:right;font-size:11px;font-weight:600;text-transform:uppercase;color:#888;">HTVA</th>'
-    +'</tr></thead><tbody>'+rows+'</tbody></table></div>'
-    +'<div class="section"><div class="section-title">R\u00e9capitulatif</div><table style="width:100%;border-collapse:collapse;">'
-      +'<tr><td style="padding:7px 12px;font-size:13px;color:#555;">Total brut HTVA</td><td style="padding:7px 12px;text-align:right;font-weight:600;">'+fmt(htvaTotal)+'</td></tr>'
-      +'<tr><td style="padding:7px 12px;font-size:13px;color:#555;">Commission Bleenr (10%)</td><td style="padding:7px 12px;text-align:right;font-weight:600;color:#C0392B;">-'+fmt(commission)+'</td></tr>'
-      +'<tr style="border-top:2px solid #1A1A18;"><td style="padding:9px 12px;font-size:14px;font-weight:700;">Net \u00e0 percevoir</td><td style="padding:9px 12px;text-align:right;font-size:14px;font-weight:700;color:#1B5E3B;">'+fmt(net)+'</td></tr>'
-    +'</table></div>';
-  _buildPdfWindow(_pdfBase('Factures \u2014 '+mLabel, body));
+  var mLabel=_RPT_MONTHS[_dInvSelMonth-1]+' '+_dInvSelYear;
+  var mm=String(_dInvSelMonth).padStart(2,'0');
+  var lastDay=String(new Date(_dInvSelYear,_dInvSelMonth,0).getDate()).padStart(2,'0');
+  var periodRange='01-'+mm+'-'+_dInvSelYear+' — '+lastDay+'-'+mm+'-'+_dInvSelYear;
+  var number='REL-'+_dInvSelYear+'-'+mm+'-'+String(currentUser?.id||'').slice(0,4).toUpperCase();
+
+  var page='<div class="page">'
+    +_docTop('Relevé mensuel des missions', number, ['Date : '+_docDate(), 'Période : '+periodRange])
+    +'<div class="parties">'+_docParty('Transporteur',_docProfileParty(Object.assign({email:currentUser?.email},currentProfile||{}),true),false)
+      +_docParty('Plateforme',_docBleenrParty(s),true)+'</div>'
+    +(data.length
+      ?'<table class="lines"><thead><tr><th>Description</th><th class="c">Qté</th><th class="r">Prix unitaire HTVA</th><th class="r">Sous-total</th><th class="r">TVA '+pVat+' %</th><th class="r">Total</th></tr></thead><tbody>'+rows+'</tbody></table>'
+      :'<div class="box" style="margin-top:8px;"><div>Aucune mission pour '+mLabel+'.</div></div>')
+    +'<div class="sum"><table>'
+      +'<tr><td>Prestations HTVA</td><td class="r">'+_rptMoney(htva)+'</td></tr>'
+      +'<tr><td>TVA '+pVat+' %</td><td class="r">'+_rptMoney(pVatAmt)+'</td></tr>'
+      +'<tr><td><b>Prestations TVAC</b></td><td class="r"><b>'+_rptMoney(pTvac)+'</b></td></tr>'
+      +'<tr><td>Commission Bleenr ('+commRate+' %) HTVA</td><td class="r">−'+_rptMoney(cHt)+'</td></tr>'
+      +'<tr><td>TVA commission '+(rc?'0 % (autoliquidation)':cVat+' %')+'</td><td class="r">−'+_rptMoney(cVatAmt)+'</td></tr>'
+      +'<tr class="grand"><td>Net à percevoir (EUR)</td><td class="r">'+_rptMoney(net)+'</td></tr>'
+    +'</table></div>'
+    +'<div class="box"><div class="boxt">Net à percevoir : '+_rptMoney(net)+'</div>'
+      +'<div>Prestations TVAC '+_rptMoney(pTvac)+' − commission TVAC '+_rptMoney(cTvac)+'.</div>'
+      +'<div class="muted">Montant versé par Bleenr pour '+data.length+' mission(s) réalisée(s) en '+mLabel+'.</div></div>'
+    +'<div class="foot">'+e(_docFooter(s))+'</div>'
+    +'</div>';
+  _docOpen(_bleenrDocHtml('Relevé '+mLabel+' — Bleenr', page));
 };
 
 async function loadPassengersList(){
