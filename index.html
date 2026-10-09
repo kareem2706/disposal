@@ -5017,13 +5017,17 @@ function _openRideDetailImpl(el){
       } else {
         ft=closeBtn+'<button class="btn btn-green" style="min-width:160px;" onclick="_detailOffer(this)" data-rid="'+rId+'" data-ride=\''+safeRd+'\'>Soumettre une offre</button>';
       }
-    } else if(r.status==='confirmed'){
+    } else if(r.status==='confirmed'||r.status==='active'){
       var _endTime=_getRideEndTime(r);
       var _isOverdue=_endTime&&new Date()>_endTime;
       var _missionBtn='<button onclick="generateMissionPdf(\''+rId+'\')" style="background:none;border:1.5px solid var(--sand3);border-radius:var(--r);padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);font-family:\'DM Sans\',sans-serif;margin-right:auto;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>T\u00e9l\u00e9charger mission</button>';
       var _assignBtn=(currentUser&&r.driver_id===currentUser.id&&!_isOverdue)
         ?'<button class="btn btn-secondary btn-sm" style="margin-left:6px;" onclick="openMissionAssignment(\''+rId+'\')">Modifier véhicule / chauffeur</button>':'';
-      if(_isOverdue){
+      if(currentUser&&r.driver_id===currentUser.id){
+        // Mission progress: En chemin -> Pick up terminé -> Mission terminée (timestamp stored at each step)
+        if(r.on_way_at||r.pickup_at) _assignBtn='';
+        ft=_missionProgressHtml(r)+_missionBtn+_assignBtn+closeBtn+_missionStepBtn(r);
+      } else if(_isOverdue){
         ft=_missionBtn+closeBtn+'<button class="btn btn-green" onclick="completeRide(\''+rId+'\')" style="margin-left:8px;">Terminer la course</button>';
       } else {
         ft=_missionBtn+_assignBtn+closeBtn;
@@ -5420,6 +5424,63 @@ async function _promoteNotesToDriver(rideId){
     await sb.from('rides').update({notes: newNotes}).eq('id',rideId);
   }catch(e){ console.warn('_promoteNotesToDriver error',e); }
 }
+
+// ── Mission progress (fleet): En chemin → Pick up terminé → Mission terminée ──
+function _hhmm(ts){ if(!ts) return ''; var d=new Date(ts); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function _missionProgressHtml(r){
+  var parts=[];
+  if(r.on_way_at) parts.push('En chemin '+_hhmm(r.on_way_at));
+  if(r.pickup_at) parts.push('Pick up '+_hhmm(r.pickup_at));
+  return '<div style="margin-right:auto;font-size:12px;color:var(--ink3);">'+(parts.length?parts.join(' · '):'')+'</div>';
+}
+function _missionStepBtn(r){
+  var id=String(r.id).replace(/'/g,'');
+  var b=function(step,label){ return '<button class="btn btn-green" style="margin-left:8px;" onclick="missionStep(\''+id+'\',\''+step+'\',this)">'+label+'</button>'; };
+  if(!r.on_way_at) return b('on_way','En chemin');
+  if(!r.pickup_at) return b('pickup','Pick up terminé');
+  return b('done','Mission terminée');
+}
+window.missionStep=async function(rideId, step, btn){
+  if(!sb||!currentUser) return;
+  if(btn){ btn.disabled=true; btn.textContent='…'; }
+  var now=new Date().toISOString();
+  var upd = step==='on_way' ? { on_way_at:now }
+          : step==='pickup' ? { pickup_at:now, status:'active' }
+          : { completed_at:now, status:'done' };
+  try{
+    var {data:rows,error}=await sb.from('rides').update(upd).eq('id',rideId).eq('driver_id',currentUser.id).in('status',['confirmed','active']).select('*');
+    if(error) throw error;
+    if(!rows||!rows.length) throw new Error('Mise à jour refusée');
+    var r=rows[0];
+    if(step==='on_way'){
+      // Client is told the driver is on the way (vehicle / driver details included)
+      var veh=null, drv=null;
+      try{
+        var {data:of}=await sb.from('offers').select('*').eq('ride_id',rideId).eq('status','accepted').maybeSingle();
+        if(of&&of.vehicle_id) veh=(await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',of.vehicle_id).maybeSingle()).data;
+        if(of&&of.fleet_driver_id) drv=(await sb.from('fleet_drivers').select('first_name,last_name,phone').eq('id',of.fleet_driver_id).maybeSingle()).data;
+      }catch(_e){}
+      var mail=window._mailRideData(r,{
+        vehicle: veh?(((veh.brand||'')+' '+(veh.model||'')+' '+(veh.color||'')).trim()+(veh.plate?' ('+veh.plate+')':'')):'',
+        driver: drv?((drv.first_name||'')+' '+(drv.last_name||'')).trim():'',
+        driverPhone: drv&&drv.phone?drv.phone:''
+      });
+      delete mail.price;
+      window.sendMailToUsers('driver_on_way', r.client_id, mail);
+      showToast('✅ Statut « En chemin » envoyé au client');
+    } else if(step==='pickup'){
+      showToast('✅ Pick up enregistré');
+    } else {
+      showToast('✅ Mission terminée');
+    }
+    closeModal('m-ride-detail');
+    if(typeof loadDriverDashboard==='function') loadDriverDashboard();
+    if(typeof loadMissions==='function') loadMissions();
+  }catch(e){
+    showToast('Erreur : '+(e.message||e));
+    if(btn){ btn.disabled=false; btn.textContent='Réessayer'; }
+  }
+};
 
 window.completeRide=async function(rideId){
   if(!sb)return;
