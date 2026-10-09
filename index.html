@@ -693,6 +693,7 @@ body{background:var(--bg);}
 
 .modal-ft .btn{padding:6px 13px;font-size:12px;}
 .ride-card>div{min-width:0;}
+.rmm{position:relative;flex:none}.rmm-btn{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--sand3);background:#fff;color:var(--ink2);display:flex;align-items:center;justify-content:center;cursor:pointer}.rmm-btn:hover{background:var(--sand2,#f3f3f1)}.rmm-pop{display:none;position:absolute;left:0;bottom:calc(100% + 8px);min-width:240px;background:#fff;border:1px solid var(--sand3);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.14);padding:6px;z-index:20;flex-direction:column}.rmm.open .rmm-pop{display:flex}.rmm-it{background:none;border:none;text-align:left;padding:11px 12px;border-radius:8px;font:500 14px 'DM Sans',sans-serif;color:var(--ink);cursor:pointer}.rmm-it:hover{background:#EEF6F0}
 </style>
 <script>window.initGooglePlaces=window.initGooglePlaces||function(){if(window._gpReady)window._gpReady();};window._gpReady=null;</script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places,routes&language=fr&loading=async&callback=initGooglePlaces" async defer></script>
@@ -5026,7 +5027,9 @@ function _openRideDetailImpl(el){
       if(currentUser&&r.driver_id===currentUser.id){
         // Mission progress: En chemin -> Pick up terminé -> Mission terminée (timestamp stored at each step)
         if(r.on_way_at||r.pickup_at) _assignBtn='';
-        ft=_missionProgressHtml(r)+_missionBtn+_assignBtn+closeBtn+_missionStepBtn(r);
+        var _menu=[{l:'T\u00e9l\u00e9charger la mission',f:"generateMissionPdf('"+rId+"')"}];
+        if(_assignBtn) _menu.push({l:'Modifier v\u00e9hicule / chauffeur',f:"openMissionAssignment('"+rId+"')"});
+        ft=_rideMoreMenu(_menu)+_missionProgressHtml(r)+_missionStepBtn(r);
       } else if(_isOverdue){
         ft=_missionBtn+closeBtn+'<button class="btn btn-green" onclick="completeRide(\''+rId+'\')" style="margin-left:8px;">Terminer la course</button>';
       } else {
@@ -5054,7 +5057,8 @@ var _pendingDeleteRide = null;
 function _buildPdfWindow(html){var win=window.open('','_blank');if(win){win.document.write(html);win.document.close();}}
 function _pdfBase(title,bodyHtml){
   return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>'+title+'</title>'
-    +'<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:"Helvetica Neue",Arial,sans-serif;color:#1A1A18;background:#fff;padding:36px;}h1{font-family:Georgia,serif;font-size:22px;letter-spacing:.1em;margin-bottom:24px;}table{width:100%;border-collapse:collapse;margin-bottom:4px;}td{padding:7px 12px;font-size:13px;border-bottom:1px solid #E8E8E8;}td:first-child{color:#777;width:38%;}td:last-child{font-weight:600;}.section{margin-bottom:22px;}.section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:8px;border-bottom:2px solid #1A1A18;padding-bottom:4px;}.footer{margin-top:40px;font-size:10px;color:#999;text-align:center;border-top:1px solid #E8E8E8;padding-top:12px;}@media print{button{display:none!important;}}</style>'
+    +'<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:"Helvetica Neue",Arial,sans-serif;color:#1A1A18;background:#fff;padding:36px;}h1{font-family:Georgia,serif;font-size:22px;letter-spacing:.1em;margin-bottom:24px;}table{width:100%;border-collapse:collapse;margin-bottom:4px;}td{padding:7px 12px;font-size:13px;border-bottom:1px solid #E8E8E8;}td:first-child{color:#777;width:38%;}td:last-child{font-weight:600;}.section{margin-bottom:22px;}.section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:8px;border-bottom:2px solid #1A1A18;padding-bottom:4px;}.footer{margin-top:40px;font-size:10px;color:#999;text-align:center;border-top:1px solid #E8E8E8;padding-top:12px;}@media print{button{display:none!important;}}.rmm{position:relative;flex:none}.rmm-btn{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--sand3);background:#fff;color:var(--ink2);display:flex;align-items:center;justify-content:center;cursor:pointer}.rmm-btn:hover{background:var(--sand2,#f3f3f1)}.rmm-pop{display:none;position:absolute;left:0;bottom:calc(100% + 8px);min-width:240px;background:#fff;border:1px solid var(--sand3);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.14);padding:6px;z-index:20;flex-direction:column}.rmm.open .rmm-pop{display:flex}.rmm-it{background:none;border:none;text-align:left;padding:11px 12px;border-radius:8px;font:500 14px 'DM Sans',sans-serif;color:var(--ink);cursor:pointer}.rmm-it:hover{background:#EEF6F0}
+</style>'
     +'</head><body><h1>BLEENR</h1>'+bodyHtml
     +'<div style="text-align:center;margin-top:28px;"><button onclick="window.print()" style="padding:9px 24px;background:#1A1A18;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">Imprimer / PDF</button></div>'
     +'<div class="footer">DISPOSAL SRL — bleenr.com</div></body></html>';
@@ -5091,7 +5095,8 @@ var _BLEENR_DOC_CSS='*{box-sizing:border-box;margin:0;padding:0}'
   +'table.lines th,table.kv th,.box{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
 
 function _bleenrDocHtml(title, inner){
-  return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>'+_billingEsc(title)+'</title><style>'+_BLEENR_DOC_CSS+'</style></head><body>'
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>'+_billingEsc(title)+'</title><style>'+_BLEENR_DOC_CSS+'.rmm{position:relative;flex:none}.rmm-btn{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--sand3);background:#fff;color:var(--ink2);display:flex;align-items:center;justify-content:center;cursor:pointer}.rmm-btn:hover{background:var(--sand2,#f3f3f1)}.rmm-pop{display:none;position:absolute;left:0;bottom:calc(100% + 8px);min-width:240px;background:#fff;border:1px solid var(--sand3);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.14);padding:6px;z-index:20;flex-direction:column}.rmm.open .rmm-pop{display:flex}.rmm-it{background:none;border:none;text-align:left;padding:11px 12px;border-radius:8px;font:500 14px 'DM Sans',sans-serif;color:var(--ink);cursor:pointer}.rmm-it:hover{background:#EEF6F0}
+</style></head><body>'
     +inner
     +'<div class="np" style="text-align:center;margin-top:30px;"><button onclick="window.print()" style="padding:10px 26px;background:#1B5E3B;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Imprimer / PDF</button></div>'
     +'</body></html>';
@@ -5427,11 +5432,16 @@ async function _promoteNotesToDriver(rideId){
 
 // ── Mission progress (fleet): En chemin → Pick up terminé → Mission terminée ──
 function _hhmm(ts){ if(!ts) return ''; var d=new Date(ts); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function _rideMoreMenu(items){
+  var it=items.map(function(i){return '<button type="button" class="rmm-it" onclick="this.closest(\'.rmm\').classList.remove(\'open\');'+i.f+'">'+i.l+'</button>';}).join('');
+  return '<div class="rmm"><button type="button" class="rmm-btn" title="Plus d\'actions" onclick="event.stopPropagation();this.parentNode.classList.toggle(\'open\')"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button><div class="rmm-pop">'+it+'</div></div>';
+}
+document.addEventListener('click',function(e){document.querySelectorAll('.rmm.open').forEach(function(m){if(!m.contains(e.target))m.classList.remove('open');});});
 function _missionProgressHtml(r){
   var parts=[];
   if(r.on_way_at) parts.push('En chemin '+_hhmm(r.on_way_at));
   if(r.pickup_at) parts.push('Pick up '+_hhmm(r.pickup_at));
-  return '<div style="margin-right:auto;font-size:12px;color:var(--ink3);">'+(parts.length?parts.join(' · '):'')+'</div>';
+  return '<div style="margin:0 auto 0 12px;font-size:12px;color:var(--ink3);">'+(parts.length?parts.join(' · '):'')+'</div>';
 }
 function _missionStepBtn(r){
   var id=String(r.id).replace(/'/g,'');
