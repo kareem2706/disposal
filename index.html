@@ -687,6 +687,15 @@ body{background:var(--bg);}
 @media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);}}
 .mobile-topbar{display:none;align-items:center;gap:12px;padding:0 16px;height:52px;background:var(--white);border-bottom:1px solid var(--sand3);position:sticky;top:0;z-index:200;flex-shrink:0;}
 .mobile-topbar-title{font-size:15px;font-weight:600;color:var(--ink);}
+.mobile-topbar-icon{display:none;width:30px;height:30px;border-radius:8px;background:var(--green-bg);color:var(--green);align-items:center;justify-content:center;flex-shrink:0;margin-right:-4px;}
+.mobile-topbar-icon svg{width:17px;height:17px;}
+@media(max-width:900px){.page .pg-head{display:none!important;}.mobile-topbar-icon.has-icon{display:flex;}}
+/* Driver invoices toolbar */
+.dinv-hd{flex-wrap:wrap;}
+.dinv-hd select{flex-shrink:0;}
+@media(max-width:600px){.dinv-hd{padding:12px 14px!important;}.dinv-nav{width:100%;}.dinv-nav select{flex:1;min-width:0;font-size:14px!important;padding:6px 8px!important;}.dinv-nav button{width:34px!important;height:34px!important;flex-shrink:0;}.dinv-btns{width:100%;}.dinv-btns .btn{flex:1;justify-content:center;}}
+/* Driver calendar (portrait mobile) */
+@media(max-width:600px){.dcal-bar{flex-wrap:wrap;padding:10px 12px!important;gap:8px!important;}.dcal-bar #d-cal-title{order:-1;flex:1 1 100%!important;}#page-d-calendar #d-cal-grid{padding:8px 8px 12px!important;}}
 @media(max-width:900px){.app-sidebar{transform:translateX(-100%);}.app-sidebar.open{transform:translateX(0);box-shadow:var(--sh-lg);}.app-main{margin-left:0;}.mobile-topbar{display:flex;}.page{padding:16px;}.stats-row{grid-template-columns:1fr 1fr;gap:10px;}.ride-card{grid-template-columns:44px 1fr auto;grid-template-rows:auto auto auto;gap:4px 10px;padding:12px 14px;}.ride-card>*:nth-child(1){grid-column:1;grid-row:1/4;align-self:center;}.ride-card>*:nth-child(2){grid-column:2;grid-row:1;}.ride-card>*:nth-child(3){grid-column:2/4;grid-row:2;}.ride-card>*:nth-child(4){grid-column:2/4;grid-row:3;}.ride-card>*:nth-child(5){grid-column:3;grid-row:1;}.ride-card>*:nth-child(6){display:none;}.ride-card>svg:last-child{display:none;}.ride-card .ride-card-col-label{display:none;}.ride-card .ride-card-col-val{font-size:12.5px;}#page-d-dashboard.active{min-height:calc(100vh - 52px);}}
 
 .modal-ft .btn{padding:6px 14px;font-size:12px;font-weight:500;}
@@ -1226,7 +1235,7 @@ body{background:var(--bg);}
       <button id="mob-btn" class="mob-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Menu">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       </button>
-      <span id="page-title" class="mobile-topbar-title"></span>
+      <span id="page-title-icon" class="mobile-topbar-icon"></span><span id="page-title" class="mobile-topbar-title"></span>
     </div>
     <div style="position:fixed;top:16px;right:20px;z-index:60;">
       <div id="notif-btn" class="icon-btn" onclick="toggleNotifPanel()" style="position:relative;background:var(--white);box-shadow:var(--sh);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;">
@@ -1316,7 +1325,7 @@ body{background:var(--bg);}
         <button class="btn btn-sm" style="display:flex;align-items:center;gap:6px;background:#E8DEF8;color:#6750A4;border:none;font-weight:600;" onclick="openPersonalMissionModal()"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Ajouter mission personnelle</button>
       </div>
       <div class="card" style="padding:0;overflow:hidden;background:#FCFCFC;">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--sand3);gap:12px;">
+        <div class="dcal-bar" style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--sand3);gap:12px;">
           <button onclick="dCalPrev()" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--r);color:var(--ink3);flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
           <span id="d-cal-title" style="font-size:15px;font-weight:700;color:var(--ink);flex:1;text-align:center;"></span>
           <div style="display:flex;background:var(--sand2);border-radius:8px;padding:3px;gap:2px;flex-shrink:0;">
@@ -3361,6 +3370,7 @@ window.showPage = function(pageId){
     'd-invoices':'Factures', 'passengers':'Passagers',
     'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses', 'admin-billing':'Facturation', 'admin-reports':'Rapports' };
   var ptEl=document.getElementById('page-title');if(ptEl)ptEl.textContent=pageNames[pageId]||'';
+  var piEl=document.getElementById('page-title-icon');if(piEl){var _srcIc=pg.querySelector('.pg-head-icon');piEl.innerHTML=_srcIc?_srcIc.innerHTML:'';piEl.classList.toggle('has-icon',!!_srcIc);}
 
   // Mark nav item active
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === pageId));
@@ -7380,12 +7390,73 @@ function _buildCalCell(ds,isT,calRides,calView){
   if(rides.length>2&&calView==='month')p.push('<div class="cal-mb" data-ds="'+ds+'" style="font-size:9px;color:var(--blue);cursor:pointer;">Voir tout →</div>');
   p.push('</div>');return p.join('');
 }
+// Portrait phone layout for the driver calendar: compact month (dots) + vertical week list
+var _CAL_SC={waiting:'#F0D080',offers:'#90C4F8',confirmed:'#6FCF97',active:'#27AE60',done:'#B0C4B8',cancelled:'#FFAAAA',personal:'#D8C4F0'};
+var _CAL_SL={waiting:'Attente',offers:'Offres',confirmed:'Confirmée',active:'Active',done:'Terminée',cancelled:'Annulée',personal:'Personnelle'};
+function _renderCalGridMobile(grid,titleEl,calYear,calMonth,calView,calWS,calRides,viewFn,MN,DN,td){
+  var pad=function(n){return String(n).padStart(2,'0');};
+  var html='';
+  if(calView==='week'){
+    var ws=new Date(calWS),we=new Date(ws);we.setDate(we.getDate()+6);
+    titleEl.textContent=ws.getDate()+' '+MN[ws.getMonth()].slice(0,3)+' – '+we.getDate()+' '+MN[we.getMonth()].slice(0,3)+' '+we.getFullYear();
+    for(var di=0;di<7;di++){
+      var dd=new Date(ws);dd.setDate(dd.getDate()+di);
+      var ds=dd.getFullYear()+'-'+pad(dd.getMonth()+1)+'-'+pad(dd.getDate());
+      var isT=td.toDateString()===dd.toDateString();
+      var rides=calRides.filter(function(r){return r.ride_date===ds;}).sort(function(a,b){return (a.ride_time||'').localeCompare(b.ride_time||'');});
+      html+='<div style="display:flex;gap:10px;padding:10px 4px;border-bottom:1px solid var(--sand2);">'
+        +'<div style="width:42px;flex-shrink:0;text-align:center;color:'+(isT?'var(--green)':'var(--ink)')+';">'
+          +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:'+(isT?'var(--green)':'var(--ink4)')+';">'+DN[di]+'</div>'
+          +'<div style="font-size:18px;font-weight:700;">'+dd.getDate()+'</div>'
+        +'</div><div style="flex:1;min-width:0;">';
+      if(!rides.length) html+='<div style="font-size:12px;color:var(--ink4);padding-top:8px;">—</div>';
+      rides.forEach(function(r){
+        var enc=encodeURIComponent(JSON.stringify(r));
+        var lbl=r.status==='personal'?((r.notes?r.notes.split(' — ')[0]:null)||'Mission'):(r.trip_type==='disposal'?'Disposition':r.trip_type==='mixed'?'Mixte':'A → B');
+        var rt=r.status==='personal'?(r.from_address||''):((r.from_address||'').split(',')[0]+(r.to_address?' → '+r.to_address.split(',')[0]:''));
+        html+='<div class="cal-rp" data-enc="'+enc+'" style="background:'+(_CAL_SC[r.status]||'#EEE')+';border-radius:8px;padding:7px 10px;margin-bottom:5px;cursor:pointer;color:#1A2E1A;">'
+          +'<div style="font-size:12.5px;font-weight:700;">'+(r.ride_time?r.ride_time.slice(0,5)+' · ':'')+lbl+' · '+(_CAL_SL[r.status]||r.status)+'</div>'
+          +(rt?'<div style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+rt+'</div>':'')
+        +'</div>';
+      });
+      html+='</div></div>';
+    }
+  }else{
+    titleEl.textContent=MN[calMonth]+' '+calYear;
+    var fd=new Date(calYear,calMonth,1).getDay();fd=fd===0?6:fd-1;
+    var dim=new Date(calYear,calMonth+1,0).getDate();
+    html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;">';
+    DN.forEach(function(d){html+='<div style="text-align:center;font-size:10px;font-weight:700;color:var(--ink4);text-transform:uppercase;padding:2px 0;">'+d.slice(0,1)+'</div>';});
+    html+='</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">';
+    for(var e=0;e<fd;e++)html+='<div></div>';
+    for(var day=1;day<=dim;day++){
+      var ds2=calYear+'-'+pad(calMonth+1)+'-'+pad(day);
+      var isT2=td.getFullYear()===calYear&&td.getMonth()===calMonth&&td.getDate()===day;
+      var rs=calRides.filter(function(r){return r.ride_date===ds2;});
+      var dots=rs.slice(0,4).map(function(r){return '<span style="width:6px;height:6px;border-radius:50%;background:'+(_CAL_SC[r.status]||'#CCC')+';display:inline-block;"></span>';}).join('');
+      html+='<div class="cal-mb" data-ds="'+ds2+'" style="min-height:46px;border-radius:8px;border:1px solid '+(isT2?'transparent':'var(--sand3)')+';background:'+(isT2?'var(--green-bg)':'#FCFCFC')+';display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;">'
+        +'<span style="font-size:13px;font-weight:'+(isT2?'700':'500')+';color:'+(isT2?'var(--green)':'var(--ink)')+';">'+day+'</span>'
+        +'<span style="display:flex;gap:2px;height:6px;align-items:center;">'+dots+(rs.length>4?'<span style="font-size:9px;color:var(--ink3);">+</span>':'')+'</span>'
+      +'</div>';
+    }
+    html+='</div><div style="font-size:11px;color:var(--ink4);text-align:center;margin-top:10px;">Touchez un jour pour voir le détail de la semaine</div>';
+  }
+  grid.innerHTML=html;
+  grid.onclick=function(e){
+    var rp=e.target.closest('.cal-rp');if(rp){try{var r=JSON.parse(decodeURIComponent(rp.dataset.enc));var tmp=document.createElement('div');tmp.dataset.ride=JSON.stringify(r).replace(/'/g,"&#39;");openRideDetail(tmp);}catch(ex){}return;}
+    var mb=e.target.closest('.cal-mb');if(mb&&viewFn){viewFn('week',mb.dataset.ds);}
+  };
+}
+// Re-render the driver calendar when the phone rotates (portrait <-> landscape)
+(function(){var _t,_w=window.innerWidth;window.addEventListener('resize',function(){clearTimeout(_t);_t=setTimeout(function(){var w=window.innerWidth;var ch=((w<=600)!==(_w<=600));_w=w;if(ch&&document.querySelector('#page-d-calendar.active')){_renderCalGrid('d-cal-grid','d-cal-title',_dCalY,_dCalM,_dCalView,_dCalWS,_dCalRides);}},200);});})();
 function _renderCalGrid(gridId,titleId,calYear,calMonth,calView,calWS,calRides,prevFn,nextFn,setViewFn){
   var MN=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   var DN=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
   var td=new Date();
   var html='',grid=document.getElementById(gridId),titleEl=document.getElementById(titleId);
   if(!grid||!titleEl)return;
+  var _viewFn=setViewFn||(gridId==='d-cal-grid'?window.dCalView:window.calSetView);
+  if(gridId==='d-cal-grid'&&window.innerWidth<=600){ _renderCalGridMobile(grid,titleEl,calYear,calMonth,calView,calWS,calRides,_viewFn,MN,DN,td); return; }
   if(calView==='week'){
     var ws=new Date(calWS),we=new Date(ws);we.setDate(we.getDate()+6);
     titleEl.textContent=ws.getDate()+' '+MN[ws.getMonth()].slice(0,3)+' – '+we.getDate()+' '+MN[we.getMonth()].slice(0,3)+' '+we.getFullYear();
@@ -7407,7 +7478,7 @@ function _renderCalGrid(gridId,titleId,calYear,calMonth,calView,calWS,calRides,p
   }
   grid.innerHTML=html;
   grid.onclick=function(e){
-    var mb=e.target.closest('.cal-mb');if(mb){setViewFn('week',mb.dataset.ds);return;}
+    var mb=e.target.closest('.cal-mb');if(mb){_viewFn('week',mb.dataset.ds);return;}
     var rp=e.target.closest('.cal-rp');if(rp){try{var r=JSON.parse(decodeURIComponent(rp.dataset.enc));var tmp=document.createElement('div');tmp.dataset.ride=JSON.stringify(r).replace(/'/g,"&#39;");openRideDetail(tmp);}catch(ex){}}
   };
 }
@@ -10846,16 +10917,18 @@ window._renderDriverInvoiceMonth = async function(){
   var fmt = function(v){ return parseFloat(v).toFixed(2).replace('.',',')+' €'; };
   var tLbl = {ab:'A → B', disposal:'Disposition', mixed:'Mixte'};
 
-  var header = '<div class="card-hd" style="display:flex;align-items:center;gap:8px;justify-content:space-between;">'
-    +'<div style="display:flex;align-items:center;gap:6px;">'
+  var header = '<div class="card-hd dinv-hd" style="display:flex;align-items:center;gap:8px;justify-content:space-between;">'
+    +'<div class="dinv-nav" style="display:flex;align-items:center;gap:6px;">'
       +'<button onclick="_dInvStep(-1)" style="'+btnStyle+'">&lt;</button>'
       +'<select onchange="_dInvSetMonth(parseInt(this.value))" style="'+selStyle+'">'+monthOpts+'</select>'
       +'<select onchange="_dInvSetYear(parseInt(this.value))" style="'+selStyle+'">'+yearOpts+'</select>'
       +'<button onclick="_dInvStep(1)" style="'+btnStyle+'">&gt;</button>'
     +'</div>'
     +(monthRides.length
-      ? '<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;flex-shrink:0;" onclick="generateDriverInvoices(\'prestation\')">Factures prestation</button>'
-          +'<button class="btn btn-secondary btn-sm" style="flex-shrink:0;margin-left:6px;" onclick="generateDriverInvoices(\'commission\')">Facture commission</button>'
+      ? '<div class="dinv-btns" style="display:flex;gap:6px;">'
+          +'<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;flex-shrink:0;" onclick="generateDriverInvoices(\'prestation\')">Factures prestation</button>'
+          +'<button class="btn btn-secondary btn-sm" style="flex-shrink:0;" onclick="generateDriverInvoices(\'commission\')">Facture commission</button>'
+        +'</div>'
       : '')
   +'</div>';
 
