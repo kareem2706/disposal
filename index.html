@@ -694,8 +694,25 @@ body{background:var(--bg);}
 .dinv-hd{flex-wrap:wrap;}
 .dinv-hd select{flex-shrink:0;}
 @media(max-width:600px){.dinv-hd{padding:12px 14px!important;}.dinv-nav{width:100%;}.dinv-nav select{flex:1;min-width:0;font-size:14px!important;padding:6px 8px!important;}.dinv-nav button{width:34px!important;height:34px!important;flex-shrink:0;}.dinv-btns{width:100%;}.dinv-btns .btn{flex:1;justify-content:center;}}
+/* Mobile: money KPI on one line */
+@media(max-width:600px){.stat-val.stat-money{white-space:nowrap;font-size:clamp(18px,6.2vw,34px);}}
+/* Mobile: modal footers — actions left, amount right, no "Fermer" button */
+@media(max-width:900px){
+  .modal-ft{justify-content:flex-start!important;flex-wrap:wrap;}
+  .modal-ft .m-close-mob{display:none!important;}
+  .modal-ft > div[style*="margin-right:auto"]{order:99;margin-right:0!important;margin-left:auto!important;}
+  .modal-ft:not(:has(> :not(.m-close-mob))){display:none!important;}
+}
+/* Mobile: new request form — no zoom/shift on focus, date & time same size as other fields */
+@media(max-width:900px){
+  .modal .modal-body{overflow-x:hidden;}
+  .modal input:not([type=checkbox]):not([type=radio]),.modal select,.modal textarea{font-size:16px;max-width:100%;}
+  .modal input[type=date],.modal input[type=time]{-webkit-appearance:none;appearance:none;display:block;width:100%;min-width:0;box-sizing:border-box;height:44px;line-height:normal;text-align:left;background:white;}
+  .modal input[type=date]::-webkit-date-and-time-value,.modal input[type=time]::-webkit-date-and-time-value{text-align:left;margin:0;}
+  .modal input:not([type=checkbox]):not([type=radio]):not([type=file]),.modal select{height:44px;box-sizing:border-box;}
+}
 /* Driver calendar (portrait mobile) */
-@media(max-width:600px){.dcal-bar{flex-wrap:wrap;padding:10px 12px!important;gap:8px!important;}.dcal-bar #d-cal-title{order:-1;flex:1 1 100%!important;}#page-d-calendar #d-cal-grid{padding:8px 8px 12px!important;}}
+@media(max-width:600px){.dcal-bar{flex-wrap:wrap;padding:10px 12px!important;gap:8px!important;}.dcal-bar #d-cal-title,.dcal-bar #cal-title{order:-1;flex:1 1 100%!important;}#page-d-calendar #d-cal-grid,#page-calendar #cal-grid{padding:8px 8px 12px!important;}}
 @media(max-width:900px){.app-sidebar{transform:translateX(-100%);}.app-sidebar.open{transform:translateX(0);box-shadow:var(--sh-lg);}.app-main{margin-left:0;}.mobile-topbar{display:flex;}.page{padding:16px;}.stats-row{grid-template-columns:1fr 1fr;gap:10px;}.ride-card{grid-template-columns:44px 1fr auto;grid-template-rows:auto auto auto;gap:4px 10px;padding:12px 14px;}.ride-card>*:nth-child(1){grid-column:1;grid-row:1/4;align-self:center;}.ride-card>*:nth-child(2){grid-column:2;grid-row:1;}.ride-card>*:nth-child(3){grid-column:2/4;grid-row:2;}.ride-card>*:nth-child(4){grid-column:2/4;grid-row:3;}.ride-card>*:nth-child(5){grid-column:3;grid-row:1;}.ride-card>*:nth-child(6){display:none;}.ride-card>svg:last-child{display:none;}.ride-card .ride-card-col-label{display:none;}.ride-card .ride-card-col-val{font-size:12.5px;}#page-d-dashboard.active{min-height:calc(100vh - 52px);}}
 
 .modal-ft .btn{padding:6px 14px;font-size:12px;font-weight:500;}
@@ -1295,7 +1312,7 @@ body{background:var(--bg);}
         <div><h1>Calendrier</h1><p>Vos demandes du mois</p></div>
       </div>
       <div class="card" style="padding:0;overflow:hidden;background:#FCFCFC;">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--sand3);gap:12px;">
+        <div class="dcal-bar" style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--sand3);gap:12px;">
           <button onclick="calPrevMonth()" style="background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--r);color:var(--ink3);flex-shrink:0;"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
           <span id="cal-title" style="font-size:15px;font-weight:700;color:var(--ink);flex:1;text-align:center;"></span>
           <div style="display:flex;background:var(--sand2);border-radius:8px;padding:3px;gap:2px;flex-shrink:0;">
@@ -3481,7 +3498,7 @@ async function loadClientDashboard(){
     '<div class="stat-card">'+_mkI(_s1,'var(--green-bg)')+'<div class="stat-label">Confirmées/terminées</div><div class="stat-val">'+confirmed+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s2,'#FFF3DC')+'<div class="stat-label">En attente</div><div class="stat-val">'+pending+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s3,'var(--blue-bg)')+'<div class="stat-label">Offres reçues</div><div class="stat-val">'+withOffer+'</div></div>'
-    +'<div class="stat-card">'+_mkI(_s4,'var(--red-bg)')+'<div class="stat-label">Total pay\u00e9</div><div class="stat-val">'+(totalNet>0?totalNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>';
+    +'<div class="stat-card">'+_mkI(_s4,'var(--red-bg)')+'<div class="stat-label">Total pay\u00e9</div><div class="stat-val stat-money">'+(totalNet>0?totalNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>';
 
   // Active ride
   const active = rides.find(r => r.status==='active');
@@ -3930,7 +3947,7 @@ async function loadDriverDashboard(){
   document.getElementById('driver-stats').innerHTML=
     '<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>','var(--green-bg)')+'<div class="stat-label">Missions \u00e0 venir</div><div class="stat-val">'+upcomingMissions.length+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>','var(--blue-bg)')+'<div class="stat-label">Ce mois</div><div class="stat-val">'+monthMissions.length+'</div></div>'
-    +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>','var(--red-bg)')+'<div class="stat-label">Revenus</div><div class="stat-val">'+(revenueNet>0?revenueNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>'
+    +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>','var(--red-bg)')+'<div class="stat-label">Revenus</div><div class="stat-val stat-money">'+(revenueNet>0?revenueNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>','#FFF3DC')+'<div class="stat-label">Score</div><div class="stat-val">'+scoreDisplay+'</div></div>';
 
   // Update marketplace badge immediately (hidden per spec)
@@ -6916,7 +6933,10 @@ function setLoading(btn, loading, text){
   btn.innerHTML = loading ? `<span class="auth-loading"><span class="spinner-sm"></span>${text}</span>` : text;
 }
 
-window.openModal  = id => document.getElementById(id)?.classList.add('open');
+function _tagModalClose(m){ if(!m||m.id==='m-confirm-delete') return; m.querySelectorAll('.modal-ft button').forEach(function(b){ if((b.textContent||'').trim()==='Fermer') b.classList.add('m-close-mob'); }); }
+window.openModal  = id => { var _m=document.getElementById(id); if(!_m) return; _tagModalClose(_m); _m.classList.add('open'); };
+// Footers rebuilt while a modal is open (e.g. after rating) get tagged too
+(function(){ try{ new MutationObserver(function(muts){ muts.forEach(function(mu){ var t=mu.target; if(t&&t.closest&&t.closest('.modal-ft')) _tagModalClose(t.closest('.modal-overlay')); }); }).observe(document.body,{childList:true,subtree:true}); }catch(e){} })();
 // Vehicle guide: re-parented to the end of <body> so it can never sit
 // behind the modal that opened it, whatever the DOM order or stacking context.
 window.openVehGuide = function(){
@@ -7448,7 +7468,7 @@ function _renderCalGridMobile(grid,titleEl,calYear,calMonth,calView,calWS,calRid
   };
 }
 // Re-render the driver calendar when the phone rotates (portrait <-> landscape)
-(function(){var _t,_w=window.innerWidth;window.addEventListener('resize',function(){clearTimeout(_t);_t=setTimeout(function(){var w=window.innerWidth;var ch=((w<=600)!==(_w<=600));_w=w;if(ch&&document.querySelector('#page-d-calendar.active')){_renderCalGrid('d-cal-grid','d-cal-title',_dCalY,_dCalM,_dCalView,_dCalWS,_dCalRides);}},200);});})();
+(function(){var _t,_w=window.innerWidth;window.addEventListener('resize',function(){clearTimeout(_t);_t=setTimeout(function(){var w=window.innerWidth;var ch=((w<=600)!==(_w<=600));_w=w;if(ch&&document.querySelector('#page-d-calendar.active')){_renderCalGrid('d-cal-grid','d-cal-title',_dCalY,_dCalM,_dCalView,_dCalWS,_dCalRides);}if(ch&&document.querySelector('#page-calendar.active')&&_calWS){_renderCalGrid('cal-grid','cal-title',_calY,_calM,_calView,_calWS,_calRides,calPrevMonth,calNextMonth,calSetView);}},200);});})();
 function _renderCalGrid(gridId,titleId,calYear,calMonth,calView,calWS,calRides,prevFn,nextFn,setViewFn){
   var MN=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   var DN=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
@@ -7456,7 +7476,7 @@ function _renderCalGrid(gridId,titleId,calYear,calMonth,calView,calWS,calRides,p
   var html='',grid=document.getElementById(gridId),titleEl=document.getElementById(titleId);
   if(!grid||!titleEl)return;
   var _viewFn=setViewFn||(gridId==='d-cal-grid'?window.dCalView:window.calSetView);
-  if(gridId==='d-cal-grid'&&window.innerWidth<=600){ _renderCalGridMobile(grid,titleEl,calYear,calMonth,calView,calWS,calRides,_viewFn,MN,DN,td); return; }
+  if((gridId==='d-cal-grid'||gridId==='cal-grid')&&window.innerWidth<=600){ _renderCalGridMobile(grid,titleEl,calYear,calMonth,calView,calWS,calRides,_viewFn,MN,DN,td); return; }
   if(calView==='week'){
     var ws=new Date(calWS),we=new Date(ws);we.setDate(we.getDate()+6);
     titleEl.textContent=ws.getDate()+' '+MN[ws.getMonth()].slice(0,3)+' – '+we.getDate()+' '+MN[we.getMonth()].slice(0,3)+' '+we.getFullYear();
