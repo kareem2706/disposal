@@ -700,13 +700,15 @@ body{background:var(--bg);}
 @media(max-width:900px){
   .modal-ft{justify-content:flex-start!important;flex-wrap:wrap;}
   .modal-ft .m-close-mob{display:none!important;}
+  .modal-ft:not(:has(> div[style*="margin-right:auto"])):not(:has(> .ft-menu)) > .btn-green:last-child,
+  .modal-ft:not(:has(> div[style*="margin-right:auto"])):not(:has(> .ft-menu)) > .btn-primary:last-child{margin-left:auto!important;}
   .modal-ft > div[style*="margin-right:auto"]{order:99;margin-right:0!important;margin-left:auto!important;}
   .modal-ft:not(:has(> :not(.m-close-mob))){display:none!important;}
 }
 @media(max-width:900px){#m-ride-detail .modal:not(:has(#detail-ft > :not(.m-close-mob))) #detail-map-wrap{margin-bottom:20px!important;}}
 /* Footer actions dropdown */
 .ft-menu{position:relative;flex-shrink:0;}
-.ft-menu-btn{display:flex;align-items:center;gap:6px;background:var(--white);border:1.5px solid var(--sand3);border-radius:var(--r);padding:7px 12px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.ft-menu-btn{display:flex;align-items:center;justify-content:center;width:38px;height:38px;background:var(--white);border:1.5px solid var(--sand3);border-radius:10px;padding:0;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:'DM Sans',sans-serif;}
 .ft-menu-list{display:none;position:absolute;left:0;bottom:calc(100% + 6px);min-width:260px;max-width:calc(100vw - 64px);background:#fff;border:1px solid var(--sand3);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.14);padding:6px;z-index:50;}
 .ft-menu.open .ft-menu-list{display:block;}
 .ft-menu-item{display:flex;align-items:center;gap:9px;width:100%;background:none;border:none;text-align:left;padding:10px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;font-family:'DM Sans',sans-serif;}
@@ -2075,8 +2077,7 @@ body{background:var(--bg);}
       <div id="offer-err" class="auth-error"></div>
     </div>
     <div class="modal-ft">
-      <button class="btn btn-secondary" onclick="closeModal('m-submit-offer')">Annuler</button>
-      <div id="offer-btn-wrap" style="min-width:160px;position:relative;border-radius:40px;overflow:hidden;"><button class="btn btn-green" id="btn-offer-submit" onclick="_offerBtnClick()" style="width:100%;position:relative;z-index:1;">Soumettre →</button><div id="offer-progress-bar" style="position:absolute;left:0;top:0;height:100%;width:0%;background:#2E6B4A;opacity:0.35;pointer-events:none;z-index:2;"></div></div>
+      <div id="offer-btn-wrap" style="margin-left:auto;min-width:160px;position:relative;border-radius:40px;overflow:hidden;"><button class="btn btn-green" id="btn-offer-submit" onclick="_offerBtnClick()" style="width:100%;position:relative;z-index:1;">Soumettre →</button><div id="offer-progress-bar" style="position:absolute;left:0;top:0;height:100%;width:0%;background:#2E6B4A;opacity:0.35;pointer-events:none;z-index:2;"></div></div>
     </div>
   </div>
 </div>
@@ -4014,7 +4015,7 @@ async function loadDriverDashboard(){
 
     var dI=function(s,bg){return '<div class="stat-card-icon" style="background:'+bg+'">'+s+'</div>';};
   document.getElementById('driver-stats').innerHTML=
-    '<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>','var(--green-bg)')+'<div class="stat-label">Missions \u00e0 venir</div><div class="stat-val">'+upcomingMissions.length+'</div></div>'
+    '<div class="stat-card"'+(upcomingMissions.length?' onclick="showPage(\'missions\')" style="cursor:pointer;" title="Voir mes missions à venir"':'')+'>'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>','var(--green-bg)')+'<div class="stat-label">Missions \u00e0 venir</div><div class="stat-val">'+upcomingMissions.length+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>','var(--blue-bg)')+'<div class="stat-label">Ce mois</div><div class="stat-val">'+monthMissions.length+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>','var(--red-bg)')+'<div class="stat-label">Revenus</div><div class="stat-val stat-money">'+(revenueNet>0?revenueNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>','#FFF3DC')+'<div class="stat-label">Score</div><div class="stat-val">'+scoreDisplay+'</div></div>';
@@ -4880,6 +4881,10 @@ function _openRideDetailImpl(el){
         var _phPax=document.getElementById('ph-drv-pax');
         var _phNote=document.getElementById('ph-drv-note');
         if(_phPax){ _phPax.outerHTML = contactBlock; } else { bodyEl3.insertAdjacentHTML('beforeend', contactBlock); }
+        if(r.status==='active'||r.status==='done'||r.pickup_at){
+          // Ride in progress: note can no longer be added/edited (read-only if one exists)
+          noteCard = offerNote ? '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Note au client</div><div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+offerNote+'</div></div>' : '';
+        }
         if(_phNote){ _phNote.outerHTML = noteCard; } else { bodyEl3.insertAdjacentHTML('beforeend', noteCard); }
         // Attach event via JS (safe for all characters including apostrophes)
         setTimeout(function(){
@@ -5049,10 +5054,11 @@ function _openRideDetailImpl(el){
       ft=closeBtn;
     } else if(r.status==='confirmed'){
       var pdfVoucherBtn = '<button onclick="generateRideVoucher(\''+rId+'\')" class="btn btn-secondary" style="display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Voucher</button>';
+      var _voucherMenu=_ftMenu('<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');generateRideVoucher(\''+String(rId).replace(/'/g,'')+'\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Télécharger le voucher</button>');
       if(_rideCancelLocked(r)){
-        ft='<div style="margin-right:auto;font-size:12px;color:var(--ink3);">Annulation impossible \u00e0 moins de '+_refundDelayHours(r)+' h du d\u00e9part</div>'+pdfVoucherBtn+closeBtn;
+        ft=_voucherMenu+'<div style="margin-right:auto;font-size:12px;color:var(--ink3);">Annulation impossible \u00e0 moins de '+_refundDelayHours(r)+' h du d\u00e9part</div>'+closeBtn;
       } else {
-        ft=trashBtn+pdfVoucherBtn+closeBtn;
+        ft=_voucherMenu+trashBtn+closeBtn;
       }
     } else if(r.status==='done'){
       var priceTagDone = r.final_price
@@ -5539,7 +5545,10 @@ function _rideActionsMenu(rId, canAssign){
   var carIc='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/></svg>';
   var items='<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');generateMissionPdf(\''+id+'\')">'+docIc+'Télécharger l\'ordre de mission</button>';
   if(canAssign) items+='<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openMissionAssignment(\''+id+'\')">'+carIc+'Modifier véhicule / chauffeur</button>';
-  return '<div class="ft-menu"><button type="button" class="ft-menu-btn" onclick="event.stopPropagation();this.parentElement.classList.toggle(\'open\')">Actions <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><div class="ft-menu-list">'+items+'</div></div>';
+  return _ftMenu(items);
+}
+function _ftMenu(items){
+  return '<div class="ft-menu"><button type="button" class="ft-menu-btn" title="Actions" aria-label="Actions" onclick="event.stopPropagation();this.parentElement.classList.toggle(\'open\')"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><div class="ft-menu-list">'+items+'</div></div>';
 }
 document.addEventListener('click',function(e){ if(!e.target.closest('.ft-menu')) document.querySelectorAll('.ft-menu.open').forEach(function(m){m.classList.remove('open');}); });
 function _missionStepBtn(r){
@@ -6560,23 +6569,20 @@ function renderOfferCard(o){
   return '<div class="offer-card" style="padding:16px 20px;">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;">'
       +'<div style="flex:1;min-width:0;">'
-        +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;"><span style="font-weight:700;font-size:15px;">'+classBadge+vehName+'</span></div>'
-        +amenities
-        +kmHtml
+        +'<div style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+vehName+'</div>'
       +'</div>'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">'
         +'<div style="text-align:right;"><div style="font-size:10px;color:var(--ink4);font-weight:500;">Prix</div><div style="font-size:20px;font-weight:700;color:var(--ink);">'+priceDisplay+'</div></div>'
         +'<button class="btn btn-green" style="white-space:nowrap;padding:8px 16px;font-size:12px;" data-oid="'+safeId+'" data-did="'+safeDrv+'" data-price="'+safePrice+'" onclick="_pickOffer(this)">Choisir cette offre</button>'
       +'</div>'
     +'</div>'
-    // Driver message
-    +(o.message?'<div style="margin-top:10px;padding:8px 12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);display:flex;gap:7px;align-items:flex-start;">'
-      +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
-      +'<span>'+o.message+'</span></div>':'')
     // Voir détail toggle
     +'<div style="margin-top:10px;">'
       +'<button onclick="_toggleOfferDetail(this)" style="background:none;border:none;font-size:12px;color:var(--ink3);cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-family:\'DM Sans\',sans-serif;"><svg id="od-arrow-'+safeId+'" width="12" height="12" viewBox="0 0 12 12" fill="none" style="transition:transform .2s;"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Voir détail</button>'
       +'<div id="od-detail-'+safeId+'" style="display:none;margin-top:8px;padding:10px 12px;background:var(--sand);border-radius:var(--r);font-size:12px;color:var(--ink2);">'
+        +(classBadge?'<div style="margin-bottom:8px;">'+classBadge+'</div>':'')
+        +amenities+kmHtml
+        +((amenities||kmHtml)?'<div style="height:12px;"></div>':'')
         +(v?('<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 16px;">'
           +'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Marque</span><div style="font-weight:500;">'+(v.brand||'—')+'</div></div>'
           +'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Modèle</span><div style="font-weight:500;">'+(v.model||'—')+'</div></div>'
@@ -6585,6 +6591,9 @@ function renderOfferCard(o){
           +(vehClass?'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Gamme</span><div style="font-weight:500;">'+(classLabels[vehClass]||vehClass)+'</div></div>':'')
           +'</div>'
         ):'<div style="color:var(--ink4);font-style:italic;">Aucun détail véhicule disponible</div>')
+        +(o.message?'<div style="margin-top:10px;padding:8px 12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);display:flex;gap:7px;align-items:flex-start;">'
+      +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
+      +'<span>'+o.message+'</span></div>':'')
       +'</div>'
     +'</div>'
   +'</div>';
