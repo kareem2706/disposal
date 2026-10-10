@@ -3901,11 +3901,13 @@ function _renderDriverActiveRides(list){
     return '<div data-ride=\''+safe+'\' onclick="openRideDetail(this)" style="background:#fff;border:1.5px solid #6FCF97;border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px;">'
       +'<div style="flex:1;min-width:200px;">'
         +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-family:monospace;font-size:12px;font-weight:700;color:var(--ink2);">'+esc(code)+'</span>'
-          +(r.pickup_at?'<span style="font-size:11.5px;color:var(--ink3);">Pick up à '+_hhmm(r.pickup_at)+'</span>':'')+'</div>'
+          +(r.pickup_at?'<span style="font-size:11.5px;color:var(--ink3);">Pick up à '+_hhmm(r.pickup_at)+'</span>':(r.on_way_at?'<span style="font-size:11.5px;color:var(--ink3);">En chemin depuis '+_hhmm(r.on_way_at)+'</span>':''))+'</div>'
         +'<div style="font-size:14px;font-weight:600;color:var(--ink);">'+from+' <span style="color:var(--ink4);">→</span> '+to+'</div>'
         +(pax?'<div style="font-size:12px;color:var(--ink3);margin-top:3px;">Passager : '+esc(pax[1])+'</div>':'')
       +'</div>'
-      +'<button class="btn btn-green" style="flex-shrink:0;" onclick="event.stopPropagation();missionStep(\''+id+'\',\'done\',this)">Mission terminée</button>'
+      +(r.pickup_at||r.status==='active'
+        ? '<button class="btn btn-green" style="flex-shrink:0;" onclick="event.stopPropagation();missionStep(\''+id+'\',\'done\',this)">Mission terminée</button>'
+        : '<button class="btn btn-green" style="flex-shrink:0;" onclick="event.stopPropagation();missionStep(\''+id+'\',\'pickup\',this)">Pick up terminé</button>')
     +'</div>';
   }).join('');
   box.innerHTML='<div style="background:#EAF7EF;border:1px solid #BFE5CC;border-radius:16px;padding:14px 14px 4px;margin:4px 0 22px;">'
@@ -4023,7 +4025,8 @@ async function loadDriverDashboard(){
   var badgeEl = document.getElementById('badge-marketplace');
   if(badgeEl){ badgeEl.style.display = 'none'; }
 
-  _renderDriverActiveRides(missions.filter(function(r){ return r.status==='active' && r.driver_id===uid; }));
+  // In progress = driver on the way (En chemin) or pick-up done
+  _renderDriverActiveRides(missions.filter(function(r){ return r.status==='active' || (r.status==='confirmed' && r.on_way_at); }));
 
   var latestPending = pending.filter(_driverCanHandleRide).slice().sort(function(a,b){
     return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||''));
