@@ -703,6 +703,18 @@ body{background:var(--bg);}
   .modal-ft > div[style*="margin-right:auto"]{order:99;margin-right:0!important;margin-left:auto!important;}
   .modal-ft:not(:has(> :not(.m-close-mob))){display:none!important;}
 }
+@media(max-width:900px){#m-ride-detail .modal:not(:has(#detail-ft > :not(.m-close-mob))) #detail-map-wrap{margin-bottom:20px!important;}}
+/* Footer actions dropdown */
+.ft-menu{position:relative;flex-shrink:0;}
+.ft-menu-btn{display:flex;align-items:center;gap:6px;background:var(--white);border:1.5px solid var(--sand3);border-radius:var(--r);padding:7px 12px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.ft-menu-list{display:none;position:absolute;left:0;bottom:calc(100% + 6px);min-width:260px;max-width:calc(100vw - 64px);background:#fff;border:1px solid var(--sand3);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.14);padding:6px;z-index:50;}
+.ft-menu.open .ft-menu-list{display:block;}
+.ft-menu-item{display:flex;align-items:center;gap:9px;width:100%;background:none;border:none;text-align:left;padding:10px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.ft-menu-item:hover{background:var(--sand2);}
+.ft-menu-item svg{flex-shrink:0;color:var(--ink3);}
+/* Driver dashboard: ride in progress */
+@keyframes livePulse{0%{box-shadow:0 0 0 0 rgba(39,174,96,.55)}70%{box-shadow:0 0 0 8px rgba(39,174,96,0)}100%{box-shadow:0 0 0 0 rgba(39,174,96,0)}}
+.live-dot{width:9px;height:9px;border-radius:50%;background:#27AE60;display:inline-block;animation:livePulse 1.6s infinite;flex-shrink:0;}
 /* Mobile: new request form — no zoom/shift on focus, date & time same size as other fields */
 @media(max-width:900px){
   .modal .modal-body{overflow-x:hidden;}
@@ -1384,6 +1396,7 @@ body{background:var(--bg);}
       </div>
       <div id="driver-verify-banner" style="display:none;"></div>
       <div class="stats-row" id="driver-stats"></div>
+      <div id="driver-active-rides" style="display:none;"></div>
       <div class="section-hd">
         <div style="display:flex;align-items:center;gap:8px;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
@@ -3347,16 +3360,7 @@ function enterApp(){
           await _promoteNotesToDriver(_sr.ride);
           _notifyRideConfirmed(_sr.ride, payDriverId);
           if(typeof loadClientDashboard==='function') await loadClientDashboard();
-          // Self-contained success overlay
-          var _so=document.createElement('div');
-          _so.style.cssText='position:fixed;inset:0;background:rgba(14,14,12,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
-          _so.innerHTML='<div style="background:#fff;border-radius:16px;padding:36px 28px;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.18);">'
-            +'<div style="font-size:52px;margin-bottom:12px;">✅</div>'
-            +'<div style="font-size:19px;font-weight:700;color:#1B5E3B;margin-bottom:10px;">Paiement réussi</div>'
-            +'<div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:24px;">Votre course est confirmée 🎉</div>'
-            +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="padding:11px 28px;background:#1A1A18;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">OK</button>'
-            +'</div>';
-          document.body.appendChild(_so);
+          await _showPaymentSuccess(_sr.ride, tvac);
         }catch(e){ console.error('Stripe return error:',e); showPaymentResult('error','Erreur','Paiement re\u00e7u mais erreur de mise \u00e0 jour. Contactez le support.'); }
       } else if(_sr.status==='error'){
         if(typeof loadClientDashboard==='function') await loadClientDashboard();
@@ -3373,6 +3377,43 @@ function enterApp(){
     }, 1200);
     }
   }
+}
+
+// Payment confirmed screen (Stripe return)
+async function _showPaymentSuccess(rideId, amount){
+  var r=null;
+  try{ if(sb&&rideId){ var q=await sb.from('rides').select('*').eq('id',rideId).maybeSingle(); r=q.data; } }catch(e){}
+  var esc=function(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  var amt=amount||(r&&r.final_price)||0;
+  var row=function(l,v){ return '<div style="display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-top:1px solid #ECECEC;font-size:13px;"><span style="color:#7A867B;">'+l+'</span><span style="color:#1A2E1A;font-weight:600;text-align:right;">'+v+'</span></div>'; };
+  var rows='';
+  if(r){
+    rows+=row('Réservation','<span style="font-family:monospace;">'+esc(r.booking_code||String(r.id).slice(0,8))+'</span>');
+    if(r.ride_date) rows+=row('Date',esc(formatDate(r.ride_date))+(r.ride_time?' · '+esc(r.ride_time.slice(0,5)):''));
+    rows+=row('Trajet',esc((r.from_address||'—').split(',')[0])+(r.trip_type==='disposal'?' (mise à disposition)':' → '+esc((r.to_address||'—').split(',')[0])));
+  }
+  if(amt) rows+=row('Montant payé',parseFloat(amt).toFixed(2).replace('.',',')+' € TVAC');
+  rows=rows.replace('border-top:1px solid #ECECEC;','');
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(14,20,16,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML='<div style="background:#fff;border-radius:20px;max-width:400px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);font-family:\'DM Sans\',sans-serif;animation:scaleIn .25s ease;">'
+    +'<div style="background:linear-gradient(135deg,#1B5E3B 0%,#2E7A50 100%);padding:30px 24px 24px;text-align:center;color:#fff;">'
+      +'<div style="width:62px;height:62px;border-radius:50%;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">'
+        +'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>'
+      +'<div style="font-size:20px;font-weight:700;letter-spacing:-.2px;">Paiement confirmé</div>'
+      +'<div style="font-size:13.5px;opacity:.85;margin-top:5px;">Votre course est réservée.</div>'
+    +'</div>'
+    +'<div style="padding:16px 24px 6px;">'+rows+'</div>'
+    +'<div style="padding:4px 24px 0;font-size:12px;color:#7A867B;line-height:1.5;">Un e-mail de confirmation vous a été envoyé avec le détail de votre réservation.</div>'
+    +'<div style="padding:18px 24px 22px;display:flex;gap:10px;">'
+      +'<button data-act="rides" style="flex:1;padding:12px;background:#fff;color:#1B5E3B;border:1.5px solid #CFE3D6;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Mes demandes</button>'
+      +'<button data-act="close" style="flex:1;padding:12px;background:#1B5E3B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Continuer</button>'
+    +'</div></div>';
+  ov.addEventListener('click',function(e){
+    var b=e.target.closest('button[data-act]'); if(!b) return;
+    ov.remove(); if(b.dataset.act==='rides') showPage('rides');
+  });
+  document.body.appendChild(ov);
 }
 
 // ── NAVIGATION ────────────────────────────────────────
@@ -3845,6 +3886,34 @@ async function _renderDriverVerifyBanner(){
   el.style.display='block';
 }
 
+// Rides currently in progress (pick-up done) — shown apart from the other requests
+function _renderDriverActiveRides(list){
+  var box=document.getElementById('driver-active-rides'); if(!box) return;
+  if(!list||!list.length){ box.style.display='none'; box.innerHTML=''; return; }
+  var esc=function(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  var cards=list.map(function(r){
+    var code=r.booking_code||String(r.id).slice(0,8);
+    var from=esc((r.from_address||'—').split(',')[0]);
+    var to=r.trip_type==='disposal'?'Mise à disposition':esc((r.to_address||'—').split(',')[0]);
+    var pax=(r.notes||'').match(/\|pax:([^|]+)/);
+    var safe=JSON.stringify(r).replace(/'/g,'&#39;');
+    var id=String(r.id).replace(/'/g,'');
+    return '<div data-ride=\''+safe+'\' onclick="openRideDetail(this)" style="background:#fff;border:1.5px solid #6FCF97;border-radius:14px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:10px;">'
+      +'<div style="flex:1;min-width:200px;">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-family:monospace;font-size:12px;font-weight:700;color:var(--ink2);">'+esc(code)+'</span>'
+          +(r.pickup_at?'<span style="font-size:11.5px;color:var(--ink3);">Pick up à '+_hhmm(r.pickup_at)+'</span>':'')+'</div>'
+        +'<div style="font-size:14px;font-weight:600;color:var(--ink);">'+from+' <span style="color:var(--ink4);">→</span> '+to+'</div>'
+        +(pax?'<div style="font-size:12px;color:var(--ink3);margin-top:3px;">Passager : '+esc(pax[1])+'</div>':'')
+      +'</div>'
+      +'<button class="btn btn-green" style="flex-shrink:0;" onclick="event.stopPropagation();missionStep(\''+id+'\',\'done\',this)">Mission terminée</button>'
+    +'</div>';
+  }).join('');
+  box.innerHTML='<div style="background:#EAF7EF;border:1px solid #BFE5CC;border-radius:16px;padding:14px 14px 4px;margin:4px 0 22px;">'
+    +'<div style="display:flex;align-items:center;gap:9px;margin:0 2px 12px;"><span class="live-dot"></span><span style="font-size:15px;font-weight:700;color:var(--green);">Course'+(list.length>1?'s':'')+' en cours</span><span style="font-size:12px;color:var(--ink3);">('+list.length+')</span></div>'
+    +cards+'</div>';
+  box.style.display='block';
+}
+
 async function loadDriverDashboard(){
   const uid = currentUser?.id;
   let missions = [], pending = [];
@@ -3953,6 +4022,8 @@ async function loadDriverDashboard(){
   // Update marketplace badge immediately (hidden per spec)
   var badgeEl = document.getElementById('badge-marketplace');
   if(badgeEl){ badgeEl.style.display = 'none'; }
+
+  _renderDriverActiveRides(missions.filter(function(r){ return r.status==='active' && r.driver_id===uid; }));
 
   var latestPending = pending.filter(_driverCanHandleRide).slice().sort(function(a,b){
     return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||''));
@@ -5050,14 +5121,15 @@ function _openRideDetailImpl(el){
       var _missionBtn='<button onclick="generateMissionPdf(\''+rId+'\')" style="background:none;border:1.5px solid var(--sand3);border-radius:var(--r);padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--ink2);font-family:\'DM Sans\',sans-serif;margin-right:auto;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>T\u00e9l\u00e9charger mission</button>';
       var _assignBtn=(currentUser&&r.driver_id===currentUser.id&&!_isOverdue)
         ?'<button class="btn btn-secondary btn-sm" style="margin-left:6px;" onclick="openMissionAssignment(\''+rId+'\')">Modifier véhicule / chauffeur</button>':'';
+      var _canAssign=!!_assignBtn;
       if(currentUser&&r.driver_id===currentUser.id){
         // Mission progress: En chemin -> Pick up terminé -> Mission terminée (timestamp stored at each step)
-        if(r.on_way_at||r.pickup_at) _assignBtn='';
-        ft=_missionProgressHtml(r)+_missionBtn+_assignBtn+closeBtn+_missionStepBtn(r);
+        if(r.on_way_at||r.pickup_at) _canAssign=false;
+        ft=_rideActionsMenu(rId,_canAssign)+_missionProgressHtml(r)+closeBtn+_missionStepBtn(r);
       } else if(_isOverdue){
-        ft=_missionBtn+closeBtn+'<button class="btn btn-green" onclick="completeRide(\''+rId+'\')" style="margin-left:8px;">Terminer la course</button>';
+        ft=_rideActionsMenu(rId,false)+'<span style="flex:1;"></span>'+closeBtn+'<button class="btn btn-green" onclick="completeRide(\''+rId+'\')" style="margin-left:8px;">Terminer la course</button>';
       } else {
-        ft=_missionBtn+_assignBtn+closeBtn;
+        ft=_rideActionsMenu(rId,_canAssign)+'<span style="flex:1;"></span>'+closeBtn;
       }
     } else {
       // For subcontract rides (done/cancelled etc.) — show price left
@@ -5458,8 +5530,18 @@ function _missionProgressHtml(r){
   var parts=[];
   if(r.on_way_at) parts.push('En chemin '+_hhmm(r.on_way_at));
   if(r.pickup_at) parts.push('Pick up '+_hhmm(r.pickup_at));
-  return '<div style="margin-right:auto;font-size:12px;color:var(--ink3);">'+(parts.length?parts.join(' · '):'')+'</div>';
+  return '<div style="flex:1;min-width:0;font-size:12px;color:var(--ink3);text-align:right;">'+(parts.length?parts.join(' · '):'')+'</div>';
 }
+// Driver ride-detail footer: secondary actions grouped in a dropdown
+function _rideActionsMenu(rId, canAssign){
+  var id=String(rId).replace(/'/g,'');
+  var docIc='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg>';
+  var carIc='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/></svg>';
+  var items='<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');generateMissionPdf(\''+id+'\')">'+docIc+'Télécharger l\'ordre de mission</button>';
+  if(canAssign) items+='<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openMissionAssignment(\''+id+'\')">'+carIc+'Modifier véhicule / chauffeur</button>';
+  return '<div class="ft-menu"><button type="button" class="ft-menu-btn" onclick="event.stopPropagation();this.parentElement.classList.toggle(\'open\')">Actions <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><div class="ft-menu-list">'+items+'</div></div>';
+}
+document.addEventListener('click',function(e){ if(!e.target.closest('.ft-menu')) document.querySelectorAll('.ft-menu.open').forEach(function(m){m.classList.remove('open');}); });
 function _missionStepBtn(r){
   var id=String(r.id).replace(/'/g,'');
   var b=function(step,label){ return '<button class="btn btn-green" style="margin-left:8px;" onclick="missionStep(\''+id+'\',\''+step+'\',this)">'+label+'</button>'; };
