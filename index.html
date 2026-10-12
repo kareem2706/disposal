@@ -3898,20 +3898,31 @@ function _trkSetStatus(txt, warn){
 }
 async function _trkSend(pos){
   if(!sb||!currentUser||!_trk.rides.length) return;
-  var p={ lat:pos.coords.latitude, lng:pos.coords.longitude };
-  var now=Date.now();
-  // throttle: every 8 s, or sooner if the car moved more than 40 m
-  if(_trk.lastPos && now-_trk.lastSent<8000 && _trkDist(_trk.lastPos,p)<40) return;
-  _trk.lastSent=now; _trk.lastPos=p;
+  var c=pos.coords, p={ lat:c.latitude, lng:c.longitude }, acc=c.accuracy||9999, now=Date.now();
+  // 1) Precision filter: keep only real GPS fixes (≤ 25 m). Wi-Fi/cell estimates (50 m – 3 km) are discarded,
+  //    unless no GPS fix has been obtained for 30 s (then sent, but flagged).
+  if(acc<=25) _trk.lastGood=now;
+  if(acc>25 && _trk.lastGood && now-_trk.lastGood<30000) return;
+  if(acc>25 && !_trk.lastGood && (!_trk.firstFix || now-_trk.firstFix<30000)){ _trk.firstFix=_trk.firstFix||now; _trkSetStatus('📍 Recherche du signal GPS… (précision actuelle ± '+Math.round(acc)+' m)'); return; }
+  // 2) Reject impossible jumps (> 60 m/s ≈ 216 km/h) caused by a bad fix
+  if(_trk.lastPos && _trk.lastSent){ var dt=(now-_trk.lastSent)/1000; if(dt>0 && _trkDist(_trk.lastPos,p)/dt>60 && acc>10) return; }
+  // 3) Send often: every 2 s when moving (≥ 3 m), heartbeat every 5 s when stopped
+  var moved=_trk.lastPos?_trkDist(_trk.lastPos,p):Infinity;
+  if(_trk.lastPos && !((moved>=3 && now-_trk.lastSent>=2000) || now-_trk.lastSent>=5000)) return;
+  if(_trk.sending) return;
+  _trk.sending=true; _trk.lastSent=now; _trk.lastPos=p;
   var rows=_trk.rides.map(function(id){ return { ride_id:id, driver_id:currentUser.id, lat:p.lat, lng:p.lng,
-    heading:(pos.coords.heading!=null&&!isNaN(pos.coords.heading))?pos.coords.heading:null,
-    speed:(pos.coords.speed!=null&&!isNaN(pos.coords.speed))?pos.coords.speed:null,
-    accuracy:pos.coords.accuracy||null, updated_at:new Date().toISOString() }; });
+    heading:(c.heading!=null&&!isNaN(c.heading))?c.heading:null,
+    speed:(c.speed!=null&&!isNaN(c.speed))?c.speed:null,
+    accuracy:Math.round(acc), updated_at:new Date().toISOString() }; });
   try{
     var {error}=await sb.from('ride_locations').upsert(rows,{onConflict:'ride_id'});
     if(error) throw error;
-    _trkSetStatus('📍 Position partagée avec le client · '+new Date().toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit'}));
+    var t=new Date().toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    if(acc>25) _trkSetStatus('⚠️ Précision faible (± '+Math.round(acc)+' m) — activez « Position exacte » pour le navigateur dans les réglages du téléphone · '+t,true);
+    else _trkSetStatus('📍 Position GPS partagée (± '+Math.round(acc)+' m) · '+t);
   }catch(e){ console.warn('[tracking] upsert failed',e); _trkSetStatus('⚠️ Position non envoyée ('+(e.message||e)+')',true); }
+  finally{ _trk.sending=false; }
 }
 async function _trkWakeLock(on){
   try{
@@ -3924,7 +3935,7 @@ function _syncDriverTracking(list){
   _trk.rides=(list||[]).map(function(r){ return r.id; });
   if(!_trk.rides.length){
     if(_trk.watch!=null){ navigator.geolocation.clearWatch(_trk.watch); _trk.watch=null; }
-    _trkWakeLock(false); _trk.lastPos=null; return;
+    _trkWakeLock(false); _trk.lastPos=null; _trk.lastGood=null; _trk.firstFix=null; return;
   }
   if(!navigator.geolocation){ _trkSetStatus('⚠️ Localisation non disponible sur cet appareil',true); return; }
   _trkWakeLock(true);
@@ -3932,7 +3943,7 @@ function _syncDriverTracking(list){
     _trkSetStatus('📍 Activation de la localisation…');
     _trk.watch=navigator.geolocation.watchPosition(_trkSend,function(err){
       _trkSetStatus(err&&err.code===1?'⚠️ Localisation refusée — autorisez-la pour que le client vous suive':'⚠️ Position indisponible',true);
-    },{ enableHighAccuracy:true, maximumAge:5000, timeout:20000 });
+    },{ enableHighAccuracy:true, maximumAge:0, timeout:15000 });
   } else if(_trk.status){ _trkSetStatus(_trk.status); }
 }
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible' && _trk.rides.length){ _trkWakeLock(true); _trk.lastSent=0; } });
@@ -4016,7 +4027,7 @@ window.openLiveTracking = async function(rideId){
   };
   await pull();
   try{ _lt.channels.push(sb.channel('lt_'+rideId).on('postgres_changes',{event:'*',schema:'public',table:'ride_locations',filter:'ride_id=eq.'+rideId},function(pl){ if(pl&&pl.new&&pl.new.lat!=null) _ltOnLoc(pl.new); }).subscribe()); }catch(e){}
-  _lt.timers.push(setInterval(pull,10000));
+  _lt.timers.push(setInterval(pull,4000));
   _lt.timers.push(setInterval(function(){ _ltRenderUpd(); },15000));
   window.addEventListener('resize',setSheetVar);
 };
@@ -4036,7 +4047,7 @@ function _ltFrame(force){
 }
 function _ltOnLoc(l, initial){
   if(!_lt) return;
-  var prevLoc=_lt.loc; _lt.loc=l; _ltRenderUpd();
+  var prevLoc=_lt.loc; if(prevLoc && prevLoc.updated_at===l.updated_at && prevLoc.lat===l.lat && prevLoc.lng===l.lng) return; _lt.loc=l; _ltRenderUpd();
   if(!_lt.map) return;
   var to={lat:l.lat,lng:l.lng};
   if(l.heading!=null && !isNaN(l.heading)) _lt.rot=l.heading;
@@ -4046,7 +4057,7 @@ function _ltOnLoc(l, initial){
     _lt.shown=to; _ltFrame(true); _ltRoute(true); _ltRenderStatus(); return;
   }
   // smooth glide between the two positions
-  var from=_lt.shown||to, t0=performance.now(), dur=initial?0:1500;
+  var from=_lt.shown||to, t0=performance.now(), dur=initial?0:1000;
   if(_lt.raf) cancelAnimationFrame(_lt.raf);
   var step=function(now){
     if(!_lt||!_lt.car) return;
@@ -4077,7 +4088,7 @@ function _ltRenderUpd(){
   var el=document.getElementById('lt-upd'); if(!el||!_lt) return;
   if(!_lt.loc){ el.textContent=''; return; }
   var s=Math.max(0,Math.round((Date.now()-new Date(_lt.loc.updated_at).getTime())/1000));
-  el.innerHTML=(s>120?'<span style="color:#B7791F;font-weight:600;">⚠️ Signal GPS perdu depuis '+Math.round(s/60)+' min</span>':'● Position en direct · mise à jour '+(s<20?'à l\'instant':'il y a '+(s<60?s+' s':Math.round(s/60)+' min')))
+  el.innerHTML=(s>120?'<span style="color:#B7791F;font-weight:600;">⚠️ Signal GPS perdu depuis '+Math.round(s/60)+' min</span>':'● Position en direct'+(_lt.loc.accuracy?' (± '+Math.round(_lt.loc.accuracy)+' m)':'')+' · mise à jour '+(s<10?'à l\'instant':'il y a '+(s<60?s+' s':Math.round(s/60)+' min')))
     +' · '+_lt.esc(_lt.ride&&_lt.ride.booking_code||'');
 }
 function _ltRenderStatus(){
@@ -4117,7 +4128,7 @@ async function _loadAdminLive(){
     return '<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--sand2);">'
       +'<span class="live-dot" style="'+(l&&age<=2?'':'background:#C9A227;animation:none;')+'"></span>'
       +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--ink);"><span style="font-family:monospace;">'+esc(r.booking_code||String(r.id).slice(0,8))+'</span> · '+esc(_arDisplayName(fleets[r.driver_id]))+'</div>'
-        +'<div style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+st+' · '+(l?(age<1?'GPS à l\'instant':'GPS il y a '+age+' min'):'pas encore de position')+'</div></div>'
+        +'<div style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+st+' · '+(l?(age<1?'GPS à l\'instant':'GPS il y a '+age+' min')+(l.accuracy?' (± '+Math.round(l.accuracy)+' m)':''):'pas encore de position')+'</div></div>'
       +'<button class="btn btn-green btn-sm" style="flex-shrink:0;" onclick="openLiveTracking(\''+String(r.id).replace(/'/g,'')+'\')">Suivre</button>'
     +'</div>';
   }).join('');
@@ -4145,7 +4156,7 @@ async function _loadAdminLive(){
     });
     if(n && !_admLive.fitted){ _admLive.map.fitBounds(b,60); if(_admLive.map.getZoom()>15) _admLive.map.setZoom(15); _admLive.fitted=true; }
   });
-  if(!_admLive.timer) _admLive.timer=setInterval(function(){ if(document.querySelector('#page-admin-dashboard.active')) _loadAdminLive(); },10000);
+  if(!_admLive.timer) _admLive.timer=setInterval(function(){ if(document.querySelector('#page-admin-dashboard.active')) _loadAdminLive(); },5000);
 }
 
 function _renderDriverActiveRides(list, boxId, forClient){
