@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@capacitor/core@7.6.9/dist/capacitor.js"></script>
 <!-- Stripe.js -->
 <script src="https://js.stripe.com/v3/"></script>
 <style>
@@ -1312,7 +1313,7 @@ body{background:var(--bg);}
         <button class="btn btn-primary btn-sm" onclick="filterRides('all',this)">Toutes</button>
         <button class="btn btn-secondary btn-sm" onclick="filterRides('waiting',this)">En attente</button>
         <button class="btn btn-secondary btn-sm" onclick="filterRides('offers',this)">Offres</button>
-        <button class="btn btn-secondary btn-sm" onclick="filterRides('pending_payment',this)">Paiement en cours</button>
+        <button class="btn btn-secondary btn-sm" style="display:none;" onclick="filterRides('pending_payment',this)">Paiement en cours</button>
         <button class="btn btn-secondary btn-sm" onclick="filterRides('confirmed',this)">Confirmées</button>
         <button class="btn btn-secondary btn-sm" onclick="filterRides('done',this)">Terminées</button>
       </div>
@@ -1771,7 +1772,7 @@ body{background:var(--bg);}
         <div class="card" style="padding:0;">
           <div class="card-hd" style="font-weight:700;">Remboursements <span id="admin-sum-refund-period-label" style="font-size:11px;font-weight:400;color:var(--ink3);margin-left:6px;"></span></div>
           <div style="padding:14px 20px;display:flex;flex-direction:column;gap:0;">
-            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+            <div style="display:none;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
               <span style="font-size:12.5px;color:var(--ink3);">Virement</span>
               <span style="font-size:13px;font-weight:600;color:var(--red);" id="admin-sum-refund-bank">—</span>
             </div>
@@ -1930,13 +1931,13 @@ body{background:var(--bg);}
           <span style="font-size:14px;font-weight:600;">Total TVAC</span>
           <span id="payment-total" style="font-size:22px;font-weight:700;color:var(--green);">—</span>
         </div>
-        <div style="font-size:11px;color:var(--ink3);margin-top:6px;" id="payment-confirm-label">Paiement sécurisé &bull; Confirmation immédiate*</div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:6px;" id="payment-confirm-label">Paiement sécurisé &bull; Confirmation immédiate</div>
       </div>
 
       <!-- Step 1: choose payment method -->
       <div id="payment-step-1">
-        <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Choisissez votre mode de paiement</div>
-        <div id="payment-methods" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:none;font-size:13px;font-weight:600;margin-bottom:12px;">Choisissez votre mode de paiement</div>
+        <div id="payment-methods" style="display:none;flex-direction:column;gap:10px;">
           <div id="pm-bank" onclick="selectPaymentMethod('bank_transfer')" style="display:flex;align-items:center;gap:14px;padding:16px 20px;border-radius:var(--r);border:2px solid var(--sand3);cursor:pointer;transition:border-color var(--t),background var(--t);background:var(--white);">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M2 10h20" stroke="currentColor" stroke-width="1.8"/><path d="M6 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
             <div>
@@ -1982,7 +1983,7 @@ body{background:var(--bg);}
     </div>
     <div class="modal-ft" style="display:flex;gap:8px;justify-content:flex-end;">
       <button class="btn btn-close" id="payment-btn-back" style="display:none;" onclick="paymentGoBack()">&#8592; Retour</button>
-      <button class="btn btn-green" id="payment-btn-next" style="min-width:200px;margin-left:auto;">Suivant &rarr;</button>
+      <button class="btn btn-green" id="payment-btn-next" style="min-width:200px;margin-left:auto;">Payer par carte bancaire</button>
       <button class="btn btn-green" id="payment-btn-confirm-bank" style="display:none;min-width:200px;margin-left:auto;" onclick="confirmPayment('bank_transfer')">Paiement effectu&eacute;</button>
     </div>
   </div>
@@ -3916,11 +3917,18 @@ async function _trkSend(pos){
     speed:(c.speed!=null&&!isNaN(c.speed))?c.speed:null,
     accuracy:Math.round(acc), updated_at:new Date().toISOString() }; });
   try{
-    var {error}=await sb.from('ride_locations').upsert(rows,{onConflict:'ride_id'});
-    if(error) throw error;
+    if(_trkNativeGeo()){
+      var _ss=(await sb.auth.getSession()).data.session;
+      var _res=await Capacitor.registerPlugin('CapacitorHttp').request({ url:SB_URL+'/rest/v1/ride_locations?on_conflict=ride_id', method:'POST',
+        headers:{ apikey:SB_KEY, Authorization:'Bearer '+(_ss?_ss.access_token:SB_KEY), 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal' }, data:rows });
+      if(!_res || _res.status>=300) throw new Error('HTTP '+(_res?_res.status:'?'));
+    } else {
+      var {error}=await sb.from('ride_locations').upsert(rows,{onConflict:'ride_id'});
+      if(error) throw error;
+    }
     var t=new Date().toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
     if(acc>25) _trkSetStatus('⚠️ Précision faible (± '+Math.round(acc)+' m) — activez « Position exacte » pour le navigateur dans les réglages du téléphone · '+t,true);
-    else _trkSetStatus('📍 Position GPS partagée (± '+Math.round(acc)+' m) · '+t);
+    else _trkSetStatus('📍 Position GPS partagée (± '+Math.round(acc)+' m)'+(_trkNativeGeo()?' · même écran verrouillé':'')+' · '+t);
   }catch(e){ console.warn('[tracking] upsert failed',e); _trkSetStatus('⚠️ Position non envoyée ('+(e.message||e)+')',true); }
   finally{ _trk.sending=false; }
 }
@@ -3931,11 +3939,44 @@ async function _trkWakeLock(on){
   }catch(e){}
 }
 // Called with the driver's rides in progress; starts/stops GPS sharing accordingly
+// Inside the Bleenr Chauffeur app (Capacitor), GPS continues in the background / screen locked
+function _trkNativeGeo(){
+  try{ if(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform() && Capacitor.registerPlugin){ return _trk.bg || (_trk.bg=Capacitor.registerPlugin('BackgroundGeolocation')); } }catch(e){}
+  return null;
+}
 function _syncDriverTracking(list){
   _trk.rides=(list||[]).map(function(r){ return r.id; });
+  var BG=_trkNativeGeo();
   if(!_trk.rides.length){
+    if(_trk.nativeId){ try{ BG&&BG.removeWatcher({id:_trk.nativeId}); }catch(e){} _trk.nativeId=null; }
     if(_trk.watch!=null){ navigator.geolocation.clearWatch(_trk.watch); _trk.watch=null; }
     _trkWakeLock(false); _trk.lastPos=null; _trk.lastGood=null; _trk.firstFix=null; return;
+  }
+  if(BG){
+    if(!_trk.nativeId && !_trk.nativeStarting){
+      _trk.nativeStarting=true;
+      _trkSetStatus('📍 Activation de la localisation…');
+      (async function(){
+        try{ if(Capacitor.getPlatform()==='android'){ await Capacitor.registerPlugin('LocalNotifications').requestPermissions(); } }catch(e){}
+        try{
+          _trk.nativeId=await BG.addWatcher({
+            backgroundTitle:'Bleenr — course en cours',
+            backgroundMessage:'Votre position est partagée avec le client jusqu\'à la fin de la mission.',
+            requestPermissions:true, stale:false, distanceFilter:3
+          },function(loc,err){
+            if(err){
+              if(err.code==='NOT_AUTHORIZED'){ _trkSetStatus('⚠️ Localisation refusée — touchez ici pour ouvrir les réglages',true); var st=document.getElementById('trk-status'); if(st) st.onclick=function(){ BG.openSettings(); }; }
+              else _trkSetStatus('⚠️ Position indisponible',true);
+              return;
+            }
+            if(!loc) return;
+            _trkSend({ coords:{ latitude:loc.latitude, longitude:loc.longitude, accuracy:loc.accuracy, heading:loc.bearing, speed:loc.speed } });
+          });
+        }catch(e){ _trkSetStatus('⚠️ Localisation impossible ('+(e.message||e)+')',true); }
+        _trk.nativeStarting=false;
+      })();
+    } else if(_trk.status){ _trkSetStatus(_trk.status); }
+    return;
   }
   if(!navigator.geolocation){ _trkSetStatus('⚠️ Localisation non disponible sur cet appareil',true); return; }
   _trkWakeLock(true);
@@ -4185,7 +4226,7 @@ function _renderDriverActiveRides(list, boxId, forClient){
   }).join('');
   box.innerHTML='<div style="background:#EAF7EF;border:1px solid #BFE5CC;border-radius:16px;padding:14px 14px 4px;margin:4px 0 22px;">'
     +'<div style="display:flex;align-items:center;gap:9px;margin:0 2px 12px;"><span class="live-dot"></span><span style="font-size:15px;font-weight:700;color:var(--green);">Course'+(list.length>1?'s':'')+' en cours</span><span style="font-size:12px;color:var(--ink3);">('+list.length+')</span></div>'
-    +(forClient?'':'<div id="trk-status" style="font-size:11.5px;color:var(--ink3);margin:-6px 2px 10px;">'+(_trk.status||'📍 Votre position est partagée avec le client pendant la course — gardez l\'application ouverte.')+'</div>')
+    +(forClient?'':'<div id="trk-status" style="font-size:11.5px;color:var(--ink3);margin:-6px 2px 10px;">'+(_trk.status||(_trkNativeGeo()?'📍 Votre position est partagée avec le client pendant la course.':'📍 Votre position est partagée avec le client — gardez cette page ouverte (ou utilisez l\'application Bleenr Chauffeur pour un suivi écran verrouillé).'))+'</div>')
     +cards+'</div>';
   box.style.display='block';
 }
@@ -7019,7 +7060,7 @@ window.openPaymentModal = function(offerId, driverId, amount){
   _paymentShowStep(1);
   // Reset confirm label
   var confirmLabel = document.getElementById('payment-confirm-label');
-  if(confirmLabel){ confirmLabel.textContent = 'Paiement sécurisé \u2022 Confirmation immédiate*'; }
+  if(confirmLabel){ confirmLabel.textContent = 'Paiement sécurisé \u2022 Confirmation immédiate'; }
   // Reset method selection visuals
   var bankEl = document.getElementById('pm-bank');
   var stripeEl = document.getElementById('pm-stripe');
@@ -7027,10 +7068,14 @@ window.openPaymentModal = function(offerId, driverId, amount){
   if(stripeEl){ stripeEl.style.borderColor = 'var(--sand3)'; stripeEl.style.background = 'var(--white)'; }
 
   // Reset main action button
+  // Card payment only (bank transfer disabled)
+  _selectedPaymentMethod='stripe';
   var nextBtn=document.getElementById('payment-btn-next');
-  if(nextBtn){nextBtn.textContent='Suivant \u2192';nextBtn.onclick=function(){
-    if(!_selectedPaymentMethod){var e=document.getElementById('payment-err');if(e)showError(e,'Veuillez s\u00e9lectionner un mode de paiement');return;}
-  };}
+  if(nextBtn){
+    var _payTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
+    nextBtn.textContent='Payer par carte bancaire';
+    nextBtn.onclick=function(){ confirmStripeCheckout(_payTvac,_payTvac); };
+  }
 
   // Clear errors
   ['payment-err','payment-err-bank','payment-err-stripe'].forEach(function(id){
@@ -7160,7 +7205,7 @@ window.confirmStripeCheckout=async function(amount,totalTvac){
     window.location.href=result.url;
   }catch(e){
     if(errEl){showError(errEl,e.message||'Erreur de redirection Stripe');}
-    if(btn)setLoading(btn,false,'Payer via Stripe \u2192');
+    if(btn)setLoading(btn,false,'Payer par carte bancaire');
   }
 };
 
@@ -7269,7 +7314,7 @@ window.confirmStripePayment=async function(){
     });
     if(!efResp.ok){var et=await efResp.text();throw new Error('Edge Function: '+efResp.status+' '+et.slice(0,100));}
     var d=await efResp.json();if(!d.url)throw new Error('URL manquante');window.location.href=d.url;
-  }catch(e){if(btn)setLoading(btn,false,'Payer →');if(errEl)showError(errEl,e.message||'Erreur Stripe');}
+  }catch(e){if(btn)setLoading(btn,false,'Payer par carte bancaire');if(errEl)showError(errEl,e.message||'Erreur Stripe');}
 };;
 
 function getDemoOffers(){
