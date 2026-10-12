@@ -3544,6 +3544,7 @@ async function loadClientDashboard(){
   // Rides in progress (driver on the way or pick-up done) — same block as the driver dashboard
   var _inProgress = function(r){ return r.status==='active' || (r.status==='confirmed' && r.on_way_at); };
   _renderDriverActiveRides(rides.filter(_inProgress), 'active-ride-wrap', true);
+  _initClientTracking(rides.filter(_inProgress));
 
   // Non-terminated rides sorted by ride_date asc for dashboard (oldest first), max 3 (rides in progress shown above)
   const recent = rides.filter(function(r){ return r.status !== 'done' && r.status !== 'cancelled' && !_inProgress(r); }).slice().sort(function(a,b){
@@ -3886,6 +3887,124 @@ async function _renderDriverVerifyBanner(){
 }
 
 // Rides currently in progress (pick-up done) — shown apart from the other requests
+// ── LIVE DRIVER TRACKING ──────────────────────────────
+// Driver side: while a ride is "En chemin" or in progress, the phone's position is shared (table ride_locations).
+var _trk={ watch:null, rides:[], lastSent:0, lastPos:null, wake:null, status:'' };
+function _trkDist(a,b){ var R=6371000,toR=Math.PI/180,dLa=(b.lat-a.lat)*toR,dLo=(b.lng-a.lng)*toR; var x=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(a.lat*toR)*Math.cos(b.lat*toR)*Math.sin(dLo/2)*Math.sin(dLo/2); return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)); }
+function _trkSetStatus(txt, warn){
+  _trk.status=txt;
+  var el=document.getElementById('trk-status'); if(!el) return;
+  el.textContent=txt; el.style.color=warn?'var(--red)':'var(--ink3)';
+}
+async function _trkSend(pos){
+  if(!sb||!currentUser||!_trk.rides.length) return;
+  var p={ lat:pos.coords.latitude, lng:pos.coords.longitude };
+  var now=Date.now();
+  // throttle: every 8 s, or sooner if the car moved more than 40 m
+  if(_trk.lastPos && now-_trk.lastSent<8000 && _trkDist(_trk.lastPos,p)<40) return;
+  _trk.lastSent=now; _trk.lastPos=p;
+  var rows=_trk.rides.map(function(id){ return { ride_id:id, driver_id:currentUser.id, lat:p.lat, lng:p.lng,
+    heading:(pos.coords.heading!=null&&!isNaN(pos.coords.heading))?pos.coords.heading:null,
+    speed:(pos.coords.speed!=null&&!isNaN(pos.coords.speed))?pos.coords.speed:null,
+    accuracy:pos.coords.accuracy||null, updated_at:new Date().toISOString() }; });
+  try{
+    var {error}=await sb.from('ride_locations').upsert(rows,{onConflict:'ride_id'});
+    if(error) throw error;
+    _trkSetStatus('📍 Position partagée avec le client · '+new Date().toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit'}));
+  }catch(e){ console.warn('[tracking] upsert failed',e); _trkSetStatus('⚠️ Position non envoyée ('+(e.message||e)+')',true); }
+}
+async function _trkWakeLock(on){
+  try{
+    if(on && !_trk.wake && navigator.wakeLock){ _trk.wake=await navigator.wakeLock.request('screen'); _trk.wake.addEventListener('release',function(){ _trk.wake=null; }); }
+    if(!on && _trk.wake){ await _trk.wake.release(); _trk.wake=null; }
+  }catch(e){}
+}
+// Called with the driver's rides in progress; starts/stops GPS sharing accordingly
+function _syncDriverTracking(list){
+  _trk.rides=(list||[]).map(function(r){ return r.id; });
+  if(!_trk.rides.length){
+    if(_trk.watch!=null){ navigator.geolocation.clearWatch(_trk.watch); _trk.watch=null; }
+    _trkWakeLock(false); _trk.lastPos=null; return;
+  }
+  if(!navigator.geolocation){ _trkSetStatus('⚠️ Localisation non disponible sur cet appareil',true); return; }
+  _trkWakeLock(true);
+  if(_trk.watch==null){
+    _trkSetStatus('📍 Activation de la localisation…');
+    _trk.watch=navigator.geolocation.watchPosition(_trkSend,function(err){
+      _trkSetStatus(err&&err.code===1?'⚠️ Localisation refusée — autorisez-la pour que le client vous suive':'⚠️ Position indisponible',true);
+    },{ enableHighAccuracy:true, maximumAge:5000, timeout:20000 });
+  } else if(_trk.status){ _trkSetStatus(_trk.status); }
+}
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible' && _trk.rides.length){ _trkWakeLock(true); _trk.lastSent=0; } });
+
+// Client side: live map of the driver for each ride in progress
+var _trkView={ channels:[], maps:{}, timer:null };
+function _trkCarIcon(){
+  return { url:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#1B5E3B" fill-opacity=".18"/><circle cx="22" cy="22" r="13" fill="#1B5E3B" stroke="#fff" stroke-width="3"/><path d="M15.5 24.5l1.6-4.6a1.5 1.5 0 011.4-1h7a1.5 1.5 0 011.4 1l1.6 4.6v3h-13z" fill="#fff"/><circle cx="18.5" cy="27.5" r="1.3" fill="#1B5E3B"/><circle cx="25.5" cy="27.5" r="1.3" fill="#1B5E3B"/></svg>'),
+    scaledSize:new google.maps.Size(44,44), anchor:new google.maps.Point(22,22) };
+}
+function _trkAgo(iso){ var s=Math.max(0,Math.round((Date.now()-new Date(iso).getTime())/1000)); return s<60?'à l\'instant':(s<3600?'il y a '+Math.round(s/60)+' min':'il y a '+Math.round(s/3600)+' h'); }
+function _trkApply(ride, loc){
+  var v=_trkView.maps[ride.id]; if(!v) return;
+  var info=document.getElementById('trk-info-'+ride.id);
+  if(!loc){ if(info) info.textContent='En attente de la position du chauffeur…'; var md=document.getElementById('trk-map-'+ride.id); if(md&&!v.map) md.textContent='La position du chauffeur apparaîtra ici dès qu\'il la partage.'; return; }
+  var p={lat:loc.lat,lng:loc.lng};
+  v.loc=loc;
+  if(!v.map && window.google && google.maps && google.maps.Map){
+    v.map=new google.maps.Map(document.getElementById('trk-map-'+ride.id),{ center:p, zoom:14, disableDefaultUI:true, zoomControl:true, gestureHandling:'cooperative', clickableIcons:false });
+    v.car=new google.maps.Marker({ position:p, map:v.map, icon:_trkCarIcon(), zIndex:10, title:'Votre chauffeur' });
+    // pick-up point (geocoded once)
+    try{ new google.maps.Geocoder().geocode({address:ride.from_address},function(res,st){ if(st==='OK'&&res[0]){ v.pickup=res[0].geometry.location; new google.maps.Marker({position:v.pickup,map:v.map,title:'Prise en charge'}); _trkFit(v); } }); }catch(e){}
+  } else if(v.car){ v.car.setPosition(p); _trkFit(v); }
+  var stale=(Date.now()-new Date(loc.updated_at).getTime())>120000;
+  if(info) info.innerHTML='Position '+(stale?'<b style="color:var(--amber);">'+_trkAgo(loc.updated_at)+'</b>':_trkAgo(loc.updated_at))+(v.eta?' · '+v.eta:'');
+  _trkEta(ride, v);
+}
+function _trkFit(v){
+  if(!v.map||!v.car) return;
+  if(v.pickup && !v.pickedUp){ var b=new google.maps.LatLngBounds(); b.extend(v.car.getPosition()); b.extend(v.pickup); v.map.fitBounds(b,60); if(v.map.getZoom()>16) v.map.setZoom(16); }
+  else v.map.panTo(v.car.getPosition());
+}
+function _trkEta(ride, v){
+  // ETA to the pick-up point while the driver is on the way (max one request per minute)
+  if(ride.pickup_at||!v.loc||!window.google||!google.maps.DirectionsService) return;
+  if(v.etaAt && Date.now()-v.etaAt<60000) return;
+  v.etaAt=Date.now();
+  try{
+    new google.maps.DirectionsService().route({ origin:{lat:v.loc.lat,lng:v.loc.lng}, destination:ride.from_address, travelMode:'DRIVING' },function(res,st){
+      if(st==='OK'&&res.routes[0]&&res.routes[0].legs[0]){
+        v.eta='arrivée estimée dans '+res.routes[0].legs[0].duration.text;
+        var info=document.getElementById('trk-info-'+ride.id); if(info&&v.loc) info.innerHTML='Position '+_trkAgo(v.loc.updated_at)+' · '+v.eta;
+      }
+    });
+  }catch(e){}
+}
+async function _initClientTracking(list){
+  // clean previous subscriptions
+  _trkView.channels.forEach(function(c){ try{ sb.removeChannel(c); }catch(e){} });
+  _trkView.channels=[]; _trkView.maps={};
+  if(_trkView.timer){ clearInterval(_trkView.timer); _trkView.timer=null; }
+  if(!sb||!list||!list.length) return;
+  var byId={};
+  list.forEach(function(r){ byId[r.id]=r; _trkView.maps[r.id]={ pickedUp:!!r.pickup_at }; });
+  var fetchAll=async function(){
+    try{
+      var {data}=await sb.from('ride_locations').select('*').in('ride_id',Object.keys(byId));
+      var got={}; (data||[]).forEach(function(l){ got[l.ride_id]=l; });
+      Object.keys(byId).forEach(function(id){ _trkApply(byId[id], got[id]||(_trkView.maps[id]&&_trkView.maps[id].loc)||null); });
+    }catch(e){ console.warn('[tracking] fetch failed',e); }
+  };
+  await fetchAll();
+  list.forEach(function(r){
+    try{
+      var ch=sb.channel('trk_'+r.id).on('postgres_changes',{event:'*',schema:'public',table:'ride_locations',filter:'ride_id=eq.'+r.id},function(pl){ if(pl&&pl.new&&pl.new.lat!=null) _trkApply(byId[r.id], pl.new); }).subscribe();
+      _trkView.channels.push(ch);
+    }catch(e){}
+  });
+  // safety net if realtime is not enabled on the table
+  _trkView.timer=setInterval(function(){ if(document.getElementById('active-ride-wrap')&&document.querySelector('[id^="trk-map-"]')) fetchAll(); else { clearInterval(_trkView.timer); _trkView.timer=null; } },15000);
+}
+
 function _renderDriverActiveRides(list, boxId, forClient){
   var box=document.getElementById(boxId||'driver-active-rides'); if(!box) return;
   if(!list||!list.length){ box.style.display='none'; box.innerHTML=''; return; }
@@ -3907,10 +4026,15 @@ function _renderDriverActiveRides(list, boxId, forClient){
       +(forClient ? '' : r.pickup_at||r.status==='active'
         ? '<button class="btn btn-green" style="flex-shrink:0;" onclick="event.stopPropagation();missionStep(\''+id+'\',\'done\',this)">Mission terminée</button>'
         : '<button class="btn btn-green" style="flex-shrink:0;" onclick="event.stopPropagation();missionStep(\''+id+'\',\'pickup\',this)">Pick up terminé</button>')
+      +(forClient ? '<div onclick="event.stopPropagation();" style="flex-basis:100%;cursor:default;">'
+          +'<div id="trk-map-'+id+'" style="height:230px;border-radius:12px;overflow:hidden;background:var(--sand2);display:flex;align-items:center;justify-content:center;text-align:center;padding:0 24px;box-sizing:border-box;font-size:12px;color:var(--ink3);">Carte en cours de chargement…</div>'
+          +'<div id="trk-info-'+id+'" style="font-size:11.5px;color:var(--ink3);margin-top:6px;">En attente de la position du chauffeur…</div>'
+        +'</div>' : '')
     +'</div>';
   }).join('');
   box.innerHTML='<div style="background:#EAF7EF;border:1px solid #BFE5CC;border-radius:16px;padding:14px 14px 4px;margin:4px 0 22px;">'
     +'<div style="display:flex;align-items:center;gap:9px;margin:0 2px 12px;"><span class="live-dot"></span><span style="font-size:15px;font-weight:700;color:var(--green);">Course'+(list.length>1?'s':'')+' en cours</span><span style="font-size:12px;color:var(--ink3);">('+list.length+')</span></div>'
+    +(forClient?'':'<div id="trk-status" style="font-size:11.5px;color:var(--ink3);margin:-6px 2px 10px;">'+(_trk.status||'📍 Votre position est partagée avec le client pendant la course — gardez l\'application ouverte.')+'</div>')
     +cards+'</div>';
   box.style.display='block';
 }
@@ -4025,7 +4149,9 @@ async function loadDriverDashboard(){
   if(badgeEl){ badgeEl.style.display = 'none'; }
 
   // In progress = driver on the way (En chemin) or pick-up done
-  _renderDriverActiveRides(missions.filter(function(r){ return r.status==='active' || (r.status==='confirmed' && r.on_way_at); }));
+  var _drvInProgress = missions.filter(function(r){ return r.status==='active' || (r.status==='confirmed' && r.on_way_at); });
+  _renderDriverActiveRides(_drvInProgress);
+  _syncDriverTracking(_drvInProgress.filter(function(r){ return r.driver_id===uid; }));
 
   var latestPending = pending.filter(_driverCanHandleRide).slice().sort(function(a,b){
     return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||''));
