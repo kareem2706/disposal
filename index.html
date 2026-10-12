@@ -1727,6 +1727,7 @@ body{background:var(--bg);}
           <div class="stat-val" id="admin-stat-ca" style="font-size:28px;">—</div>
         </div>
       </div>
+      <div id="admin-live-rides" style="display:none;"></div>
       <!-- Period filter -->
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
         <span style="font-size:15px;font-weight:600;color:var(--ink);">Sélection</span>
@@ -3544,7 +3545,6 @@ async function loadClientDashboard(){
   // Rides in progress (driver on the way or pick-up done) — same block as the driver dashboard
   var _inProgress = function(r){ return r.status==='active' || (r.status==='confirmed' && r.on_way_at); };
   _renderDriverActiveRides(rides.filter(_inProgress), 'active-ride-wrap', true);
-  _initClientTracking(rides.filter(_inProgress));
 
   // Non-terminated rides sorted by ride_date asc for dashboard (oldest first), max 3 (rides in progress shown above)
   const recent = rides.filter(function(r){ return r.status !== 'done' && r.status !== 'cancelled' && !_inProgress(r); }).slice().sort(function(a,b){
@@ -3937,72 +3937,215 @@ function _syncDriverTracking(list){
 }
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible' && _trk.rides.length){ _trkWakeLock(true); _trk.lastSent=0; } });
 
-// Client side: live map of the driver for each ride in progress
-var _trkView={ channels:[], maps:{}, timer:null };
-function _trkCarIcon(){
-  return { url:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#1B5E3B" fill-opacity=".18"/><circle cx="22" cy="22" r="13" fill="#1B5E3B" stroke="#fff" stroke-width="3"/><path d="M15.5 24.5l1.6-4.6a1.5 1.5 0 011.4-1h7a1.5 1.5 0 011.4 1l1.6 4.6v3h-13z" fill="#fff"/><circle cx="18.5" cy="27.5" r="1.3" fill="#1B5E3B"/><circle cx="25.5" cy="27.5" r="1.3" fill="#1B5E3B"/></svg>'),
-    scaledSize:new google.maps.Size(44,44), anchor:new google.maps.Point(22,22) };
+// ── LIVE TRACKING VIEW (client & admin) — Uber/Bolt style ─────────────
+var _lt=null;
+function _ltWhenMaps(cb, n){ n=n||0; if(window.google&&google.maps&&google.maps.Map) return cb(); if(n>60) return; setTimeout(function(){ _ltWhenMaps(cb,n+1); },250); }
+function _ltBearing(a,b){ var toR=Math.PI/180, y=Math.sin((b.lng-a.lng)*toR)*Math.cos(b.lat*toR), x=Math.cos(a.lat*toR)*Math.sin(b.lat*toR)-Math.sin(a.lat*toR)*Math.cos(b.lat*toR)*Math.cos((b.lng-a.lng)*toR); return (Math.atan2(y,x)/toR+360)%360; }
+function _ltCarSymbol(rot){
+  return { path:'M -7,-12 Q 0,-16 7,-12 L 8,10 Q 0,15 -8,10 Z M -5.5,-6 L 5.5,-6 L 4.5,-1 L -4.5,-1 Z',
+    fillColor:'#1B5E3B', fillOpacity:1, strokeColor:'#FFFFFF', strokeWeight:2, scale:1.35, rotation:rot||0, anchor:new google.maps.Point(0,0) };
 }
-function _trkAgo(iso){ var s=Math.max(0,Math.round((Date.now()-new Date(iso).getTime())/1000)); return s<60?'à l\'instant':(s<3600?'il y a '+Math.round(s/60)+' min':'il y a '+Math.round(s/3600)+' h'); }
-function _trkApply(ride, loc){
-  var v=_trkView.maps[ride.id]; if(!v) return;
-  var info=document.getElementById('trk-info-'+ride.id);
-  if(!loc){ if(info) info.textContent='En attente de la position du chauffeur…'; var md=document.getElementById('trk-map-'+ride.id); if(md&&!v.map) md.textContent='La position du chauffeur apparaîtra ici dès qu\'il la partage.'; return; }
-  var p={lat:loc.lat,lng:loc.lng};
-  v.loc=loc;
-  if(!v.map && window.google && google.maps && google.maps.Map){
-    v.map=new google.maps.Map(document.getElementById('trk-map-'+ride.id),{ center:p, zoom:14, disableDefaultUI:true, zoomControl:true, gestureHandling:'cooperative', clickableIcons:false });
-    v.car=new google.maps.Marker({ position:p, map:v.map, icon:_trkCarIcon(), zIndex:10, title:'Votre chauffeur' });
-    // pick-up point (geocoded once)
-    try{ new google.maps.Geocoder().geocode({address:ride.from_address},function(res,st){ if(st==='OK'&&res[0]){ v.pickup=res[0].geometry.location; new google.maps.Marker({position:v.pickup,map:v.map,title:'Prise en charge'}); _trkFit(v); } }); }catch(e){}
-  } else if(v.car){ v.car.setPosition(p); _trkFit(v); }
-  var stale=(Date.now()-new Date(loc.updated_at).getTime())>120000;
-  if(info) info.innerHTML='Position '+(stale?'<b style="color:var(--amber);">'+_trkAgo(loc.updated_at)+'</b>':_trkAgo(loc.updated_at))+(v.eta?' · '+v.eta:'');
-  _trkEta(ride, v);
+function _ltPin(color,label){
+  return { url:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 30 40"><path d="M15 39s13-13.4 13-23.5A13 13 0 002 15.5C2 25.6 15 39 15 39z" fill="'+color+'" stroke="#fff" stroke-width="2"/><text x="15" y="20" text-anchor="middle" font-family="Arial" font-size="12" font-weight="700" fill="#fff">'+label+'</text></svg>'),
+    scaledSize:new google.maps.Size(30,40), anchor:new google.maps.Point(15,39) };
 }
-function _trkFit(v){
-  if(!v.map||!v.car) return;
-  if(v.pickup && !v.pickedUp){ var b=new google.maps.LatLngBounds(); b.extend(v.car.getPosition()); b.extend(v.pickup); v.map.fitBounds(b,60); if(v.map.getZoom()>16) v.map.setZoom(16); }
-  else v.map.panTo(v.car.getPosition());
-}
-function _trkEta(ride, v){
-  // ETA to the pick-up point while the driver is on the way (max one request per minute)
-  if(ride.pickup_at||!v.loc||!window.google||!google.maps.DirectionsService) return;
-  if(v.etaAt && Date.now()-v.etaAt<60000) return;
-  v.etaAt=Date.now();
+window.openLiveTracking = async function(rideId){
+  if(!sb) return;
+  closeLiveTracking();
+  var esc=function(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  var ov=document.createElement('div'); ov.id='lt-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:9500;background:#E9EEEA;font-family:\'DM Sans\',sans-serif;';
+  ov.innerHTML='<div id="lt-map" style="position:absolute;inset:0;"></div>'
+    +'<button onclick="closeLiveTracking()" aria-label="Fermer" style="position:absolute;top:calc(14px + env(safe-area-inset-top));left:14px;z-index:2;width:44px;height:44px;border-radius:50%;border:none;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A2E1A" stroke-width="2.4" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></button>'
+    +'<button id="lt-recenter" onclick="_ltRecenter()" aria-label="Recentrer" style="position:absolute;right:14px;bottom:calc(var(--lt-sheet,190px) + 14px);z-index:2;width:44px;height:44px;border-radius:50%;border:none;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;cursor:pointer;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1B5E3B" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>'
+    +'<div id="lt-sheet" style="position:absolute;left:0;right:0;bottom:0;z-index:2;background:#fff;border-radius:22px 22px 0 0;box-shadow:0 -6px 30px rgba(0,0,0,.16);padding:10px 20px calc(18px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto;">'
+      +'<div style="width:40px;height:4px;border-radius:2px;background:#D9D9D9;margin:0 auto 14px;"></div>'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">'
+        +'<div style="min-width:0;"><div id="lt-title" style="font-size:19px;font-weight:700;color:#1A2E1A;">Chargement…</div><div id="lt-sub" style="font-size:13px;color:#5A7A5A;margin-top:3px;"></div></div>'
+        +'<div id="lt-eta" style="flex-shrink:0;text-align:center;background:#1B5E3B;color:#fff;border-radius:12px;padding:8px 12px;display:none;"><div id="lt-eta-v" style="font-size:20px;font-weight:700;line-height:1;"></div><div style="font-size:10.5px;opacity:.85;margin-top:3px;">min</div></div>'
+      +'</div>'
+      +'<div id="lt-progress" style="display:flex;gap:6px;margin:14px 0;"></div>'
+      +'<div id="lt-driver" style="display:flex;align-items:center;gap:12px;padding-top:12px;border-top:1px solid #EEE;"></div>'
+      +'<div id="lt-upd" style="font-size:11px;color:#9EB0A3;margin-top:10px;"></div>'
+    +'</div>';
+  document.body.appendChild(ov);
+  document.body.style.overflow='hidden';
+  _lt={ id:rideId, ride:null, loc:null, shown:null, rot:0, follow:true, channels:[], timers:[], esc:esc, raf:null };
+  var sheet=document.getElementById('lt-sheet');
+  var setSheetVar=function(){ if(sheet) ov.style.setProperty('--lt-sheet', sheet.offsetHeight+'px'); };
+
+  // Ride + people
+  try{ _lt.ride=(await sb.from('rides').select('*').eq('id',rideId).maybeSingle()).data; }catch(e){}
+  if(!_lt||!_lt.ride){ document.getElementById('lt-title').textContent='Course introuvable'; return; }
+  var r=_lt.ride, veh=null, drv=null;
   try{
-    new google.maps.DirectionsService().route({ origin:{lat:v.loc.lat,lng:v.loc.lng}, destination:ride.from_address, travelMode:'DRIVING' },function(res,st){
-      if(st==='OK'&&res.routes[0]&&res.routes[0].legs[0]){
-        v.eta='arrivée estimée dans '+res.routes[0].legs[0].duration.text;
-        var info=document.getElementById('trk-info-'+ride.id); if(info&&v.loc) info.innerHTML='Position '+_trkAgo(v.loc.updated_at)+' · '+v.eta;
-      }
+    var of=(await sb.from('offers').select('vehicle_id,fleet_driver_id,driver_id').eq('ride_id',r.id).eq('status','accepted').maybeSingle()).data;
+    if(of&&of.vehicle_id) veh=(await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',of.vehicle_id).maybeSingle()).data;
+    if(of&&of.fleet_driver_id) drv=(await sb.from('fleet_drivers').select('first_name,last_name,phone').eq('id',of.fleet_driver_id).maybeSingle()).data;
+    if(!drv&&r.driver_id) drv=(await sb.from('profiles').select('first_name,last_name,phone,company_name').eq('id',r.driver_id).maybeSingle()).data;
+  }catch(e){}
+  if(!_lt) return;
+  var dName=drv?(((drv.first_name||'')+' '+(drv.last_name||'')).trim()||drv.company_name||'Chauffeur'):'Chauffeur';
+  var vName=veh?[((veh.brand||'')+' '+(veh.model||'')).trim(),veh.color].filter(Boolean).join(' · '):'';
+  var initials=dName.split(' ').map(function(w){return w.charAt(0);}).join('').slice(0,2).toUpperCase();
+  document.getElementById('lt-driver').innerHTML='<div style="width:46px;height:46px;border-radius:50%;background:#EAF7EF;color:#1B5E3B;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+esc(initials||'—')+'</div>'
+    +'<div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:700;color:#1A2E1A;">'+esc(dName)+'</div>'
+      +'<div style="font-size:12.5px;color:#5A7A5A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(vName||'—')+'</div></div>'
+    +(veh&&veh.plate?'<div style="flex-shrink:0;font-family:monospace;font-weight:700;font-size:13px;background:#F2F2F2;border:1.5px solid #DDD;border-radius:6px;padding:4px 8px;">'+esc(veh.plate)+'</div>':'')
+    +(drv&&drv.phone?'<a href="tel:'+esc(drv.phone)+'" aria-label="Appeler" style="flex-shrink:0;width:42px;height:42px;border-radius:50%;background:#1B5E3B;display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.4 1.8.7 2.7a2 2 0 01-.5 2.1L8 9.8a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.6 2.7.7a2 2 0 011.7 2z"/></svg></a>':'');
+  _ltRenderStatus(); setSheetVar();
+
+  _ltWhenMaps(function(){
+    if(!_lt) return;
+    _lt.map=new google.maps.Map(document.getElementById('lt-map'),{ center:{lat:50.8466,lng:4.3528}, zoom:13, disableDefaultUI:true, clickableIcons:false, gestureHandling:'greedy',
+      styles:[{featureType:'poi',stylers:[{visibility:'off'}]},{featureType:'transit',stylers:[{visibility:'simplified'}]}] });
+    _lt.map.addListener('dragstart',function(){ if(_lt) _lt.follow=false; });
+    _lt.route=new google.maps.Polyline({ map:_lt.map, strokeColor:'#1B5E3B', strokeOpacity:.9, strokeWeight:5 });
+    var geo=new google.maps.Geocoder();
+    var place=function(addr,color,label,key){ if(!addr) return; try{ geo.geocode({address:addr},function(res,st){ if(_lt&&st==='OK'&&res[0]){ _lt[key]=res[0].geometry.location; new google.maps.Marker({map:_lt.map,position:_lt[key],icon:_ltPin(color,label),zIndex:5}); if(!_lt.loc) _lt.map.setCenter(_lt[key]); _ltRoute(true); } }); }catch(e){} };
+    place(r.from_address,'#1B5E3B','A','pickup');
+    if(r.trip_type!=='disposal' && r.to_address) place(r.to_address,'#C0392B','B','dest');
+    if(_lt.loc) _ltOnLoc(_lt.loc,true);
+  });
+
+  // Data: realtime + polling fallback
+  var pull=async function(){
+    if(!_lt) return;
+    try{ var l=(await sb.from('ride_locations').select('*').eq('ride_id',rideId).maybeSingle()).data; if(l) _ltOnLoc(l); else if(!_lt.loc) _ltRenderStatus(); }catch(e){}
+    try{ var rr=(await sb.from('rides').select('*').eq('id',rideId).maybeSingle()).data; if(rr&&_lt){ var ph=!!_lt.ride.pickup_at!==!!rr.pickup_at; _lt.ride=rr; _ltRenderStatus(); if(ph) _ltRoute(true); } }catch(e){}
+  };
+  await pull();
+  try{ _lt.channels.push(sb.channel('lt_'+rideId).on('postgres_changes',{event:'*',schema:'public',table:'ride_locations',filter:'ride_id=eq.'+rideId},function(pl){ if(pl&&pl.new&&pl.new.lat!=null) _ltOnLoc(pl.new); }).subscribe()); }catch(e){}
+  _lt.timers.push(setInterval(pull,10000));
+  _lt.timers.push(setInterval(function(){ _ltRenderUpd(); },15000));
+  window.addEventListener('resize',setSheetVar);
+};
+window.closeLiveTracking=function(){
+  if(_lt){ _lt.channels.forEach(function(c){ try{ sb.removeChannel(c); }catch(e){} }); _lt.timers.forEach(clearInterval); if(_lt.raf) cancelAnimationFrame(_lt.raf); }
+  _lt=null;
+  var ov=document.getElementById('lt-overlay'); if(ov) ov.remove();
+  document.body.style.overflow='';
+};
+window._ltRecenter=function(){ if(!_lt||!_lt.map) return; _lt.follow=true; _ltFrame(true); };
+function _ltTarget(){ if(!_lt) return null; return _lt.ride&&_lt.ride.pickup_at ? (_lt.dest||null) : (_lt.pickup||null); }
+function _ltFrame(force){
+  if(!_lt||!_lt.map||!_lt.shown||(!_lt.follow&&!force)) return;
+  var t=_ltTarget(), car=new google.maps.LatLng(_lt.shown.lat,_lt.shown.lng);
+  if(t){ var b=new google.maps.LatLngBounds(); b.extend(car); b.extend(t); var sh=(document.getElementById('lt-sheet')||{}).offsetHeight||200; _lt.map.fitBounds(b,{top:90,left:50,right:50,bottom:sh+40}); if(_lt.map.getZoom()>17) _lt.map.setZoom(17); }
+  else { _lt.map.panTo(car); if(_lt.map.getZoom()<15) _lt.map.setZoom(15); }
+}
+function _ltOnLoc(l, initial){
+  if(!_lt) return;
+  var prevLoc=_lt.loc; _lt.loc=l; _ltRenderUpd();
+  if(!_lt.map) return;
+  var to={lat:l.lat,lng:l.lng};
+  if(l.heading!=null && !isNaN(l.heading)) _lt.rot=l.heading;
+  else if(_lt.shown && _trkDist(_lt.shown,to)>5) _lt.rot=_ltBearing(_lt.shown,to);
+  if(!_lt.car){
+    _lt.car=new google.maps.Marker({ map:_lt.map, position:to, icon:_ltCarSymbol(_lt.rot), zIndex:20 });
+    _lt.shown=to; _ltFrame(true); _ltRoute(true); _ltRenderStatus(); return;
+  }
+  // smooth glide between the two positions
+  var from=_lt.shown||to, t0=performance.now(), dur=initial?0:1500;
+  if(_lt.raf) cancelAnimationFrame(_lt.raf);
+  var step=function(now){
+    if(!_lt||!_lt.car) return;
+    var k=dur?Math.min(1,(now-t0)/dur):1, e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+    _lt.shown={ lat:from.lat+(to.lat-from.lat)*e, lng:from.lng+(to.lng-from.lng)*e };
+    _lt.car.setPosition(_lt.shown); _lt.car.setIcon(_ltCarSymbol(_lt.rot));
+    if(k<1) _lt.raf=requestAnimationFrame(step); else { _lt.raf=null; _ltFrame(); }
+  };
+  _lt.raf=requestAnimationFrame(step);
+  _ltRoute(false);
+}
+function _ltRoute(force){
+  if(!_lt||!_lt.map||!_lt.loc||!window.google||!google.maps.DirectionsService) return;
+  var t=_ltTarget();
+  if(!t){ _lt.route.setPath([]); _lt.etaMin=null; _ltRenderStatus(); return; }
+  if(!force && _lt.routeAt && Date.now()-_lt.routeAt<30000) return;
+  _lt.routeAt=Date.now();
+  try{
+    new google.maps.DirectionsService().route({ origin:{lat:_lt.loc.lat,lng:_lt.loc.lng}, destination:t, travelMode:'DRIVING' },function(res,st){
+      if(!_lt) return;
+      if(st==='OK'&&res.routes[0]){ _lt.route.setPath(res.routes[0].overview_path); var leg=res.routes[0].legs[0]; _lt.etaMin=Math.max(1,Math.round(leg.duration.value/60)); _lt.distTxt=leg.distance.text; }
+      else { _lt.route.setPath([{lat:_lt.loc.lat,lng:_lt.loc.lng},t]); }
+      _ltRenderStatus(); _ltFrame();
     });
   }catch(e){}
 }
-async function _initClientTracking(list){
-  // clean previous subscriptions
-  _trkView.channels.forEach(function(c){ try{ sb.removeChannel(c); }catch(e){} });
-  _trkView.channels=[]; _trkView.maps={};
-  if(_trkView.timer){ clearInterval(_trkView.timer); _trkView.timer=null; }
-  if(!sb||!list||!list.length) return;
-  var byId={};
-  list.forEach(function(r){ byId[r.id]=r; _trkView.maps[r.id]={ pickedUp:!!r.pickup_at }; });
-  var fetchAll=async function(){
-    try{
-      var {data}=await sb.from('ride_locations').select('*').in('ride_id',Object.keys(byId));
-      var got={}; (data||[]).forEach(function(l){ got[l.ride_id]=l; });
-      Object.keys(byId).forEach(function(id){ _trkApply(byId[id], got[id]||(_trkView.maps[id]&&_trkView.maps[id].loc)||null); });
-    }catch(e){ console.warn('[tracking] fetch failed',e); }
-  };
-  await fetchAll();
-  list.forEach(function(r){
-    try{
-      var ch=sb.channel('trk_'+r.id).on('postgres_changes',{event:'*',schema:'public',table:'ride_locations',filter:'ride_id=eq.'+r.id},function(pl){ if(pl&&pl.new&&pl.new.lat!=null) _trkApply(byId[r.id], pl.new); }).subscribe();
-      _trkView.channels.push(ch);
-    }catch(e){}
+function _ltRenderUpd(){
+  var el=document.getElementById('lt-upd'); if(!el||!_lt) return;
+  if(!_lt.loc){ el.textContent=''; return; }
+  var s=Math.max(0,Math.round((Date.now()-new Date(_lt.loc.updated_at).getTime())/1000));
+  el.innerHTML=(s>120?'<span style="color:#B7791F;font-weight:600;">⚠️ Signal GPS perdu depuis '+Math.round(s/60)+' min</span>':'● Position en direct · mise à jour '+(s<20?'à l\'instant':'il y a '+(s<60?s+' s':Math.round(s/60)+' min')))
+    +' · '+_lt.esc(_lt.ride&&_lt.ride.booking_code||'');
+}
+function _ltRenderStatus(){
+  if(!_lt||!_lt.ride) return;
+  var r=_lt.ride, t=document.getElementById('lt-title'), s=document.getElementById('lt-sub'), eb=document.getElementById('lt-eta'), ev=document.getElementById('lt-eta-v'), pg=document.getElementById('lt-progress');
+  if(!t) return;
+  var hhmm=function(min){ var d=new Date(Date.now()+min*60000); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+  var stage=r.status==='done'?3:(r.pickup_at?2:(r.on_way_at?1:0));
+  if(stage===3){ t.textContent='Course terminée'; s.textContent='Merci d\'avoir voyagé avec Bleenr.'; eb.style.display='none'; if(_lt.route) _lt.route.setPath([]); }
+  else if(stage===2){
+    if(r.trip_type==='disposal'){ t.textContent='Mise à disposition en cours'; s.textContent='Votre chauffeur est avec vous.'; eb.style.display='none'; }
+    else { t.textContent='En route vers la destination'; s.textContent=_lt.etaMin?('Arrivée prévue à '+hhmm(_lt.etaMin)+(_lt.distTxt?' · '+_lt.distTxt:'')):_lt.esc((r.to_address||'').split(',')[0]); eb.style.display=_lt.etaMin?'block':'none'; if(_lt.etaMin) ev.textContent=_lt.etaMin; }
+  } else if(stage===1){
+    t.textContent=_lt.etaMin&&_lt.etaMin<=1?'Votre chauffeur arrive':'Votre chauffeur est en route';
+    s.textContent=_lt.loc?(_lt.etaMin?'Arrivée au point de prise en charge vers '+hhmm(_lt.etaMin):_lt.esc((r.from_address||'').split(',')[0])):'En attente de la position du chauffeur…';
+    eb.style.display=_lt.etaMin?'block':'none'; if(_lt.etaMin) ev.textContent=_lt.etaMin;
+  } else { t.textContent='Course confirmée'; s.textContent='Le suivi démarre dès que le chauffeur se met en route.'; eb.style.display='none'; }
+  var lbl=['En route','Pris en charge','Terminée'];
+  if(pg) pg.innerHTML=lbl.map(function(l,i){ var on=stage>=i+1; return '<div style="flex:1;"><div style="height:4px;border-radius:2px;background:'+(on?'#1B5E3B':'#E3E8E4')+';"></div><div style="font-size:10.5px;margin-top:5px;color:'+(on?'#1B5E3B':'#9EB0A3')+';font-weight:'+(on?'700':'500')+';">'+l+'</div></div>'; }).join('');
+}
+
+// Admin dashboard: every ride in progress, live
+var _admLive={ map:null, markers:{}, timer:null };
+async function _loadAdminLive(){
+  var box=document.getElementById('admin-live-rides'); if(!box||!sb) return;
+  var rides=[];
+  try{ rides=(await sb.from('rides').select('*').or('status.eq.active,and(status.eq.confirmed,on_way_at.not.is.null)').order('ride_date',{ascending:true})).data||[]; }catch(e){}
+  if(!rides.length){ box.style.display='none'; box.innerHTML=''; _admLive.map=null; _admLive.markers={}; return; }
+  var ids=rides.map(function(r){return r.id;}), fleetIds=rides.map(function(r){return r.driver_id;}).filter(Boolean);
+  var locs={}, fleets={};
+  try{ ((await sb.from('ride_locations').select('*').in('ride_id',ids)).data||[]).forEach(function(l){ locs[l.ride_id]=l; }); }catch(e){}
+  try{ if(fleetIds.length) ((await sb.from('profiles').select('id,first_name,last_name,company_name,role,email').in('id',fleetIds)).data||[]).forEach(function(p){ fleets[p.id]=p; }); }catch(e){}
+  var esc=function(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  var rows=rides.map(function(r){
+    var l=locs[r.id], age=l?Math.round((Date.now()-new Date(l.updated_at).getTime())/60000):null;
+    var st=r.pickup_at?'Client à bord · depuis '+_hhmm(r.pickup_at):'En route vers le client · depuis '+_hhmm(r.on_way_at);
+    return '<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--sand2);">'
+      +'<span class="live-dot" style="'+(l&&age<=2?'':'background:#C9A227;animation:none;')+'"></span>'
+      +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--ink);"><span style="font-family:monospace;">'+esc(r.booking_code||String(r.id).slice(0,8))+'</span> · '+esc(_arDisplayName(fleets[r.driver_id]))+'</div>'
+        +'<div style="font-size:12px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+st+' · '+(l?(age<1?'GPS à l\'instant':'GPS il y a '+age+' min'):'pas encore de position')+'</div></div>'
+      +'<button class="btn btn-green btn-sm" style="flex-shrink:0;" onclick="openLiveTracking(\''+String(r.id).replace(/'/g,'')+'\')">Suivre</button>'
+    +'</div>';
+  }).join('');
+  if(!document.getElementById('adm-live-map')){
+    box.innerHTML='<div class="card" style="padding:16px 18px;margin-bottom:20px;">'
+      +'<div style="display:flex;align-items:center;gap:9px;margin-bottom:12px;"><span class="live-dot"></span><span style="font-size:15px;font-weight:700;color:var(--ink);">Courses en cours</span><span id="adm-live-count" style="font-size:12px;color:var(--ink3);"></span></div>'
+      +'<div id="adm-live-map" style="height:300px;border-radius:12px;overflow:hidden;background:var(--sand2);margin-bottom:6px;"></div>'
+      +'<div id="adm-live-list"></div></div>';
+    _admLive.map=null; _admLive.markers={};
+  }
+  box.style.display='block';
+  document.getElementById('adm-live-count').textContent='('+rides.length+')';
+  document.getElementById('adm-live-list').innerHTML=rows;
+  _ltWhenMaps(function(){
+    if(!document.getElementById('adm-live-map')) return;
+    if(!_admLive.map) _admLive.map=new google.maps.Map(document.getElementById('adm-live-map'),{ center:{lat:50.8466,lng:4.3528}, zoom:11, disableDefaultUI:true, zoomControl:true, clickableIcons:false });
+    var b=new google.maps.LatLngBounds(), n=0;
+    Object.keys(_admLive.markers).forEach(function(id){ if(!locs[id]){ _admLive.markers[id].setMap(null); delete _admLive.markers[id]; } });
+    rides.forEach(function(r){
+      var l=locs[r.id]; if(!l) return;
+      var p={lat:l.lat,lng:l.lng}, m=_admLive.markers[r.id];
+      if(!m){ m=_admLive.markers[r.id]=new google.maps.Marker({ map:_admLive.map, position:p, icon:_ltCarSymbol(l.heading||0), title:(r.booking_code||'') }); m.addListener('click',function(){ openLiveTracking(r.id); }); }
+      else { m.setPosition(p); m.setIcon(_ltCarSymbol(l.heading||0)); }
+      b.extend(p); n++;
+    });
+    if(n && !_admLive.fitted){ _admLive.map.fitBounds(b,60); if(_admLive.map.getZoom()>15) _admLive.map.setZoom(15); _admLive.fitted=true; }
   });
-  // safety net if realtime is not enabled on the table
-  _trkView.timer=setInterval(function(){ if(document.getElementById('active-ride-wrap')&&document.querySelector('[id^="trk-map-"]')) fetchAll(); else { clearInterval(_trkView.timer); _trkView.timer=null; } },15000);
+  if(!_admLive.timer) _admLive.timer=setInterval(function(){ if(document.querySelector('#page-admin-dashboard.active')) _loadAdminLive(); },10000);
 }
 
 function _renderDriverActiveRides(list, boxId, forClient){
@@ -4026,10 +4169,7 @@ function _renderDriverActiveRides(list, boxId, forClient){
       +(forClient ? '' : r.pickup_at||r.status==='active'
         ? '<button class="btn btn-green" style="flex-shrink:0;" onclick="event.stopPropagation();missionStep(\''+id+'\',\'done\',this)">Mission terminée</button>'
         : '<button class="btn btn-green" style="flex-shrink:0;" onclick="event.stopPropagation();missionStep(\''+id+'\',\'pickup\',this)">Pick up terminé</button>')
-      +(forClient ? '<div onclick="event.stopPropagation();" style="flex-basis:100%;cursor:default;">'
-          +'<div id="trk-map-'+id+'" style="height:230px;border-radius:12px;overflow:hidden;background:var(--sand2);display:flex;align-items:center;justify-content:center;text-align:center;padding:0 24px;box-sizing:border-box;font-size:12px;color:var(--ink3);">Carte en cours de chargement…</div>'
-          +'<div id="trk-info-'+id+'" style="font-size:11.5px;color:var(--ink3);margin-top:6px;">En attente de la position du chauffeur…</div>'
-        +'</div>' : '')
+      +(forClient ? '<button class="btn btn-green" style="flex-shrink:0;display:flex;align-items:center;gap:7px;" onclick="event.stopPropagation();openLiveTracking(\''+id+'\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 22s7-6.6 7-12a7 7 0 00-14 0c0 5.4 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>Suivre en direct</button>' : '')
     +'</div>';
   }).join('');
   box.innerHTML='<div style="background:#EAF7EF;border:1px solid #BFE5CC;border-radius:16px;padding:14px 14px 4px;margin:4px 0 22px;">'
@@ -5187,6 +5327,7 @@ function _openRideDetailImpl(el){
       } else {
         ft=_voucherMenu+trashBtn+closeBtn;
       }
+      if(r.on_way_at) ft+='<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');openLiveTracking(\''+String(rId).replace(/'/g,'')+'\')">Suivre en direct</button>';
     } else if(r.status==='done'){
       var priceTagDone = r.final_price
         ? '<div style="margin-right:auto;padding:6px 12px;background:var(--green-bg);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--green);">Montant pay\u00e9\u00a0: '+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</div>'
@@ -10845,6 +10986,7 @@ window.arOpenDetail = async function(row){
   var subTitle = subtitleMap[r.trip_type]||'Course';
   if(titleEl) titleEl.innerHTML = (r.booking_code ? r.booking_code+' — '+subTitle : subTitle) + subIcon2 + ' '+getStatusPill(r.status,0);
   if(bodyEl)  bodyEl.innerHTML  = body;
+  if(r.status==='active' || (r.status==='confirmed' && r.on_way_at)) footerHtml += '<button class="btn btn-green" style="margin-left:8px;" onclick="closeModal(\'m-ar-detail\');openLiveTracking(\''+String(r.id).replace(/'/g,'')+'\')">Suivre en direct</button>';
   if(ftEl)    ftEl.innerHTML    = footerHtml;
 
   // Fetch client phone for admin popup
@@ -11096,6 +11238,7 @@ window.refreshAdminDashboard = async function() {
 };
 
 async function loadAdminDashboard() {
+  _loadAdminLive();
   await refreshAdminDashboard();
 }
 
