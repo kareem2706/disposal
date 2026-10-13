@@ -5151,8 +5151,12 @@ function _openRideDetailImpl(el){
     return out;
   }
   function _staticRouteMap(img, baseSrc, points){
-    if(!window.google||!google.maps) return;
     img.dataset.routeKey=baseSrc;
+    if(!window.google||!google.maps||!google.maps.Map){
+      // Google Maps not loaded yet (e.g. right after opening the app): retry shortly
+      if(typeof _ltWhenMaps==='function') _ltWhenMaps(function(){ if(img.dataset.routeKey===baseSrc) _staticRouteMap(img, baseSrc, points); });
+      return;
+    }
     var apply=function(poly, how){
       if(!poly) return;
       var routed=baseSrc.replace(/path=[^&]*/, 'path='+encodeURIComponent('color:0x1B5E3Bff|weight:4|enc:'+poly));
@@ -5175,18 +5179,21 @@ function _openRideDetailImpl(el){
       }catch(e){ console.warn('[map] Routes API indisponible :', e&&e.message||e); return false; }
     };
     // 2) Directions API (legacy) as a fallback
-    var viaDirections=function(){
+    var viaDirections=function(onFail){
       try{
-        if(!google.maps.DirectionsService) return;
+        if(!google.maps.DirectionsService){ if(onFail) onFail(); return; }
         new google.maps.DirectionsService().route({ origin:points[0], destination:points[points.length-1],
           waypoints:points.slice(1,-1).slice(0,23).map(function(p){ return {location:p, stopover:true}; }), travelMode:'DRIVING' },function(res,st){
-          if(st!=='OK'||!res.routes||!res.routes[0]){ console.warn('[map] Directions API indisponible :', st, '— activez « Routes API » ou « Directions API » pour la clé Google'); return; }
+          if(st!=='OK'||!res.routes||!res.routes[0]){ console.warn('[map] Directions API indisponible :', st); if(onFail) onFail(); return; }
           var poly=res.routes[0].overview_polyline; if(poly&&typeof poly!=='string') poly=poly.points||'';
           apply(poly,'Directions API');
         });
-      }catch(e){ console.warn('[map] Directions API :', e&&e.message||e); }
+      }catch(e){ console.warn('[map] Directions API :', e&&e.message||e); if(onFail) onFail(); }
     };
-    viaRoutes().then(function(ok){ if(!ok) viaDirections(); });
+    viaDirections(function(){
+      // fallback: Routes API, abandoned after 8 s
+      Promise.race([viaRoutes(), new Promise(function(r){ setTimeout(function(){ r(false); },8000); })]);
+    });
   }
 
   // ── Google Static Maps — hidden for confirmed client rides ──
