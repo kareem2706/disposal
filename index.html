@@ -4875,7 +4875,7 @@ function _buildRideDetailBody(r, opts){
   if(r.passengers) metaParts.push(r.passengers+' pax');
   if(r.vehicle_type) metaParts.push(r.vehicle_type);
   var metaLineHtml=metaParts.length?'<div style="display:flex;align-items:center;gap:6px;margin:0;font-size:12px;color:var(--ink3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>'+metaParts.join(' &middot; ')+'</div>':'';
-  var body='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'+metaLineHtml+(showStatus?getStatusPill(r.status,r._offerCount||0):'')+'</div>';
+  var body='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">'+_rideMetaChips(r)+(showStatus?getStatusPill(r.status,r._offerCount||0):'')+'</div>';
   if(isMixed&&mixedSegs.length){
     var mb='';
     mixedSegs.forEach(function(s,i){var sf=i>0&&mixedSegs[i-1].to&&s.from&&mixedSegs[i-1].to.trim()===s.from.trim();mb+=segCard(s,i,i===mixedSegs.length-1,sf);});
@@ -4942,6 +4942,24 @@ window.openRideDetail=function(el){
   }
 };
 
+// Ride key info (date/time, passengers, vehicle) shown as prominent chips at the top of a ride detail
+function _rideMetaChips(r){
+  var chips=[];
+  var ico=function(d){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>'; };
+  if(r.ride_date){
+    var d=new Date(r.ride_date+'T00:00:00');
+    var day=d.toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'');
+    day=day.charAt(0).toUpperCase()+day.slice(1);
+    chips.push('<span style="display:inline-flex;align-items:center;gap:7px;background:#1B5E3B;color:#fff;border-radius:9px;padding:6px 11px;font-size:13.5px;font-weight:700;white-space:nowrap;">'
+      +ico('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/>')+day
+      +(r.ride_time?'<span style="opacity:.55;font-weight:400;">|</span>'+ico('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')+r.ride_time.slice(0,5):'')+'</span>');
+  }
+  var soft='display:inline-flex;align-items:center;gap:6px;background:var(--sand2);color:var(--ink);border:1px solid var(--sand3);border-radius:9px;padding:5px 10px;font-size:13px;font-weight:600;white-space:nowrap;';
+  if(r.passengers) chips.push('<span style="'+soft+'">'+ico('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>')+r.passengers+' passager'+(r.passengers>1?'s':'')+'</span>');
+  if(r.vehicle_type){ var vl={lowcost:'Low-cost',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'}[r.vehicle_type]||r.vehicle_type;
+    chips.push('<span style="'+soft+'">'+ico('<path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>')+vl+'</span>'); }
+  return chips.length?'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">'+chips.join('')+'</div>':'';
+}
 function _openRideDetailImpl(el){
   var r;
   try{ r=JSON.parse(el.dataset.ride.replace(/&#39;/g,"'")); }catch(e){return;}
@@ -4970,7 +4988,7 @@ function _openRideDetailImpl(el){
   if(r.passengers) metaParts.push(r.passengers+' pax');
   if(r.vehicle_type) metaParts.push(r.vehicle_type);
   var metaLine=metaParts.length?'<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;font-size:12px;color:var(--ink3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>'+metaParts.join(' &middot; ')+'</div>':'';
-  var body='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'    +metaLine.replace('<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;','<div style="display:flex;align-items:center;gap:6px;margin:0;')    +getStatusPill(r.status,r._offerCount||0)  +'</div>';
+  var body='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">'+_rideMetaChips(r)+getStatusPill(r.status,r._offerCount||0)+'</div>';
 
   
   // Helper: one segment row (dot + line/no-line + content)
