@@ -4971,7 +4971,12 @@ function _rideMetaChips(r){
   if(r.passengers) chips.push('<span style="'+soft+'">'+ico('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>')+r.passengers+' passager'+(r.passengers>1?'s':'')+'</span>');
   if(r.vehicle_type){ var vl={lowcost:'Low-cost',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'}[r.vehicle_type]||r.vehicle_type;
     chips.push('<span style="'+soft+'">'+ico('<path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>')+vl+'</span>'); }
-  return chips.length?'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">'+chips.join('')+'</div>':'';
+  if(!chips.length) return '';
+  var first=r.ride_date?chips.shift():'';
+  return '<div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;">'
+    +(first?'<div>'+first+'</div>':'')
+    +(chips.length?'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">'+chips.join('')+'</div>':'')
+    +'</div>';
 }
 function _openRideDetailImpl(el){
   var r;
@@ -5001,7 +5006,7 @@ function _openRideDetailImpl(el){
   if(r.passengers) metaParts.push(r.passengers+' pax');
   if(r.vehicle_type) metaParts.push(r.vehicle_type);
   var metaLine=metaParts.length?'<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;font-size:12px;color:var(--ink3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>'+metaParts.join(' &middot; ')+'</div>':'';
-  var _stEl=document.getElementById('detail-status'); if(_stEl) _stEl.innerHTML=getStatusPill(r.status,r._offerCount||0);
+  var _stEl=document.getElementById('detail-status'); if(_stEl) _stEl.innerHTML=_statusBadge(r.status,r._offerCount||0);
   var body=_rideMetaChips(r);
 
   
@@ -9615,6 +9620,22 @@ function parseMixedNotes(notes){
   }).filter(Boolean);
 }
 
+// Prominent status badge for the ride detail title bar
+function _statusBadge(status, offerCount){
+  var I=function(d){ return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>'; };
+  var m={
+    waiting:{bg:'#FFF1CC',fg:'#7A4F00',bd:'#F0D27A',ic:I('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),tx:t('waiting')},
+    offers:{bg:'#E2EDFB',fg:'#1E4D7B',bd:'#B9D2F1',ic:I('<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>'),tx:(offerCount>0?offerCount+' ':'')+t('offers_pill')},
+    pending_payment:{bg:'#E2EDFB',fg:'#1E4D7B',bd:'#B9D2F1',ic:I('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>'),tx:'Paiement en cours'},
+    confirmed:{bg:'#1B5E3B',fg:'#FFFFFF',bd:'#1B5E3B',ic:I('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),tx:t('confirmed')},
+    active:{bg:'#27AE60',fg:'#FFFFFF',bd:'#27AE60',ic:'<span class="live-dot" style="background:#fff;"></span>',tx:t('active')},
+    done:{bg:'#3F4A44',fg:'#FFFFFF',bd:'#3F4A44',ic:I('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),tx:t('done')},
+    cancelled:{bg:'#FDE7E4',fg:'#B3261E',bd:'#F5C2BC',ic:I('<path d="M6 6l12 12M18 6L6 18"/>'),tx:t('cancelled')},
+    personal:{bg:'#EDE4FA',fg:'#5B3FA0',bd:'#D6C6F3',ic:I('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>'),tx:'Personnelle'}
+  }[status];
+  if(!m) return getStatusPill(status, offerCount);
+  return '<span style="display:inline-flex;align-items:center;gap:6px;background:'+m.bg+';color:'+m.fg+';border:1px solid '+m.bd+';border-radius:999px;padding:6px 12px 6px 10px;font-size:12.5px;font-weight:700;letter-spacing:.01em;white-space:nowrap;">'+m.ic+m.tx+'</span>';
+}
 function getStatusPill(status, offerCount){
   var map = {
     waiting: '<span class="pill waiting"><span class="pill-dot"></span>'+t('waiting')+'</span>',
