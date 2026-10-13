@@ -5221,7 +5221,9 @@ function _openRideDetailImpl(el){
   })();
 
   // ── Client contact info for driver (confirmed ride) — name only, no phone ──
-  if(!isClient && (r.status==='confirmed'||r.status==='active') && r.client_id && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
+  var _isSubPoster = !!(r.is_subcontract && currentUser && r.client_id===currentUser.id);
+  var _isSubTaker  = !!(r.is_subcontract && currentUser && r.client_id!==currentUser.id);
+  if(!isClient && ((r.status==='confirmed'||r.status==='active') || (_isSubPoster && (r.status==='waiting'||r.status==='offers'))) && r.client_id && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     var _drvBody=document.getElementById('detail-body');
     if(_drvBody){
       _drvBody.insertAdjacentHTML('beforeend',
@@ -5248,7 +5250,7 @@ function _openRideDetailImpl(el){
         var paxMatch = notesRaw.match(/\|pax:([^|]+)/);
         var noteDrvMatch = notesRaw.match(/\|note_drv:([^|]+)/);
         var telMatch = notesRaw.match(/\|tel:([^|]+)/);
-        var cName = paxMatch ? paxMatch[1].trim() : (((cp.first_name||'')+' '+(cp.last_name||'')).trim() || '—');
+        var cName = paxMatch ? paxMatch[1].trim() : (_isSubPoster ? '—' : (((cp.first_name||'')+' '+(cp.last_name||'')).trim() || '—'));
         var noteDriver = noteDrvMatch ? noteDrvMatch[1].trim() : '';
         var cPhone = telMatch ? telMatch[1].trim() : (cp.phone||'');
 
@@ -5263,8 +5265,11 @@ function _openRideDetailImpl(el){
         var offerNote = (notesRaw.match(/\|offer_note:([^|]+)/)||[])[1]||'';
         var drvNoteId = 'drv-note-card-'+r.id;
 
+        var _editIco='<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/><path d="M10 4l2 2"/></svg>';
         var contactBlock = '<div style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
-          +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Informations du passager</div>'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Informations du passager</div>'
+            +(_isSubPoster && !(r.status==='active'||r.status==='done'||r.pickup_at)?'<button class="sub-pax-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;">'+_editIco+(paxMatch||telMatch?' Modifier':' Ajouter')+'</button>':'')
+          +'</div>'
           +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+cName+'</div>'
           +(cPhone?'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:'+(noteDriver?'6px':'2px')+';"><a href="tel:'+cPhone+'" style="color:var(--blue);text-decoration:none;">'+cPhone+'</a></div>':'')
           +((notesRaw.match(/\|pemail:([^|]+)/)||[])[1]?'<div style="font-size:12.5px;margin-bottom:2px;"><a href="mailto:'+(notesRaw.match(/\|pemail:([^|]+)/)||[])[1].trim()+'" style="color:var(--blue);text-decoration:none;">'+(notesRaw.match(/\|pemail:([^|]+)/)||[])[1].trim()+'</a></div>':'')
@@ -5274,7 +5279,7 @@ function _openRideDetailImpl(el){
         // Note au client card (editable by driver)
         var noteCard = '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
           +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
-            +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Note au client</div>'
+            +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">'+(r.is_subcontract?'Note du sous-traitant':'Note au client')+'</div>'
             +'<button class="drv-note-btn" data-rid="'+r.id+'" data-note="'+offerNote.replace(/"/g,'&quot;')+'" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;font-family:\'DM Sans\',sans-serif;">'
               +'<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/><path d="M10 4l2 2"/></svg>'
               +(offerNote ? ' Modifier' : ' Ajouter')
@@ -5289,11 +5294,19 @@ function _openRideDetailImpl(el){
         if(_phPax){ _phPax.outerHTML = contactBlock; } else { bodyEl3.insertAdjacentHTML('beforeend', contactBlock); }
         if(r.status==='active'||r.status==='done'||r.pickup_at){
           // Ride in progress: note can no longer be added/edited (read-only if one exists)
-          noteCard = offerNote ? '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Note au client</div><div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+offerNote+'</div></div>' : '';
+          noteCard = offerNote ? '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">'+(r.is_subcontract?'Note du sous-traitant':'Note au client')+'</div><div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+offerNote+'</div></div>' : '';
         }
-        if(_phNote){ _phNote.outerHTML = noteCard; } else { bodyEl3.insertAdjacentHTML('beforeend', noteCard); }
+        if(_isSubPoster){
+          // The posting fleet reads the subcontractor's note (written by the fleet who accepted); no note before acceptance
+          noteCard = (r.status==='waiting'||r.status==='offers') ? ''
+            : '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Note du sous-traitant</div>'
+              +(offerNote?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+offerNote+'</div>':'<div style="font-size:12px;color:var(--ink4);">Aucune note</div>')+'</div>';
+        }
+        if(_phNote){ _phNote.outerHTML = noteCard; } else if(noteCard){ bodyEl3.insertAdjacentHTML('beforeend', noteCard); }
         // Attach event via JS (safe for all characters including apostrophes)
         setTimeout(function(){
+          var pbtn = bodyEl3.querySelector('.sub-pax-btn');
+          if(pbtn) pbtn.addEventListener('click', function(){ openPaxEdit(r.id, paxMatch?paxMatch[1].trim():'', telMatch?telMatch[1].trim():''); });
           var btn = bodyEl3.querySelector('.drv-note-btn');
           if(btn) btn.addEventListener('click', function(){
             openDriverNoteEdit(this.dataset.rid, this.dataset.note);
@@ -8375,9 +8388,10 @@ function _paxModalHtml(title, fields, saveType, rideId){
 window.openDriverNoteEdit = function(rideId, currentNote){
   var existing = document.getElementById('m-pax-edit'); if(existing) existing.remove();
   var safeNote = (currentNote||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  var fields = '<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Note au client</label>'
+  var _noteLbl = (window._lastDetailRide && window._lastDetailRide.is_subcontract) ? 'Note du sous-traitant' : 'Note au client';
+  var fields = '<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">'+_noteLbl+'</label>'
     +'<textarea id="drv-note-edit" rows="3" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;resize:none;" placeholder="Ex: Je serai en avance, véhicule noir garé devant l\'entrée">'+safeNote+'</textarea></div>';
-  document.body.insertAdjacentHTML('beforeend', _paxModalHtml('Note au client', fields, 'drv-note', rideId));
+  document.body.insertAdjacentHTML('beforeend', _paxModalHtml(_noteLbl, fields, 'drv-note', rideId));
   setTimeout(function(){
     var btn = document.getElementById('btn-pax-save');
     if(btn) btn.addEventListener('click', function(){ saveDriverNote(this.dataset.rid); });
