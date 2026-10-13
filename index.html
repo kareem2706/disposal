@@ -8214,9 +8214,13 @@ window._editPersonalFromDetail=function(){
 
 window.deletePersonalMission=function(id){
   _fleetConfirm('Supprimer cette mission ?','La mission personnelle sera d\u00e9finitivement supprim\u00e9e.',async function(){
-    // Use update to cancelled (DELETE may be blocked by RLS)
-    var res=await sb.from('rides').update({status:'cancelled'}).eq('id',id);
-    if(res.error)console.error('delete personal mission error:',res.error);
+    // Permanent delete (personal missions only)
+    var res=await sb.from('rides').delete().eq('id',id).eq('status','personal').select('id');
+    if(res.error||!res.data||!res.data.length){
+      console.error('delete personal mission error:',res.error);
+      showToast('Suppression impossible'+(res.error?' : '+res.error.message:' (droits insuffisants)'));
+      return;
+    }
     closeModal('m-personal-mission');
     showToast('Mission supprim\u00e9e');
     _dCalCache={};_dCalRides=[];
