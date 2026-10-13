@@ -5467,7 +5467,14 @@ function _openRideDetailImpl(el){
     var isExtSub=(r.is_subcontract&&currentUser&&r.client_id!==currentUser.id);
     var hasMyOffer=_myOffers&&_myOffers[rId];
 
-    if(r.status==='waiting'){
+    if(r.status==='personal'){
+      // Personal mission: edit / delete from the ⋮ menu
+      var _pid=String(rId).replace(/'/g,'');
+      ft=_ftMenu(
+        '<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');closeModal(\'m-ride-detail\');_editPersonalFromDetail()"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2l3 3-8 8H3v-3L11 2z"/></svg>Modifier la mission</button>'
+       +'<button class="ft-menu-item" style="color:var(--red);" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');closeModal(\'m-ride-detail\');deletePersonalMission(\''+_pid+'\')"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="var(--red)" stroke-width="1.6" stroke-linecap="round"><path d="M3 4h10M5 4V3h6v1M6 7v5M10 7v5M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4"/></svg>Supprimer la mission</button>'
+      )+'<span style="flex:1;"></span>'+closeBtn;
+    } else if(r.status==='waiting'){
       if(isOwnSub){
         ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Annuler la sous-traitance</button>'+closeBtn;
       } else if(isExtSub){
