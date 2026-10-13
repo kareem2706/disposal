@@ -5050,7 +5050,7 @@ function _openRideDetailImpl(el){
   if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){
     body+='<div>'
       +'<div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div>'
-      +'<div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div>'
+      +'<div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">'+(r.status==='personal'?'Note':'Note du client')+'\u00a0: </span>'+cleanNotes+'</div>'
       +'</div>';
   }
 
@@ -5106,21 +5106,50 @@ function _openRideDetailImpl(el){
     });
   }
 
-  // Static map with the real road route (Directions API overview polyline); keeps the straight line if unavailable
+  // Static map with the real road route; keeps the straight line if no routing service answers
+  function _encPolyline(pts){
+    var out='', pl=0, pg=0;
+    var enc=function(v){ v=v<0?~(v<<1):(v<<1); var r=''; while(v>=0x20){ r+=String.fromCharCode((0x20|(v&0x1f))+63); v>>=5; } return r+String.fromCharCode(v+63); };
+    pts.forEach(function(p){ var la=Math.round(p.lat*1e5), lg=Math.round(p.lng*1e5); out+=enc(la-pl)+enc(lg-pg); pl=la; pg=lg; });
+    return out;
+  }
   function _staticRouteMap(img, baseSrc, points){
-    try{
-      if(!window.google||!google.maps||!google.maps.DirectionsService) return;
-      img.dataset.routeKey=baseSrc;
-      var wps=points.slice(1,-1).slice(0,23).map(function(p){ return {location:p, stopover:true}; });
-      new google.maps.DirectionsService().route({ origin:points[0], destination:points[points.length-1], waypoints:wps, travelMode:'DRIVING' },function(res,st){
-        if(st!=='OK'||!res.routes||!res.routes[0]) return;
-        var poly=res.routes[0].overview_polyline;
-        if(poly && typeof poly!=='string') poly=poly.points||'';
-        if(!poly) return;
-        var routed=baseSrc.replace(/path=[^&]*/, 'path='+encodeURIComponent('color:0x1B5E3Bff|weight:4|enc:'+poly));
-        if(routed.length<16000 && img.dataset.routeKey===baseSrc) img.src=routed;
-      });
-    }catch(e){}
+    if(!window.google||!google.maps) return;
+    img.dataset.routeKey=baseSrc;
+    var apply=function(poly, how){
+      if(!poly) return;
+      var routed=baseSrc.replace(/path=[^&]*/, 'path='+encodeURIComponent('color:0x1B5E3Bff|weight:4|enc:'+poly));
+      if(routed.length<16000 && img.dataset.routeKey===baseSrc){ img.src=routed; console.log('[map] itinéraire routier affiché ('+how+')'); }
+    };
+    // 1) Routes API (new) — Maps JS "routes" library
+    var viaRoutes=async function(){
+      try{
+        var lib=await google.maps.importLibrary('routes');
+        if(!lib||!lib.Route||!lib.Route.computeRoutes) throw new Error('Route.computeRoutes indisponible');
+        var res=await lib.Route.computeRoutes({ origin:points[0], destination:points[points.length-1],
+          intermediates:points.slice(1,-1).slice(0,23).map(function(p){ return {location:p}; }), travelMode:'DRIVING', fields:['path'] });
+        var rt=res&&res.routes&&res.routes[0];
+        if(!rt||!rt.path||!rt.path.length) throw new Error('aucun itinéraire');
+        var pts=rt.path.map(function(ll){ return { lat:typeof ll.lat==='function'?ll.lat():ll.lat, lng:typeof ll.lng==='function'?ll.lng():ll.lng }; });
+        var step=Math.max(1,Math.ceil(pts.length/400)), simp=pts.filter(function(_,i){ return i%step===0; });
+        if(simp[simp.length-1]!==pts[pts.length-1]) simp.push(pts[pts.length-1]);
+        apply(_encPolyline(simp),'Routes API');
+        return true;
+      }catch(e){ console.warn('[map] Routes API indisponible :', e&&e.message||e); return false; }
+    };
+    // 2) Directions API (legacy) as a fallback
+    var viaDirections=function(){
+      try{
+        if(!google.maps.DirectionsService) return;
+        new google.maps.DirectionsService().route({ origin:points[0], destination:points[points.length-1],
+          waypoints:points.slice(1,-1).slice(0,23).map(function(p){ return {location:p, stopover:true}; }), travelMode:'DRIVING' },function(res,st){
+          if(st!=='OK'||!res.routes||!res.routes[0]){ console.warn('[map] Directions API indisponible :', st, '— activez « Routes API » ou « Directions API » pour la clé Google'); return; }
+          var poly=res.routes[0].overview_polyline; if(poly&&typeof poly!=='string') poly=poly.points||'';
+          apply(poly,'Directions API');
+        });
+      }catch(e){ console.warn('[map] Directions API :', e&&e.message||e); }
+    };
+    viaRoutes().then(function(ok){ if(!ok) viaDirections(); });
   }
 
   // ── Google Static Maps — hidden for confirmed client rides ──
