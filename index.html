@@ -2103,7 +2103,7 @@ body{background:var(--bg);}
     <div class="modal-hd"><span class="modal-title">Ajouter un v&eacute;hicule</span><button class="close-btn" onclick="closeModal('m-vehicle')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body" style="padding:20px 22px;">
       <div class="form-grid"><div class="input-group"><label>Marque <span style="color:var(--red)">*</span></label><select id="veh-brand" onchange="populateVehModels()"><option value="">-- Choisir --</option></select></div><div class="input-group"><label>Mod&egrave;le <span style="color:var(--red)">*</span></label><select id="veh-model"><option value="">-- Choisir une marque --</option></select></div></div>
-      <div class="form-grid"><div class="input-group"><label>Ann&eacute;e</label><input id="veh-year" type="number" min="2000" max="2030" placeholder="2023"></div><div class="input-group"><label>Couleur</label><input id="veh-color" placeholder="Noir"></div></div>
+      <div class="form-grid"><div class="input-group"><label>Ann&eacute;e <span style="color:var(--red)">*</span></label><input id="veh-year" type="number" min="2000" max="2035" placeholder="2023"><div style="font-size:11px;color:var(--ink3);margin-top:4px;">Selon la l&eacute;gislation, le v&eacute;hicule doit avoir <b>7 ans maximum</b>.</div></div><div class="input-group"><label>Couleur</label><input id="veh-color" placeholder="Noir"></div></div>
       <div class="form-grid"><div class="input-group"><label>Gamme <span style="color:var(--red)">*</span></label><select id="veh-class" onchange="_applyVehSeatsRule(true)"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div><div class="input-group"><label>Plaque</label><input id="veh-plate" placeholder="T-ABC-123"></div></div>
       <div class="form-grid"><div class="input-group"><label>Places assises <span style="color:var(--red)">*</span></label><input id="veh-seats" type="number" min="1" step="1" inputmode="numeric" placeholder="ex. 3"></div><div></div></div>
       <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
@@ -2117,11 +2117,12 @@ body{background:var(--bg);}
         </div>
       </div>
       <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
-        <div style="font-size:12px;font-weight:600;margin-bottom:8px;">Documents v&eacute;hicule (optionnel)</div>
-        <div class="input-group"><label>Carte grise</label><input type="file" id="veh-doc-cg" accept=".pdf,application/pdf"></div>
-        <div class="input-group"><label>Assurance</label><input type="file" id="veh-doc-assurance" accept=".pdf,application/pdf"></div>
-        <div class="input-group"><label>Contr&ocirc;le technique</label><input type="file" id="veh-doc-ct" accept=".pdf,application/pdf"></div>
-        <div class="input-group"><label>Vignette d&rsquo;identification</label><input type="file" id="veh-doc-vignette" accept=".pdf,application/pdf"></div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:4px;">Documents v&eacute;hicule</div>
+        <div style="font-size:11.5px;color:var(--ink3);margin-bottom:10px;">Documents obligatoires, avec leur date de validit&eacute;. Un e-mail vous pr&eacute;viendra 1 mois avant l&rsquo;expiration.</div>
+        <div class="input-group doc-row" data-doc-input="veh-doc-cg" style="padding:10px 12px;background:var(--sand);border-radius:var(--r);margin-bottom:8px;"><label style="font-weight:600;">Certificat d&rsquo;immatriculation (carte grise) <span style="color:var(--red)">*</span></label><div class="doc-file-wrap"><input type="file" id="veh-doc-cg" accept=".pdf,application/pdf,image/*"></div><div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:11.5px;color:var(--ink3);white-space:nowrap;">Valide jusqu&rsquo;au <span style="color:var(--red)">*</span></span><input type="date" id="veh-doc-cg-exp" style="flex:1;"></div></div>
+        <div class="input-group doc-row" data-doc-input="veh-doc-assurance" style="padding:10px 12px;background:var(--sand);border-radius:var(--r);margin-bottom:8px;"><label style="font-weight:600;">Certificat d&rsquo;assurance <span style="color:var(--red)">*</span></label><div class="doc-file-wrap"><input type="file" id="veh-doc-assurance" accept=".pdf,application/pdf,image/*"></div><div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:11.5px;color:var(--ink3);white-space:nowrap;">Valide jusqu&rsquo;au <span style="color:var(--red)">*</span></span><input type="date" id="veh-doc-assurance-exp" style="flex:1;"></div></div>
+        <div class="input-group doc-row" data-doc-input="veh-doc-ct" style="padding:10px 12px;background:var(--sand);border-radius:var(--r);margin-bottom:8px;"><label style="font-weight:600;">Contr&ocirc;le technique <span style="color:var(--red)">*</span></label><div class="doc-file-wrap"><input type="file" id="veh-doc-ct" accept=".pdf,application/pdf,image/*"></div><div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:11.5px;color:var(--ink3);white-space:nowrap;">Valide jusqu&rsquo;au <span style="color:var(--red)">*</span></span><input type="date" id="veh-doc-ct-exp" style="flex:1;"></div></div>
+        <div class="input-group doc-row" data-doc-input="veh-doc-vignette" style="padding:10px 12px;background:var(--sand);border-radius:var(--r);margin-bottom:8px;"><label style="font-weight:600;">Vignette d&rsquo;identification du v&eacute;hicule <span style="color:var(--red)">*</span></label><div class="doc-file-wrap"><input type="file" id="veh-doc-vignette" accept=".pdf,application/pdf,image/*"></div><div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:11.5px;color:var(--ink3);white-space:nowrap;">Valide jusqu&rsquo;au <span style="color:var(--red)">*</span></span><input type="date" id="veh-doc-vignette-exp" style="flex:1;"></div></div>
       </div>
       <div id="veh-err" class="auth-error"></div>
     </div>
@@ -2138,9 +2139,12 @@ body{background:var(--bg);}
       <div class="form-grid"><div class="input-group"><label>Pr&eacute;nom <span style="color:var(--red)">*</span></label><input id="drv-fname" placeholder="Jean"></div><div class="input-group"><label>Nom <span style="color:var(--red)">*</span></label><input id="drv-lname" placeholder="Dupont"></div></div>
       <div class="form-grid"><div class="input-group"><label>T&eacute;l&eacute;phone</label><input id="drv-phone" type="tel" placeholder="+32 470 12 34 56"></div><div class="input-group"><label>Email</label><input id="drv-email" type="email" placeholder="jean@example.com"></div></div>
       <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
-        <div style="font-size:12px;font-weight:600;margin-bottom:8px;">Documents chauffeur (optionnel)</div>
-        <div class="input-group"><label>Permis de conduire</label><input type="file" id="drv-doc-permis" accept=".pdf,application/pdf"></div>
-        <div class="input-group"><label>Carte VTC</label><input type="file" id="drv-doc-vtc" accept=".pdf,application/pdf"></div>
+        <div class="input-group"><label>Licence <span style="color:var(--red)">*</span></label><select id="drv-license"><option value="">-- Choisir --</option><option value="bruxelles">Licence bruxelloise</option><option value="wallonie">Licence wallonne</option><option value="flandre">Licence flamande</option></select></div>
+        <div style="font-size:12px;font-weight:600;margin:6px 0 4px;">Documents chauffeur</div>
+        <div style="font-size:11.5px;color:var(--ink3);margin-bottom:10px;">Documents obligatoires, avec leur date de validit&eacute;. Un e-mail vous pr&eacute;viendra 1 mois avant l&rsquo;expiration.</div>
+        <div class="input-group doc-row" data-doc-input="drv-doc-permis" style="padding:10px 12px;background:var(--sand);border-radius:var(--r);margin-bottom:8px;"><label style="font-weight:600;">Permis de conduire <span style="color:var(--red)">*</span></label><div class="doc-file-wrap"><input type="file" id="drv-doc-permis" accept=".pdf,application/pdf,image/*"></div><div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:11.5px;color:var(--ink3);white-space:nowrap;">Valide jusqu&rsquo;au <span style="color:var(--red)">*</span></span><input type="date" id="drv-doc-permis-exp" style="flex:1;"></div></div>
+        <div class="input-group doc-row" data-doc-input="drv-doc-id" style="padding:10px 12px;background:var(--sand);border-radius:var(--r);margin-bottom:8px;"><label style="font-weight:600;">Carte d&rsquo;identit&eacute; <span style="color:var(--red)">*</span></label><div class="doc-file-wrap"><input type="file" id="drv-doc-id" accept=".pdf,application/pdf,image/*"></div><div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:11.5px;color:var(--ink3);white-space:nowrap;">Valide jusqu&rsquo;au <span style="color:var(--red)">*</span></span><input type="date" id="drv-doc-id-exp" style="flex:1;"></div></div>
+        <div class="input-group doc-row" data-doc-input="drv-doc-capa" style="padding:10px 12px;background:var(--sand);border-radius:var(--r);margin-bottom:8px;"><label style="font-weight:600;">Certificat de capacit&eacute; <span style="color:var(--red)">*</span></label><div class="doc-file-wrap"><input type="file" id="drv-doc-capa" accept=".pdf,application/pdf,image/*"></div><div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:11.5px;color:var(--ink3);white-space:nowrap;">Valide jusqu&rsquo;au <span style="color:var(--red)">*</span></span><input type="date" id="drv-doc-capa-exp" style="flex:1;"></div></div>
       </div>
       <div id="drv-err" class="auth-error"></div>
     </div>
@@ -8949,9 +8953,7 @@ async function loadFleetVehicles(){
     var safeId=v.id.replace(/'/g,'');
     var docs=vehDocsMap[v.id]||[];
     var docsHtml=docs.length>0
-      ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+docs.map(function(d){
-        return '<a href="'+d.file_url+'" target="_blank" style="font-size:10px;padding:2px 6px;background:var(--green-bg);color:var(--green);border-radius:4px;text-decoration:none;">'+(vehDocLabels[d.doc_type]||d.doc_type)+'</a>';
-      }).join('')+'</div>'
+      ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+docs.map(_docBadge).join('')+'</div>'
       :'';
     var amenIcons={
       electric:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
@@ -9008,6 +9010,79 @@ window._applyVehSeatsRule=function(reset){
   }
 };
 
+// ── Fleet documents: required files + validity date ──
+var _VEH_DOCS=[{id:'veh-doc-cg',type:'carte_grise',label:"Certificat d'immatriculation"},{id:'veh-doc-assurance',type:'assurance',label:"Certificat d'assurance"},{id:'veh-doc-ct',type:'controle_technique',label:'Contrôle technique'},{id:'veh-doc-vignette',type:'vignette_identification',label:"Vignette d'identification"}];
+var _DRV_DOCS=[{id:'drv-doc-permis',type:'permis_conduire',label:'Permis de conduire'},{id:'drv-doc-id',type:'carte_identite',label:"Carte d'identité"},{id:'drv-doc-capa',type:'certificat_capacite',label:'Certificat de capacité'}];
+var _DOC_LABELS={carte_grise:'Carte grise',assurance:'Assurance',controle_technique:'CT',vignette_identification:'Vignette',permis_conduire:'Permis',carte_identite:"Carte d'identité",certificat_capacite:'Certificat de capacité',carte_vtc:'Carte VTC'};
+var _VEH_MAX_AGE=7;
+function _docToday(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function _docFmt(iso){ if(!iso) return ''; var p=String(iso).slice(0,10).split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function _docFormReset(defs){
+  defs.forEach(function(d){
+    var fi=document.getElementById(d.id), ex=document.getElementById(d.id+'-exp');
+    if(fi){ fi.value=''; fi.style.display=''; fi.disabled=false; var row=fi.closest('.doc-row'); if(row){ var t=row.querySelector('.doc-exists-tag'); if(t) t.remove(); } }
+    if(ex){ ex.value=''; ex.disabled=false; ex.min=_docToday(); }
+  });
+}
+function _docFormFill(defs, existing){
+  _docFormReset(defs);
+  defs.forEach(function(d){
+    var doc=existing[d.type], fi=document.getElementById(d.id), ex=document.getElementById(d.id+'-exp');
+    if(!doc||!fi) return;
+    fi.style.display='none';
+    var wrap=fi.closest('.doc-file-wrap')||fi.parentElement;
+    var tag=document.createElement('div'); tag.className='doc-exists-tag';
+    tag.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11.5px;';
+    tag.innerHTML='<a href="'+doc.file_url+'" target="_blank" style="padding:2px 8px;background:var(--green-bg);color:var(--green);border-radius:4px;text-decoration:none;font-weight:600;">✓ Document ajouté</a>'
+      +'<button type="button" style="background:none;border:none;color:var(--blue);font-weight:600;font-size:11.5px;cursor:pointer;padding:0;">Remplacer</button>';
+    tag.querySelector('button').onclick=function(){ fi.style.display=''; fi.click(); tag.remove(); };
+    wrap.appendChild(tag);
+    if(ex) ex.value=doc.expires_at?String(doc.expires_at).slice(0,10):'';
+  });
+}
+function _docFormValidate(defs, existing){
+  var today=_docToday();
+  for(var i=0;i<defs.length;i++){
+    var d=defs[i], fi=document.getElementById(d.id), ex=document.getElementById(d.id+'-exp');
+    var hasFile=fi&&fi.files&&fi.files.length>0, exp=ex?ex.value:'';
+    if(!hasFile && !existing[d.type]) return 'Document obligatoire : '+d.label;
+    if(!exp) return 'Date de validité obligatoire : '+d.label;
+    if(exp<=today) return d.label+' : document expiré — ajoutez un document en cours de validité';
+  }
+  return null;
+}
+async function _docFormSave(defs, existing, table, fk, fkVal, folder){
+  var errors=[];
+  for(var i=0;i<defs.length;i++){
+    var d=defs[i], fi=document.getElementById(d.id), ex=document.getElementById(d.id+'-exp');
+    var file=fi&&fi.files&&fi.files[0], exp=ex&&ex.value?ex.value:null, old=existing[d.type];
+    try{
+      if(file){
+        var url=await _uploadFleetFile(file, folder);
+        var r;
+        if(old) r=await sb.from(table).update({file_url:url,doc_name:file.name,expires_at:exp,reminder_sent_at:null}).eq('id',old.id);
+        else { var row={doc_type:d.type,doc_name:file.name,file_url:url,expires_at:exp}; row[fk]=fkVal; r=await sb.from(table).insert(row); }
+        if(r.error) throw r.error;
+      } else if(old && String(old.expires_at||'').slice(0,10)!==(exp||'')){
+        var u=await sb.from(table).update({expires_at:exp,reminder_sent_at:null}).eq('id',old.id);
+        if(u.error) throw u.error;
+      }
+    }catch(e){ console.error('[docs] '+d.type,e); errors.push(d.label+' : '+(e.message||e)); }
+  }
+  return errors;
+}
+// Badge for lists (fleet & admin): label + validity, amber < 30 days, red when expired
+function _docBadge(dc){
+  var lbl=_DOC_LABELS[dc.doc_type]||dc.doc_type, bg='var(--blue-bg)', col='var(--blue)', extra='';
+  if(dc.expires_at){
+    var days=Math.floor((new Date(String(dc.expires_at).slice(0,10)+'T23:59:59')-new Date())/86400000);
+    extra=' · '+(days<0?'expiré':'exp. '+_docFmt(dc.expires_at));
+    if(days<0){ bg='var(--red-bg)'; col='var(--red)'; } else if(days<=30){ bg='var(--amber-bg)'; col='var(--amber)'; }
+  }
+  return '<a href="'+dc.file_url+'" target="_blank" style="font-size:10px;padding:2px 7px;background:'+bg+';color:'+col+';border-radius:4px;text-decoration:none;font-weight:500;white-space:nowrap;">'+lbl+extra+'</a>';
+}
+var _LICENSE_LABELS={bruxelles:'Licence bruxelloise',wallonie:'Licence wallonne',flandre:'Licence flamande'};
+
 window.openVehicleModal=function(){
   window._editVehicleId=null;
   window._editVehicleDocsOnly=false;
@@ -9023,10 +9098,8 @@ window.openVehicleModal=function(){
   var cls=document.getElementById('veh-class');if(cls)cls.value='lowcost';
   var seatsEl=document.getElementById('veh-seats');if(seatsEl){seatsEl.disabled=false;seatsEl.value='';}
   _applyVehSeatsRule(true);
-  ['veh-doc-cg','veh-doc-assurance','veh-doc-ct','veh-doc-vignette'].forEach(function(id){
-    var e=document.getElementById(id);if(e){e.value='';e.style.display='';}
-    if(e){var wrap=e.closest('.input-group');if(wrap){var tag=wrap.querySelector('.doc-exists-tag');if(tag)tag.remove();}}
-  });
+  _docFormReset(_VEH_DOCS); window._vehExistingDocs={};
+  var vErr=document.getElementById('veh-err'); if(vErr) vErr.classList.remove('show');
   ['electric','hybrid','wifi','water','snacks'].forEach(function(a){var cb=document.getElementById('veh-amen-'+a);if(cb)cb.checked=false;});
   openModal('m-vehicle');
 };
@@ -9040,6 +9113,12 @@ window.saveVehicle=async function(){
   var vclass=document.getElementById('veh-class').value;
   var plate=(document.getElementById('veh-plate').value||'').trim();
   if(!brand||!model){showError(errEl,'Marque et mod\u00e8le sont requis');return;}
+  if(!window._editVehicleDocsOnly){
+    if(!year){showError(errEl,'Ann\u00e9e du v\u00e9hicule requise');return;}
+    if(new Date().getFullYear()-year>_VEH_MAX_AGE){showError(errEl,'Selon la l\u00e9gislation, le v\u00e9hicule doit avoir '+_VEH_MAX_AGE+' ans maximum ('+(new Date().getFullYear()-_VEH_MAX_AGE)+' ou plus r\u00e9cent).');return;}
+  }
+  var _vDocErr=_docFormValidate(_VEH_DOCS, window._vehExistingDocs||{});
+  if(_vDocErr){showError(errEl,_vDocErr);return;}
   var seatsInp=document.getElementById('veh-seats');
   var seatsLocked=!!(seatsInp&&seatsInp.disabled); // validated vehicle: seats not editable, keep stored value
   var seats=parseInt(seatsInp?seatsInp.value:'',10);
@@ -9066,20 +9145,8 @@ window.saveVehicle=async function(){
       if(error)throw error;
       vehId=veh.id;
     }
-    // Upload vehicle docs (non-blocking: vehicle is saved even if doc upload fails)
-    var docTypes=[{id:'veh-doc-cg',type:'carte_grise'},{id:'veh-doc-assurance',type:'assurance'},{id:'veh-doc-ct',type:'controle_technique'},{id:'veh-doc-vignette',type:'vignette_identification'}];
-    var docErrors=[];
-    for(var i=0;i<docTypes.length;i++){
-      var fi=document.getElementById(docTypes[i].id);
-      console.log('[saveVehicle] doc input',docTypes[i].id,'element:',!!fi,'files:',fi?fi.files.length:0,fi&&fi.files[0]?fi.files[0].name:'(none)');
-      if(fi&&fi.files&&fi.files.length>0){
-        try{
-          var url=await _uploadFleetFile(fi.files[0],'vehicles/'+vehId);
-          var insRes=await sb.from('vehicle_documents').insert({vehicle_id:vehId,doc_type:docTypes[i].type,doc_name:fi.files[0].name,file_url:url});
-          if(insRes.error){console.error('vehicle_documents insert error:',insRes.error);docErrors.push(docTypes[i].type+': '+insRes.error.message);}
-        }catch(de){console.error('vehicle doc upload error:',de);docErrors.push(docTypes[i].type+': '+(de.message||de));}
-      }
-    }
+    // Upload vehicle docs (+ validity dates)
+    var docErrors=await _docFormSave(_VEH_DOCS, window._vehExistingDocs||{}, 'vehicle_documents', 'vehicle_id', vehId, 'vehicles/'+vehId);
     window._editVehicleId=null;
     closeModal('m-vehicle');
     await loadFleetVehicles();
@@ -9121,33 +9188,12 @@ window.editVehicle=async function(id, docsOnly){
     noticeEl.style.display = isValidated ? 'block' : 'none';
   }
   // Docs
-  var vehDocMap={carte_grise:'veh-doc-cg',assurance:'veh-doc-assurance',controle_technique:'veh-doc-ct',vignette_identification:'veh-doc-vignette'};
   var {data:existDocs}=await sb.from('vehicle_documents').select('*').eq('vehicle_id',id);
   var uploadedTypes={};
   (existDocs||[]).forEach(function(d){uploadedTypes[d.doc_type]=d;});
-  Object.keys(vehDocMap).forEach(function(dtype){
-    var inputId=vehDocMap[dtype];
-    var fi=document.getElementById(inputId);
-    if(!fi)return;
-    var wrap=fi.closest('.input-group');
-    if(!wrap)return;
-    if(uploadedTypes[dtype]){
-      fi.style.display='none';
-      var existTag=wrap.querySelector('.doc-exists-tag');
-      if(existTag)existTag.remove();
-      var tag=document.createElement('a');
-      tag.className='doc-exists-tag';
-      tag.href=uploadedTypes[dtype].file_url;
-      tag.target='_blank';
-      tag.style.cssText='display:inline-block;font-size:10px;padding:2px 8px;background:var(--green-bg);color:var(--green);border-radius:4px;text-decoration:none;font-weight:500;';
-      tag.textContent='\u2713 D\u00e9j\u00e0 ajout\u00e9';
-      wrap.appendChild(tag);
-    } else {
-      fi.style.display='';fi.value='';fi.disabled=false;
-      var existTag=wrap.querySelector('.doc-exists-tag');
-      if(existTag)existTag.remove();
-    }
-  });
+  window._vehExistingDocs=uploadedTypes;
+  _docFormFill(_VEH_DOCS, uploadedTypes);
+  var vErr=document.getElementById('veh-err'); if(vErr) vErr.classList.remove('show');
   window._editVehicleId=id;
   window._editVehicleDocsOnly=isValidated;
   var titleEl=document.querySelector('#m-vehicle .modal-title');
@@ -9273,9 +9319,7 @@ async function loadFleetDriversList(){
     var safeId=d.id.replace(/'/g,'');
     var docs=drvDocsMap[d.id]||[];
     var docsHtml=docs.length>0
-      ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+docs.map(function(dc){
-        return '<a href="'+dc.file_url+'" target="_blank" style="font-size:10px;padding:2px 6px;background:var(--blue-bg);color:var(--blue);border-radius:4px;text-decoration:none;">'+(drvDocLabels[dc.doc_type]||dc.doc_type)+'</a>';
-      }).join('')+'</div>'
+      ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+docs.map(_docBadge).join('')+'</div>'
       :'';
     var dStatus=d.status||'pending';
     var dStatusBadge=dStatus==='validated'
@@ -9285,7 +9329,7 @@ async function loadFleetDriversList(){
         :'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-weight:600;margin-left:8px;">En attente</span>';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
       +'<div style="flex:1;min-width:0;"><div style="font-weight:500;font-size:13px;display:flex;align-items:center;">'+d.first_name+' '+d.last_name+dStatusBadge+'</div>'
-      +'<div style="font-size:11px;color:var(--ink4);">'+(d.phone||'')+(d.email?' \u00b7 '+d.email:'')+'</div>'
+      +'<div style="font-size:11px;color:var(--ink4);">'+[d.phone||'',d.email||'',_LICENSE_LABELS[d.license_region]||''].filter(Boolean).join(' \u00b7 ')+'</div>'
       +docsHtml+'</div>'
       +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
       +'<button style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:2px;" title="Modifier" onclick="editDriver(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
@@ -9299,10 +9343,8 @@ window.openDriverModal=function(){
   var titleEl=document.querySelector('#m-driver .modal-title');if(titleEl)titleEl.textContent='Ajouter un chauffeur';
   ['drv-fname','drv-lname','drv-phone','drv-email'].forEach(function(id){var e=document.getElementById(id);if(e){e.value='';e.disabled=false;e.style.opacity='1';}});
   var notice=document.getElementById('drv-validated-notice');if(notice)notice.style.display='none';
-  ['drv-doc-permis','drv-doc-vtc'].forEach(function(id){
-    var e=document.getElementById(id);if(e){e.value='';e.style.display='';}
-    if(e){var wrap=e.closest('.input-group');if(wrap){var tag=wrap.querySelector('.doc-exists-tag');if(tag)tag.remove();}}
-  });
+  _docFormReset(_DRV_DOCS); window._drvExistingDocs={};
+  var lic=document.getElementById('drv-license'); if(lic) lic.value='';
   document.getElementById('drv-err').classList.remove('show');
   openModal('m-driver');
 };
@@ -9321,34 +9363,13 @@ window.editDriver=async function(id){
   // Show/hide validated notice
   var notice=document.getElementById('drv-validated-notice');
   if(notice) notice.style.display=isValidated?'block':'none';
+  var lic=document.getElementById('drv-license'); if(lic) lic.value=d.license_region||'';
   // Load existing docs
-  var drvDocMap={permis_conduire:'drv-doc-permis',carte_vtc:'drv-doc-vtc'};
   var {data:existDocs}=await sb.from('driver_documents').select('*').eq('driver_id',id);
   var uploadedTypes={};
   (existDocs||[]).forEach(function(dc){uploadedTypes[dc.doc_type]=dc;});
-  Object.keys(drvDocMap).forEach(function(dtype){
-    var inputId=drvDocMap[dtype];
-    var fi=document.getElementById(inputId);
-    if(!fi)return;
-    var wrap=fi.closest('.input-group');
-    if(!wrap)return;
-    if(uploadedTypes[dtype]){
-      fi.style.display='none';
-      var existTag=wrap.querySelector('.doc-exists-tag');
-      if(existTag)existTag.remove();
-      var tag=document.createElement('a');
-      tag.className='doc-exists-tag';
-      tag.href=uploadedTypes[dtype].file_url;
-      tag.target='_blank';
-      tag.style.cssText='display:inline-block;font-size:10px;padding:2px 8px;background:var(--green-bg);color:var(--green);border-radius:4px;text-decoration:none;font-weight:500;';
-      tag.textContent='\u2713 D\u00e9j\u00e0 ajout\u00e9';
-      wrap.appendChild(tag);
-    } else {
-      fi.style.display='';fi.value='';
-      var existTag=wrap.querySelector('.doc-exists-tag');
-      if(existTag)existTag.remove();
-    }
-  });
+  window._drvExistingDocs=uploadedTypes;
+  _docFormFill(_DRV_DOCS, uploadedTypes);
   document.getElementById('drv-err').classList.remove('show');
   openModal('m-driver');
 };
@@ -9360,29 +9381,21 @@ window.saveDriver=async function(){
   var phone=(document.getElementById('drv-phone').value||'').trim();
   var email=(document.getElementById('drv-email').value||'').trim();
   if(!fname||!lname){showError(errEl,'Pr\u00e9nom et nom sont requis');return;}
+  var license=(document.getElementById('drv-license')||{}).value||'';
+  if(!license){showError(errEl,'Indiquez la licence du chauffeur (bruxelloise, wallonne ou flamande)');return;}
+  var _dDocErr=_docFormValidate(_DRV_DOCS, window._drvExistingDocs||{});
+  if(_dDocErr){showError(errEl,_dDocErr);return;}
   try{
     var drvId=window._editDriverId;
     if(drvId){
-      var {error}=await sb.from('fleet_drivers').update({first_name:fname,last_name:lname,phone:phone||null,email:email||null}).eq('id',drvId);
+      var {error}=await sb.from('fleet_drivers').update({first_name:fname,last_name:lname,phone:phone||null,email:email||null,license_region:license}).eq('id',drvId);
       if(error)throw error;
     } else {
-      var {data:drv,error}=await sb.from('fleet_drivers').insert({fleet_id:currentUser.id,first_name:fname,last_name:lname,phone:phone||null,email:email||null}).select().single();
+      var {data:drv,error}=await sb.from('fleet_drivers').insert({fleet_id:currentUser.id,first_name:fname,last_name:lname,phone:phone||null,email:email||null,license_region:license}).select().single();
       if(error)throw error;
       drvId=drv.id;
     }
-    var docTypes=[{id:'drv-doc-permis',type:'permis_conduire'},{id:'drv-doc-vtc',type:'carte_vtc'}];
-    var docErrors=[];
-    for(var i=0;i<docTypes.length;i++){
-      var fi=document.getElementById(docTypes[i].id);
-      console.log('[saveDriver] doc input',docTypes[i].id,'element:',!!fi,'files:',fi?fi.files.length:0,fi&&fi.files[0]?fi.files[0].name:'(none)');
-      if(fi&&fi.files&&fi.files.length>0){
-        try{
-          var url=await _uploadFleetFile(fi.files[0],'drivers/'+drvId);
-          var insRes=await sb.from('driver_documents').insert({driver_id:drvId,doc_type:docTypes[i].type,doc_name:fi.files[0].name,file_url:url});
-          if(insRes.error){console.error('driver_documents insert error:',insRes.error);docErrors.push(docTypes[i].type+': '+insRes.error.message);}
-        }catch(de){console.error('driver doc upload error:',de);docErrors.push(docTypes[i].type+': '+(de.message||de));}
-      }
-    }
+    var docErrors=await _docFormSave(_DRV_DOCS, window._drvExistingDocs||{}, 'driver_documents', 'driver_id', drvId, 'drivers/'+drvId);
     window._editDriverId=null;
     closeModal('m-driver');
     await loadFleetDriversList();
@@ -9879,11 +9892,7 @@ window.showFleetDetail=async function(fleetId){
           var vDocs=vehDocMap[v.id]||[];
           var vDocLabels={carte_grise:'Carte grise',assurance:'Assurance',controle_technique:'CT',vignette_identification:'Vignette'};
           var vDocsHtml=vDocs.length>0
-            ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+vDocs.map(function(d){
-              return '<a href="'+d.file_url+'" target="_blank" style="font-size:10px;padding:2px 8px;background:var(--blue-bg);color:var(--blue);border-radius:4px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;">'
-                +'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 1h5l4 4v9a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z"/><path d="M9 1v4h4"/></svg>'
-                +(vDocLabels[d.doc_type]||d.doc_type)+'</a>';
-            }).join('')+'</div>'
+            ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+vDocs.map(_docBadge).join('')+'</div>'
             :'';
           return '<tr style="border-bottom:1px solid var(--sand2);">'
             +'<td style="padding:10px 14px;font-weight:500;">'+(v.brand||'')+' '+(v.model||'')+' '+(v.year||'')+vDocsHtml+'</td>'
@@ -9912,14 +9921,10 @@ window.showFleetDetail=async function(fleetId){
           var dDocs=drvDocMap[d.id]||[];
           var dDocLabels={permis_conduire:'Permis',carte_vtc:'Carte VTC'};
           var dDocsHtml=dDocs.length>0
-            ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+dDocs.map(function(doc){
-              return '<a href="'+doc.file_url+'" target="_blank" style="font-size:10px;padding:2px 8px;background:var(--blue-bg);color:var(--blue);border-radius:4px;text-decoration:none;display:inline-flex;align-items:center;gap:3px;">'
-                +'<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 1h5l4 4v9a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z"/><path d="M9 1v4h4"/></svg>'
-                +(dDocLabels[doc.doc_type]||doc.doc_type)+'</a>';
-            }).join('')+'</div>'
+            ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+dDocs.map(_docBadge).join('')+'</div>'
             :'';
           return '<tr style="border-bottom:1px solid var(--sand2);">'
-            +'<td style="padding:10px 14px;font-weight:500;">'+(d.first_name||'')+' '+(d.last_name||'')+dDocsHtml+'</td>'
+            +'<td style="padding:10px 14px;font-weight:500;">'+(d.first_name||'')+' '+(d.last_name||'')+(d.license_region?'<div style="font-size:11px;color:var(--ink3);font-weight:400;">'+(_LICENSE_LABELS[d.license_region]||d.license_region)+'</div>':'')+dDocsHtml+'</td>'
             +'<td style="padding:10px 14px;font-size:12px;">'+(d.phone||'\u2014')+'</td>'
             +'<td style="padding:10px 14px;font-size:12px;">'+(d.email||'\u2014')+'</td>'
             +'<td style="padding:10px 14px;">'+_adminStatusBadge(d.status)+'</td>'
