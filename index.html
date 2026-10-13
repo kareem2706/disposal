@@ -2223,6 +2223,16 @@ body{background:var(--bg);}
         </div>
         <div id="sub-mixed-segments"></div>
       </div>
+      <div style="margin-top:14px;padding:12px 14px;background:var(--sand);border-radius:var(--r);">
+        <div style="font-size:12px;font-weight:600;margin-bottom:2px;">Informations du client</div>
+        <div style="font-size:11.5px;color:var(--ink3);margin-bottom:10px;">Transmises uniquement au chauffeur qui accepte la course.</div>
+        <div class="form-grid">
+          <div class="input-group"><label>Nom du client</label><input id="sub-cli-name" placeholder="Marie Dupont" autocomplete="off"></div>
+          <div class="input-group"><label>T&eacute;l&eacute;phone</label><input id="sub-cli-tel" type="tel" placeholder="+32 470 12 34 56"></div>
+          <div class="input-group"><label>E-mail</label><input id="sub-cli-email" type="email" placeholder="client@exemple.com"></div>
+          <div class="input-group"><label>R&eacute;f&eacute;rence / n&deg; de vol</label><input id="sub-cli-ref" placeholder="SN 3712, dossier 2024-118…"></div>
+        </div>
+      </div>
       <div style="margin-top:14px;">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
           <div class="input-group" style="flex:1;margin:0;"><label>Prix (€ HTVA)</label><input id="sub-price" type="number" placeholder="110" oninput="updateSubPriceDisplay(this.value)"></div>
@@ -4888,7 +4898,7 @@ function _buildRideDetailBody(r, opts){
     body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+segRow('green',t('lbl_depart'),from,true)+segRow('red',t('lbl_arrivee'),to,false)+'<div id="'+idPrefix+'detail-route-info" style="padding:4px 0 4px 30px;display:none;"><div style="font-size:11.5px;color:var(--ink2);font-weight:500;" id="'+idPrefix+'detail-route-info-text"></div></div>'+'</div>';
   }
   var rawNotes=r.notes||'';
-  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|tel:[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
+  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
   if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div></div>';}
   var noteDrvMatch = rawNotes.match(/\|note_drv:([^|]+)/);
   if(noteDrvMatch){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">Note du client</div><div style="padding:12px;background:var(--blue-bg);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;">'+noteDrvMatch[1].trim()+'</div></div>';}
@@ -5064,7 +5074,7 @@ function _openRideDetailImpl(el){
   }
 
   var rawNotes=r.notes||'';
-  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|tel:[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
+  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
   if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){
     body+='<div>'
       +'<div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div>'
@@ -5253,6 +5263,8 @@ function _openRideDetailImpl(el){
           +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Informations du passager</div>'
           +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+cName+'</div>'
           +(cPhone?'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:'+(noteDriver?'6px':'2px')+';"><a href="tel:'+cPhone+'" style="color:var(--blue);text-decoration:none;">'+cPhone+'</a></div>':'')
+          +((notesRaw.match(/\|pemail:([^|]+)/)||[])[1]?'<div style="font-size:12.5px;margin-bottom:2px;"><a href="mailto:'+(notesRaw.match(/\|pemail:([^|]+)/)||[])[1].trim()+'" style="color:var(--blue);text-decoration:none;">'+(notesRaw.match(/\|pemail:([^|]+)/)||[])[1].trim()+'</a></div>':'')
+          +((notesRaw.match(/\|pref:([^|]+)/)||[])[1]?'<div style="font-size:12.5px;color:var(--ink2);margin-bottom:'+(noteDriver?'6px':'2px')+';"><span style="color:var(--ink3);">Réf. : </span><b>'+(notesRaw.match(/\|pref:([^|]+)/)||[])[1].trim()+'</b></div>':'')
           +(noteDriver?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;padding-top:4px;border-top:1px solid #d0e4f7;"><span style="font-style:normal;font-weight:600;color:var(--ink2);">Message du client\u00a0: </span>'+noteDriver+'</div>':'')
           +'</div>';
         // Note au client card (editable by driver)
@@ -5657,7 +5669,7 @@ async function _docRideDocument(rideId, mode){
   var paxN=(nR.match(/\|pax:([^|]+)/)||[])[1]||'', paxT=(nR.match(/\|tel:([^|]+)/)||[])[1]||'';
   var noteD=(nR.match(/\|note_drv:([^|]+)/)||[])[1]||'';
   var dur=(nR.match(/Durée:(\d+)/)||[])[1]||'';
-  var cln=nR.replace(/\|pax:[^|]*/g,'').replace(/\|tel:[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').trim();
+  var cln=nR.replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').trim();
   var code=r.booking_code||r.id.slice(0,8);
   var left, right, kind, boxTitle, boxBody;
 
@@ -5920,7 +5932,7 @@ async function _promoteNotesToDriver(rideId){
     if(notes.includes('|note_drv:')) return;
     // Extract clean base note (strip pax/tel/duration/mixte tags)
     var clean = notes
-      .replace(/\|pax:[^|]*/g,'').replace(/\|tel:[^|]*/g,'')
+      .replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref):[^|]*/g,'')
       .replace(/^Mixte:.*$/m,'').replace(/Dur\u00e9e:[^\s|]+/g,'').trim();
     if(!clean) return;
     var newNotes = notes.trimEnd() + '|note_drv:' + clean;
@@ -6217,8 +6229,8 @@ window.editRide = async function(rideId){
   // Technical tags stored in notes (passenger, driver notes) are not shown in "Instructions"
   var _nRaw = r.notes||'';
   window._editRidePax = { name:((_nRaw.match(/\|pax:([^|]*)/)||[])[1]||'').trim(), tel:((_nRaw.match(/\|tel:([^|]*)/)||[])[1]||'').trim() };
-  window._editHiddenTags = (_nRaw.match(/\|(note_drv|offer_note):[^|]*/g)||[]).join('');
-  r = Object.assign({}, r, { notes: _nRaw.replace(/\|(pax|tel|note_drv|offer_note):[^|]*/g,'').trim() });
+  window._editHiddenTags = (_nRaw.match(/\|(note_drv|offer_note|pemail|pref):[^|]*/g)||[]).join('');
+  r = Object.assign({}, r, { notes: _nRaw.replace(/\|(pax|tel|note_drv|offer_note|pemail|pref):[^|]*/g,'').trim() });
 
   // Activate correct trip type tab
   document.querySelectorAll('.trip-type').forEach(function(b){
@@ -6820,6 +6832,14 @@ window.submitSubcontract = async function(){
   }
 
   var priceVal = parseFloat(g('sub-price')) || null;
+  // Final client details (shown only to the driver who accepts)
+  var _clean=function(v){ return String(v||'').replace(/\|/g,'/').trim(); };
+  var _cn=_clean(g('sub-cli-name')), _ct=_clean(g('sub-cli-tel')), _ce=_clean(g('sub-cli-email')), _cr=_clean(g('sub-cli-ref'));
+  if(_ce && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(_ce)){ if(err){ err.textContent='E-mail du client invalide'; err.classList.add('show'); } return; }
+  if(_cn) notes=(notes||'')+'|pax:'+_cn;
+  if(_ct) notes=(notes||'')+'|tel:'+_ct;
+  if(_ce) notes=(notes||'')+'|pemail:'+_ce;
+  if(_cr) notes=(notes||'')+'|pref:'+_cr;
 
   // DEMO MODE
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
@@ -7857,7 +7877,7 @@ window._debugRides = async function(){
 };
 
 
-window.openSubRideModal=function(){openModal('m-subcontract');};
+window.openSubRideModal=function(){['sub-cli-name','sub-cli-tel','sub-cli-email','sub-cli-ref'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});openModal('m-subcontract');};
 
 
 async function loadNotifications(){
