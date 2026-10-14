@@ -3657,10 +3657,11 @@ async function loadInvoices(){
   var rides = [];
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     const [doneRes, cancelledRes] = await Promise.all([
-      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes').eq('client_id', currentUser.id).eq('status','done').order('ride_date',{ascending:false}),
-      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes,payment_method').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).order('ride_date',{ascending:false})
+      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes,is_subcontract').eq('client_id', currentUser.id).eq('status','done').order('ride_date',{ascending:false}),
+      sb.from('rides').select('id,booking_code,from_address,to_address,trip_type,ride_date,ride_time,final_price,status,notes,payment_method,is_subcontract').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).order('ride_date',{ascending:false})
     ]);
     rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'))];
+    rides = rides.filter(function(r){ return !r.is_subcontract; }); // sous-traitances : hors facturation
     rides.sort(function(a,b){ return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||'')); });
   } else {
     rides = getDemoRides().filter(r => r.status === 'done' || (r.status==='cancelled'&&r.final_price));
@@ -3812,6 +3813,7 @@ window.generateMonthInvoice = async function(monthKey){
     sb.from('rides').select('*').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true})
   ]);
   var rides=(res[0].data||[]).concat((res[1].data||[]).filter(function(r){ return r.payment_method && r.payment_method!=='refunded'; }));
+  rides=rides.filter(function(r){ return !r.is_subcontract; }); // sous-traitances : hors facturation
   rides.sort(function(a,b){ return (a.ride_date||'').localeCompare(b.ride_date||''); });
   var people={}; if(currentProfile) people[currentUser.id]=Object.assign({email:currentUser.email},currentProfile);
   _invOpen({ rides:rides, kind:'prestation', year:parseInt(monthKey.slice(0,4)), month:parseInt(monthKey.slice(5,7)), people:people });
@@ -10542,7 +10544,7 @@ async function _rptRender(){
     var rr=await sb.from('rides').select('*').in('status',['done','confirmed']).not('driver_id','is',null).not('final_price','is',null)
       .gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true});
     if(rr.error) throw rr.error;
-    var rides=rr.data||[];
+    var rides=(rr.data||[]).filter(function(r){ return !r.is_subcontract; }); // sous-traitances : hors facturation
     _rptRides=rides;
     var ids=[...new Set(rides.map(function(r){return r.driver_id;}).concat(rides.map(function(r){return r.client_id;})).filter(Boolean))];
     var people={};
@@ -10767,7 +10769,7 @@ async function _invOpen(o){
   win.document.write('<p style="font-family:sans-serif;padding:30px;">Génération des factures…</p>');
   try{
     var e=_billingEsc;
-    var rides=(o.rides||[]).filter(function(r){ return r.driver_id && r.final_price; });
+    var rides=(o.rides||[]).filter(function(r){ return r.driver_id && r.final_price && !r.is_subcontract; });
     var s=o.settings||await _docBilling();
     var cfg=_invCfg(s);
     var people=Object.assign({}, o.people||{});
@@ -11629,7 +11631,7 @@ window._renderDriverInvoiceMonth = async function(){
     .not('final_price','is',null)
     .gte('ride_date',from).lte('ride_date',to)
     .order('ride_date',{ascending:true});
-  var monthRides = data||[];
+  var monthRides = (data||[]).filter(function(r){ return !r.is_subcontract; }); // sous-traitances : hors facturation
   window._dInvCurrentData = monthRides;
 
   var fmt = function(v){ return parseFloat(v).toFixed(2).replace('.',',')+' €'; };
