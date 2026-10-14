@@ -248,6 +248,10 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 .ride-route{font-weight:500;font-size:13.5px;margin-bottom:3px;display:flex;align-items:center;gap:5px;}
 .ride-sep{color:var(--ink4);font-size:11px;}
 .ride-meta{font-size:11.5px;color:var(--ink3);display:flex;gap:10px;flex-wrap:wrap;}
+/* Date + passagers + classe : une ligne sur ordinateur, deux lignes sur mobile */
+.rmc-wrap{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:6px;}
+.rmc-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
+@media(max-width:600px){.rmc-wrap{flex-direction:column;align-items:flex-start;}}
 
 /* ═══ PILLS ═══ */
 .pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap;}
@@ -4973,9 +4977,9 @@ function _rideMetaChips(r){
     chips.push('<span style="'+soft+'">'+ico('<path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>')+vl+'</span>'); }
   if(!chips.length) return '';
   var first=r.ride_date?chips.shift():'';
-  return '<div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;">'
+  return '<div class="rmc-wrap">'
     +(first?'<div>'+first+'</div>':'')
-    +(chips.length?'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">'+chips.join('')+'</div>':'')
+    +(chips.length?'<div class="rmc-row">'+chips.join('')+'</div>':'')
     +'</div>';
 }
 function _openRideDetailImpl(el){
