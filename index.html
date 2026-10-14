@@ -2728,7 +2728,24 @@ let _authListenerRegistered = false;
 let _passwordRecoveryActive = false;
 let _initialCheckDone = false;
 let _loginInProgress = false;
+// Erreur renvoyée par Google / Microsoft / Supabase au retour d'une connexion (?error=… ou #error=…)
+function _readOAuthError(){
+  try{
+    var q=new URLSearchParams(location.search), h=new URLSearchParams(location.hash.replace(/^#/,''));
+    var code=q.get('error')||h.get('error'); if(!code) return null;
+    return { code:code, sub:q.get('error_code')||h.get('error_code')||'', desc:(q.get('error_description')||h.get('error_description')||code).replace(/\+/g,' ') };
+  }catch(e){ return null; }
+}
+function _showAuthProblem(msg){
+  console.warn('[auth] '+msg);
+  var _l=document.getElementById('app-loader'); if(_l) _l.style.display='none';
+  showScreen('auth');
+  var am=document.getElementById('auth-main'); if(am) am.style.display='block';
+  var sso=document.getElementById('auth-sso'); if(sso) sso.style.display='none';
+  var el=document.getElementById('auth-err-email'); if(el) showError(el, msg);
+}
 async function checkSession(){
+  var _oauthErr=_readOAuthError();
   if(!sb)initSupabase();
   if(!_authListenerRegistered){
     _authListenerRegistered = true;
@@ -2758,10 +2775,13 @@ async function checkSession(){
     console.log('[checkSession] got session:', !!session);
     _initialCheckDone = true;
     if(_passwordRecoveryActive) return;
+    if(_oauthErr) history.replaceState(null,'',location.pathname);
     if(session){
       currentUser = session.user;
       await loadProfile();
       enterApp();
+    } else if(_oauthErr){
+      _showAuthProblem('Connexion impossible : '+_oauthErr.desc+(_oauthErr.sub?' ('+_oauthErr.sub+')':''));
     } else {
       var _l2=document.getElementById('app-loader');if(_l2)_l2.style.display='none';
       showScreen('landing');
@@ -2770,6 +2790,7 @@ async function checkSession(){
     console.error('checkSession error:', e);
     _initialCheckDone = true;
     _entering=false;
+    if(_oauthErr || currentUser){ _showAuthProblem('Connexion impossible : '+((_oauthErr&&_oauthErr.desc)||e.message||e)); return; }
     var _l2=document.getElementById('app-loader');if(_l2)_l2.style.display='none';
     showScreen('landing');
   }
