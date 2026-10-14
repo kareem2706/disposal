@@ -2506,6 +2506,9 @@ const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 const DEMO_MODE_KEY='disposal_demo';
 const STRIPE_FEE_MULTIPLIER = 1.029; // 1 + 2.9% Stripe fee
 const TVA_RATE = 0.06; // TVA rate applied to payments
+// rides.final_price : montant TVAC payé par le client, SAUF pour une sous-traitance où c'est le prix HTVA
+// fixé par la flotte qui sous-traite (la TVA « client → transporteur » du pays du transporteur s'y ajoute).
+function _rideHtva(r){ var p=parseFloat(r&&r.final_price)||0; return (r&&r.is_subcontract) ? p : p/(1+TVA_RATE); }
 const STRIPE_PK = 'pk_test_REPLACE_WITH_YOUR_STRIPE_PUBLISHABLE_KEY'; // Replace with your Stripe publishable key
 const MISSION_STATUSES = ['confirmed', 'active', 'done', 'pending_payment']; // Driver mission statuses to display
 const ADMIN_EMAIL = 'kb@bleenr.com';
@@ -4329,8 +4332,7 @@ async function loadDriverDashboard(){
   // Revenue = HTVA of done missions (excl. refunded) minus 10% platform commission
   const revenueNet = monthMissions.reduce(function(a,r){
     if(r.payment_method==='refunded') return a; // refunded ride: don't count
-    var tvac = parseFloat(r.final_price||0);
-    var htva = tvac / 1.06;
+    var htva = _rideHtva(r); // sous-traitance : prix déjà HTVA
     return a + htva * 0.9; // net after 10% commission
   },0);
   const upcomingMissions = missions.filter(function(r){return r.status==='confirmed'||r.status==='pending_payment';});
@@ -5443,14 +5445,13 @@ function _openRideDetailImpl(el){
         // ── Price block ──
         var phPrice = document.getElementById('ph-price');
         if(phPrice && r.final_price){
-          var tvac = parseFloat(r.final_price);
-          var htva = parseFloat((tvac/(1+TVA_RATE)).toFixed(2));
-          var tvaAmt = parseFloat((tvac-htva).toFixed(2));
+          var _pr = await _ridePrice(r);
+          var tvac = _pr.tvac, htva = _pr.htva, tvaAmt = _pr.tva;
           var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
           phPrice.outerHTML = '<div style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
             +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Prix</div>'
             +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Prix HTVA</span><span>'+fmt(htva)+'</span></div>'
-            +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">TVA 6%</span><span>'+fmt(tvaAmt)+'</span></div>'
+            +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">TVA '+_pr.pct+'%</span><span>'+fmt(tvaAmt)+'</span></div>'
             +'<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:5px 0 2px;border-top:1px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(tvac)+'</span></div>'
             +'</div>';
         } else if(phPrice){ phPrice.remove(); }
@@ -5662,6 +5663,16 @@ function _docBilling(){
   }
   return _docBillingP;
 }
+// HTVA / TVA / TVAC d'une course. Sous-traitance : HTVA = final_price + TVA du pays du transporteur (Admin → Facturation)
+async function _ridePrice(r){
+  var p=parseFloat(r&&r.final_price)||0;
+  if(!r||!r.is_subcontract){ var h=_rptR2(p/(1+TVA_RATE)); return { htva:h, pct:Math.round(TVA_RATE*100), tva:_rptR2(p-h), tvac:p }; }
+  var country=null;
+  if(r.driver_id && currentUser && r.driver_id===currentUser.id) country=currentProfile&&currentProfile.address_country;
+  else if(r.driver_id && sb){ try{ country=((await sb.from('profiles').select('address_country').eq('id',r.driver_id).maybeSingle()).data||{}).address_country; }catch(e){} }
+  var pct=_invCfg(await _docBilling()).vatFor(country), tva=_rptR2(p*pct/100);
+  return { htva:p, pct:pct, tva:tva, tvac:_rptR2(p+tva) };
+}
 function _docBleenrParty(s){
   return { name:s.company_name||'Bleenr', l1:[s.street,s.box?'bte '+s.box:''].filter(Boolean).join(' '), l2:[s.postal_code,s.city].filter(Boolean).join(' '), l3:s.country||'', vat:s.vat_number||'', business:true };
 }
@@ -5750,10 +5761,10 @@ async function _docRideDocument(rideId, mode){
 
   var sum='';
   if(r.final_price){
-    var tvac=parseFloat(r.final_price), htva=_rptR2(tvac/(1+TVA_RATE)), tva=_rptR2(tvac-htva);
+    var _pr=await _ridePrice(r), tvac=_pr.tvac, htva=_pr.htva, tva=_pr.tva;
     sum='<div class="sum"><table>'
       +'<tr><td>Prix HTVA</td><td class="r">'+_rptMoney(htva)+'</td></tr>'
-      +'<tr><td>TVA '+Math.round(TVA_RATE*100)+' %</td><td class="r">'+_rptMoney(tva)+'</td></tr>'
+      +'<tr><td>TVA '+_pr.pct+' %</td><td class="r">'+_rptMoney(tva)+'</td></tr>'
       +'<tr class="grand"><td>Total TVAC (EUR)</td><td class="r">'+_rptMoney(tvac)+'</td></tr>'
       +'</table></div>';
   }
@@ -10392,7 +10403,7 @@ async function loadAdminReports(){
 window._rptSet=function(y,m){ _rptYear=y; _rptMonth=m; _rptRender(); };
 window._rptStep=function(d){ var m=_rptMonth+d, y=_rptYear; if(m<1){m=12;y--;} if(m>12){m=1;y++;} _rptSet(y,m); };
 
-function _rptRideHtva(r){ return _rptR2(parseFloat(r.final_price)/(1+TVA_RATE)); }
+function _rptRideHtva(r){ return _rptR2(_rideHtva(r)); }
 
 async function _rptRender(){
   var el=document.getElementById('admin-reports-content'); if(!el) return;
@@ -10506,7 +10517,7 @@ var _rptPeople={};
 // Admin: one line per client with its prestation invoices (one per fleet)
 function _rptClientsCard(){
   var by={};
-  (_rptRides||[]).forEach(function(r){ if(!r.client_id) return; var c=by[r.client_id]=by[r.client_id]||{n:0,tvac:0,fleets:{}}; c.n++; c.tvac+=parseFloat(r.final_price)||0; c.fleets[r.driver_id]=1; });
+  (_rptRides||[]).forEach(function(r){ if(!r.client_id) return; var c=by[r.client_id]=by[r.client_id]||{n:0,tvac:0,fleets:{}}; c.n++; c.tvac+=r.is_subcontract ? _rptRideHtva(r)*(1+_invCfg(_rptSettings||{}).vatFor((_rptPeople[r.driver_id]||{}).address_country)/100) : (parseFloat(r.final_price)||0); c.fleets[r.driver_id]=1; });
   var ids=Object.keys(by); if(!ids.length) return '';
   ids.sort(function(a,b){ return _rptFleetName(_rptPeople[a]).localeCompare(_rptFleetName(_rptPeople[b])); });
   var th=function(l,r){ return '<th style="padding:10px 12px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:600;text-align:'+(r?'right':'left')+';white-space:nowrap;">'+l+'</th>'; };
@@ -11108,16 +11119,15 @@ window.arOpenDetail = async function(row){
   }
 
   if(r.final_price){
-    var tvac = parseFloat(r.final_price);
-    var htva = parseFloat((tvac / (1 + TVA_RATE)).toFixed(2));
-    var tvaAmt = parseFloat((htva * TVA_RATE).toFixed(2));
+    var _pr = await _ridePrice(r);
+    var tvac = _pr.tvac, htva = _pr.htva, tvaAmt = _pr.tva;
     var commission = parseFloat((htva * 0.10).toFixed(2));
     var driverNet = parseFloat((htva * 0.90).toFixed(2));
     var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
     infoRows += '<div style="padding:7px 0;border-bottom:1px solid var(--sand2);">'
       +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Détail du prix</div>'
       +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Prix HTVA</span><span>'+fmt(htva)+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">TVA 6%</span><span>'+fmt(tvaAmt)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">TVA '+_pr.pct+'%</span><span>'+fmt(tvaAmt)+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Commission plateforme (10%)</span><span style="color:var(--red);">− '+fmt(commission)+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Prix chauffeur net</span><span style="color:var(--green);font-weight:600;">'+fmt(driverNet)+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:5px 0 2px;border-top:1px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(tvac)+'</span></div>'
@@ -11549,7 +11559,7 @@ window._renderDriverInvoiceMonth = async function(){
   var totHt = 0, totComm = 0;
   var cell = function(v, extra){ return '<td style="padding:10px 12px;font-size:12.5px;text-align:right;white-space:nowrap;vertical-align:top;'+(extra||'')+'">'+v+'</td>'; };
   var rows = monthRides.map(function(r){
-    var ht = r2(parseFloat(r.final_price||0) / (1+TVA_RATE));
+    var ht = r2(_rideHtva(r));
     var cm = r2(ht * cRate / 100);
     totHt += ht; totComm += cm;
     var code = r.booking_code || r.id.slice(0,8);
