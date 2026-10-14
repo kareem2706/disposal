@@ -1668,7 +1668,7 @@ body{background:var(--bg);}
           <div id="pf-security-card" class="card" style="padding:24px;margin-bottom:16px;">
             <div style="font-weight:600;margin-bottom:14px;font-size:13.5px;">S&#xe9;curit&#xe9;</div>
             <div class="input-group"><label>Nouveau mot de passe</label><input id="pf-pwd" type="password" placeholder="Laisser vide = inchang&#xe9;"></div>
-            <button class="btn btn-secondary btn-full" onclick="changePassword()">Modifier</button>
+            <button class="btn btn-primary btn-full" onclick="changePassword()">Modifier</button>
           </div>
           <div id="pf-notif-card" class="card" style="padding:24px;">
             <div style="font-weight:600;margin-bottom:14px;font-size:13.5px;">Notifications</div>
@@ -4550,7 +4550,7 @@ window.saveProfile = async function(){
   const updates = {
     first_name:      isValidatedDriver ? undefined : gv('pf-fname'),
     last_name:       isValidatedDriver ? undefined : gv('pf-lname'),
-    company_name:    gv('pf-company') || undefined,
+    company_name:    isValidatedDriver ? undefined : (gv('pf-company') || undefined),
     phone:           gv('pf-phone'),
     vat_number:      gv('pf-vat'),
     address_street:  gv('pf-street'),
@@ -8846,14 +8846,17 @@ function loadProfileForm(){
     var lnEl=document.getElementById('pf-lname');
     if(fnEl){fnEl.disabled=isVerified;fnEl.style.opacity=isVerified?'0.5':'1';fnEl.style.cursor=isVerified?'not-allowed':'text';}
     if(lnEl){lnEl.disabled=isVerified;lnEl.style.opacity=isVerified?'0.5':'1';lnEl.style.cursor=isVerified?'not-allowed':'text';}
-    // Show notice under name fields
-    var nameGrid=document.getElementById('pf-names-grid');
+    // Nom de société vérifié : grisé et non modifiable
+    var coEl=document.getElementById('pf-company');
+    if(coEl){coEl.disabled=isVerified;coEl.style.opacity=isVerified?'0.5':'1';coEl.style.cursor=isVerified?'not-allowed':'text';coEl.style.background=isVerified?'var(--sand2)':'';}
+    // Show notice under the company name
+    var coWrap=document.getElementById('pf-company-wrap');
     var verNotice=document.getElementById('pf-verified-notice');
-    if(nameGrid && isVerified && !verNotice){
+    if(coWrap && isVerified && !verNotice){
       var n=document.createElement('div');n.id='pf-verified-notice';
-      n.style.cssText='font-size:11px;color:var(--green);font-weight:500;margin-top:4px;';
-      n.textContent='✓ Profil validé — le nom ne peut plus être modifié.';
-      nameGrid.insertAdjacentElement('afterend',n);
+      n.style.cssText='font-size:11px;color:var(--green);font-weight:500;margin-top:5px;';
+      n.textContent='✓ Société vérifiée — le nom ne peut plus être modifié.';
+      coWrap.appendChild(n);
     } else if(verNotice){ verNotice.style.display=isVerified?'block':'none'; }
   }
 }
@@ -8864,7 +8867,8 @@ var _PF_TABS=[
   {k:'account', l:'Compte',         cards:[['pf-account-card','pf-security-card']]},
   {k:'notif',   l:'Notifications',  cards:['pf-notif-card']},
   {k:'docs',    l:'Documents',      cards:['pf-docs-card']},
-  {k:'fleet',   l:'Flotte',         cards:['pf-veh-card','pf-drv-card']}
+  {k:'fleet',   l:'Véhicules',      cards:['pf-veh-card']},
+  {k:'drivers', l:'Chauffeurs',     cards:['pf-drv-card']}
 ];
 var _pfTab='company', _pfOrig=[];
 // Retour à la mise en page d'origine (ex. déconnexion d'une flotte puis connexion d'un client sans recharger)
