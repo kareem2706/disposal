@@ -848,11 +848,11 @@ body{background:var(--bg);}
     <div class="ld-wrap">
       <div class="ld-cls-top">
         <div class="ld-rv"><span class="ld-eye">La flotte</span><h2 class="ld-serif">Choisissez votre<br><em>classe</em>.</h2></div>
-        <div class="ld-cls-tabs" id="ld-cls-tabs"><button class="ld-cls-tab on" data-k="0">Low cost</button><button class="ld-cls-tab" data-k="1">Business</button><button class="ld-cls-tab" data-k="2">Premi&egrave;re</button><button class="ld-cls-tab" data-k="3">Van</button><button class="ld-cls-tab" data-k="4">Autocar</button></div>
+        <div class="ld-cls-tabs" id="ld-cls-tabs"><button class="ld-cls-tab on" data-k="0">Economy</button><button class="ld-cls-tab" data-k="1">Business</button><button class="ld-cls-tab" data-k="2">Premi&egrave;re</button><button class="ld-cls-tab" data-k="3">Van</button><button class="ld-cls-tab" data-k="4">Autocar</button></div>
       </div>
       <div class="ld-cls-body ld-rv">
         <div class="ld-cls-img" id="ld-cls-img">
-          <div class="ld-img on"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Low cost</span></div><img src="assets/landing/classe-lowcost.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+          <div class="ld-img on"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Economy</span></div><img src="assets/landing/classe-lowcost.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
           <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Business</span></div><img src="assets/landing/classe-business.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
           <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Premi&egrave;re</span></div><img src="assets/landing/classe-premiere.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
           <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; van</span></div><img src="assets/landing/classe-van.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
@@ -2038,7 +2038,7 @@ body{background:var(--bg);}
           <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="ride-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="ride-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="ride-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
-          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="ride-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
+          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="ride-vehicle"><option value="lowcost">Economy</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
           <div class="input-group full"><label>Instructions</label><textarea id="ride-notes" rows="2" placeholder="Bagages, enfants, acc&egrave;s PMR&hellip;"></textarea></div>
           <div id="ride-pax-section" style="grid-column:1/-1;"></div>
         </div>
@@ -2050,7 +2050,7 @@ body{background:var(--bg);}
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="disp-time" type="time"></div>
           <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
           <div class="input-group"><label>Passagers</label><select id="disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
-          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="disp-vehicle"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
+          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="disp-vehicle"><option value="lowcost">Economy</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
           <div class="input-group full"><label>Instructions</label><textarea id="disp-notes" rows="2" placeholder="It&eacute;n&eacute;raire, arr&ecirc;ts pr&eacute;vus&hellip;"></textarea></div>
           <div id="disp-pax-section" style="grid-column:1/-1;"></div>
         </div>
@@ -2133,7 +2133,7 @@ body{background:var(--bg);}
     <div class="modal-body" style="padding:20px 22px;">
       <div class="form-grid"><div class="input-group"><label>Marque <span style="color:var(--red)">*</span></label><select id="veh-brand" onchange="populateVehModels()"><option value="">-- Choisir --</option></select></div><div class="input-group"><label>Mod&egrave;le <span style="color:var(--red)">*</span></label><select id="veh-model"><option value="">-- Choisir une marque --</option></select></div></div>
       <div class="form-grid"><div class="input-group"><label>Ann&eacute;e <span style="color:var(--red)">*</span></label><input id="veh-year" type="number" min="2000" max="2035" placeholder="2023"><div style="font-size:11px;color:var(--ink3);margin-top:4px;">Selon la l&eacute;gislation, le v&eacute;hicule doit avoir <b>7 ans maximum</b>.</div></div><div class="input-group"><label>Couleur</label><input id="veh-color" placeholder="Noir"></div></div>
-      <div class="form-grid"><div class="input-group"><label>Gamme <span style="color:var(--red)">*</span></label><select id="veh-class" onchange="_applyVehSeatsRule(true)"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div><div class="input-group"><label>Plaque</label><input id="veh-plate" placeholder="T-ABC-123"></div></div>
+      <div class="form-grid"><div class="input-group"><label>Gamme <span style="color:var(--red)">*</span></label><select id="veh-class" onchange="_applyVehSeatsRule(true)"><option value="lowcost">Economy</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div><div class="input-group"><label>Plaque</label><input id="veh-plate" placeholder="T-ABC-123"></div></div>
       <div class="form-grid"><div class="input-group"><label>Places assises <span style="color:var(--red)">*</span></label><input id="veh-seats" type="number" min="1" step="1" inputmode="numeric" placeholder="ex. 3"></div><div></div></div>
       <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
         <div style="font-size:12px;font-weight:600;margin-bottom:10px;">&Eacute;quipements</div>
@@ -2228,7 +2228,7 @@ body{background:var(--bg);}
           <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="sub-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="sub-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="sub-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option></select></div>
-          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="sub-veh"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
+          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="sub-veh"><option value="lowcost">Economy</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
           <div class="input-group full"><label>Instructions</label><textarea id="sub-notes" rows="2" placeholder="Bagages, enfants…"></textarea></div>
         </div>
       </div>
@@ -2240,7 +2240,7 @@ body{background:var(--bg);}
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="sub-disp-time" type="time"></div>
           <div class="input-group"><label>Dur&eacute;e (h)</label><input id="sub-disp-dur" type="number" min="1" max="24" value="2" placeholder="2"></div>
           <div class="input-group"><label>Passagers</label><select id="sub-disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option></select></div>
-          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="sub-disp-veh"><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
+          <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="sub-disp-veh"><option value="lowcost">Economy</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
           <div class="input-group full"><label>Instructions</label><textarea id="sub-disp-notes" rows="2" placeholder="It&eacute;n&eacute;raire, arr&ecirc;ts pr&eacute;vus…"></textarea></div>
         </div>
       </div>
@@ -2322,7 +2322,7 @@ body{background:var(--bg);}
         <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="pm-date"></div>
         <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="pm-time" value="08:00"></div>
         <div class="form-grid" style="grid-column:1/-1;">
-          <div class="input-group"><label>V&eacute;hicule</label><select id="pm-vehicle"><option value="">-- Aucun --</option><option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
+          <div class="input-group"><label>V&eacute;hicule</label><select id="pm-vehicle"><option value="">-- Aucun --</option><option value="lowcost">Economy</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
           <div class="input-group"><label>Plaque</label><input id="pm-plate" placeholder="1-ABC-123"></div>
         </div>
         <div class="input-group full"><label>Notes</label><textarea id="pm-notes" rows="2" placeholder="Informations complémentaires…"></textarea></div>
@@ -2445,7 +2445,7 @@ if(window.google&&window.google.maps&&window.google.maps.places){initGooglePlace
 window._gpReady=initGooglePlaces;
 
 function _attachGoogleAC(){
-  var ids = ['ride-from','ride-to','disp-from','sub-from','sub-to','sub-disp-from','pm-from','pm-to','pm-dispo-location'];
+  var ids = ['ld-from','ld-to','ride-from','ride-to','disp-from','sub-from','sub-to','sub-disp-from','pm-from','pm-to','pm-dispo-location'];
   ids.forEach(function(id){
     var el = document.getElementById(id);
     if(el && !el._gp){
@@ -3898,7 +3898,7 @@ async function _autoCancelOverdueRides(pendingRides){
 
 // Returns true if the driver (with their fleet vehicles) can handle this ride's vehicle_type
 function _driverCanHandleRide(r){
-  // No active vehicle: the fleet cannot handle any request, low-cost included
+  // No active vehicle: the fleet cannot handle any request, Economy included
   if(!_fleetVehicles || _fleetVehicles.length === 0) return false;
   if(!r.vehicle_type || r.vehicle_type === '') return true;
   var _vehicleServes = {
@@ -4917,7 +4917,7 @@ function _buildRideDetailBody(r, opts){
   var metaParts=[];
   if(r.ride_date) metaParts.push(formatDate(r.ride_date)+(r.ride_time?' '+r.ride_time.slice(0,5):''));
   if(r.passengers) metaParts.push(r.passengers+' pax');
-  if(r.vehicle_type) metaParts.push(r.vehicle_type);
+  if(r.vehicle_type) metaParts.push(_DOC_CLASSES[r.vehicle_type]||r.vehicle_type);
   var metaLineHtml=metaParts.length?'<div style="display:flex;align-items:center;gap:6px;margin:0;font-size:12px;color:var(--ink3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>'+metaParts.join(' &middot; ')+'</div>':'';
   var body='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">'+_rideMetaChips(r)+(showStatus?getStatusPill(r.status,r._offerCount||0):'')+'</div>';
   if(isMixed&&mixedSegs.length){
@@ -5000,7 +5000,7 @@ function _rideMetaChips(r){
   }
   var soft='display:inline-flex;align-items:center;gap:6px;background:var(--sand2);color:var(--ink);border:1px solid var(--sand3);border-radius:9px;padding:5px 10px;font-size:13px;font-weight:600;white-space:nowrap;';
   if(r.passengers) chips.push('<span style="'+soft+'">'+ico('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>')+r.passengers+' passager'+(r.passengers>1?'s':'')+'</span>');
-  if(r.vehicle_type){ var vl={lowcost:'Low-cost',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'}[r.vehicle_type]||r.vehicle_type;
+  if(r.vehicle_type){ var vl={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'}[r.vehicle_type]||r.vehicle_type;
     chips.push('<span style="'+soft+'">'+ico('<path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>')+vl+'</span>'); }
   if(!chips.length) return '';
   var first=r.ride_date?chips.shift():'';
@@ -5035,7 +5035,7 @@ function _openRideDetailImpl(el){
   var metaParts=[];
   if(r.ride_date) metaParts.push(formatDate(r.ride_date)+(r.ride_time?' '+r.ride_time.slice(0,5):''));
   if(r.passengers) metaParts.push(r.passengers+' pax');
-  if(r.vehicle_type) metaParts.push(r.vehicle_type);
+  if(r.vehicle_type) metaParts.push(_DOC_CLASSES[r.vehicle_type]||r.vehicle_type);
   var metaLine=metaParts.length?'<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;font-size:12px;color:var(--ink3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>'+metaParts.join(' &middot; ')+'</div>':'';
   var _stEl=document.getElementById('detail-status'); if(_stEl) _stEl.innerHTML=_statusBadge(r.status,r._offerCount||0);
   var body=_rideMetaChips(r);
@@ -5721,7 +5721,7 @@ function _docOpen(html){
   win.document.open(); win.document.write(html); win.document.close();
 }
 var _DOC_TYPES={ab:'Course A → B',disposal:'Mise à disposition',mixed:'Course mixte'};
-var _DOC_CLASSES={lowcost:'Low-cost',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'};
+var _DOC_CLASSES={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'};
 
 // Shared body of a ride voucher / mission order
 async function _docRideDocument(rideId, mode){
@@ -6797,7 +6797,7 @@ window.addSubSegment = function(){
   div.id = 'sub-seg-'+n;
 
   var paxOpts='<option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option>';
-  var vehOpts='<option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option>';
+  var vehOpts='<option value="lowcost">Economy</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option>';
 
   var abFields=
     '<div class="input-group full"><label>D\u00e9part <span style="color:var(--red)">*</span></label><input id="sub-sf-'+n+'" placeholder="Gare du Midi, Bruxelles" autocomplete="off"></div>'+
@@ -7539,7 +7539,7 @@ window.openVehGuide = function(){
   if(old){ old.remove(); return; }
 
   var GUIDE = [
-    ['Low-cost', 'Tout type de v\u00e9hicule'],
+    ['Economy', 'Tout type de v\u00e9hicule'],
     ['Business', 'Mercedes Classe E ou \u00e9quivalent'],
     ['Luxe',     'Mercedes Classe S ou \u00e9quivalent'],
     ['Van',      'Mercedes Classe V ou \u00e9quivalent'],
@@ -7817,7 +7817,7 @@ document.getElementById('screen-landing') && (function(){
 
   // classes tabs
   var CLS = [
-    { c:'Low cost', m:'Toyota Prius, Skoda Octavia ou similaire', pax:3, bag:3, d:"Un voyage pour tous les budgets : le m\u00eame chauffeur v\u00e9rifi\u00e9 et le m\u00eame prix fixe, au tarif le plus doux." },
+    { c:'Economy', m:'Toyota Prius, Skoda Octavia ou similaire', pax:3, bag:3, d:"Un voyage pour tous les budgets : le m\u00eame chauffeur v\u00e9rifi\u00e9 et le m\u00eame prix fixe, au tarif le plus doux." },
     { c:'Business', m:'Mercedes Classe E, BMW S\u00e9rie 5 ou similaire', pax:3, bag:3, d:"La r\u00e9f\u00e9rence pour les rendez-vous d'affaires et les transferts a\u00e9roport. Discr\u00e8te, confortable, toujours impeccable." },
     { c:'Premi\u00e8re', m:'Mercedes Classe S, BMW S\u00e9rie 7 ou similaire', pax:3, bag:3, d:"L'espace arri\u00e8re d'un salon et un silence de cabine, pour les occasions qui comptent." },
     { c:'Van', m:'Mercedes Classe V ou similaire', pax:7, bag:7, d:"Pour les familles, les \u00e9quipes et les valises nombreuses \u2014 sans renoncer au confort." },
@@ -8743,7 +8743,7 @@ window.addMixedSegment=function(){
   var cont=document.getElementById('mixed-segments');if(!cont)return;
   var d=document.createElement('div');d.className='mixed-segment';d.id='seg-'+n;
   var paxOpts='<option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option>';
-  var vehOpts='<option value="lowcost">Low-cost</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option>';
+  var vehOpts='<option value="lowcost">Economy</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option>';
 
   // A->B fields (same as panel-ab)
   var abFields=
@@ -9200,7 +9200,7 @@ async function loadFleetVehicles(){
   var {data:allVehDocs}=await sb.from('vehicle_documents').select('*').in('vehicle_id',vehIds);
   var vehDocsMap={};
   (allVehDocs||[]).forEach(function(d){if(!vehDocsMap[d.vehicle_id])vehDocsMap[d.vehicle_id]=[];vehDocsMap[d.vehicle_id].push(d);});
-  var classLabels={lowcost:'Low-cost',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'};
+  var classLabels={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'};
   var vehDocLabels={carte_grise:'Carte grise',assurance:'Assurance',controle_technique:'CT',vignette_identification:'Vignette'};
   el.innerHTML=data.map(function(v){
     var safeId=v.id.replace(/'/g,'');
@@ -9378,7 +9378,7 @@ window.saveVehicle=async function(){
   if(!seatsLocked){
     if(_VEH_FIXED_SEATS[vclass]) seats=_VEH_FIXED_SEATS[vclass];
     if(!(seats>0)){showError(errEl,'Nombre de places assises requis');return;}
-    if(vclass==='lowcost'&&seats<3){showError(errEl,'Low-cost : minimum 3 places assises');return;}
+    if(vclass==='lowcost'&&seats<3){showError(errEl,'Economy : minimum 3 places assises');return;}
   }
   // Read amenities checkboxes
   var amenities=[];
@@ -9696,7 +9696,7 @@ function populateOfferVehicles(requestedClass){
     return;
   }
   if(errDiv)errDiv.style.display='none';
-  var classLabels={lowcost:'Low-cost',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'};
+  var classLabels={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'};
   var amenShort={electric:'\u26a1',hybrid:'\u2600',wifi:'WiFi',water:'\ud83d\udca7',snacks:'\u2615'};
   matching.forEach(function(v){
     var opt=document.createElement('option');
