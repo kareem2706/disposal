@@ -962,11 +962,14 @@ body{background:var(--bg);}
           </button>
         </div>
         <div class="auth-or"><span>OU</span></div>
-        <div class="input-group"><label>Adresse email</label><input id="inp-email" type="email" placeholder="marie@example.com" autocomplete="email"></div>
-        <div class="input-group"><label>Mot de passe</label><input id="inp-pwd" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitEmail()"></div>
-        <div id="forgot-pwd-link" style="text-align:right;margin:-4px 0 8px;"><a href="#" onclick="forgotPassword();return false;" style="font-size:12px;color:var(--green);text-decoration:none;">Mot de passe oublié ?</a></div>
+        <div class="input-group"><label>Adresse email</label><input id="inp-email" type="email" placeholder="marie@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')submitLoginMain()"></div>
+        <div id="login-pwd-wrap" style="display:none;">
+          <div class="input-group"><label>Mot de passe</label><input id="inp-pwd" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitEmail()"></div>
+          <div id="forgot-pwd-link" style="text-align:right;margin:-4px 0 8px;"><a href="#" onclick="forgotPassword();return false;" style="font-size:12px;color:var(--green);text-decoration:none;">Mot de passe oublié ?</a></div>
+        </div>
         <div id="auth-err-email" class="auth-error"></div>
-        <button class="btn btn-primary btn-full" id="btn-email-submit" onclick="submitEmail()">Connexion →</button>
+        <button class="btn btn-primary btn-full" id="btn-email-submit" onclick="submitLoginMain()">Recevoir un code →</button>
+        <div style="text-align:center;margin-top:12px;"><a href="#" id="login-mode-link" onclick="toggleLoginPwd();return false;" style="font-size:12.5px;color:var(--green);text-decoration:none;font-weight:600;">Se connecter avec un mot de passe</a></div>
       </div>
 
       <!-- ══ REGISTER STEPS ══ -->
@@ -1036,12 +1039,11 @@ body{background:var(--bg);}
           <div id="reg-driver-fields" style="display:none;">
             <div class="input-group"><label>Nom de société</label><input id="inp-company-driver" placeholder="Transport Dupont SPRL" autocomplete="organization"></div>
           </div>
-          <div class="input-group"><label>Adresse email</label><input id="inp-email-reg" type="email" placeholder="marie@example.com" autocomplete="email"></div>
-          <div class="input-group"><label>Mot de passe</label><input id="inp-pwd-reg" type="password" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitEmailReg()"></div>
-          <div class="input-group" style="display:none;" id="inp-pwd2-wrap"><label>Confirmer le mot de passe</label><input id="inp-pwd2" type="password" placeholder="••••••••" autocomplete="new-password"></div>
+          <div class="input-group"><label>Adresse email</label><input id="inp-email-reg" type="email" placeholder="marie@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')submitEmailReg()"></div>
           <div id="reg-vat" class="input-group" style="display:none;"><label>N° de TVA (optionnel)</label><input id="inp-vat" placeholder="BE 0000.000.000"></div>
           <div id="auth-err-email-reg" class="auth-error"></div>
-          <button class="btn btn-primary btn-full" onclick="submitEmailReg()">Créer le compte →</button>
+          <button class="btn btn-primary btn-full" id="btn-reg-submit" onclick="submitEmailReg()">Recevoir un code →</button>
+          <div style="text-align:center;font-size:11.5px;color:var(--ink3);margin-top:8px;">Un code à 6 chiffres vous sera envoyé par e-mail pour confirmer votre adresse.</div>
         </div>
 
         <!-- Step R4: email verification link sent -->
@@ -1077,13 +1079,13 @@ body{background:var(--bg);}
     <div id="auth-otp" style="display:none;">
       <div style="text-align:center;margin-bottom:22px;">
         <div style="width:50px;height:50px;background:var(--sand2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="5" y="2" width="14" height="20" rx="3" stroke="var(--ink)" stroke-width="1.6"/><circle cx="12" cy="15" r="2" fill="var(--ink)"/><path d="M9 7h6" stroke="var(--ink2)" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>
         </div>
         <div style="font-size:15px;font-weight:600;margin-bottom:4px;">V&eacute;rification</div>
         <p id="otp-label" class="text-xs">Code envoy&eacute; &agrave; votre contact</p>
       </div>
       <div class="otp-grid" id="otp-inputs">
-        <input type="text" maxlength="1" inputmode="numeric" oninput="otpNext(this)" onkeydown="otpKey(event,this)">
+        <input type="text" maxlength="1" inputmode="numeric" autocomplete="one-time-code" oninput="otpNext(this)" onkeydown="otpKey(event,this)">
         <input type="text" maxlength="1" inputmode="numeric" oninput="otpNext(this)" onkeydown="otpKey(event,this)">
         <input type="text" maxlength="1" inputmode="numeric" oninput="otpNext(this)" onkeydown="otpKey(event,this)">
         <input type="text" maxlength="1" inputmode="numeric" oninput="otpNext(this)" onkeydown="otpKey(event,this)">
@@ -1094,7 +1096,7 @@ body{background:var(--bg);}
       <button class="btn btn-primary btn-full" id="btn-otp" onclick="verifyOTP()">Confirmer</button>
       <div style="display:flex;justify-content:space-between;margin-top:10px;">
         <button class="btn btn-ghost btn-sm" onclick="backToAuthMain()">&larr; Retour</button>
-        <button class="btn btn-ghost btn-sm" onclick="resendOTP()">Renvoyer</button>
+        <button class="btn btn-ghost btn-sm" id="btn-otp-resend" onclick="resendOTP()">Renvoyer</button>
       </div>
     </div>
 
@@ -1666,7 +1668,8 @@ body{background:var(--bg);}
         </div>
         <div>
           <div id="pf-security-card" class="card" style="padding:24px;margin-bottom:16px;">
-            <div style="font-weight:600;margin-bottom:14px;font-size:13.5px;">S&#xe9;curit&#xe9;</div>
+            <div style="font-weight:600;margin-bottom:4px;font-size:13.5px;">Mot de passe</div>
+            <div style="font-size:12px;color:var(--ink3);margin-bottom:12px;">Optionnel : la connexion se fait par code envoy&#xe9; par e-mail. D&#xe9;finissez un mot de passe pour vous connecter sans code.</div>
             <div class="input-group"><label>Nouveau mot de passe</label><input id="pf-pwd" type="password" placeholder="Laisser vide = inchang&#xe9;"></div>
             <button class="btn btn-primary btn-full" onclick="changePassword()">Modifier</button>
           </div>
@@ -3022,10 +3025,9 @@ window.selectClientType = function(type){
 
 // submitEmailReg reads from reg-specific fields
 window.submitEmailReg = async function(){
-  var email = (document.getElementById('inp-email-reg')?.value||'').trim();
-  var pwd   = (document.getElementById('inp-pwd-reg')?.value||'').trim();
+  var email = (document.getElementById('inp-email-reg')?.value||'').trim().toLowerCase();
   var errEl = document.getElementById('auth-err-email-reg');
-  if(!email||!pwd){ if(errEl){errEl.textContent='Email et mot de passe requis';errEl.classList.add('show');} return; }
+  if(!_validEmail(email)){ if(errEl){errEl.textContent='Adresse e-mail invalide';errEl.classList.add('show');} return; }
 
   var role = _authSelectedRole||'client';
   var clientType = role==='client' ? (_regClientType||'perso') : null;
@@ -3043,11 +3045,42 @@ window.submitEmailReg = async function(){
     lname = (document.getElementById('inp-lname')?.value||'').trim();
   }
 
-  var btn = document.querySelector('#reg-step3 .btn-primary');
-  if(btn) setLoading(btn,true,'Création...');
+  if(role==='driver' && !company){ if(errEl){errEl.textContent='Nom de société requis';errEl.classList.add('show');} return; }
+  if(!sb){ if(errEl){errEl.textContent='Supabase non configuré';errEl.classList.add('show');} return; }
+  if(errEl) errEl.classList.remove('show');
+  var btn = document.getElementById('btn-reg-submit');
+  if(btn) setLoading(btn,true,'Envoi du code…');
   var meta = {role, client_type:clientType, first_name:fname||null, last_name:lname||null, company_name:company||null};
+  var vat = (document.getElementById('inp-vat')?.value||'').trim();
+  var {error} = await _sendEmailCode(email, true, meta);
+  if(btn) setLoading(btn,false,'Recevoir un code →');
+  if(error){
+    var _m=error.message||'';
+    if(errEl){ errEl.textContent=/rate|security purposes|seconds/i.test(_m)?'Trop de demandes : patientez une minute avant de redemander un code.':_m; errEl.classList.add('show'); }
+    return;
+  }
+  // Même rôle mémorisé que pour Google / Microsoft (appliqué au premier chargement du profil)
+  try{ localStorage.setItem('bleenr_pending_role', JSON.stringify({ role:role, client_type:clientType, company_name:company||null, ts:Date.now() })); }catch(e){}
+  _otpPurpose='register'; _otpRegExtra={ meta:meta, vat:vat, email:email };
+  _otpOpen(email);
+};
+
+// Après validation du code d'inscription : TVA + e-mail de bienvenue (une seule fois, compte neuf)
+async function _afterCodeSignup(){
+  var x=_otpRegExtra||{}; _otpRegExtra=null;
+  if(!currentUser) return;
+  var isNew = currentUser.created_at && (Date.now()-new Date(currentUser.created_at).getTime() < 30*60*1000);
+  if(!isNew) return; // adresse déjà inscrite : simple connexion
+  try{ if(x.vat && currentProfile && !currentProfile.vat_number){ await sb.from('profiles').update({vat_number:x.vat}).eq('id',currentUser.id); currentProfile.vat_number=x.vat; } }catch(e){}
+  try{
+    var m=x.meta||{};
+    window.sendMail(m.role==='driver' ? 'welcome_driver' : 'welcome_client', currentUser.email, { name:(m.first_name||'').trim(), isPro: m.client_type==='pro' ? 'yes' : 'no' });
+  }catch(e){ console.warn('welcome mail', e); }
+}
+
+// Ancienne inscription par mot de passe (conservée, plus appelée)
+async function _legacySignupWithPassword(email, pwd, meta, role, clientType, fname, lname, company, errEl){
   var {data,error} = await sb.auth.signUp({email,password:pwd,options:{data:meta,emailRedirectTo:window.location.origin+window.location.pathname}});
-  if(btn) setLoading(btn,false,'Créer le compte →');
   if(error){ if(errEl){errEl.textContent=error.message;errEl.classList.add('show');} return; }
   if(data?.user){
     var profileData = {id:data.user.id, email:email, role:role, client_type:role==='driver' ? null : (clientType||'perso'), first_name:fname||null, last_name:lname||null, company_name:company||null};
@@ -3212,7 +3245,70 @@ function showOTPScreen(){
 }
 
 window.otpNext = function(el){
-  if(el.value.length === 1) el.nextElementSibling?.focus();
+  var v=(el.value||'').replace(/\D/g,'');
+  if(v.length>1){ _otpFill(v); return; } // collage / autoremplissage iOS-Android
+  el.value=v;
+  if(v.length === 1){ if(el.nextElementSibling) el.nextElementSibling.focus(); else if(_otpType==='email') verifyOTP(); }
+};
+function _otpFill(v){
+  var ins=document.querySelectorAll('#otp-inputs input');
+  for(var i=0;i<ins.length;i++) ins[i].value=v[i]||'';
+  (ins[Math.min(v.length,ins.length)-1]||ins[0]).focus();
+  if(v.length>=ins.length && _otpType==='email') verifyOTP();
+}
+document.addEventListener('paste', function(e){
+  if(!e.target || !e.target.closest || !e.target.closest('#otp-inputs')) return;
+  var v=((e.clipboardData||window.clipboardData).getData('text')||'').replace(/\D/g,'');
+  if(v.length>1){ e.preventDefault(); _otpFill(v); }
+});
+
+// ── Connexion / inscription par code e-mail ──
+var _loginPwdMode=false, _otpEmail='', _otpPurpose='login', _otpRegExtra=null, _otpResendAt=0;
+window.toggleLoginPwd=function(force){
+  _loginPwdMode = (typeof force==='boolean') ? force : !_loginPwdMode;
+  var w=document.getElementById('login-pwd-wrap'); if(w) w.style.display=_loginPwdMode?'block':'none';
+  var b=document.getElementById('btn-email-submit'); if(b) b.textContent=_loginPwdMode?'Connexion →':'Recevoir un code →';
+  var l=document.getElementById('login-mode-link'); if(l) l.textContent=_loginPwdMode?'Recevoir un code par e-mail à la place':'Se connecter avec un mot de passe';
+  var er=document.getElementById('auth-err-email'); if(er) er.classList.remove('show');
+  if(_loginPwdMode){ var p=document.getElementById('inp-pwd'); if(p) setTimeout(function(){p.focus();},50); }
+};
+window.submitLoginMain=function(){ return _loginPwdMode ? submitEmail() : sendLoginCode(); };
+function _validEmail(e){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e); }
+async function _sendEmailCode(email, createUser, meta){
+  var opts={ shouldCreateUser: !!createUser, emailRedirectTo: window.location.origin+window.location.pathname };
+  if(meta) opts.data=meta;
+  return sb.auth.signInWithOtp({ email: email, options: opts });
+}
+function _otpOpen(email){
+  _otpType='email'; _otpEmail=email; _otpResendAt=Date.now()+60000;
+  var lbl=document.getElementById('otp-label'); if(lbl) lbl.innerHTML='Code envoyé à <b>'+String(email).replace(/</g,'&lt;')+'</b><br>Vérifiez aussi vos courriers indésirables.';
+  var err=document.getElementById('auth-err-otp'); if(err) err.classList.remove('show');
+  var b=document.getElementById('btn-otp'); if(b) setLoading(b,false,'Confirmer');
+  showOTPScreen(); _otpResendTick();
+}
+function _otpResendTick(){
+  var b=document.getElementById('btn-otp-resend'); if(!b) return;
+  var left=Math.ceil((_otpResendAt-Date.now())/1000);
+  if(left>0){ b.disabled=true; b.textContent='Renvoyer ('+left+' s)'; setTimeout(_otpResendTick,1000); }
+  else { b.disabled=false; b.textContent='Renvoyer'; }
+}
+window.sendLoginCode=async function(){
+  var email=(document.getElementById('inp-email')?.value||'').trim().toLowerCase();
+  var err=document.getElementById('auth-err-email'), btn=document.getElementById('btn-email-submit');
+  if(!_validEmail(email)){ showError(err,'Adresse e-mail invalide'); return; }
+  if(localStorage.getItem(DEMO_MODE_KEY)==='1'){ enterApp(); return; }
+  if(!sb){ showError(err,'Supabase non configuré'); return; }
+  err.classList.remove('show'); setLoading(btn,true,'Envoi du code…');
+  var {error}=await _sendEmailCode(email,false,null);
+  setLoading(btn,false,'Recevoir un code →');
+  if(error){
+    var m=error.message||'';
+    if(/signups? not allowed|not found|user not found/i.test(m)) showError(err,'Aucun compte avec cette adresse. Créez un compte dans l’onglet « Inscription ».');
+    else if(/rate|security purposes|seconds/i.test(m)) showError(err,'Trop de demandes : patientez une minute avant de redemander un code.');
+    else showError(err,m);
+    return;
+  }
+  _otpPurpose='login'; _otpRegExtra=null; _otpOpen(email);
 };
 
 window.otpKey = function(e, el){
@@ -3238,25 +3334,39 @@ window.verifyOTP = async function(){
     if(_otpType === 'phone'){
       result = await sb.auth.verifyOtp({ phone: _phoneForOTP, token, type: 'sms' });
     } else {
-      result = await sb.auth.verifyOtp({ email: document.getElementById('inp-email').value, token, type: 'email' });
+      _loginInProgress = true; _entering = false;
+      result = await sb.auth.verifyOtp({ email: _otpEmail || document.getElementById('inp-email').value, token, type: 'email' });
     }
     if(result.error) throw result.error;
     currentUser = result.data.user;
     await loadProfile();
+    if(_otpType==='email' && _otpPurpose==='register') await _afterCodeSignup();
+    setLoading(btn, false, 'Confirmer');
     enterApp();
+    _loginInProgress = false;
   } catch(e){
+    _loginInProgress = false;
     showError(err, 'Code incorrect ou expiré');
     setLoading(btn, false, 'Confirmer');
+    document.querySelectorAll('#otp-inputs input').forEach(function(i){ i.value=''; });
+    var f=document.querySelector('#otp-inputs input'); if(f) f.focus();
   }
 };
 
 window.resendOTP = async function(){
+  if(_otpType==='email'){
+    if(!sb || !_otpEmail || Date.now()<_otpResendAt) return;
+    var r=await _sendEmailCode(_otpEmail, _otpPurpose==='register', _otpRegExtra && _otpRegExtra.meta);
+    if(r.error){ showError(document.getElementById('auth-err-otp'), /rate|seconds/i.test(r.error.message||'')?'Patientez avant de redemander un code.':r.error.message); return; }
+    _otpResendAt=Date.now()+60000; _otpResendTick(); showToast('📧 Nouveau code envoyé'); return;
+  }
   if(!sb || !_phoneForOTP) return;
   const { error } = await sb.auth.resendSignUp({ type: 'sms', phone: _phoneForOTP });
   if(!error) showToast('📱 Nouveau code envoyé');
 };
 
 window.backToAuthMain = function(){
+  var _bo=document.getElementById('btn-otp'); if(_bo) setLoading(_bo,false,'Confirmer');
   document.getElementById('auth-otp').style.display = 'none';
   document.getElementById('auth-sso').style.display = 'none';
   document.getElementById('auth-reset-request').style.display = 'none';
