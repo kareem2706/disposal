@@ -279,6 +279,15 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 .mktabs{display:flex;gap:3px;background:var(--sand2);border-radius:var(--r);padding:3px;width:fit-content;margin-bottom:16px;}
 .mktab{padding:6px 16px;border-radius:8px;font-size:12.5px;cursor:pointer;border:none;background:transparent;color:var(--ink2);transition:all var(--t);font-family:'DM Sans',sans-serif;}
 .mktab.active{background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);font-weight:500;}
+/* Profil flotte : onglets */
+.pf-tabs{display:flex;gap:3px;background:var(--sand2);border-radius:var(--r);padding:3px;width:fit-content;max-width:100%;overflow-x:auto;margin-bottom:18px;scrollbar-width:none;}
+.pf-tabs::-webkit-scrollbar{display:none;}
+.pf-tab{padding:7px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--ink2);white-space:nowrap;transition:all var(--t);font-family:'DM Sans',sans-serif;}
+.pf-tab.active{background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);font-weight:600;}
+.pf-panel{max-width:900px;}
+.pf-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
+.pf-sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin:0 0 12px;}
+@media(max-width:900px){.pf-panel-grid{grid-template-columns:1fr;}.pf-tabs{width:100%;flex-wrap:wrap;overflow:visible;}.pf-tab{flex:1 1 auto;padding:7px 10px;}}
 .mk-item{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--sand3);transition:background var(--t);}
 .mk-item:hover{background:var(--sand);}
 .mk-item:last-child{border-bottom:none;}
@@ -1502,8 +1511,10 @@ body{background:var(--bg);}
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
         <div><h1>Profil</h1></div>
       </div>
-      <div class="two-col" style="max-width:900px;">
-        <div class="card" style="padding:28px 28px 24px;">
+      <div id="pf-tabs" class="pf-tabs" role="tablist" style="display:none;"></div>
+      <div id="pf-panels"></div>
+      <div id="pf-main-cols" class="two-col" style="max-width:900px;">
+        <div id="pf-identity-card" class="card" style="padding:28px 28px 24px;">
           <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
             <div id="profile-av" class="user-av" style="width:52px;height:52px;font-size:18px;">?</div>
             <div><div id="profile-fullname" style="font-size:16px;font-weight:600;">&#x2014;</div><div id="profile-email-disp" class="text-xs">&#x2014;</div></div>
@@ -1654,12 +1665,12 @@ body{background:var(--bg);}
           <button class="btn btn-primary btn-full" onclick="saveProfile()">Sauvegarder</button>
         </div>
         <div>
-          <div class="card" style="padding:24px;margin-bottom:16px;">
+          <div id="pf-security-card" class="card" style="padding:24px;margin-bottom:16px;">
             <div style="font-weight:600;margin-bottom:14px;font-size:13.5px;">S&#xe9;curit&#xe9;</div>
             <div class="input-group"><label>Nouveau mot de passe</label><input id="pf-pwd" type="password" placeholder="Laisser vide = inchang&#xe9;"></div>
             <button class="btn btn-secondary btn-full" onclick="changePassword()">Modifier</button>
           </div>
-          <div class="card" style="padding:24px;">
+          <div id="pf-notif-card" class="card" style="padding:24px;">
             <div style="font-weight:600;margin-bottom:14px;font-size:13.5px;">Notifications</div>
             <div style="display:flex;flex-direction:column;gap:11px;">
               <label style="display:flex;justify-content:space-between;cursor:pointer;margin:0;font-size:13px;">Nouvelle offre<input type="checkbox" id="notif-offer" checked style="width:auto;accent-color:var(--ink)"></label>
@@ -1671,8 +1682,24 @@ body{background:var(--bg);}
       </div>
       <!-- ═══ FLEET SECTIONS (visible only for drivers) ═══ -->
       <div id="pf-fleet-sections" style="display:none;max-width:900px;margin-top:20px;">
+        <!-- Informations bancaires (flotte) -->
+        <div id="pf-bank-card" class="card" style="padding:24px;margin-bottom:16px;">
+          <div style="font-weight:600;margin-bottom:4px;font-size:13.5px;">Informations bancaires</div>
+          <div style="font-size:12px;color:var(--ink3);margin-bottom:14px;">Compte sur lequel Bleenr verse vos prestations.</div>
+          <div class="input-group"><label>Titulaire du compte</label><input id="pf-bank-holder" placeholder="Nom de la société"></div>
+          <div class="input-group"><label>IBAN</label><input id="pf-iban" placeholder="BE68 5390 0754 7034" autocomplete="off" style="font-family:monospace;text-transform:uppercase;"></div>
+          <div class="input-group"><label>BIC / SWIFT</label><input id="pf-bic" placeholder="GEBABEBB" autocomplete="off" style="font-family:monospace;text-transform:uppercase;"></div>
+          <div id="pf-bank-err" class="auth-error"></div>
+          <button class="btn btn-primary btn-full" onclick="saveBankInfo()">Enregistrer</button>
+        </div>
+        <!-- Compte : e-mail de connexion -->
+        <div id="pf-account-card" class="card" style="padding:24px;margin-bottom:16px;">
+          <div style="font-weight:600;margin-bottom:14px;font-size:13.5px;">Compte</div>
+          <div class="input-group"><label>E-mail de connexion</label><input id="pf-login-email" disabled style="opacity:.7;cursor:not-allowed;"></div>
+          <div style="font-size:12px;color:var(--ink3);">Pour modifier l&#x27;e-mail de connexion, contactez <a href="mailto:info@bleenr.com" style="color:var(--green);font-weight:600;">info@bleenr.com</a>.</div>
+        </div>
         <!-- Documents société -->
-        <div class="card" style="padding:24px;margin-bottom:16px;">
+        <div id="pf-docs-card" class="card" style="padding:24px;margin-bottom:16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
             <div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:600;font-size:13.5px;">Documents soci&eacute;t&eacute;</span><span id="fleet-docs-status"></span></div>
             <button class="btn btn-secondary btn-sm" onclick="openFleetDocModal()">+ Ajouter</button>
@@ -1680,7 +1707,7 @@ body{background:var(--bg);}
           <div id="fleet-docs-list" style="font-size:13px;color:var(--ink3);">Chargement...</div>
         </div>
         <!-- Véhicules -->
-        <div class="card" style="padding:24px;margin-bottom:16px;">
+        <div id="pf-veh-card" class="card" style="padding:24px;margin-bottom:16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
             <div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:600;font-size:13.5px;">V&eacute;hicules</span><span id="fleet-vehicles-status"></span></div>
             <button class="btn btn-secondary btn-sm" onclick="openVehicleModal()">+ Ajouter</button>
@@ -1688,7 +1715,7 @@ body{background:var(--bg);}
           <div id="fleet-vehicles-list" style="font-size:13px;color:var(--ink3);">Chargement...</div>
         </div>
         <!-- Chauffeurs -->
-        <div class="card" style="padding:24px;margin-bottom:16px;">
+        <div id="pf-drv-card" class="card" style="padding:24px;margin-bottom:16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
             <div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:600;font-size:13.5px;">Chauffeurs</span><span id="fleet-drivers-status"></span></div>
             <button class="btn btn-secondary btn-sm" onclick="openDriverModal()">+ Ajouter</button>
@@ -8805,6 +8832,12 @@ function loadProfileForm(){
   // Show fleet sections for drivers
   var fleetSec=document.getElementById('pf-fleet-sections');
   if(fleetSec) fleetSec.style.display=(role==='driver'?'block':'none');
+  if(role==='driver'){
+    _pfSetupDriverTabs();
+    set('pf-iban',_pfFmtIban(currentProfile.iban||''));set('pf-bic',currentProfile.bic||'');
+    set('pf-bank-holder',currentProfile.bank_holder||co||'');
+    set('pf-login-email',(currentUser&&currentUser.email)||'');
+  } else _pfTeardownDriverTabs();
   if(role==='driver') loadFleetProfile();
   // Lock first/last name if driver is validated
   if(role==='driver'){
@@ -8824,6 +8857,78 @@ function loadProfileForm(){
     } else if(verNotice){ verNotice.style.display=isVerified?'block':'none'; }
   }
 }
+
+// ── Profil flotte : onglets Société / Compte / Notifications / Documents / Flotte ──
+var _PF_TABS=[
+  {k:'company', l:'Société',        cards:[['pf-identity-card','pf-bank-card']]},
+  {k:'account', l:'Compte',         cards:[['pf-account-card','pf-security-card']]},
+  {k:'notif',   l:'Notifications',  cards:['pf-notif-card']},
+  {k:'docs',    l:'Documents',      cards:['pf-docs-card']},
+  {k:'fleet',   l:'Flotte',         cards:['pf-veh-card','pf-drv-card']}
+];
+var _pfTab='company', _pfOrig=[];
+// Retour à la mise en page d'origine (ex. déconnexion d'une flotte puis connexion d'un client sans recharger)
+function _pfTeardownDriverTabs(){
+  var bar=document.getElementById('pf-tabs'), panels=document.getElementById('pf-panels');
+  if(!bar||!bar.dataset.ready) return;
+  _pfOrig.slice().reverse().forEach(function(o){ o[1].insertBefore(o[0],o[2]); o[0].style.marginBottom=o[3]; });
+  _pfOrig=[]; panels.innerHTML=''; bar.innerHTML=''; bar.style.display='none'; delete bar.dataset.ready;
+  var mc=document.getElementById('pf-main-cols'); if(mc) mc.style.removeProperty('display');
+  var fs=document.getElementById('pf-fleet-sections'); if(fs){ fs.style.removeProperty('display'); fs.style.display='none'; } // sections flotte : chauffeurs uniquement
+}
+function _pfSetupDriverTabs(){
+  var bar=document.getElementById('pf-tabs'), panels=document.getElementById('pf-panels');
+  if(!bar||!panels) return;
+  if(!bar.dataset.ready){
+    bar.innerHTML=_PF_TABS.map(function(t){ return '<button class="pf-tab" role="tab" data-k="'+t.k+'" onclick="_pfShowTab(\''+t.k+'\')">'+t.l+'</button>'; }).join('');
+    _PF_TABS.forEach(function(t){
+      var pn=document.createElement('div'); pn.className='pf-panel'; pn.id='pf-panel-'+t.k; pn.style.display='none';
+      t.cards.forEach(function(c){
+        [].concat(c).forEach(function(id){ var el=document.getElementById(id); if(el) _pfOrig.push([el,el.parentNode,el.nextSibling,el.style.marginBottom]); });
+        if(Array.isArray(c)){ // two cards side by side on desktop
+          var g=document.createElement('div'); g.className='pf-panel-grid';
+          c.forEach(function(id){ var el=document.getElementById(id); if(el){ el.style.marginBottom='0'; g.appendChild(el); } });
+          pn.appendChild(g);
+        } else { var el=document.getElementById(c); if(el) pn.appendChild(el); }
+      });
+      panels.appendChild(pn);
+    });
+    // Original containers are now empty
+    ['pf-main-cols','pf-fleet-sections'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.setProperty('display','none','important'); });
+    bar.dataset.ready='1';
+  }
+  bar.style.display='flex';
+  _pfShowTab(_pfTab);
+}
+window._pfShowTab=function(k){
+  _pfTab=k;
+  document.querySelectorAll('#pf-tabs .pf-tab').forEach(function(b){ var on=b.dataset.k===k; b.classList.toggle('active',on); b.setAttribute('aria-selected',on?'true':'false'); });
+  _PF_TABS.forEach(function(t){ var pn=document.getElementById('pf-panel-'+t.k); if(pn) pn.style.display=(t.k===k?'block':'none'); });
+};
+function _pfFmtIban(v){ return String(v||'').replace(/\s+/g,'').toUpperCase().replace(/(.{4})/g,'$1 ').trim(); }
+function _pfIbanValid(v){
+  var x=String(v||'').replace(/\s+/g,'').toUpperCase();
+  if(!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(x)) return false;
+  var r=(x.slice(4)+x.slice(0,4)).replace(/[A-Z]/g,function(c){ return String(c.charCodeAt(0)-55); });
+  var m=0; for(var i=0;i<r.length;i++){ m=(m*10+parseInt(r[i],10))%97; }
+  return m===1;
+}
+window.saveBankInfo=async function(){
+  var g=function(id){ var e=document.getElementById(id); return e?e.value.trim():''; };
+  var err=document.getElementById('pf-bank-err'); if(err) err.classList.remove('show');
+  var iban=g('pf-iban').replace(/\s+/g,'').toUpperCase(), bic=g('pf-bic').replace(/\s+/g,'').toUpperCase(), holder=g('pf-bank-holder');
+  var fail=function(m){ if(err){ err.textContent=m; err.classList.add('show'); } };
+  if(iban && !_pfIbanValid(iban)) return fail('IBAN invalide — vérifiez le numéro.');
+  if(bic && !/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bic)) return fail('BIC invalide (8 ou 11 caractères).');
+  var upd={ iban:iban||null, bic:bic||null, bank_holder:holder||null };
+  if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
+    var {error}=await sb.from('profiles').update(upd).eq('id',currentUser.id);
+    if(error) return fail(/column/i.test(error.message||'') ? 'Champs bancaires non installés : exécutez profiles_bank.sql dans Supabase.' : 'Erreur : '+error.message);
+  }
+  Object.assign(currentProfile,upd);
+  var ib=document.getElementById('pf-iban'); if(ib) ib.value=_pfFmtIban(iban);
+  showToast(t('toast_saved'));
+};
 
 // ═══════════════════════════════════════════════════════════════
 // FLEET PROFILE: Documents, Vehicles, Drivers
