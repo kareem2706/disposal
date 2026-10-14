@@ -3317,10 +3317,10 @@ function enterApp(){
   var adminNav=document.getElementById('nav-admin');if(adminNav)adminNav.style.display=isAdmin?'block':'none';
   var cCta=document.getElementById('nav-cta-client');if(cCta)cCta.style.display=(!isAdmin && role==='client')?'block':'none';
   var dCta=document.getElementById('nav-cta-driver');if(dCta)dCta.style.display=(isAdminDriver || (!isAdmin && role==='driver'))?'block':'none';
-  // Show fixed help card only for client role
+  // Fixed help card in the sidebar (above Déconnexion) for clients and fleets
   var helpCard=document.getElementById('client-help-card');
   if(helpCard){
-    helpCard.style.display = (!isAdmin && role==='client') ? 'block' : 'none';
+    helpCard.style.display = (!isAdmin && (role==='client' || role==='driver')) ? 'block' : 'none';
     helpCard.classList.toggle('help-drv', !isAdmin && role==='driver'); // fleets: shown in the menu on mobile only
   }
 
