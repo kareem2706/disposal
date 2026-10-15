@@ -5784,7 +5784,7 @@ function _openRideDetailImpl(el){
         +closeBtn;
     } else if(r.status==='offers'){
       ft=trashBtn+closeBtn
-        +'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRide(this.dataset.r)" data-m="m-ride-detail" data-r="'+rId+'">Voir les offres &#x2192;</button>';
+        +'<button class="btn btn-primary" onclick="openRide(this.dataset.r);closeModal(this.dataset.m)" data-m="m-ride-detail" data-r="'+rId+'">Voir les offres &#x2192;</button>';
     } else if(r.status==='pending_payment'){
       ft=closeBtn;
     } else if(r.status==='confirmed'){
