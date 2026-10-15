@@ -4177,8 +4177,8 @@ async function _autoCancelOverdueRides(pendingRides){
     if(isNaN(rideStart))continue;
     if(now>rideStart){
       try{
-        var res=await sb.from('rides').update({status:'cancelled'}).eq('id',r.id).in('status',['waiting','offers']);
-        if(!res.error)cancelled++;
+        var res=await sb.from('rides').update({status:'cancelled'}).eq('id',r.id).in('status',['waiting','offers']).select('id');
+        if(!res.error && res.data && res.data.length){ cancelled++; _notifyOfferDriversCancelled(r,'expired'); }
       }catch(e){}
     }
   }
@@ -6218,6 +6218,30 @@ window._notifyRideConfirmed = async function(rideId, driverId){
   }catch(e){ console.warn('_notifyRideConfirmed', e); }
 };
 
+// Prévient (e-mail + notification dans l'application) les chauffeurs ayant envoyé une offre
+// reason : 'client' (annulée par le client) ou 'expired' (délai dépassé, annulée par le système)
+window._notifyOfferDriversCancelled = async function(ride, reason){
+  if(!sb || !ride || !ride.id) return;
+  try{
+    var off = await sb.from('offers').select('driver_id').eq('ride_id', ride.id);
+    var ids = (off.data||[]).map(function(o){ return o.driver_id; });
+    if(ride.driver_id) ids.push(ride.driver_id);
+    ids = ids.filter(function(id,i,a){ return id && id!==ride.client_id && a.indexOf(id)===i; });
+    if(!ids.length) return;
+    var code = ride.booking_code || String(ride.id).slice(0,8);
+    var when = (ride.ride_date?formatDate(ride.ride_date):'') + (ride.ride_time?' à '+String(ride.ride_time).slice(0,5):'');
+    var expired = reason==='expired';
+    var title = expired ? 'Demande expirée' : 'Demande annulée';
+    var body = 'La demande '+code+(when?' du '+when:'')+', sur laquelle vous aviez envoyé une offre, '
+      + (expired ? 'a été annulée automatiquement : aucune offre n’a été acceptée avant l’heure de départ.' : 'a été annulée par le client.')
+      + ' Votre offre n’est plus valable.';
+    await sb.from('notifications').insert(ids.map(function(d){ return {user_id:d,type:'ride_cancelled',title:title,body:body,ride_id:ride.id,read:false}; }));
+    var base = Object.assign(window._mailRideData(ride), { audience:'driver', reason: expired?'expired':'client' });
+    delete base.passenger;
+    window.sendMailToUsers('ride_cancelled', ids, base);
+  }catch(e){ console.warn('_notifyOfferDriversCancelled', e); }
+};
+
 // Sends the cancellation notice to the client (and driver if one was assigned)
 window._notifyRideCancelled = async function(rideId, refundable, offerDriverIds){
   if(!sb || !rideId) return;
@@ -6234,7 +6258,7 @@ window._notifyRideCancelled = async function(rideId, refundable, offerDriverIds)
     if(r.driver_id) drvIds.push(r.driver_id);
     drvIds = drvIds.filter(function(id){ return id && id !== r.client_id; });
     if(drvIds.length){
-      var dBase = Object.assign({}, base, { audience: 'driver' });
+      var dBase = Object.assign({}, base, { audience: 'driver', reason: 'client' });
       delete dBase.passenger;
       window.sendMailToUsers('ride_cancelled', drvIds, dBase);
     }
@@ -6566,7 +6590,10 @@ window.confirmDeleteRide = async function(){
     } else {
       showToast('✅ Demande annulée');
       if(dIds.length>0){
-        await sb.from('notifications').insert(dIds.map(function(d){return{user_id:d,type:'ride_cancelled',title:'Demande annulée',body:'Une demande sur laquelle vous aviez soumis une offre a été annulée.',ride_id:rideId,read:false};}));
+        var _cr=rideForCancel||{}, _cc=_cr.booking_code||String(rideId).slice(0,8);
+        var _cw=(_cr.ride_date?formatDate(_cr.ride_date):'')+(_cr.ride_time?' à '+String(_cr.ride_time).slice(0,5):'');
+        dIds=dIds.filter(function(d,i,a){ return d && a.indexOf(d)===i; });
+        await sb.from('notifications').insert(dIds.map(function(d){return{user_id:d,type:'ride_cancelled',title:'Demande annulée',body:'La demande '+_cc+(_cw?' du '+_cw:'')+', sur laquelle vous aviez envoyé une offre, a été annulée par le client. Votre offre n’est plus valable.',ride_id:rideId,read:false};}));
       }
     }
   } catch(e){
