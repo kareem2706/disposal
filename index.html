@@ -332,6 +332,10 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 .ofc-pick{margin-left:auto;padding:10px 24px!important;font-size:14px!important;font-weight:600!important;border-radius:999px!important;justify-content:center;}
 .ofc-detail{display:none;margin-top:10px;padding:10px 12px;background:var(--sand);border-radius:10px;font-size:12px;color:var(--ink2);}
 #m-view-offers.rd-panel .modal-ft{display:none;}
+/* Navigation entre écrans plein écran : l'écran précédent reste ouvert mais masqué */
+.modal-overlay.rd-panel.rd-under{display:none!important;}
+body.rd-nav .modal-overlay.rd-panel.open:not(.rd-under) .rd-back{display:flex;}
+body.rd-nav .modal-overlay.rd-panel.open:not(.rd-under) .modal-title{flex:1;min-width:0;text-align:left;}
 /* Confirmation et paiement (version « plein écran ») */
 #m-payment.rd-panel .modal{max-height:none;}
 #m-payment .modal-ft .btn-green{padding:12px 28px!important;font-size:15px!important;font-weight:600!important;border-radius:999px!important;justify-content:center;}
@@ -5816,7 +5820,7 @@ function _openRideDetailImpl(el){
         +closeBtn;
     } else if(r.status==='offers'){
       ft=trashBtn+closeBtn
-        +'<button class="btn btn-primary" onclick="openRide(this.dataset.r);closeModal(this.dataset.m)" data-m="m-ride-detail" data-r="'+rId+'">Voir les offres &#x2192;</button>';
+        +'<button class="btn btn-primary" onclick="_rdPushUnder(this.dataset.m);openRide(this.dataset.r)" data-m="m-ride-detail" data-r="'+rId+'">Voir les offres &#x2192;</button>';
     } else if(r.status==='pending_payment'){
       ft=closeBtn;
     } else if(r.status==='confirmed'){
@@ -6618,7 +6622,7 @@ window.confirmDeleteRide = async function(){
 };
 
 window.editRide = async function(rideId){
-  closeModal('m-ride-detail');
+  _rdPushUnder('m-ride-detail');
   var r = null;
   if(sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     var res = await sb.from('rides').select('*').eq('id',rideId).single();
@@ -6626,7 +6630,7 @@ window.editRide = async function(rideId){
   } else {
     r = getDemoRides().find(function(x){return x.id===rideId;});
   }
-  if(!r){ showToast('Demande introuvable'); return; }
+  if(!r){ showToast('Demande introuvable'); if(_rdStack.length) _rdBack(null); return; }
 
   // Set edit mode
   var editIdEl = document.getElementById('ride-edit-id');
@@ -7085,7 +7089,7 @@ window._editOffer = function(btn){
   var r=null; try{ r=JSON.parse(raw.replace(/&#39;/g,"'")); }catch(e){}
   var rId=btn.dataset.rid;
   if(!rId) return;
-  closeModal('m-ride-detail');
+  _rdPushUnder('m-ride-detail');
   // Open offer modal — openOfferModal will pre-fill via _myOffers
   setTimeout(function(){ openOfferModal(rId, '', r); }, 150);
 };
@@ -7095,7 +7099,7 @@ window._detailOffer = function(btn){
   var r=null; try{ r=JSON.parse(raw.replace(/&#39;/g,"'")); }catch(e){ r=null; }
   var rId=btn.dataset.rid;
   if(!r||!rId){ console.error('_detailOffer: missing data'); return; }
-  closeModal('m-ride-detail');
+  _rdPushUnder('m-ride-detail');
   setTimeout(function(){ openOfferModal(rId, '', r); }, 200);
 };
 
@@ -7602,9 +7606,9 @@ window.openPaymentModal = function(offerId, driverId, amount){
     var el = document.getElementById(id); if(el){ el.classList.remove('show'); el.textContent = ''; }
   });
 
-  // Ouvrir d'abord le paiement, puis fermer les offres (sinon le retour navigateur refermerait le panneau)
+  // Les offres restent derrière : « retour » y ramène
+  _rdPushUnder('m-view-offers');
   openModal('m-payment');
-  closeModal('m-view-offers');
 };
 
 function _paymentShowStep(step){
@@ -7889,7 +7893,7 @@ function _rdEnsureBack(m){
   var hd=m.querySelector('.modal-hd'); if(!hd || hd.querySelector('.rd-back')) return;
   var b=document.createElement('button'); b.type='button'; b.className='rd-back'; b.setAttribute('aria-label','Retour');
   b.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
-  b.onclick=function(){ closeModal(m.id); };
+  b.onclick=function(){ _rdBack(m.id); };
   hd.insertBefore(b, hd.firstChild);
 }
 // ── Version « plein écran » : historique du navigateur + lien direct #course/CODE ──
@@ -7901,11 +7905,34 @@ function _rdOpened(id){
   var code=isDetail?_rdCode(id):'', url=location.pathname+location.search+(code?'#course/'+encodeURIComponent(code):(isDetail?'':location.hash));
   try{ if(_rdHist) history.replaceState({rd:id},'',url); else { history.pushState({rd:id},'',url); _rdHist=true; } }catch(e){}
 }
-function _rdHideAll(){ document.querySelectorAll('.modal-overlay.rd-panel.open').forEach(function(m){ m.classList.remove('open'); }); document.body.classList.remove('rd-open'); }
-window.addEventListener('popstate', function(){ if(_rdHist){ _rdHist=false; _rdHideAll(); } });
+function _rdHideAll(){ document.querySelectorAll('.modal-overlay.rd-panel.open').forEach(function(m){ m.classList.remove('open','rd-under'); }); _rdStack=[]; document.body.classList.remove('rd-open','rd-nav'); }
+// Pile des écrans précédents (ex. fiche → offres → paiement) : « retour » revient d'un cran
+var _rdStack=[], _rdSkipPop=0;
+window._rdPushUnder=function(prevId){
+  var p=document.getElementById(prevId);
+  if(!p || !p.classList.contains('open') || p.classList.contains('rd-under')) return;
+  p.classList.add('rd-under'); _rdStack.push(prevId); document.body.classList.add('rd-nav');
+  try{ history.pushState({rd:'nav'},'',location.href); }catch(e){}
+};
+function _rdPopTo(curId){
+  var cur=curId&&document.getElementById(curId); if(cur) cur.classList.remove('open');
+  var prev=document.getElementById(_rdStack.pop()||'');
+  if(prev){ prev.classList.remove('rd-under'); prev.classList.add('open'); }
+  if(!_rdStack.length) document.body.classList.remove('rd-nav');
+}
+window._rdBack=function(id){
+  if(!_rdStack.length){ closeModal(id); return; }
+  _rdPopTo(id); _rdSkipPop++;
+  try{ history.back(); }catch(e){ _rdSkipPop--; }
+};
+window.addEventListener('popstate', function(){
+  if(_rdSkipPop>0){ _rdSkipPop--; return; }
+  if(_rdStack.length){ var top=document.querySelector('.modal-overlay.rd-panel.open:not(.rd-under)'); _rdPopTo(top?top.id:null); return; }
+  if(_rdHist){ _rdHist=false; _rdHideAll(); }
+});
 document.addEventListener('keydown', function(e){
   if(e.key!=='Escape' || document.querySelector('.modal-overlay.open:not(.rd-panel)')) return;
-  var top=document.querySelector('.modal-overlay.rd-form.open')||document.querySelector('.modal-overlay.rd-panel.open'); if(top) closeModal(top.id);
+  var top=document.querySelector('.modal-overlay.rd-panel.open:not(.rd-under)'); if(top) _rdBack(top.id);
 });
 // Ouverture d'une course depuis un lien …#course/CODE (après connexion)
 async function _rdDeepLink(){
@@ -7984,11 +8011,16 @@ window.openVehGuide = function(){
   document.addEventListener('keydown', onKey);
 };
 window.closeModal = id => {
-  document.getElementById(id)?.classList.remove('open');
-  var _cm=document.getElementById(id);
+  var _cm=document.getElementById(id), _extra=0;
+  if(_cm && _cm.classList.contains('rd-panel') && !_cm.classList.contains('rd-under') && _rdStack.length){
+    _extra=_rdStack.length;
+    _rdStack.splice(0).forEach(function(x){ var e=document.getElementById(x); if(e) e.classList.remove('open','rd-under'); });
+    document.body.classList.remove('rd-nav');
+  }
+  if(_cm) _cm.classList.remove('open','rd-under');
   if(_cm && _cm.classList.contains('rd-panel') && !document.querySelector('.modal-overlay.rd-panel.open')){
     document.body.classList.remove('rd-open');
-    if(_rdHist){ _rdHist=false; try{ history.back(); }catch(e){} }
+    if(_rdHist){ _rdHist=false; try{ history.go(-(1+_extra)); }catch(e){} }
   }
   // Clear fleet modal errors on close
   if(id==='m-fleet-doc'){var e=document.getElementById('fd-err');if(e)e.classList.remove('show');}
