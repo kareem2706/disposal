@@ -4697,6 +4697,7 @@ async function loadDriverDashboard(){
   const _cRate = (await _commPct(currentProfile && currentProfile.address_country)) / 100;
   const revenueNet = monthMissions.reduce(function(a,r){
     if(r.payment_method==='refunded') return a; // refunded ride: don't count
+    if(r.is_subcontract) return a; // sous-traitance : non comptée dans les revenus
     var htva = _rideHtva(r); // sous-traitance : prix déjà HTVA
     return a + htva * (1 - _cRate); // net after platform commission
   },0);
@@ -4716,8 +4717,8 @@ async function loadDriverDashboard(){
     var dI=function(s,bg){return '<div class="stat-card-icon" style="background:'+bg+'">'+s+'</div>';};
   document.getElementById('driver-stats').innerHTML=
     '<div class="stat-card"'+(upcomingMissions.length?' onclick="showPage(\'missions\')" style="cursor:pointer;" title="Voir mes missions à venir"':'')+'>'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>','var(--green-bg)')+'<div class="stat-label">Missions \u00e0 venir</div><div class="stat-val">'+upcomingMissions.length+'</div></div>'
-    +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>','var(--blue-bg)')+'<div class="stat-label">Ce mois</div><div class="stat-val">'+monthMissions.length+'</div></div>'
-    +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M16 7V5a4 4 0 00-8 0v2"/><circle cx="12" cy="14" r="2"/></svg>','var(--red-bg)')+'<div class="stat-label">Revenus</div><div class="stat-val stat-money">'+(revenueNet>0?revenueNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>'
+    +'<div class="stat-card" onclick="_goDoneMissions()" style="cursor:pointer;" title="Voir les missions terminées">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>','var(--blue-bg)')+'<div class="stat-label">Ce mois</div><div class="stat-val">'+monthMissions.length+'</div></div>'
+    +'<div class="stat-card" onclick="showPage(\'d-invoices\')" style="cursor:pointer;" title="Voir la facturation">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 6.5A7 7 0 1018.5 17.5"/><path d="M4 10.5h10M4 13.5h10"/></svg>','var(--green-bg)')+'<div class="stat-label">Revenus</div><div class="stat-val stat-money">'+(revenueNet>0?revenueNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>','#FFF3DC')+'<div class="stat-label">Score</div><div class="stat-val">'+scoreDisplay+'</div></div>';
 
   // Update marketplace badge immediately (hidden per spec)
@@ -4823,6 +4824,10 @@ window.mkSwitch = function(btn, target){
 };
 
 // MISSIONS
+window._goDoneMissions=function(){
+  showPage('missions');
+  setTimeout(function(){ var b=document.getElementById('mstab-done'); if(b) msSwitch(b,'ms-done'); },60);
+};
 window.msSwitch = function(btn, target){
   document.querySelectorAll('#page-missions .mktab').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
