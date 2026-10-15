@@ -8,7 +8,7 @@ create table if not exists public.push_tokens (
   token      text primary key,                                   -- ExponentPushToken[...]
   user_id    uuid not null references auth.users(id) on delete cascade,
   platform   text,                                               -- ios / android
-  prefs      jsonb not null default '{"new_request":true,"request_updated":true,"request_cancelled":true}'::jsonb,
+  prefs      jsonb not null default '{"new_request":true,"request_updated":true,"request_cancelled":true,"offer_accepted":true}'::jsonb,
   updated_at timestamptz not null default now()
 );
 

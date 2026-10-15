@@ -4,6 +4,8 @@
 //   • « Nouvelle demande »  → tous les chauffeurs (sauf le créateur) quand une demande est publiée
 //   • « Demande modifiée »  → chauffeurs ayant fait une offre + chauffeur attribué, si date/heure/adresses/véhicule/pax changent
 //   • « Demande annulée »   → chauffeurs ayant fait une offre + chauffeur attribué, quand la course passe à « cancelled »
+//   • « Offre acceptée »    → le chauffeur dont l'offre est retenue (course confirmée ou en attente de paiement)
+// Les chauffeurs dont l'offre a été refusée (autre chauffeur retenu) ne reçoivent plus rien sur cette demande.
 // Chaque chauffeur peut couper chaque type dans son profil (push_tokens.prefs).
 
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -15,7 +17,7 @@ const MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "aoû
 const DAYS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
 
 type Ride = Record<string, any>;
-type Kind = "new_request" | "request_updated" | "request_cancelled";
+type Kind = "new_request" | "request_updated" | "request_cancelled" | "offer_accepted";
 
 async function rest(path: string) {
   const r = await fetch(`${SB_URL}/rest/v1/${path}`, { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } });
@@ -42,6 +44,9 @@ function decide(type: string, rec: Ride, old: Ride | null): Kind | null {
   if (type === "INSERT") return OPEN.includes(rec.status) ? "new_request" : null;
   if (type !== "UPDATE" || !old) return null;
   if (rec.status === "cancelled" && old.status !== "cancelled") return "request_cancelled";
+  // Offre acceptée : un chauffeur est attribué à une demande qui était ouverte
+  const assigned = ["confirmed", "pending_payment"].includes(rec.status) && !!rec.driver_id;
+  if (assigned && (OPEN.includes(old.status) || !old.driver_id || old.driver_id !== rec.driver_id)) return "offer_accepted";
   // Demande qui (re)devient ouverte (ex. paiement validé, republication)
   if (OPEN.includes(rec.status) && !OPEN.includes(old.status) && old.status !== "cancelled") return "new_request";
   if (rec.status !== "cancelled" && WATCHED.some((k) => String(rec[k] ?? "") !== String(old[k] ?? ""))) return "request_updated";
@@ -57,8 +62,11 @@ Deno.serve(async (req) => {
 
     // Destinataires
     let users: string[] | null = null; // null = tous les chauffeurs
-    if (kind !== "new_request") {
-      const offers = await rest(`offers?ride_id=eq.${rec.id}&select=driver_id`);
+    if (kind === "offer_accepted") {
+      users = [rec.driver_id];
+    } else if (kind !== "new_request") {
+      // Offres en cours ou acceptée (pas les offres refusées) + chauffeur attribué
+      const offers = await rest(`offers?ride_id=eq.${rec.id}&status=in.(pending,accepted)&select=driver_id`);
       users = [...new Set([...(offers as any[]).map((o) => o.driver_id), rec.driver_id].filter(Boolean))];
       if (!users.length) return new Response(JSON.stringify({ skipped: "no recipients" }), { status: 200 });
     }
@@ -68,9 +76,11 @@ Deno.serve(async (req) => {
     if (!tokens.length) return new Response(JSON.stringify({ sent: 0 }), { status: 200 });
 
     const title = kind === "new_request" ? (rec.is_subcontract ? "Nouvelle sous-traitance" : "Nouvelle demande")
-      : kind === "request_updated" ? "Demande modifiée" : "Demande annulée";
+      : kind === "request_updated" ? "Demande modifiée"
+      : kind === "offer_accepted" ? "Offre acceptée 🎉" : "Demande annulée";
     const extra = [VEH[rec.vehicle_type] || rec.vehicle_type, rec.passengers ? rec.passengers + " pax" : ""].filter(Boolean).join(" · ");
-    const body = [route(rec), [when(rec), kind === "new_request" ? extra : ""].filter(Boolean).join(" · ")].filter(Boolean).join("\n");
+    const lead = kind === "offer_accepted" ? `${rec.booking_code || "Course"} est confirmée pour vous.` : "";
+    const body = [lead, route(rec), [when(rec), kind === "new_request" ? extra : ""].filter(Boolean).join(" · ")].filter(Boolean).join("\n");
 
     const msgs = tokens.map((t) => ({ to: t.token, title, body, sound: "default", data: { ride_id: rec.id, kind }, channelId: "default" }));
     let sent = 0;
