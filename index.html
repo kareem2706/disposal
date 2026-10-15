@@ -368,6 +368,28 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .modal-ft{padding:13px 22px;border-top:1px solid var(--sand3);display:flex;gap:9px;align-items:center;justify-content:flex-end;flex-shrink:0;}
 .close-btn{width:28px;height:28px;border-radius:50%;border:none;background:var(--sand2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink2);transition:all var(--t);}
 .close-btn:hover{background:var(--sand3);color:var(--ink);}
+/* ═══ Version « plein écran » : détail d'une course en panneau latéral (ordinateur) / page (mobile) ═══ */
+.rd-back{display:none;width:34px;height:34px;border-radius:50%;border:none;background:transparent;cursor:pointer;align-items:center;justify-content:center;color:var(--ink);margin:-4px 6px -4px -8px;flex-shrink:0;}
+.rd-back:hover{background:var(--sand2);}
+@keyframes rdSlideIn{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes rdSlideUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+@media(min-width:901px){
+  .modal-overlay.rd-panel{left:auto;width:min(580px,44vw);padding:0;background:transparent;backdrop-filter:none;align-items:stretch;justify-content:stretch;z-index:700;}
+  .modal-overlay.rd-panel.open{animation:none;}
+  .modal-overlay.rd-panel .modal{max-width:none!important;max-height:none!important;height:100%;border-radius:0;border-left:1px solid var(--sand3);box-shadow:-18px 0 44px rgba(14,14,12,.10);animation:rdSlideIn .22s var(--ease);}
+  .modal-overlay.rd-panel .modal-body{padding:18px 24px!important;}
+  .modal-overlay.rd-panel #detail-map-wrap{height:220px!important;}
+  .modal-overlay.rd-panel #detail-map-img{height:225px!important;}
+  body.rd-open .app-main{margin-right:min(580px,44vw);transition:margin-right .2s var(--ease);}
+}
+@media(max-width:900px){
+  .modal-overlay.rd-panel{padding:0;align-items:stretch;justify-content:stretch;background:var(--bg);backdrop-filter:none;}
+  .modal-overlay.rd-panel .modal{max-width:none!important;max-height:none!important;width:100%;height:100%;height:100dvh;border-radius:0;box-shadow:none;animation:rdSlideUp .2s var(--ease);}
+  .modal-overlay.rd-panel .modal-hd{padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top));}
+  .modal-overlay.rd-panel .rd-back{display:flex;}
+  .modal-overlay.rd-panel .modal-hd>.close-btn{display:none;}
+  .modal-overlay.rd-panel .modal-ft{padding-bottom:max(13px,env(safe-area-inset-bottom));}
+}
 
 /* ═══ NOTIFICATIONS PANEL ═══ */
 .notif-panel{position:absolute;top:44px;right:0;width:320px;background:white;border:1px solid var(--sand3);border-radius:var(--r-lg);box-shadow:var(--sh-lg);display:none;z-index:200;}
@@ -2340,9 +2362,10 @@ body{background:var(--bg);}
 </div>
 
 <!-- Ride Detail -->
-<div class="modal-overlay" id="m-ride-detail">
+<div class="modal-overlay rd-panel" id="m-ride-detail">
   <div class="modal" style="max-width:520px;max-height:88vh;">
     <div class="modal-hd">
+      <button class="rd-back" type="button" aria-label="Retour" onclick="closeModal('m-ride-detail')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
       <span class="modal-title" id="detail-title">D&eacute;tail de la demande</span>
       <span id="detail-status" style="margin-left:auto;margin-right:10px;flex-shrink:0;"></span>
       <button class="close-btn" onclick="closeModal('m-ride-detail')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
@@ -2355,9 +2378,10 @@ body{background:var(--bg);}
 </div>
 
 <!-- Admin Ride Detail -->
-<div class="modal-overlay" id="m-ar-detail" onclick="if(event.target===this)closeModal('m-ar-detail')">
+<div class="modal-overlay rd-panel" id="m-ar-detail" onclick="if(event.target===this)closeModal('m-ar-detail')">
   <div class="modal" style="max-width:540px;max-height:88vh;">
     <div class="modal-hd">
+      <button class="rd-back" type="button" aria-label="Retour" onclick="closeModal('m-ar-detail')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
       <span class="modal-title" id="ar-detail-title">Détail de la course</span>
       <button class="close-btn" onclick="closeModal('m-ar-detail')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
     </div>
@@ -3461,6 +3485,7 @@ async function loadMyOffers(){
 function enterApp(){
   console.log('[enterApp] called, _entering=',_entering);
   if(_entering)return; _entering=true;
+  if(/^#course\//.test(location.hash||'')) setTimeout(_rdDeepLink, 900);
   var _l=document.getElementById('app-loader');if(_l)_l.style.display='none';
   showScreen('app');
   const metaRole = currentUser?.user_metadata?.role;
@@ -3598,6 +3623,7 @@ async function _showPaymentSuccess(rideId, amount){
 
 // ── NAVIGATION ────────────────────────────────────────
 window.showPage = function(pageId){
+  if(document.querySelector('.modal-overlay.rd-panel.open')){ _rdHist=false; _rdHideAll(); try{ if(history.state&&history.state.rd) history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const pg = document.getElementById('page-' + pageId);
   if(!pg) return;
@@ -7657,7 +7683,30 @@ function setLoading(btn, loading, text){
 }
 
 function _tagModalClose(m){ if(!m||m.id==='m-confirm-delete') return; m.querySelectorAll('.modal-ft button').forEach(function(b){ if((b.textContent||'').trim()==='Fermer') b.classList.add('m-close-mob'); }); }
-window.openModal  = id => { var _m=document.getElementById(id); if(!_m) return; _tagModalClose(_m); _m.classList.add('open'); };
+window.openModal  = id => { var _m=document.getElementById(id); if(!_m) return; _tagModalClose(_m); _m.classList.add('open'); if(_m.classList.contains('rd-panel')) _rdOpened(id); };
+// ── Version « plein écran » : historique du navigateur + lien direct #course/CODE ──
+var _rdHist=false, _rdClosing=false;
+function _rdCode(id){ var r=id==='m-ar-detail'?window._lastArRide:window._lastDetailRide; return r?(r.booking_code||String(r.id||'')):''; }
+function _rdOpened(id){
+  document.body.classList.add('rd-open');
+  var code=_rdCode(id), url=location.pathname+location.search+(code?'#course/'+encodeURIComponent(code):'');
+  try{ if(_rdHist) history.replaceState({rd:id},'',url); else { history.pushState({rd:id},'',url); _rdHist=true; } }catch(e){}
+}
+function _rdHideAll(){ ['m-ride-detail','m-ar-detail'].forEach(function(i){ var m=document.getElementById(i); if(m) m.classList.remove('open'); }); document.body.classList.remove('rd-open'); }
+window.addEventListener('popstate', function(){ if(_rdHist){ _rdHist=false; _rdHideAll(); } });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape' && document.querySelector('.modal-overlay.rd-panel.open') && !document.querySelector('.modal-overlay.open:not(.rd-panel)')) closeModal(document.querySelector('.modal-overlay.rd-panel.open').id); });
+// Ouverture d'une course depuis un lien …#course/CODE (après connexion)
+async function _rdDeepLink(){
+  var m=(location.hash||'').match(/^#course\/([^&]+)$/); if(!m||!sb||!currentUser) return;
+  var code=decodeURIComponent(m[1]);
+  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+  try{
+    var q=sb.from('rides').select('*'); q=/^[0-9a-f-]{36}$/i.test(code)?q.eq('id',code):q.eq('booking_code',code);
+    var r=(await q.maybeSingle()).data; if(!r) return;
+    var fake=document.createElement('div'); fake.dataset.ride=JSON.stringify(r).replace(/'/g,"&#39;");
+    if(currentRole==='admin' && typeof arOpenDetail==='function') arOpenDetail(fake); else openRideDetail(fake);
+  }catch(e){ console.warn('[deep link]', e); }
+}
 // Footers rebuilt while a modal is open (e.g. after rating) get tagged too
 (function(){ try{ new MutationObserver(function(muts){ muts.forEach(function(mu){ var t=mu.target; if(t&&t.closest&&t.closest('.modal-ft')) _tagModalClose(t.closest('.modal-overlay')); }); }).observe(document.body,{childList:true,subtree:true}); }catch(e){} })();
 // Vehicle guide: re-parented to the end of <body> so it can never sit
@@ -7724,6 +7773,10 @@ window.openVehGuide = function(){
 };
 window.closeModal = id => {
   document.getElementById(id)?.classList.remove('open');
+  if(id==='m-ride-detail'||id==='m-ar-detail'){
+    if(!document.querySelector('.modal-overlay.rd-panel.open')) document.body.classList.remove('rd-open');
+    if(_rdHist){ _rdHist=false; try{ history.back(); }catch(e){} }
+  }
   // Clear fleet modal errors on close
   if(id==='m-fleet-doc'){var e=document.getElementById('fd-err');if(e)e.classList.remove('show');}
   if(id==='m-vehicle'){var e=document.getElementById('veh-err');if(e)e.classList.remove('show');}
@@ -11342,6 +11395,7 @@ function _arRenderTable(rides, el){
 
 window.arOpenDetail = async function(row){
   var r; try{ r=JSON.parse(row.dataset.ride.replace(/&#39;/g,"'").replace(/&lt;/g,'<').replace(/&gt;/g,'>')); }catch(e){ return; }
+  window._lastArRide=r;
 
   // Build detail body using shared helper
   var result = _buildRideDetailBody(r, {idPrefix:'ar-', showStatus:false});
