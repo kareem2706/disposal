@@ -381,7 +381,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(input[type="time"]),
 .modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(select[id$="-pax"]),
 .modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(select[id$="-vehicle"]),
-.modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(select[id$="-veh"]){grid-column:auto;min-width:0;}
+.modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(select[id$="-veh"]),
+.modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(select[id^="spax-"]),
+.modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(select[id^="sveh-"]),
+.modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(select[id^="sub-spax-"]),
+.modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(select[id^="sub-sveh-"]){grid-column:auto;min-width:0;}
 .modal-overlay.rd-form .form-grid .input-group.full{grid-column:1/-1;}
 .modal-overlay.rd-form .form-grid input[type="date"],.modal-overlay.rd-form .form-grid input[type="time"]{min-width:0;width:100%;}
 /* Pop-ups (évaluation, confirmation, paiement…) toujours au-dessus des panneaux plein écran */
