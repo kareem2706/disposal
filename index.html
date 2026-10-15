@@ -5326,13 +5326,11 @@ function _openRideDetailImpl(el){
   var titleEl=document.getElementById('detail-title');
   var subTitle=isMixed?t('title_mixed'):isDisp?t('title_disp'):t('title_ab');
   // Prepend booking code to title if available
-  var fullTitle = r.booking_code ? '<span class="rd-code">'+r.booking_code+'</span><span class="rd-sep"> — </span><span class="rd-sub">'+subTitle+'</span>' : '<span class="rd-sub">'+subTitle+'</span>';
-  if(titleEl){
-    titleEl.innerHTML = fullTitle
-      + (r.is_subcontract
+  var _subIc = r.is_subcontract
         ? ' <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--amber-bg);color:var(--amber);vertical-align:middle;margin-left:4px;" title="Sous-traitée"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>'
-        : '');
-  }
+        : '';
+  var fullTitle = r.booking_code ? '<span class="rd-code">'+r.booking_code+'</span><span class="rd-sep"> — </span><span class="rd-sub">'+subTitle+_subIc+'</span>' : '<span class="rd-sub">'+subTitle+_subIc+'</span>';
+  if(titleEl) titleEl.innerHTML = fullTitle;
 
   // Header row: big title + status pill
   var metaParts=[];
@@ -5432,10 +5430,11 @@ function _openRideDetailImpl(el){
   var bodyEl=document.getElementById('detail-body');if(bodyEl)bodyEl.innerHTML=body;
 
   // ── Google Distance Matrix for A→B (gen-protected) ──
-  if(!isDisp&&!isMixed&&r.from_address&&r.to_address&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
-    (function(myGen){
+  if(!isDisp&&!isMixed&&r.from_address&&r.to_address&&typeof _ltWhenMaps==='function'){
+    (function(myGen){ _ltWhenMaps(function(){
+      if(window._detailGen!==myGen||!google.maps.DistanceMatrixService) return;
       (new google.maps.DistanceMatrixService()).getDistanceMatrix({
-        origins:[r.from_address],destinations:[r.to_address],
+        origins:[cleanAddr(r.from_address)],destinations:[cleanAddr(r.to_address)],
         travelMode:google.maps.TravelMode.DRIVING,language:'fr'
       },function(res,st){
         if(window._detailGen!==myGen)return;
@@ -5449,7 +5448,7 @@ function _openRideDetailImpl(el){
           }
         }
       });
-    })(gen);
+    }); })(gen);
   }
 
   // ── Google Distance Matrix for mixed A→B segments (gen-protected) ──
@@ -5546,7 +5545,7 @@ function _openRideDetailImpl(el){
         mixedSegs.forEach(function(s){if(s.from&&s.from!=='—')pts.push(s.from);if(s.to&&s.to!=='—'&&s.to!==s.from)pts.push(s.to);});
         if(pts.length>0){var pP=pts.map(function(p){return encodeURIComponent(p);}).join('%7C');var mP=pts.map(function(p,i){var col=i===0?'0x1B5E3B':(i===pts.length-1?'0xC0392B':'0xE67E22');return 'markers=color:'+col+'%7Clabel:'+(i+1)+'%7C'+encodeURIComponent(p);});src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&path=color:0x1B5E3Bff|weight:4|'+pP+'&'+mP.join('&')+'&key='+KEY;}
       } else if(r.trip_type!=='disposal'&&r.to_address){
-        var f=encodeURIComponent(r.from_address),t2=encodeURIComponent(r.to_address);
+        var f=encodeURIComponent(cleanAddr(r.from_address)),t2=encodeURIComponent(cleanAddr(r.to_address));
         src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&path=color:0x1B5E3Bff|weight:4|'+f+'|'+t2+'&markers=color:0x1B5E3B%7Clabel:A%7C'+f+'&markers=color:0xC0392B%7Clabel:B%7C'+t2+'&key='+KEY;
       } else if(r.from_address){
         var f=encodeURIComponent(r.from_address);
@@ -5560,7 +5559,7 @@ function _openRideDetailImpl(el){
         wrap.style.display='block';
         var sp3=document.getElementById('detail-map-spacer');if(sp3)sp3.style.height='12px';
         // Replace the straight line by the real driving route (A -> B, via the mixed segments)
-        var _routePts = (isMixed&&mixedSegs&&mixedSegs.length>0) ? pts : ((r.trip_type!=='disposal'&&r.to_address) ? [r.from_address, r.to_address] : null);
+        var _routePts = (isMixed&&mixedSegs&&mixedSegs.length>0) ? pts : ((r.trip_type!=='disposal'&&r.to_address) ? [cleanAddr(r.from_address), cleanAddr(r.to_address)] : null);
         if(_routePts && _routePts.length>=2) _staticRouteMap(img, src, _routePts);
       }
     }
