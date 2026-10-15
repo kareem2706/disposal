@@ -4062,7 +4062,7 @@ function _renderInvoiceMonth(){
       +'</div>'
       +'<div style="text-align:right;white-space:nowrap;">'
         +'<div style="font-size:13px;font-weight:600;">'+htva.toFixed(2).replace('.',',')+' €</div>'
-        +'<div style="font-size:10px;color:var(--ink3);">HTVA</div>'
+        +'<div style="font-size:11px;color:var(--ink3);">TVA '+((r.final_price?parseFloat(r.final_price):0)-htva).toFixed(2).replace('.',',')+' €</div>'
       +'</div>'
     +'</div>';
   }).join('');
