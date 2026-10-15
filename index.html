@@ -783,6 +783,16 @@ body{background:var(--bg);}
 @media(max-width:600px){.dinv-hd{padding:12px 14px!important;}.dinv-nav{width:100%;}.dinv-nav select{flex:1;min-width:0;font-size:14px!important;padding:6px 8px!important;}.dinv-nav button{width:34px!important;height:34px!important;flex-shrink:0;}.dinv-btns{width:100%;}.dinv-btns .btn{flex:1;justify-content:center;}}
 /* Mobile: money KPI on one line */
 @media(max-width:600px){.stat-val.stat-money{white-space:nowrap;font-size:clamp(18px,6.2vw,34px);}}
+/* Mobile : cartes de statistiques compactes (icône à gauche, libellé + valeur à droite) */
+@media(max-width:900px){
+  .stats-row{gap:8px!important;margin-bottom:16px!important;}
+  .stats-row .stat-card{display:grid!important;grid-template-columns:34px minmax(0,1fr);grid-template-rows:auto auto;column-gap:10px;row-gap:3px;align-items:center;padding:12px!important;border-radius:14px;}
+  .stats-row .stat-card-icon{grid-row:1/3;width:34px;height:34px;margin:0!important;border-radius:9px;}
+  .stats-row .stat-card-icon svg{width:17px;height:17px;}
+  .stats-row .stat-label{margin:0!important;font-size:9.5px!important;letter-spacing:.04em;line-height:1.25;align-self:end;}
+  .stats-row .stat-val{font-size:21px!important;line-height:1.1;align-self:start;}
+  .stats-row .stat-val.stat-money{font-size:clamp(15px,4.6vw,21px)!important;white-space:nowrap;}
+}
 /* Mobile: modal footers — actions left, amount right, no "Fermer" button */
 @media(max-width:900px){
   .modal-ft{justify-content:flex-start!important;flex-wrap:wrap;}
@@ -3793,7 +3803,7 @@ async function loadClientDashboard(){
   // bank_transfer/stripe cancelled but NOT yet refunded (remboursement en attente) → don't count as paid yet, money not confirmed lost
   var totalNet = total + paidCancelled; // refunded already excluded (those rides have payment_method='refunded', not in done/confirmed)
   document.getElementById('client-stats').innerHTML=
-    '<div class="stat-card">'+_mkI(_s1,'var(--green-bg)')+'<div class="stat-label">Confirmées/terminées</div><div class="stat-val">'+confirmed+'</div></div>'
+    '<div class="stat-card">'+_mkI(_s1,'var(--green-bg)')+'<div class="stat-label">Confirmées / terminées</div><div class="stat-val">'+confirmed+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s2,'#FFF3DC')+'<div class="stat-label">En attente</div><div class="stat-val">'+pending+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s3,'var(--blue-bg)')+'<div class="stat-label">Offres reçues</div><div class="stat-val">'+withOffer+'</div></div>'
     +'<div class="stat-card">'+_mkI(_s4,'var(--red-bg)')+'<div class="stat-label">Total pay\u00e9</div><div class="stat-val stat-money">'+(totalNet>0?totalNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>';
