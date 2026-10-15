@@ -5524,48 +5524,87 @@ function _openRideDetailImpl(el){
   }
   function _staticRouteMap(img, baseSrc, points){
     img.dataset.routeKey=baseSrc;
-    if(!window.google||!google.maps||!google.maps.Map){
-      // Google Maps not loaded yet (e.g. right after opening the app): retry shortly
-      if(typeof _ltWhenMaps==='function') _ltWhenMaps(function(){ if(img.dataset.routeKey===baseSrc) _staticRouteMap(img, baseSrc, points); });
-      return;
-    }
-    var apply=function(poly, how){
-      if(!poly) return;
-      var routed=baseSrc.replace(/path=[^&]*/, 'path='+encodeURIComponent('color:0x1B5E3Bff|weight:4|enc:'+poly));
-      if(routed.length<16000 && img.dataset.routeKey===baseSrc){ img.src=routed; console.log('[map] itinéraire routier affiché ('+how+')'); }
+    var KEYR='AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y';
+    var cacheKey='rt:'+points.join('>');
+    var apply=function(poly, how, meters, secs){
+      if(!poly || img.dataset.routeKey!==baseSrc) return false;
+      var routed=baseSrc+'&path='+encodeURIComponent('color:0x1B5E3Bff|weight:5|enc:'+poly);
+      if(routed.length>=16000) return false;
+      img.src=routed; console.log('[map] itinéraire routier affiché ('+how+')');
+      try{ sessionStorage.setItem(cacheKey, JSON.stringify({p:poly,m:meters||0,s:secs||0})); }catch(e){}
+      // Distance / durée à partir de l'itinéraire si la ligne n'est pas encore remplie
+      if(meters){
+        var te=document.getElementById('detail-route-info-text'), ie=document.getElementById('detail-route-info');
+        if(te && ie && !te.textContent){ te.textContent=(meters/1000).toFixed(1).replace('.',',')+' km - +/- '+Math.max(1,Math.round((secs||0)/60))+' min'; ie.style.display='block'; }
+      }
+      return true;
     };
-    // 1) Routes API (new) — Maps JS "routes" library
-    var viaRoutes=async function(){
-      try{
-        var lib=await google.maps.importLibrary('routes');
-        if(!lib||!lib.Route||!lib.Route.computeRoutes) throw new Error('Route.computeRoutes indisponible');
-        var res=await lib.Route.computeRoutes({ origin:points[0], destination:points[points.length-1],
-          intermediates:points.slice(1,-1).slice(0,23).map(function(p){ return {location:p}; }), travelMode:'DRIVING', fields:['path'] });
-        var rt=res&&res.routes&&res.routes[0];
-        if(!rt||!rt.path||!rt.path.length) throw new Error('aucun itinéraire');
-        var pts=rt.path.map(function(ll){ return { lat:typeof ll.lat==='function'?ll.lat():ll.lat, lng:typeof ll.lng==='function'?ll.lng():ll.lng }; });
-        var step=Math.max(1,Math.ceil(pts.length/400)), simp=pts.filter(function(_,i){ return i%step===0; });
-        if(simp[simp.length-1]!==pts[pts.length-1]) simp.push(pts[pts.length-1]);
-        apply(_encPolyline(simp),'Routes API');
-        return true;
-      }catch(e){ console.warn('[map] Routes API indisponible :', e&&e.message||e); return false; }
+    // Itinéraire déjà calculé pendant cette session
+    try{ var c=JSON.parse(sessionStorage.getItem(cacheKey)||'null'); if(c&&c.p){ apply(c.p,'cache',c.m,c.s); return; } }catch(e){}
+    var simplify=function(pts){
+      var step=Math.max(1,Math.ceil(pts.length/400)), simp=pts.filter(function(_,i){ return i%step===0; });
+      if(simp[simp.length-1]!==pts[pts.length-1]) simp.push(pts[pts.length-1]);
+      return _encPolyline(simp);
     };
-    // 2) Directions API (legacy) as a fallback
-    var viaDirections=function(onFail){
-      try{
-        if(!google.maps.DirectionsService){ if(onFail) onFail(); return; }
-        new google.maps.DirectionsService().route({ origin:points[0], destination:points[points.length-1],
-          waypoints:points.slice(1,-1).slice(0,23).map(function(p){ return {location:p, stopover:true}; }), travelMode:'DRIVING' },function(res,st){
-          if(st!=='OK'||!res.routes||!res.routes[0]){ console.warn('[map] Directions API indisponible :', st); if(onFail) onFail(); return; }
-          var poly=res.routes[0].overview_polyline; if(poly&&typeof poly!=='string') poly=poly.points||'';
-          apply(poly,'Directions API');
+    // 1) Routes API en direct (REST) — ne dépend pas du chargement de Google Maps JS
+    var viaRest=function(){
+      return fetch('https://routes.googleapis.com/directions/v2:computeRoutes',{ method:'POST',
+        headers:{'Content-Type':'application/json','X-Goog-Api-Key':KEYR,'X-Goog-FieldMask':'routes.polyline.encodedPolyline,routes.distanceMeters,routes.duration'},
+        body:JSON.stringify({ origin:{address:points[0]}, destination:{address:points[points.length-1]},
+          intermediates:points.slice(1,-1).slice(0,23).map(function(p){ return {address:p}; }), travelMode:'DRIVE', languageCode:'fr' })
+      }).then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error((j&&j.error&&j.error.message)||('HTTP '+r.status)); return j; }); })
+        .then(function(j){
+          var rt=j&&j.routes&&j.routes[0]; if(!rt||!rt.polyline||!rt.polyline.encodedPolyline) throw new Error('aucun itinéraire');
+          return apply(rt.polyline.encodedPolyline,'Routes API REST',rt.distanceMeters,parseInt(String(rt.duration||'0').replace('s',''))||0);
+        }).catch(function(e){ console.warn('[map] Routes API (REST) indisponible :', e&&e.message||e); return false; });
+    };
+    // 2) Directions (Maps JS) — chargé explicitement via importLibrary
+    var viaDirections=function(){
+      return new Promise(function(resolve){
+        _ltWhenMaps(async function(){
+          try{
+            var lib=google.maps.importLibrary?await google.maps.importLibrary('routes'):google.maps;
+            var DS=(lib&&lib.DirectionsService)||google.maps.DirectionsService;
+            if(!DS) throw new Error('DirectionsService absent');
+            new DS().route({ origin:points[0], destination:points[points.length-1],
+              waypoints:points.slice(1,-1).slice(0,23).map(function(p){ return {location:p, stopover:true}; }), travelMode:'DRIVING' },function(res,st){
+              if(st!=='OK'||!res.routes||!res.routes[0]){ console.warn('[map] Directions indisponible :', st); resolve(false); return; }
+              var rt=res.routes[0], poly=rt.overview_polyline; if(poly&&typeof poly!=='string') poly=poly.points||'';
+              if(!poly && rt.overview_path) poly=simplify(rt.overview_path.map(function(ll){ return {lat:ll.lat(),lng:ll.lng()}; }));
+              var m=0,sec=0; (rt.legs||[]).forEach(function(l){ m+=(l.distance&&l.distance.value)||0; sec+=(l.duration&&l.duration.value)||0; });
+              resolve(apply(poly,'Directions',m,sec));
+            });
+          }catch(e){ console.warn('[map] Directions :', e&&e.message||e); resolve(false); }
         });
-      }catch(e){ console.warn('[map] Directions API :', e&&e.message||e); if(onFail) onFail(); }
+        setTimeout(function(){ resolve(false); },10000);
+      });
     };
-    viaDirections(function(){
-      // fallback: Routes API, abandoned after 8 s
-      Promise.race([viaRoutes(), new Promise(function(r){ setTimeout(function(){ r(false); },8000); })]);
-    });
+    // 3) Routes (Maps JS)
+    var viaRoutesJs=function(){
+      return new Promise(function(resolve){
+        _ltWhenMaps(async function(){
+          try{
+            var lib=await google.maps.importLibrary('routes');
+            if(!lib||!lib.Route||!lib.Route.computeRoutes) throw new Error('Route.computeRoutes indisponible');
+            var res=await lib.Route.computeRoutes({ origin:points[0], destination:points[points.length-1],
+              intermediates:points.slice(1,-1).slice(0,23).map(function(p){ return {location:p}; }), travelMode:'DRIVING', fields:['path','distanceMeters','durationMillis'] });
+            var rt=res&&res.routes&&res.routes[0];
+            if(!rt||!rt.path||!rt.path.length) throw new Error('aucun itinéraire');
+            var pts=rt.path.map(function(ll){ return { lat:typeof ll.lat==='function'?ll.lat():ll.lat, lng:typeof ll.lng==='function'?ll.lng():ll.lng }; });
+            resolve(apply(simplify(pts),'Routes JS',rt.distanceMeters,(rt.durationMillis||0)/1000));
+          }catch(e){ console.warn('[map] Routes JS indisponible :', e&&e.message||e); resolve(false); }
+        });
+        setTimeout(function(){ resolve(false); },10000);
+      });
+    };
+    (async function(){
+      if(await viaRest()) return;
+      if(img.dataset.routeKey!==baseSrc) return;
+      if(await viaDirections()) return;
+      if(img.dataset.routeKey!==baseSrc) return;
+      if(await viaRoutesJs()) return;
+      console.warn('[map] aucun service d’itinéraire n’a répondu : carte sans tracé');
+    })();
   }
 
   // ── Google Static Maps — hidden for confirmed client rides ──
@@ -5582,10 +5621,10 @@ function _openRideDetailImpl(el){
       if(isMixed&&mixedSegs&&mixedSegs.length>0){
         var pts=[];
         mixedSegs.forEach(function(s){if(s.from&&s.from!=='—')pts.push(s.from);if(s.to&&s.to!=='—'&&s.to!==s.from)pts.push(s.to);});
-        if(pts.length>0){var pP=pts.map(function(p){return encodeURIComponent(p);}).join('%7C');var mP=pts.map(function(p,i){var col=i===0?'0x1B5E3B':(i===pts.length-1?'0xC0392B':'0xE67E22');return 'markers=color:'+col+'%7Clabel:'+(i+1)+'%7C'+encodeURIComponent(p);});src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&path=color:0x1B5E3Bff|weight:4|'+pP+'&'+mP.join('&')+'&key='+KEY;}
+        if(pts.length>0){var mP=pts.map(function(p,i){var col=i===0?'0x1B5E3B':(i===pts.length-1?'0xC0392B':'0xE67E22');return 'markers=color:'+col+'%7Clabel:'+(i+1)+'%7C'+encodeURIComponent(p);});src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&'+mP.join('&')+'&key='+KEY;}
       } else if(r.trip_type!=='disposal'&&r.to_address){
         var f=encodeURIComponent(cleanAddr(r.from_address)),t2=encodeURIComponent(cleanAddr(r.to_address));
-        src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&path=color:0x1B5E3Bff|weight:4|'+f+'|'+t2+'&markers=color:0x1B5E3B%7Clabel:A%7C'+f+'&markers=color:0xC0392B%7Clabel:B%7C'+t2+'&key='+KEY;
+        src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&markers=color:0x1B5E3B%7Clabel:A%7C'+f+'&markers=color:0xC0392B%7Clabel:B%7C'+t2+'&key='+KEY;
       } else if(r.from_address){
         var f=encodeURIComponent(r.from_address);
         src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&zoom=14&center='+f+'&markers=color:0x1B5E3B%7C'+f+'&key='+KEY;
@@ -5598,7 +5637,7 @@ function _openRideDetailImpl(el){
         wrap.style.display='block';
         var sp3=document.getElementById('detail-map-spacer');if(sp3)sp3.style.height='12px';
         // Replace the straight line by the real driving route (A -> B, via the mixed segments)
-        var _routePts = (isMixed&&mixedSegs&&mixedSegs.length>0) ? pts : ((r.trip_type!=='disposal'&&r.to_address) ? [cleanAddr(r.from_address), cleanAddr(r.to_address)] : null);
+        var _routePts = (isMixed&&mixedSegs&&mixedSegs.length>0) ? pts.map(function(x){ return cleanAddr(x); }) : ((r.trip_type!=='disposal'&&r.to_address) ? [cleanAddr(r.from_address), cleanAddr(r.to_address)] : null);
         if(_routePts && _routePts.length>=2) _staticRouteMap(img, src, _routePts);
       }
     }
