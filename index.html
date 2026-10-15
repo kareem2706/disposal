@@ -427,6 +427,8 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .modal-overlay.rd-form{z-index:750;}
 /* Fiche course : boutons d'action (Soumettre une offre, En chemin, Pick up…) plus grands */
 .modal-overlay.rd-panel:not(.rd-form) .modal-ft > .btn-green,.modal-overlay.rd-panel:not(.rd-form) .modal-ft > .btn-primary{padding:11px 22px!important;font-size:14px!important;font-weight:600;border-radius:999px;}
+/* Bouton « Évaluer » compact (PC et mobile) */
+.modal-overlay .modal-ft > .btn.ft-rate,.modal-overlay.rd-panel:not(.rd-form) .modal-ft > .btn.btn-primary.ft-rate{padding:6px 14px!important;font-size:12.5px!important;font-weight:600;height:auto!important;min-height:0;border-radius:999px;flex:0 0 auto!important;}
 @media(max-width:900px){
   .modal-overlay.rd-panel:not(.rd-form) .modal-ft:not(:has(> div[style*="margin-right:auto"])):not(:has(> button[style*="margin-right:auto"])) > .btn:not(.m-close-mob){flex:1 1 0;min-width:0;height:48px;padding:0 16px!important;justify-content:center;font-size:15px!important;font-weight:600;border-radius:999px;margin-left:0!important;}
 }
@@ -864,7 +866,6 @@ body{background:var(--bg);}
   .modal-ft > div[style*="margin-right:auto"]{order:99;margin-right:0!important;margin-left:auto!important;}
   .modal-ft:has(> .ft-rate) > div[style*="margin-right:auto"]{order:0;margin-left:0!important;margin-right:auto!important;}
   .modal-ft > .ft-rate{order:1;}
-  .modal-overlay.rd-panel .modal-ft > .btn.ft-rate{padding:8px 16px!important;font-size:13.5px!important;height:auto;}
   .modal-ft:not(:has(> :not(.m-close-mob))){display:none!important;}
 }
 @media(max-width:900px){#m-ride-detail .modal:not(:has(#detail-ft > :not(.m-close-mob))) #detail-map-wrap{margin-bottom:20px!important;}}
