@@ -372,7 +372,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .rd-back{display:none;width:34px;height:34px;border-radius:50%;border:none;background:transparent;cursor:pointer;align-items:center;justify-content:center;color:var(--ink);margin:-4px 6px -4px -8px;flex-shrink:0;}
 .rd-back:hover{background:var(--sand2);}
 /* Formulaires en plein écran : au-dessus de la fiche course, champs confortables */
+.modal-overlay.rd-panel{z-index:700;}
 .modal-overlay.rd-form{z-index:750;}
+/* Pop-ups (évaluation, confirmation, paiement…) toujours au-dessus des panneaux plein écran */
+.modal-overlay:not(.rd-panel){z-index:800;}
 @media(max-width:900px){
   .modal-overlay.rd-form .modal-body{padding:16px!important;}
   .modal-overlay.rd-form .modal-ft{justify-content:stretch;gap:10px;}
@@ -5720,7 +5723,7 @@ function _openRideDetailImpl(el){
       if(r.rated){
         ft=priceTagDone+'<div style="font-size:13px;color:var(--green);font-weight:500;">\u2b50 \u00c9valu\u00e9e</div>'+closeBtn;
       } else {
-        ft=priceTagDone+closeBtn+'<button class="btn btn-primary" onclick="closeModal(this.dataset.m);openRateModal(this.dataset.r,this.dataset.f,this.dataset.rd)" data-m="m-ride-detail" data-r="'+rId+'" data-f="'+from.replace(/"/g,"&quot;")+'" data-rd=\''+JSON.stringify({trip_type:r.trip_type,to_address:r.to_address,notes:r.notes}).replace(/'/g,'&#39;')+'\'>&#11088; Evaluer</button>';
+        ft=priceTagDone+closeBtn+'<button class="btn btn-primary" onclick="openRateModal(this.dataset.r,this.dataset.f,this.dataset.rd)" data-m="m-ride-detail" data-r="'+rId+'" data-f="'+from.replace(/"/g,"&quot;")+'" data-rd=\''+JSON.stringify({trip_type:r.trip_type,to_address:r.to_address,notes:r.notes}).replace(/'/g,'&#39;')+'\'>&#11088; Evaluer</button>';
       }
     } else if(r.status==='cancelled'){
       var cancelledPriceTag = '';
@@ -8952,6 +8955,14 @@ window.submitRating=async function(){
   }
   closeModal('m-rate');
   showToast('⭐ Merci pour votre évaluation !');
+  // Rester sur la course évaluée : la fiche affiche « Évaluée » à la place du bouton
+  try{
+    var _dm=document.getElementById('m-ride-detail'), _lr=window._lastDetailRide;
+    if(_dm && _dm.classList.contains('open') && _lr && String(_lr.id)===String(rideId)){
+      var _up=Object.assign({}, _lr, {rated:true}); var _t=document.createElement('div');
+      _t.dataset.ride=JSON.stringify(_up).replace(/'/g,"&#39;"); openRideDetail(_t);
+    }
+  }catch(e){}
   if(typeof loadClientDashboard==='function') await loadClientDashboard();
 };
 
