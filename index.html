@@ -431,6 +431,22 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 /* Boutons d'étape de mission (En chemin, No Show, Pick up terminé, Mission terminée) : tous identiques */
 .btn.ms-btn,.modal-overlay.rd-panel:not(.rd-form) .modal-ft > .btn.btn-green.ms-btn,.modal-overlay.rd-panel:not(.rd-form) .modal-ft > .btn.ms-btn.ms-btn{flex:0 0 auto!important;width:136px!important;min-width:136px!important;max-width:136px;height:38px!important;padding:0 10px!important;font-size:12.5px!important;font-weight:600!important;border-radius:999px!important;justify-content:center;white-space:nowrap;line-height:1;}
 @media(max-width:600px){ .modal-ft:has(> .ms-btn + .ms-btn) > div[style*="text-align:right"]{display:none!important;} .modal-ft:has(> .ms-btn + .ms-btn) > .ft-menu{margin-right:auto!important;} }
+/* Popup No Show */
+#m-noshow .ns-modal{max-width:400px;border-radius:20px;overflow:hidden;}
+#m-noshow .ns-ic{width:56px;height:56px;border-radius:50%;background:#FDE7E4;color:#B3261E;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+#m-noshow .ns-title{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+#m-noshow .ns-sub{font-size:13.5px;color:var(--ink2);line-height:1.5;margin-bottom:16px;}
+#m-noshow .ns-ride{background:var(--sand);border-radius:12px;padding:11px 14px;text-align:left;font-size:12.5px;color:var(--ink2);margin-bottom:14px;}
+#m-noshow .ns-ride b{color:var(--ink);font-size:13px;}
+#m-noshow .ns-ride .ns-code{font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.03em;}
+#m-noshow .ns-list{list-style:none;margin:0;padding:0;text-align:left;display:flex;flex-direction:column;gap:7px;}
+#m-noshow .ns-list li{display:flex;gap:9px;font-size:12.5px;color:var(--ink2);line-height:1.45;}
+#m-noshow .ns-list li span{flex-shrink:0;width:18px;height:18px;border-radius:50%;background:var(--green-bg);color:var(--green);font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+#m-noshow .ns-ft{border-top:none;padding:16px 24px 22px;gap:10px;display:flex;}
+#m-noshow .ns-ft .btn{flex:1 1 0;white-space:nowrap;height:44px;justify-content:center;border-radius:999px;font-size:14px;font-weight:600;padding:0 12px;}
+#m-noshow .ns-confirm{background:#B3261E;color:#fff;border:none;}
+#m-noshow .ns-confirm:hover{background:#9A1F18;}
+@media(max-width:600px){ #m-noshow.open{align-items:flex-end;padding:0;} #m-noshow .ns-modal{max-width:100%;width:100%;border-radius:20px 20px 0 0;margin:0;} #m-noshow .ns-ft{padding-bottom:calc(22px + env(safe-area-inset-bottom));} }
 /* Bouton « Évaluer » compact (PC et mobile) */
 .modal-overlay .modal-ft > .btn.ft-rate,.modal-overlay.rd-panel:not(.rd-form) .modal-ft > .btn.btn-primary.ft-rate{padding:6px 14px!important;font-size:12.5px!important;font-weight:600;height:auto!important;min-height:0;border-radius:999px;flex:0 0 auto!important;}
 @media(max-width:900px){
@@ -2534,6 +2550,24 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 </div>
 
 <!-- Confirm Delete -->
+<div class="modal-overlay" id="m-noshow" style="z-index:900;">
+  <div class="modal ns-modal">
+    <div class="modal-body" style="padding:26px 24px 8px;text-align:center;">
+      <div class="ns-ic"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a7 7 0 0111.5-5.4"/><path d="M16 15l5 5M21 15l-5 5"/></svg></div>
+      <div class="ns-title">Client absent ?</div>
+      <div class="ns-sub">Déclarez un <b>No Show</b> si le client ne s’est pas présenté au lieu de rendez-vous.</div>
+      <div class="ns-ride" id="ns-ride"></div>
+      <ul class="ns-list">
+        <li><span>✓</span>La mission passe en « Mission terminée » avec la mention No Show</li>
+        <li><span>✓</span>Le client est informé par e-mail et dans l’application</li>
+      </ul>
+    </div>
+    <div class="modal-ft ns-ft">
+      <button class="btn btn-secondary" onclick="closeModal('m-noshow')">Annuler</button>
+      <button class="btn ns-confirm" id="ns-confirm-btn" onclick="_confirmNoShow(this)">Confirmer</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="m-confirm-delete" style="z-index:900;">
   <div class="modal" style="max-width:380px;">
     <div class="modal-hd"><span class="modal-title">Supprimer la demande</span></div>
@@ -6415,11 +6449,29 @@ window.missionStep=async function(rideId, step, btn){
 };
 
 // No Show : le client n'est pas au rendez-vous → mission terminée + marquée « No Show » + e-mail au client
-window.missionNoShow=async function(rideId, btn){
+var _nsRideId=null;
+window.missionNoShow=function(rideId, btn){
   if(!sb||!currentUser) return;
-  if(!confirm('Confirmer le No Show ?\n\nLe client ne s\u2019est pas présenté au lieu de rendez-vous. La mission sera terminée et le client en sera informé par e-mail.')) return;
-  var lbl=btn?btn.textContent:'';
-  if(btn){ btn.disabled=true; btn.textContent='…'; }
+  _nsRideId=rideId;
+  var r=(window._lastDetailRide&&String(window._lastDetailRide.id)===String(rideId))?window._lastDetailRide:null;
+  if(!r){ try{ var card=btn&&btn.closest('[data-ride]'); if(card) r=JSON.parse(card.dataset.ride.replace(/&#39;/g,"'")); }catch(e){} }
+  var el=document.getElementById('ns-ride');
+  if(el){
+    if(r){
+      var e=function(x){ return String(x||'').replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+      el.innerHTML='<div class="ns-code">'+e(r.booking_code||'')+'</div>'
+        +'<b>'+e(cleanAddr(r.from_address||''))+'</b>'
+        +'<div style="margin-top:3px;">Prise en charge prévue à '+e(String(r.ride_time||'').slice(0,5))+(r.on_way_at?' · en chemin depuis '+_hhmm(r.on_way_at):'')+'</div>';
+      el.style.display='';
+    } else el.style.display='none';
+  }
+  var cb=document.getElementById('ns-confirm-btn'); if(cb){ cb.disabled=false; cb.textContent='Confirmer'; }
+  openModal('m-noshow');
+};
+window._confirmNoShow=async function(btn){
+  var rideId=_nsRideId; if(!rideId||!sb||!currentUser) return;
+  var lbl='Confirmer';
+  if(btn){ btn.disabled=true; btn.textContent='Enregistrement…'; }
   var now=new Date().toISOString();
   try{
     var {data:rows,error}=await sb.from('rides').update({ completed_at:now, no_show_at:now, status:'done' })
@@ -6437,12 +6489,13 @@ window.missionNoShow=async function(rideId, btn){
       title:'Absence au rendez-vous (No Show)',
       body:'Votre chauffeur s\u2019est présenté pour la course '+(mail.code||'')+(mail.date?' du '+mail.date+(mail.time?' à '+mail.time:''):'')+', mais vous n\u2019étiez pas au lieu de rendez-vous. La course est clôturée.' }); }catch(_e){}
     showToast('✅ No Show enregistré — le client a été prévenu');
+    closeModal('m-noshow');
     closeModal('m-ride-detail');
     if(typeof loadDriverDashboard==='function') loadDriverDashboard();
     if(typeof loadMissions==='function') loadMissions();
   }catch(e){
     showToast('Erreur : '+(e.message||e));
-    if(btn){ btn.disabled=false; btn.textContent=lbl||'No Show'; }
+    if(btn){ btn.disabled=false; btn.textContent=lbl; }
   }
 };
 // E-mail « No Show » ; si le modèle n'existe pas encore dans la fonction send-mail, on envoie le texte via le modèle « note du chauffeur »
