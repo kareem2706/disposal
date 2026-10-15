@@ -374,6 +374,16 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 /* Formulaires en plein écran : au-dessus de la fiche course, champs confortables */
 .modal-overlay.rd-panel{z-index:700;}
 .modal-overlay.rd-form{z-index:750;}
+/* Formulaires avec date : Date | Heure et Passagers | Véhicule côte à côte (ordinateur et mobile), le reste en pleine largeur */
+.modal-overlay.rd-form .form-grid:has(input[type="date"]){grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;column-gap:10px;}
+.modal-overlay.rd-form .form-grid:has(input[type="date"])>*{grid-column:1/-1;}
+.modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(input[type="date"]),
+.modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(input[type="time"]),
+.modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(select[id$="-pax"]),
+.modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(select[id$="-vehicle"]),
+.modal-overlay.rd-form .form-grid:has(input[type="date"])>.input-group:has(select[id$="-veh"]){grid-column:auto;min-width:0;}
+.modal-overlay.rd-form .form-grid .input-group.full{grid-column:1/-1;}
+.modal-overlay.rd-form .form-grid input[type="date"],.modal-overlay.rd-form .form-grid input[type="time"]{min-width:0;width:100%;}
 /* Pop-ups (évaluation, confirmation, paiement…) toujours au-dessus des panneaux plein écran */
 .modal-overlay:not(.rd-panel){z-index:800;}
 @media(max-width:900px){
