@@ -4566,7 +4566,8 @@ function _renderDriverActiveRides(list, boxId, forClient){
       +'</div>'
       +(forClient ? '' : r.pickup_at||r.status==='active'
         ? '<button class="btn btn-green" style="flex-shrink:0;" onclick="event.stopPropagation();missionStep(\''+id+'\',\'done\',this)">Mission terminée</button>'
-        : '<button class="btn btn-green" style="flex-shrink:0;" onclick="event.stopPropagation();missionStep(\''+id+'\',\'pickup\',this)">Pick up terminé</button>')
+        : '<button class="btn" style="flex-shrink:0;background:#fff;color:#B3261E;border:1.5px solid #F5C2BC;" onclick="event.stopPropagation();missionNoShow(\''+id+'\',this)">No Show</button>'
+          +'<button class="btn btn-green" style="flex-shrink:0;" onclick="event.stopPropagation();missionStep(\''+id+'\',\'pickup\',this)">Pick up terminé</button>')
       +(forClient ? '<button class="btn btn-green" style="flex-shrink:0;display:flex;align-items:center;gap:7px;" onclick="event.stopPropagation();openLiveTracking(\''+id+'\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 22s7-6.6 7-12a7 7 0 00-14 0c0 5.4 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>Suivre en direct</button>' : '')
     +'</div>';
   }).join('');
@@ -5138,7 +5139,7 @@ function renderMkItem(r,isSub,isMine){
   var dayNum=rDate2?rDate2.getDate().toString().padStart(2,'0'):'--';
   var monStr=rDate2?rDate2.toLocaleDateString('fr-FR',{month:'short'}).toUpperCase().replace('.',''):'';
   var offerCnt2=r._offerCount||0;
-  var statusPill=getStatusPill(r.status,offerCnt2);
+  var statusPill=(r.no_show_at?_noShowPill()+' ':'')+getStatusPill(r.status,offerCnt2);
   var tLabel=r.status==='personal'?'Personnel':r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';
   var tColor=r.status==='personal'?'#6750A4':r.trip_type==='disposal'?'var(--amber)':r.trip_type==='mixed'?'var(--blue)':'var(--green)';
   var tBg=r.status==='personal'?'#E8DEF8':r.trip_type==='disposal'?'var(--amber-bg)':r.trip_type==='mixed'?'var(--blue-bg)':'var(--green-bg)';
@@ -5336,7 +5337,7 @@ function _openRideDetailImpl(el){
   if(r.passengers) metaParts.push(r.passengers+' pax');
   if(r.vehicle_type) metaParts.push(_DOC_CLASSES[r.vehicle_type]||r.vehicle_type);
   var metaLine=metaParts.length?'<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;font-size:12px;color:var(--ink3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>'+metaParts.join(' &middot; ')+'</div>':'';
-  var _stEl=document.getElementById('detail-status'); if(_stEl) _stEl.innerHTML=_statusBadge(r.status,r._offerCount||0);
+  var _stEl=document.getElementById('detail-status'); if(_stEl) _stEl.innerHTML=(r.no_show_at?_noShowPill(true)+' ':'')+_statusBadge(r.status,r._offerCount||0);
   var body=_rideMetaChips(r);
 
   
@@ -6366,7 +6367,7 @@ function _missionStepBtn(r){
   var id=String(r.id).replace(/'/g,'');
   var b=function(step,label){ return '<button class="btn btn-green" style="margin-left:8px;" onclick="missionStep(\''+id+'\',\''+step+'\',this)">'+label+'</button>'; };
   if(!r.on_way_at) return b('on_way','En chemin');
-  if(!r.pickup_at) return b('pickup','Pick up terminé');
+  if(!r.pickup_at) return '<button class="btn" style="margin-left:8px;background:#fff;color:#B3261E;border:1.5px solid #F5C2BC;" onclick="missionNoShow(\''+id+'\',this)">No Show</button>'+b('pickup','Pick up terminé');
   return b('done','Mission terminée');
 }
 window.missionStep=async function(rideId, step, btn){
@@ -6410,6 +6411,51 @@ window.missionStep=async function(rideId, step, btn){
     if(btn){ btn.disabled=false; btn.textContent='Réessayer'; }
   }
 };
+
+// No Show : le client n'est pas au rendez-vous → mission terminée + marquée « No Show » + e-mail au client
+window.missionNoShow=async function(rideId, btn){
+  if(!sb||!currentUser) return;
+  if(!confirm('Confirmer le No Show ?\n\nLe client ne s\u2019est pas présenté au lieu de rendez-vous. La mission sera terminée et le client en sera informé par e-mail.')) return;
+  var lbl=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='…'; }
+  var now=new Date().toISOString();
+  try{
+    var {data:rows,error}=await sb.from('rides').update({ completed_at:now, no_show_at:now, status:'done' })
+      .eq('id',rideId).eq('driver_id',currentUser.id).eq('status','confirmed').not('on_way_at','is',null).is('pickup_at',null).select('*');
+    if(error){
+      if(/no_show_at/.test(error.message||'')) throw new Error('la colonne « no_show_at » manque dans Supabase (exécuter supabase/rides_no_show.sql)');
+      throw error;
+    }
+    if(!rows||!rows.length) throw new Error('Mise à jour refusée');
+    var r=rows[0];
+    var mail=window._mailRideData(r,{ noShowTime:_hhmm(now) });
+    delete mail.price;
+    _sendNoShowMail(r.client_id, mail);
+    try{ await sb.from('notifications').insert({ user_id:r.client_id, type:'ride_no_show', ride_id:r.id, read:false,
+      title:'Absence au rendez-vous (No Show)',
+      body:'Votre chauffeur s\u2019est présenté pour la course '+(mail.code||'')+(mail.date?' du '+mail.date+(mail.time?' à '+mail.time:''):'')+', mais vous n\u2019étiez pas au lieu de rendez-vous. La course est clôturée.' }); }catch(_e){}
+    showToast('✅ No Show enregistré — le client a été prévenu');
+    closeModal('m-ride-detail');
+    if(typeof loadDriverDashboard==='function') loadDriverDashboard();
+    if(typeof loadMissions==='function') loadMissions();
+  }catch(e){
+    showToast('Erreur : '+(e.message||e));
+    if(btn){ btn.disabled=false; btn.textContent=lbl||'No Show'; }
+  }
+};
+// E-mail « No Show » ; si le modèle n'existe pas encore dans la fonction send-mail, on envoie le texte via le modèle « note du chauffeur »
+function _sendNoShowMail(clientId, data){
+  var post=function(type, d){ return fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/send-mail',{
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
+    body:JSON.stringify({ type:type, to_user_ids:[clientId], data:d }) }); };
+  if(localStorage.getItem(DEMO_MODE_KEY)==='1'||!clientId) return;
+  post('ride_no_show', data).then(function(resp){
+    if(resp.ok) return;
+    var note='Votre chauffeur s\u2019est présenté au lieu de rendez-vous'+(data.from?' ('+data.from+')':'')+(data.time?' pour la prise en charge de '+data.time:'')
+      +', mais vous n\u2019étiez pas présent. La course a été clôturée (No Show).';
+    return post('driver_note', Object.assign({}, data, { note:note, noteAction:'created' }));
+  }).catch(function(e){ console.warn('_sendNoShowMail', e); });
+}
 
 window.completeRide=async function(rideId){
   if(!sb)return;
@@ -10206,6 +10252,9 @@ function _statusBadge(status, offerCount){
   if(!m) return getStatusPill(status, offerCount);
   return '<span style="display:inline-flex;align-items:center;gap:6px;background:'+m.bg+';color:'+m.fg+';border:1px solid '+m.bd+';border-radius:999px;padding:6px 12px 6px 10px;font-size:12.5px;font-weight:700;letter-spacing:.01em;white-space:nowrap;">'+m.ic+m.tx+'</span>';
 }
+function _noShowPill(big){
+  return '<span title="Le client ne s\u2019est pas présenté" style="display:inline-flex;align-items:center;background:#FDE7E4;color:#B3261E;border:1px solid #F5C2BC;border-radius:999px;padding:'+(big?'6px 11px':'2px 8px')+';font-size:'+(big?'12.5px':'10.5px')+';font-weight:700;white-space:nowrap;">No Show</span>';
+}
 function getStatusPill(status, offerCount){
   var map = {
     waiting: '<span class="pill waiting"><span class="pill-dot"></span>'+t('waiting')+'</span>',
@@ -10221,7 +10270,7 @@ function getStatusPill(status, offerCount){
 
 function renderRideItem(r){
   var offerCnt=r._offerCount!==undefined?r._offerCount:(r.offers&&r.offers[0]?parseInt(r.offers[0].count)||0:0);
-  var statusPill=getStatusPill(r.status, offerCnt);
+  var statusPill=(r.no_show_at?_noShowPill()+' ':'')+getStatusPill(r.status, offerCnt);
   var typeLabel=tripTypeLabel(r.trip_type);
   var from=cleanAddr(r.from_address||'\u2014'),to=r.to_address||'\u2014';
   var isDisp=r.trip_type==='disposal',isMixed=r.trip_type==='mixed';
