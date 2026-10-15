@@ -879,6 +879,31 @@ body{background:var(--bg);}
 .modal-ft .btn{padding:6px 13px;font-size:12px;}
 .ride-card>div{min-width:0;}
 </style>
+<script>
+// iPad : même affichage que sur iPhone (on force les règles CSS « mobile »)
+(function(){
+  var ua=navigator.userAgent||'';
+  var ipad=/iPad/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1);
+  window._IPAD_MOB=ipad;
+  if(!ipad) return;
+  document.documentElement.classList.add('ipad-mob');
+  function fix(rules){
+    for(var i=0;i<rules.length;i++){
+      var r=rules[i];
+      if(r.media && r.cssRules){
+        var t=r.media.mediaText||'';
+        if(/max-width/.test(t) && !/min-width/.test(t)) r.media.mediaText='all';
+        else if(/min-width/.test(t) && !/max-width/.test(t)) r.media.mediaText='not all';
+      }
+      if(r.cssRules) fix(r.cssRules);
+    }
+  }
+  function run(){ for(var i=0;i<document.styleSheets.length;i++){ try{ fix(document.styleSheets[i].cssRules); }catch(e){} } }
+  run(); document.addEventListener('DOMContentLoaded',run);
+})();
+// Largeur « logique » : sur iPad on se comporte comme sur iPhone
+function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.innerWidth; }
+</script>
 <script>window.initGooglePlaces=window.initGooglePlaces||function(){if(window._gpReady)window._gpReady();};window._gpReady=null;</script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places,routes&language=fr&loading=async&callback=initGooglePlaces" async defer></script>
 </head>
@@ -3650,7 +3675,7 @@ function enterApp(){
   subscribeRealtime();
 
   // Mobile check
-  var mbEl=document.getElementById('mob-btn');if(mbEl&&window.innerWidth<=900)mbEl.style.display='flex';
+  var mbEl=document.getElementById('mob-btn');if(mbEl&&_vw()<=900)mbEl.style.display='flex';
 
   // Handle Stripe return if coming back from checkout
   if(window._stripePendingReturn){
@@ -8377,7 +8402,7 @@ function _renderCalGridMobile(grid,titleEl,calYear,calMonth,calView,calWS,calRid
   };
 }
 // Re-render the driver calendar when the phone rotates (portrait <-> landscape)
-(function(){var _t,_w=window.innerWidth;window.addEventListener('resize',function(){clearTimeout(_t);_t=setTimeout(function(){var w=window.innerWidth;var ch=((w<=600)!==(_w<=600));_w=w;if(ch&&document.querySelector('#page-d-calendar.active')){_renderCalGrid('d-cal-grid','d-cal-title',_dCalY,_dCalM,_dCalView,_dCalWS,_dCalRides);}if(ch&&document.querySelector('#page-calendar.active')&&_calWS){_renderCalGrid('cal-grid','cal-title',_calY,_calM,_calView,_calWS,_calRides,calPrevMonth,calNextMonth,calSetView);}},200);});})();
+(function(){var _t,_w=_vw();window.addEventListener('resize',function(){clearTimeout(_t);_t=setTimeout(function(){var w=_vw();var ch=((w<=600)!==(_w<=600));_w=w;if(ch&&document.querySelector('#page-d-calendar.active')){_renderCalGrid('d-cal-grid','d-cal-title',_dCalY,_dCalM,_dCalView,_dCalWS,_dCalRides);}if(ch&&document.querySelector('#page-calendar.active')&&_calWS){_renderCalGrid('cal-grid','cal-title',_calY,_calM,_calView,_calWS,_calRides,calPrevMonth,calNextMonth,calSetView);}},200);});})();
 function _renderCalGrid(gridId,titleId,calYear,calMonth,calView,calWS,calRides,prevFn,nextFn,setViewFn){
   var MN=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   var DN=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
@@ -8385,7 +8410,7 @@ function _renderCalGrid(gridId,titleId,calYear,calMonth,calView,calWS,calRides,p
   var html='',grid=document.getElementById(gridId),titleEl=document.getElementById(titleId);
   if(!grid||!titleEl)return;
   var _viewFn=setViewFn||(gridId==='d-cal-grid'?window.dCalView:window.calSetView);
-  if((gridId==='d-cal-grid'||gridId==='cal-grid')&&window.innerWidth<=600){ _renderCalGridMobile(grid,titleEl,calYear,calMonth,calView,calWS,calRides,_viewFn,MN,DN,td); return; }
+  if((gridId==='d-cal-grid'||gridId==='cal-grid')&&_vw()<=600){ _renderCalGridMobile(grid,titleEl,calYear,calMonth,calView,calWS,calRides,_viewFn,MN,DN,td); return; }
   if(calView==='week'){
     var ws=new Date(calWS),we=new Date(ws);we.setDate(we.getDate()+6);
     titleEl.textContent=ws.getDate()+' '+MN[ws.getMonth()].slice(0,3)+' – '+we.getDate()+' '+MN[we.getMonth()].slice(0,3)+' '+we.getFullYear();
