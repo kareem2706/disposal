@@ -300,6 +300,39 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 /* ═══ OFFERS ═══ */
 .offer-card{background:var(--sand);border:1.5px solid var(--sand3);border-radius:var(--r-lg);padding:16px;margin-bottom:9px;transition:border-color var(--t);}
 .offer-card:hover{border-color:var(--ink3);}
+/* Offres reçues (version « plein écran ») */
+.ofs-ride{background:var(--sand);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;flex-direction:column;gap:9px;}
+.ofs-route{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--ink);min-width:0;}
+.ofs-route span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.ofs-route svg{flex-shrink:0;color:var(--ink3);}
+.ofs-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;}
+.ofs-seg{display:inline-flex;background:var(--sand2);border-radius:999px;padding:3px;gap:2px;min-width:0;}
+.ofs-seg button{border:none;background:transparent;border-radius:999px;padding:6px 12px;font:600 12px 'DM Sans',sans-serif;color:var(--ink3);cursor:pointer;white-space:nowrap;}
+.ofs-seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1);}
+.ofs-sort{border:1px solid var(--sand3);background:#fff;border-radius:999px;padding:6px 12px;font:600 12px 'DM Sans',sans-serif;color:var(--ink2);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.offer-card.ofc{background:#fff;border:1.5px solid var(--sand3);border-radius:16px;padding:14px;margin-bottom:14px;position:relative;}
+.offer-card.ofc.best{border-color:var(--green);}
+.ofc-best{position:absolute;top:-9px;left:14px;background:var(--green);color:#fff;font-size:9.5px;font-weight:700;letter-spacing:.05em;padding:2px 9px;border-radius:999px;text-transform:uppercase;}
+.ofc-top{display:flex;align-items:center;gap:12px;}
+.ofc-ico{width:42px;height:42px;border-radius:12px;background:var(--green-bg);color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ofc-main{flex:1;min-width:0;}
+.ofc-name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ofc-meta{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink3);margin-top:3px;flex-wrap:wrap;}
+.ofc-cls{font-size:9.5px;font-weight:700;letter-spacing:.04em;color:#fff;padding:2px 7px;border-radius:5px;}
+.ofc-star{color:#B8860B;font-weight:600;}
+.ofc-price{text-align:right;flex-shrink:0;}
+.ofc-price b{display:block;font-size:19px;font-weight:700;color:var(--ink);line-height:1.15;}
+.ofc-price small{font-size:10.5px;color:var(--ink3);font-weight:500;}
+.ofc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px;}
+.ofc-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:var(--sand2);border-radius:999px;font-size:11px;color:var(--ink2);font-weight:500;}
+.ofc-msg{margin-top:10px;padding:9px 12px;background:var(--sand);border-radius:10px;font-size:12.5px;color:var(--ink2);display:flex;gap:8px;align-items:flex-start;}
+.ofc-msg svg{flex-shrink:0;margin-top:2px;}
+.ofc-ft{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--sand2);}
+.ofc-more{background:none;border:none;font:500 12.5px 'DM Sans',sans-serif;color:var(--ink3);cursor:pointer;display:flex;align-items:center;gap:4px;padding:6px 0;}
+.ofc-pick{margin-left:auto;padding:10px 24px!important;font-size:14px!important;font-weight:600!important;border-radius:999px!important;justify-content:center;}
+.ofc-detail{display:none;margin-top:10px;padding:10px 12px;background:var(--sand);border-radius:10px;font-size:12px;color:var(--ink2);}
+#m-view-offers.rd-panel .modal-ft{display:none;}
+@media(max-width:600px){.ofc-pick{flex:1;max-width:60%;height:44px;}}
 .offer-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .driver-row{display:flex;align-items:center;gap:9px;}
 .driver-av{width:34px;height:34px;border-radius:50%;background:var(--ink);color:white;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;overflow:hidden;}
@@ -4886,28 +4919,36 @@ async function openOffersModal(rideId){
     offers = getDemoOffers();
   }
 
-  document.getElementById('offers-modal-title').innerHTML = '<div style="font-size:18px;font-weight:700;">Offres disponibles</div><div style="font-size:12px;color:var(--ink3);font-weight:400;margin-top:2px;">' + offers.length + ' chauffeur'+(offers.length>1?'s':'')+' certifi\u00e9'+(offers.length>1?'s':'')+' pour votre trajet</div>';
+  var _rr=_currentPaymentRide, _n=offers.length;
+  var _code=_rr?(_rr.booking_code||''):'';
+  document.getElementById('offers-modal-title').innerHTML = (_code?'<span class="rd-code">'+_code+'</span><span class="rd-sep"> · </span>':'')
+    +'<span class="rd-sub">'+(_n?_n+' offre'+(_n>1?'s':'')+' reçue'+(_n>1?'s':''):'Offres reçues')+'</span>';
 
   _offersData=offers;
   _offersFilter='all';
   _offersSort='asc';
 
-  // Render filter/sort bar + offers
-  var filtersHtml='<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">'
-    +'<div style="display:flex;gap:6px;">'
-      +'<button class="offers-filter-btn" style="padding:5px 12px;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;background:var(--green);color:#fff;" onclick="_offersSetFilter(\'all\',this)">Tous</button>'
-      +'<button class="offers-filter-btn" style="padding:5px 12px;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;background:var(--sand2);color:var(--ink3);" onclick="_offersSetFilter(\'electric\',this)">\u26a1 \u00c9lectrique</button>'
-      +'<button class="offers-filter-btn" style="padding:5px 12px;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;background:var(--sand2);color:var(--ink3);" onclick="_offersSetFilter(\'hybrid\',this)">\u2600 Hybride</button>'
+  // Rappel de la course
+  var rideHtml='';
+  if(_rr){
+    var _sa=function(x){ return String(cleanAddr(x)||'').split(',')[0].trim(); };
+    var _from=_sa(_rr.from_address), _to=_rr.trip_type==='disposal'?'Mise à disposition':_sa(_rr.to_address);
+    rideHtml='<div class="ofs-ride">'+_rideMetaChips(_rr)
+      +'<div class="ofs-route"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>'
+      +'<span>'+(_from||'—')+'</span>'+(_to?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>'+_to+'</span>':'')+'</div></div>';
+  }
+  var filtersHtml=_n>1?('<div class="ofs-bar">'
+    +'<div class="ofs-seg">'
+      +'<button class="offers-filter-btn on" onclick="_offersSetFilter(\'all\',this)">Toutes</button>'
+      +'<button class="offers-filter-btn" onclick="_offersSetFilter(\'electric\',this)">\u26a1 Électrique</button>'
+      +'<button class="offers-filter-btn" onclick="_offersSetFilter(\'hybrid\',this)">Hybride</button>'
     +'</div>'
-    +'<div style="display:flex;gap:6px;">'
-      +'<button class="offers-sort-btn" style="padding:5px 12px;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;background:var(--green);color:#fff;" onclick="_offersSetSort(\'asc\',this)">Prix \u2191</button>'
-      +'<button class="offers-sort-btn" style="padding:5px 12px;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif;background:var(--sand2);color:var(--ink3);" onclick="_offersSetSort(\'desc\',this)">Prix \u2193</button>'
-    +'</div>'
-  +'</div>';
+    +'<button class="ofs-sort" onclick="_offersSetSort(null,this)">Prix \u2191</button>'
+  +'</div>'):'';
 
-  document.getElementById('offers-list').innerHTML = offers.length
+  document.getElementById('offers-list').innerHTML = rideHtml + (offers.length
     ? filtersHtml + '<div id="offers-cards">' + offers.sort(function(a,b){return (a.price||0)-(b.price||0);}).map(function(o){return renderOfferCard(o);}).join('') + '</div>'
-    : '<div class="empty-state"><p class="empty-text">'+t('empty_offers')+'</p></div>';
+    : '<div class="empty-state"><p class="empty-text">'+t('empty_offers')+'</p></div>');
 }
 window.acceptOffer = async function(offerId, driverId, price){
   if(localStorage.getItem(DEMO_MODE_KEY) === '1'){
@@ -7258,7 +7299,6 @@ function renderOfferCard(o){
   var classLabels={lowcost:'ECO',business:'BUSINESS',van:'VAN',luxe:'LUXE',bus:'BUS'};
   var classColors={lowcost:'#6B8E23',business:'#1B5E3B',van:'#2E6B4A',luxe:'#8B0000',bus:'#B8860B'};
   var vehClass = v ? (v.vehicle_class||'') : '';
-  var classBadge = vehClass ? '<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:'+(classColors[vehClass]||'var(--ink3)')+';color:#fff;font-size:9px;font-weight:700;letter-spacing:.04em;vertical-align:middle;margin-right:8px;">'+(classLabels[vehClass]||vehClass.toUpperCase())+'</span>' : '';
 
   var amenLabels={electric:'100% \u00c9lectrique',hybrid:'Hybride',wifi:'Wi-Fi',water:'Eau incluse',snacks:'Snacks'};
   var amenIcons={
@@ -7268,14 +7308,9 @@ function renderOfferCard(o){
     water:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>',
     snacks:'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>'
   };
-  var amenities = v && v.amenities && v.amenities.length > 0
-    ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">'+v.amenities.map(function(a){
-        return '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--sand2);border-radius:20px;font-size:10px;color:var(--ink2);font-weight:500;">'+(amenIcons[a]||'')+' '+(amenLabels[a]||a)+'</span>';
-      }).join('')+'</div>'
-    : '';
 
   // Km inclus proposés par le chauffeur (mise à disposition / segments mise à disposition)
-  var kmHtml='';
+  var kmTags='';
   if(o.included_km && typeof o.included_km==='object'){
     var _kmSegs=_offerKmSegments(_currentPaymentRide);
     var _kmIcon='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19L8 5M20 19L16 5M12 6v2M12 11v2M12 16v2"/></svg>';
@@ -7289,39 +7324,38 @@ function renderOfferCard(o){
       Object.keys(o.included_km).forEach(function(k){ _kmLines.push(o.included_km[k]+' km inclus'); });
     }
     if(_kmLines.length){
-      kmHtml='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">'+_kmLines.map(function(l){
-        return '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--sand2);border-radius:20px;font-size:10px;color:var(--ink);font-weight:600;">'+_kmIcon+' '+l+'</span>';
-      }).join('')+'</div>';
+      kmTags=_kmLines.map(function(l){ return '<span class="ofc-tag" style="color:var(--ink);font-weight:600;">'+_kmIcon+' '+l+'</span>'; }).join('');
     }
   }
 
-  return '<div class="offer-card" style="padding:16px 20px;">'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;">'
-      +'<div style="flex:1;min-width:0;">'
-        +'<div style="display:flex;align-items:center;min-width:0;">'+classBadge+'<span style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+vehName+'</span></div>'
+  var _prices=(_offersData||[]).map(function(x){ return parseFloat(x.price||0); }).filter(function(x){ return x>0; });
+  var isBest=_prices.length>1 && htva>0 && htva===Math.min.apply(null,_prices);
+  var pr=o.profiles||{};
+  var rating=(pr.rating_count>0 && pr.rating)?'<span class="ofc-star">\u2605 '+Number(pr.rating).toFixed(1).replace('.',',')+'</span><span>('+pr.rating_count+' avis)</span>':'';
+  var clsHtml=vehClass?'<span class="ofc-cls" style="background:'+(classColors[vehClass]||'var(--ink3)')+';">'+(classLabels[vehClass]||vehClass.toUpperCase())+'</span>':'';
+  var tags=(v&&v.amenities&&v.amenities.length?v.amenities.map(function(a){ return '<span class="ofc-tag">'+(amenIcons[a]||'')+' '+(amenLabels[a]||a)+'</span>'; }).join(''):'')+kmTags;
+  var _lbl=function(l,val){ return '<div><span style="color:var(--ink4);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">'+l+'</span><div style="font-weight:500;color:var(--ink);">'+val+'</div></div>'; };
+  var details=v?('<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px 16px;">'
+      +_lbl('Marque',v.brand||'—')+_lbl('Modèle',v.model||'—')
+      +(v.year?_lbl('Année',v.year):'')+(v.color?_lbl('Couleur',v.color):'')
+      +(vehClass?_lbl('Gamme',classLabels[vehClass]||vehClass):'')
+    +'</div>'):'';
+
+  return '<div class="offer-card ofc'+(isBest?' best':'')+'">'
+    +(isBest?'<span class="ofc-best">Meilleur prix</span>':'')
+    +'<div class="ofc-top">'
+      +'<div class="ofc-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/></svg></div>'
+      +'<div class="ofc-main"><div class="ofc-name">'+vehName+'</div>'
+        +((clsHtml||rating)?'<div class="ofc-meta">'+clsHtml+rating+'</div>':'')
       +'</div>'
-      +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">'
-        +'<button class="btn btn-green" style="white-space:nowrap;padding:9px 18px;font-size:15px;font-weight:700;" title="Choisir cette offre" data-oid="'+safeId+'" data-did="'+safeDrv+'" data-price="'+safePrice+'" onclick="_pickOffer(this)">'+priceDisplay+'</button>'
-      +'</div>'
+      +'<div class="ofc-price"><b>'+priceDisplay+'</b><small>TVAC</small></div>'
     +'</div>'
-    // Voir détail toggle
-    +'<div style="margin-top:10px;">'
-      +'<button onclick="_toggleOfferDetail(this)" style="background:none;border:none;font-size:12px;color:var(--ink3);cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;font-family:\'DM Sans\',sans-serif;"><svg id="od-arrow-'+safeId+'" width="12" height="12" viewBox="0 0 12 12" fill="none" style="transition:transform .2s;"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Voir détail</button>'
-      +'<div id="od-detail-'+safeId+'" style="display:none;margin-top:8px;padding:10px 12px;background:var(--sand);border-radius:var(--r);font-size:12px;color:var(--ink2);">'
-        +amenities+kmHtml
-        +((amenities||kmHtml)?'<div style="height:12px;"></div>':'')
-        +(v?('<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 16px;">'
-          +'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Marque</span><div style="font-weight:500;">'+(v.brand||'—')+'</div></div>'
-          +'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Modèle</span><div style="font-weight:500;">'+(v.model||'—')+'</div></div>'
-          +(v.year?'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Année</span><div style="font-weight:500;">'+v.year+'</div></div>':'')
-          +(v.color?'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Couleur</span><div style="font-weight:500;">'+v.color+'</div></div>':'')
-          +(vehClass?'<div><span style="color:var(--ink4);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Gamme</span><div style="font-weight:500;">'+(classLabels[vehClass]||vehClass)+'</div></div>':'')
-          +'</div>'
-        ):'<div style="color:var(--ink4);font-style:italic;">Aucun détail véhicule disponible</div>')
-        +(o.message?'<div style="margin-top:10px;padding:8px 12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);display:flex;gap:7px;align-items:flex-start;">'
-      +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>'
-      +'<span>'+o.message+'</span></div>':'')
-      +'</div>'
+    +(tags?'<div class="ofc-tags">'+tags+'</div>':'')
+    +(o.message?'<div class="ofc-msg"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>'+o.message+'</span></div>':'')
+    +(details?'<div id="od-detail-'+safeId+'" class="ofc-detail">'+details+'</div>':'')
+    +'<div class="ofc-ft">'
+      +(details?'<button class="ofc-more" onclick="_toggleOfferDetail(this)">Détails du véhicule<svg id="od-arrow-'+safeId+'" width="12" height="12" viewBox="0 0 12 12" fill="none" style="transition:transform .2s;"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>':'')
+      +'<button class="btn btn-green ofc-pick" title="Choisir cette offre" data-oid="'+safeId+'" data-did="'+safeDrv+'" data-price="'+safePrice+'" onclick="_pickOffer(this)">Choisir</button>'
     +'</div>'
   +'</div>';
 }
@@ -7333,7 +7367,7 @@ window._toggleOfferDetail = function(btn){
   var detailDiv = card.querySelector('[id^="od-detail-"]');
   var arrowSvg = card.querySelector('[id^="od-arrow-"]');
   if(!detailDiv) return;
-  var isOpen = detailDiv.style.display !== 'none';
+  var isOpen = getComputedStyle(detailDiv).display !== 'none';
   detailDiv.style.display = isOpen ? 'none' : 'block';
   if(arrowSvg) arrowSvg.style.transform = isOpen ? '' : 'rotate(180deg)';
   btn.style.color = isOpen ? 'var(--ink3)' : 'var(--ink)';
@@ -7354,14 +7388,12 @@ function _renderOffersFiltered(){
 
 window._offersSetFilter=function(f,btn){
   _offersFilter=f;
-  document.querySelectorAll('.offers-filter-btn').forEach(function(b){b.style.background='var(--sand2)';b.style.color='var(--ink3)';});
-  if(btn){btn.style.background='var(--green)';btn.style.color='#fff';}
+  document.querySelectorAll('.offers-filter-btn').forEach(function(b){ b.classList.toggle('on', b===btn); });
   _renderOffersFiltered();
 };
 window._offersSetSort=function(dir,btn){
-  _offersSort=dir;
-  document.querySelectorAll('.offers-sort-btn').forEach(function(b){b.style.background='var(--sand2)';b.style.color='var(--ink3)';});
-  if(btn){btn.style.background='var(--green)';btn.style.color='#fff';}
+  _offersSort=dir||(_offersSort==='asc'?'desc':'asc');
+  if(btn) btn.textContent='Prix '+(_offersSort==='asc'?'\u2191':'\u2193');
   _renderOffersFiltered();
 };
 
@@ -7770,7 +7802,7 @@ function setLoading(btn, loading, text){
 function _tagModalClose(m){ if(!m||m.id==='m-confirm-delete') return; m.querySelectorAll('.modal-ft button').forEach(function(b){ if((b.textContent||'').trim()==='Fermer') b.classList.add('m-close-mob'); }); }
 window.openModal  = id => { var _m=document.getElementById(id); if(!_m) return; _tagModalClose(_m); if(_m.classList.contains('rd-panel')) _rdEnsureBack(_m); _m.classList.add('open'); if(_m.classList.contains('rd-panel')) _rdOpened(id); };
 // Formulaires affichés en version « plein écran » (panneau à droite sur ordinateur, page sur mobile)
-var _RD_FORMS=['m-new-ride','m-submit-offer','m-subcontract','m-personal-mission','m-vehicle','m-driver','m-fleet-doc','m-passenger','m-mission-assign','m-admin-client'];
+var _RD_FORMS=['m-new-ride','m-submit-offer','m-subcontract','m-personal-mission','m-vehicle','m-driver','m-fleet-doc','m-passenger','m-mission-assign','m-admin-client','m-view-offers'];
 function _rdInitForms(){ _RD_FORMS.forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.add('rd-panel','rd-form'); }); }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_rdInitForms); else _rdInitForms();
 function _rdEnsureBack(m){
