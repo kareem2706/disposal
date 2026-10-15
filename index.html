@@ -371,6 +371,13 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 /* ═══ Version « plein écran » : détail d'une course en panneau latéral (ordinateur) / page (mobile) ═══ */
 .rd-back{display:none;width:34px;height:34px;border-radius:50%;border:none;background:transparent;cursor:pointer;align-items:center;justify-content:center;color:var(--ink);margin:-4px 6px -4px -8px;flex-shrink:0;}
 .rd-back:hover{background:var(--sand2);}
+/* Formulaires en plein écran : au-dessus de la fiche course, champs confortables */
+.modal-overlay.rd-form{z-index:750;}
+@media(max-width:900px){
+  .modal-overlay.rd-form .modal-body{padding:16px!important;}
+  .modal-overlay.rd-form .modal-ft{justify-content:stretch;}
+  .modal-overlay.rd-form .modal-ft .btn-primary,.modal-overlay.rd-form .modal-ft .btn-green{flex:1;justify-content:center;padding:12px 16px!important;font-size:14px!important;}
+}
 @keyframes rdSlideIn{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
 @keyframes rdSlideUp{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
 @media(min-width:901px){
@@ -7709,18 +7716,33 @@ function setLoading(btn, loading, text){
 }
 
 function _tagModalClose(m){ if(!m||m.id==='m-confirm-delete') return; m.querySelectorAll('.modal-ft button').forEach(function(b){ if((b.textContent||'').trim()==='Fermer') b.classList.add('m-close-mob'); }); }
-window.openModal  = id => { var _m=document.getElementById(id); if(!_m) return; _tagModalClose(_m); _m.classList.add('open'); if(_m.classList.contains('rd-panel')) _rdOpened(id); };
+window.openModal  = id => { var _m=document.getElementById(id); if(!_m) return; _tagModalClose(_m); if(_m.classList.contains('rd-panel')) _rdEnsureBack(_m); _m.classList.add('open'); if(_m.classList.contains('rd-panel')) _rdOpened(id); };
+// Formulaires affichés en version « plein écran » (panneau à droite sur ordinateur, page sur mobile)
+var _RD_FORMS=['m-new-ride','m-submit-offer','m-subcontract','m-personal-mission','m-vehicle','m-driver','m-fleet-doc','m-passenger','m-mission-assign','m-admin-client'];
+function _rdInitForms(){ _RD_FORMS.forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.add('rd-panel','rd-form'); }); }
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_rdInitForms); else _rdInitForms();
+function _rdEnsureBack(m){
+  var hd=m.querySelector('.modal-hd'); if(!hd || hd.querySelector('.rd-back')) return;
+  var b=document.createElement('button'); b.type='button'; b.className='rd-back'; b.setAttribute('aria-label','Retour');
+  b.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
+  b.onclick=function(){ closeModal(m.id); };
+  hd.insertBefore(b, hd.firstChild);
+}
 // ── Version « plein écran » : historique du navigateur + lien direct #course/CODE ──
 var _rdHist=false, _rdClosing=false;
 function _rdCode(id){ var r=id==='m-ar-detail'?window._lastArRide:window._lastDetailRide; return r?(r.booking_code||String(r.id||'')):''; }
 function _rdOpened(id){
   document.body.classList.add('rd-open');
-  var code=_rdCode(id), url=location.pathname+location.search+(code?'#course/'+encodeURIComponent(code):'');
+  var isDetail=(id==='m-ride-detail'||id==='m-ar-detail');
+  var code=isDetail?_rdCode(id):'', url=location.pathname+location.search+(code?'#course/'+encodeURIComponent(code):(isDetail?'':location.hash));
   try{ if(_rdHist) history.replaceState({rd:id},'',url); else { history.pushState({rd:id},'',url); _rdHist=true; } }catch(e){}
 }
-function _rdHideAll(){ ['m-ride-detail','m-ar-detail'].forEach(function(i){ var m=document.getElementById(i); if(m) m.classList.remove('open'); }); document.body.classList.remove('rd-open'); }
+function _rdHideAll(){ document.querySelectorAll('.modal-overlay.rd-panel.open').forEach(function(m){ m.classList.remove('open'); }); document.body.classList.remove('rd-open'); }
 window.addEventListener('popstate', function(){ if(_rdHist){ _rdHist=false; _rdHideAll(); } });
-document.addEventListener('keydown', function(e){ if(e.key==='Escape' && document.querySelector('.modal-overlay.rd-panel.open') && !document.querySelector('.modal-overlay.open:not(.rd-panel)')) closeModal(document.querySelector('.modal-overlay.rd-panel.open').id); });
+document.addEventListener('keydown', function(e){
+  if(e.key!=='Escape' || document.querySelector('.modal-overlay.open:not(.rd-panel)')) return;
+  var top=document.querySelector('.modal-overlay.rd-form.open')||document.querySelector('.modal-overlay.rd-panel.open'); if(top) closeModal(top.id);
+});
 // Ouverture d'une course depuis un lien …#course/CODE (après connexion)
 async function _rdDeepLink(){
   var m=(location.hash||'').match(/^#course\/([^&]+)$/); if(!m||!sb||!currentUser) return;
@@ -7799,8 +7821,9 @@ window.openVehGuide = function(){
 };
 window.closeModal = id => {
   document.getElementById(id)?.classList.remove('open');
-  if(id==='m-ride-detail'||id==='m-ar-detail'){
-    if(!document.querySelector('.modal-overlay.rd-panel.open')) document.body.classList.remove('rd-open');
+  var _cm=document.getElementById(id);
+  if(_cm && _cm.classList.contains('rd-panel') && !document.querySelector('.modal-overlay.rd-panel.open')){
+    document.body.classList.remove('rd-open');
     if(_rdHist){ _rdHist=false; try{ history.back(); }catch(e){} }
   }
   // Clear fleet modal errors on close
