@@ -285,6 +285,7 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 .pf-tab{padding:7px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--ink2);white-space:nowrap;transition:all var(--t);font-family:'DM Sans',sans-serif;}
 .pf-tab.active{background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);font-weight:600;}
 .pf-panel{max-width:900px;}
+.pf-panel.pf-narrow{max-width:640px;}
 .pf-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;}
 .pf-sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin:0 0 12px;}
 @media(max-width:900px){.pf-panel-grid{grid-template-columns:1fr;}.pf-tabs{width:100%;flex-wrap:wrap;overflow:visible;}.pf-tab{flex:1 1 auto;padding:7px 10px;}}
@@ -1841,12 +1842,6 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <button class="btn btn-primary btn-full" onclick="saveProfile()">Sauvegarder</button>
         </div>
         <div>
-          <div id="pf-security-card" class="card" style="padding:24px;margin-bottom:16px;">
-            <div style="font-weight:600;margin-bottom:4px;font-size:13.5px;">Mot de passe</div>
-            <div style="font-size:12px;color:var(--ink3);margin-bottom:12px;">Optionnel : la connexion se fait par code envoy&#xe9; par e-mail. D&#xe9;finissez un mot de passe pour vous connecter sans code.</div>
-            <div class="input-group"><label>Nouveau mot de passe</label><input id="pf-pwd" type="password" placeholder="Laisser vide = inchang&#xe9;"></div>
-            <button class="btn btn-primary btn-full" onclick="changePassword()">Modifier</button>
-          </div>
           <div id="pf-notif-card" class="card" style="padding:24px;">
             <div style="font-weight:600;margin-bottom:14px;font-size:13.5px;">Notifications</div>
             <div style="display:flex;flex-direction:column;gap:11px;">
@@ -4880,14 +4875,6 @@ window.saveProfile = async function(){
   showToast(t('toast_saved'));
 };
 
-window.changePassword = async function(){
-  const pwd = document.getElementById('pf-pwd').value;
-  if(!pwd) return;
-  if(!sb){ showToast('Mode démo'); return; }
-  const { error } = await sb.auth.updateUser({ password: pwd });
-  if(error) showToast('Erreur: ' + error.message);
-  else { showToast(t('toast_saved')); document.getElementById('pf-pwd').value = ''; }
-};
 
 // ── RIDE ACTIONS ──────────────────────────────────────
 window.filterRides = function(filter, btn){
@@ -9274,11 +9261,14 @@ function loadProfileForm(){
   var fleetSec=document.getElementById('pf-fleet-sections');
   if(fleetSec) fleetSec.style.display=(role==='driver'?'block':'none');
   if(role==='driver'){
-    _pfSetupDriverTabs();
+    _pfSetupDriverTabs(_PF_TABS_DRIVER,'driver');
     set('pf-iban',_pfFmtIban(currentProfile.iban||''));set('pf-bic',currentProfile.bic||'');
     set('pf-bank-holder',currentProfile.bank_holder||co||'');
-    set('pf-login-email',(currentUser&&currentUser.email)||'');
-  } else _pfTeardownDriverTabs();
+  } else {
+    var _pro=(role==='client'&&ct==='pro');
+    _pfSetupDriverTabs(_pfTabsClient(_pro), _pro?'client-pro':'client-perso');
+  }
+  set('pf-login-email',(currentUser&&currentUser.email)||'');
   if(role==='driver') loadFleetProfile();
   // Lock first/last name if driver is validated
   if(role==='driver'){
@@ -9303,31 +9293,43 @@ function loadProfileForm(){
 }
 
 // ── Profil flotte : onglets Société / Compte / Notifications / Documents / Flotte ──
-var _PF_TABS=[
+var _PF_TABS_DRIVER=[
   {k:'company', l:'Société',        cards:[['pf-identity-card','pf-bank-card']]},
-  {k:'account', l:'Compte',         cards:[['pf-account-card','pf-security-card']]},
+  {k:'account', l:'Compte',         cards:['pf-account-card']},
   {k:'notif',   l:'Notifications',  cards:['pf-notif-card']},
   {k:'docs',    l:'Documents',      cards:['pf-docs-card']},
   {k:'fleet',   l:'Véhicules',      cards:['pf-veh-card']},
   {k:'drivers', l:'Chauffeurs',     cards:['pf-drv-card']}
 ];
+// Clients (particulier / professionnel) et admin : Profil (ou Données de l'entreprise) / Compte / Notifications
+function _pfTabsClient(pro){ return [
+  {k:'company', l:pro?'Données de l’entreprise':'Profil', cards:['pf-identity-card'], narrow:true},
+  {k:'account', l:'Compte',        cards:['pf-account-card'], narrow:true},
+  {k:'notif',   l:'Notifications', cards:['pf-notif-card'],   narrow:true}
+]; }
+var _PF_TABS=_PF_TABS_DRIVER;
 var _pfTab='company', _pfOrig=[];
 // Retour à la mise en page d'origine (ex. déconnexion d'une flotte puis connexion d'un client sans recharger)
 function _pfTeardownDriverTabs(){
   var bar=document.getElementById('pf-tabs'), panels=document.getElementById('pf-panels');
   if(!bar||!bar.dataset.ready) return;
   _pfOrig.slice().reverse().forEach(function(o){ o[1].insertBefore(o[0],o[2]); o[0].style.marginBottom=o[3]; });
-  _pfOrig=[]; panels.innerHTML=''; bar.innerHTML=''; bar.style.display='none'; delete bar.dataset.ready;
+  _pfOrig=[]; panels.innerHTML=''; bar.innerHTML=''; bar.style.display='none'; delete bar.dataset.ready; delete bar.dataset.set;
   var mc=document.getElementById('pf-main-cols'); if(mc) mc.style.removeProperty('display');
   var fs=document.getElementById('pf-fleet-sections'); if(fs){ fs.style.removeProperty('display'); fs.style.display='none'; } // sections flotte : chauffeurs uniquement
 }
-function _pfSetupDriverTabs(){
+function _pfSetupDriverTabs(tabs, setKey){
   var bar=document.getElementById('pf-tabs'), panels=document.getElementById('pf-panels');
   if(!bar||!panels) return;
+  setKey=setKey||'driver';
+  if(bar.dataset.ready && bar.dataset.set!==setKey) _pfTeardownDriverTabs();
+  _PF_TABS=tabs||_PF_TABS_DRIVER;
+  if(!_PF_TABS.some(function(t){ return t.k===_pfTab; })) _pfTab='company';
   if(!bar.dataset.ready){
+    bar.dataset.set=setKey;
     bar.innerHTML=_PF_TABS.map(function(t){ return '<button class="pf-tab" role="tab" data-k="'+t.k+'" onclick="_pfShowTab(\''+t.k+'\')">'+t.l+'</button>'; }).join('');
     _PF_TABS.forEach(function(t){
-      var pn=document.createElement('div'); pn.className='pf-panel'; pn.id='pf-panel-'+t.k; pn.style.display='none';
+      var pn=document.createElement('div'); pn.className='pf-panel'+(t.narrow?' pf-narrow':''); pn.id='pf-panel-'+t.k; pn.style.display='none';
       t.cards.forEach(function(c){
         [].concat(c).forEach(function(id){ var el=document.getElementById(id); if(el) _pfOrig.push([el,el.parentNode,el.nextSibling,el.style.marginBottom]); });
         if(Array.isArray(c)){ // two cards side by side on desktop
