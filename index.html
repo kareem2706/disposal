@@ -332,6 +332,20 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 .ofc-pick{margin-left:auto;padding:10px 24px!important;font-size:14px!important;font-weight:600!important;border-radius:999px!important;justify-content:center;}
 .ofc-detail{display:none;margin-top:10px;padding:10px 12px;background:var(--sand);border-radius:10px;font-size:12px;color:var(--ink2);}
 #m-view-offers.rd-panel .modal-ft{display:none;}
+/* Confirmation et paiement (version « plein écran ») */
+#m-payment.rd-panel .modal{max-height:none;}
+#m-payment .modal-ft .btn-green{padding:12px 28px!important;font-size:15px!important;font-weight:600!important;border-radius:999px!important;justify-content:center;}
+.pay-ride{background:var(--sand);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:12.5px;}
+.pay-ride .rmc-wrap{margin-bottom:12px;}
+.pay-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);}
+.pay-offer{display:flex;align-items:center;gap:12px;border:1.5px solid var(--sand3);border-radius:14px;padding:12px 14px;margin-bottom:12px;background:#fff;}
+.pay-offer .ofc-name{margin-top:1px;}
+.pay-sum{background:#fff;border:1.5px solid var(--sand3);border-radius:14px;padding:14px 16px;}
+.pay-line{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13.5px;color:var(--ink2);padding:4px 0;}
+.pay-line>span:last-child{font-weight:600;color:var(--ink);}
+.pay-line.pay-total{border-top:1px dashed var(--sand3);margin-top:6px;padding-top:12px;font-size:15px;font-weight:700;color:var(--ink);}
+.pay-line.pay-total>span:last-child{font-size:24px;color:var(--green);font-weight:700;}
+.pay-secure{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;color:var(--ink3);margin-top:10px;padding-top:10px;border-top:1px solid var(--sand2);}
 @media(max-width:600px){.ofc-pick{flex:1;max-width:60%;height:44px;}}
 .offer-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .driver-row{display:flex;align-items:center;gap:9px;}
@@ -2103,21 +2117,14 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <button class="close-btn" onclick="closeModal('m-payment')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
     </div>
     <div class="modal-body">
-      <div id="payment-ride-info" style="display:none;background:#F7F7F7;border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:12.5px;"></div>
-      <div id="payment-summary" style="background:var(--sand2);border-radius:var(--r);padding:14px;margin-bottom:20px;border:1px solid var(--sand3);">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:14px;font-weight:500;">Montant HTVA</span>
-          <span id="payment-amount" style="font-size:18px;font-weight:700;color:var(--green);">—</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
-          <span style="font-size:12px;color:var(--ink3);" id="payment-tva-label">TVA 6%</span>
-          <span id="payment-tva" style="font-size:13px;color:var(--ink3);">—</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:8px;border-top:1px solid var(--sand3);">
-          <span style="font-size:14px;font-weight:600;">Total TVAC</span>
-          <span id="payment-total" style="font-size:22px;font-weight:700;color:var(--green);">—</span>
-        </div>
-        <div style="font-size:11px;color:var(--ink3);margin-top:6px;" id="payment-confirm-label">Paiement sécurisé &bull; Confirmation immédiate</div>
+      <div id="payment-ride-info" class="pay-ride" style="display:none;"></div>
+      <div id="payment-offer" class="pay-offer" style="display:none;"></div>
+      <div id="payment-summary" class="pay-sum" style="margin-bottom:20px;">
+        <div class="pay-lbl" style="margin-bottom:6px;">Récapitulatif</div>
+        <div class="pay-line"><span>Montant HTVA</span><span id="payment-amount">—</span></div>
+        <div class="pay-line"><span id="payment-tva-label">TVA 6%</span><span id="payment-tva">—</span></div>
+        <div class="pay-line pay-total"><span>Total TVAC</span><span id="payment-total">—</span></div>
+        <div class="pay-secure"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg><span id="payment-confirm-label">Paiement sécurisé &bull; Confirmation immédiate</span></div>
       </div>
 
       <!-- Step 1: choose payment method -->
@@ -7460,11 +7467,31 @@ window.openPaymentModal = function(offerId, driverId, amount){
   _selectedPaymentMethod = null;
   _stripePaymentMethodId = null;
 
-  document.getElementById('payment-amount').textContent = amount.toFixed(2) + ' €';
+  var _eur=function(n){ return n.toFixed(2).replace('.',',')+' €'; };
+  document.getElementById('payment-amount').textContent = _eur(amount);
   var tva = amount * TVA_RATE;
   var totalTvac = amount + tva;
-  document.getElementById('payment-tva').textContent = tva.toFixed(2) + ' €';
-  document.getElementById('payment-total').textContent = totalTvac.toFixed(2) + ' €';
+  document.getElementById('payment-tva').textContent = _eur(tva);
+  document.getElementById('payment-total').textContent = _eur(totalTvac);
+  var _tl=document.getElementById('payment-tva-label'); if(_tl) _tl.textContent='TVA '+String(+(TVA_RATE*100).toFixed(2)).replace('.',',')+' %';
+  var _pr=_currentPaymentRide, _pc=_pr?(_pr.booking_code||''):'';
+  document.getElementById('payment-modal-title').innerHTML=(_pc?'<span class="rd-code">'+_pc+'</span><span class="rd-sep"> · </span>':'')+'<span class="rd-sub">Confirmation et paiement</span>';
+  // Offre choisie
+  var _po=document.getElementById('payment-offer');
+  if(_po){
+    var _o=(_offersData||[]).find(function(x){ return String(x.id)===String(offerId); });
+    if(_o){
+      var _v=_o.vehicle||null, _vc=_v?(_v.vehicle_class||''):'';
+      var _cl={lowcost:'ECO',business:'BUSINESS',van:'VAN',luxe:'LUXE',bus:'BUS'}, _cc={lowcost:'#6B8E23',business:'#1B5E3B',van:'#2E6B4A',luxe:'#8B0000',bus:'#B8860B'};
+      var _p=_o.profiles||{};
+      var _rt=(_p.rating_count>0&&_p.rating)?'<span class="ofc-star">\u2605 '+Number(_p.rating).toFixed(1).replace('.',',')+'</span><span>('+_p.rating_count+' avis)</span>':'';
+      var _cls=_vc?'<span class="ofc-cls" style="background:'+(_cc[_vc]||'var(--ink3)')+';">'+(_cl[_vc]||_vc.toUpperCase())+'</span>':'';
+      _po.innerHTML='<div class="ofc-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/></svg></div>'
+        +'<div style="flex:1;min-width:0;"><div class="pay-lbl">Offre choisie</div><div class="ofc-name">'+(_v?((_v.brand||'')+' '+(_v.model||'')).trim():'Véhicule non spécifié')+'</div>'
+        +((_cls||_rt)?'<div class="ofc-meta">'+_cls+_rt+'</div>':'')+'</div>';
+      _po.style.display='';
+    } else _po.style.display='none';
+  }
   var withFees = (amount * STRIPE_FEE_MULTIPLIER).toFixed(2);
   var feePercent = ((STRIPE_FEE_MULTIPLIER - 1) * 100).toFixed(1);
   document.getElementById('stripe-fee-label').textContent = 'Des frais supplémentaires peuvent s\'appliquer';
@@ -7486,7 +7513,7 @@ window.openPaymentModal = function(offerId, driverId, amount){
       var toLabel = isDisp ? '\u2014' : to;
       var iconGreen='<svg width="14" height="18" viewBox="0 0 24 30" fill="#1B5E3B"><path d="M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>';
       var iconRed='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
-      var html='';
+      var html=_rideMetaChips(r);
       // Departure
       html+='<div style="display:flex;gap:14px;">'
         +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'
@@ -7566,7 +7593,7 @@ window.openPaymentModal = function(offerId, driverId, amount){
   var nextBtn=document.getElementById('payment-btn-next');
   if(nextBtn){
     var _payTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
-    nextBtn.textContent='Payer par carte bancaire';
+    nextBtn.textContent='Payer '+_payTvac.toFixed(2).replace('.',',')+' € par carte';
     nextBtn.onclick=function(){ confirmStripeCheckout(_payTvac,_payTvac); };
   }
 
@@ -7575,8 +7602,9 @@ window.openPaymentModal = function(offerId, driverId, amount){
     var el = document.getElementById(id); if(el){ el.classList.remove('show'); el.textContent = ''; }
   });
 
-  closeModal('m-view-offers');
+  // Ouvrir d'abord le paiement, puis fermer les offres (sinon le retour navigateur refermerait le panneau)
   openModal('m-payment');
+  closeModal('m-view-offers');
 };
 
 function _paymentShowStep(step){
@@ -7854,7 +7882,7 @@ function setLoading(btn, loading, text){
 function _tagModalClose(m){ if(!m||m.id==='m-confirm-delete') return; m.querySelectorAll('.modal-ft button').forEach(function(b){ if((b.textContent||'').trim()==='Fermer') b.classList.add('m-close-mob'); }); }
 window.openModal  = id => { var _m=document.getElementById(id); if(!_m) return; _tagModalClose(_m); if(_m.classList.contains('rd-panel')) _rdEnsureBack(_m); _m.classList.add('open'); if(_m.classList.contains('rd-panel')) _rdOpened(id); };
 // Formulaires affichés en version « plein écran » (panneau à droite sur ordinateur, page sur mobile)
-var _RD_FORMS=['m-new-ride','m-submit-offer','m-subcontract','m-personal-mission','m-vehicle','m-driver','m-fleet-doc','m-passenger','m-mission-assign','m-admin-client','m-view-offers'];
+var _RD_FORMS=['m-new-ride','m-submit-offer','m-subcontract','m-personal-mission','m-vehicle','m-driver','m-fleet-doc','m-passenger','m-mission-assign','m-admin-client','m-view-offers','m-payment'];
 function _rdInitForms(){ _RD_FORMS.forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.add('rd-panel','rd-form'); }); }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',_rdInitForms); else _rdInitForms();
 function _rdEnsureBack(m){
