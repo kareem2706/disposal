@@ -2,7 +2,8 @@
 // Appelée par un Database Webhook sur la table rides (INSERT + UPDATE).
 // Envoie des notifications push (Expo) aux chauffeurs de l'app Bleenr Chauffeur :
 //   • « Nouvelle demande »  → tous les chauffeurs (sauf le créateur) quand une demande est publiée
-//   • « Demande modifiée »  → chauffeurs ayant fait une offre + chauffeur attribué, si date/heure/adresses/véhicule/pax changent
+//   • « Demande / Mission modifiée » → chauffeurs ayant fait une offre + chauffeur attribué, quand le client change
+//     date, heure, adresses, gamme, passagers, passager / téléphone, note pour le chauffeur (notification seule, sans pastille)
 //   • « Demande annulée »   → chauffeurs ayant fait une offre + chauffeur attribué, quand la course passe à « cancelled »
 //   • « Offre acceptée »    → le chauffeur dont l'offre est retenue (course confirmée ou en attente de paiement)
 // Les chauffeurs dont l'offre a été refusée (autre chauffeur retenu) ne reçoivent plus rien sur cette demande.
@@ -14,6 +15,22 @@ const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const OPEN = ["waiting", "offers"];
 const WATCHED = ["ride_date", "ride_time", "from_address", "to_address", "vehicle_type", "passengers", "trip_type"];
+// Libellés des changements faits par le client (affichés dans la notification)
+const LABELS: Record<string, string> = {
+  ride_date: "date", ride_time: "heure", from_address: "adresse de départ", to_address: "adresse d'arrivée",
+  vehicle_type: "gamme", passengers: "passagers", trip_type: "type de course",
+  pax: "passager", tel: "téléphone du passager", note_drv: "note pour le chauffeur", note: "note du client",
+};
+const tag = (n: any, t: string) => ((String(n || "").match(new RegExp("\\|" + t + ":([^|]*)")) || [])[1] || "").trim();
+// Partie des notes saisie par le client (sans les tags techniques ni la note du chauffeur |offer_note:)
+const clientNote = (n: any) => String(n || "").replace(/\|(pax|tel|pemail|pref|note_drv|offer_note):[^|]*/g, "").trim();
+// Ce que le client a modifié (les changements faits par le chauffeur — note au client, étapes — sont ignorés)
+function clientChanges(rec: Ride, old: Ride): string[] {
+  const out = WATCHED.filter((k) => String(rec[k] ?? "") !== String(old[k] ?? ""));
+  for (const t of ["pax", "tel", "note_drv"]) if (tag(rec.notes, t) !== tag(old.notes, t)) out.push(t);
+  if (clientNote(rec.notes) !== clientNote(old.notes)) out.push("note");
+  return out;
+}
 const VEH: Record<string, string> = { lowcost: "Low-cost", business: "Business", van: "Van", luxe: "Luxe" };
 const MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 const DAYS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
@@ -51,7 +68,7 @@ function decide(type: string, rec: Ride, old: Ride | null): Kind | null {
   if (assigned && (OPEN.includes(old.status) || !old.driver_id || old.driver_id !== rec.driver_id)) return "offer_accepted";
   // Demande qui (re)devient ouverte (ex. paiement validé, republication)
   if (OPEN.includes(rec.status) && !OPEN.includes(old.status) && old.status !== "cancelled") return "new_request";
-  if (rec.status !== "cancelled" && WATCHED.some((k) => String(rec[k] ?? "") !== String(old[k] ?? ""))) return "request_updated";
+  if (rec.status !== "cancelled" && rec.status !== "done" && clientChanges(rec, old).length) return "request_updated";
   return null;
 }
 
@@ -110,11 +127,14 @@ Deno.serve(async (req) => {
     const visible = kind ? all.filter((t) => t.user_id !== rec.client_id && (!users || users.includes(t.user_id)) && (t.prefs?.[kind] ?? true) !== false) : [];
     const badges = openChanged ? await badgeCounts([...new Set(all.map((t) => t.user_id))]) : {};
 
+    const mission = !!rec.driver_id && ["confirmed", "active", "pending_payment"].includes(rec.status);
+    const changed = kind === "request_updated" && old ? clientChanges(rec, old).map((k) => LABELS[k] || k) : [];
     const title = kind === "new_request" ? (rec.is_subcontract ? "Nouvelle sous-traitance" : "Nouvelle demande")
-      : kind === "request_updated" ? "Demande modifiée"
+      : kind === "request_updated" ? (mission ? `Mission modifiée${rec.booking_code ? " · " + rec.booking_code : ""}` : "Demande modifiée")
       : kind === "offer_accepted" ? "Offre acceptée 🎉" : "Demande annulée";
     const extra = [VEH[rec.vehicle_type] || rec.vehicle_type, rec.passengers ? rec.passengers + " pax" : ""].filter(Boolean).join(" · ");
-    const lead = kind === "offer_accepted" ? `${rec.booking_code || "Course"} est confirmée pour vous.` : "";
+    const lead = kind === "offer_accepted" ? `${rec.booking_code || "Course"} est confirmée pour vous.`
+      : changed.length ? "Modifié par le client : " + [...new Set(changed)].join(", ") + "." : "";
     const body = [lead, route(rec), [when(rec), kind === "new_request" ? extra : ""].filter(Boolean).join(" · ")].filter(Boolean).join("\n");
 
     const shown = new Set(visible.map((t) => t.token));
