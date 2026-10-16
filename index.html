@@ -5895,7 +5895,7 @@ function _openRideDetailImpl(el){
       var pdfVoucherBtn = '<button onclick="generateRideVoucher(\''+rId+'\')" class="btn btn-secondary" style="display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Voucher</button>';
       var _vItem='<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');generateRideVoucher(\''+String(rId).replace(/'/g,'')+'\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Télécharger le voucher</button>';
       if(_rideCancelLocked(r)){
-        ft=_clientRideMenu(rId,false,false,_vItem)+'<div style="margin-right:auto;font-size:12px;color:var(--ink3);">Annulation impossible \u00e0 moins de '+_refundDelayHours(r)+' h du d\u00e9part</div>'+closeBtn;
+        ft=_clientRideMenu(rId,false,false,_vItem)+'<div style="margin-right:auto;font-size:12px;color:var(--ink3);">Annulation/Modification impossible \u00e0 moins de '+_refundDelayHours(r)+' h du d\u00e9part</div>'+closeBtn;
       } else {
         ft=_clientRideMenu(rId,false,true,_vItem)+'<div style="margin-right:auto;"></div>'+closeBtn;
       }
@@ -6445,7 +6445,7 @@ function _clientRideMenu(rId, canEdit, canCancel, extra){
   var id=String(rId).replace(/'/g,'');
   var close="this.closest('.ft-menu').classList.remove('open');";
   var editIc='<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  var trashIc='<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+  var trashIc='<svg width="15" height="15" viewBox="0 0 16 16" fill="none" style="color:var(--red);"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
   var items=extra||'';
   if(canEdit) items+='<button class="ft-menu-item" onclick="'+close+'editRide(\''+id+'\')">'+editIc+'Modifier ma demande</button>';
   if(canCancel) items+='<button class="ft-menu-item" style="color:var(--red);" onclick="'+close+'deleteRide(\''+id+'\')">'+trashIc+'Annuler ma demande</button>';
