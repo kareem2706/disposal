@@ -6,6 +6,8 @@
 //   • « Demande annulée »   → chauffeurs ayant fait une offre + chauffeur attribué, quand la course passe à « cancelled »
 //   • « Offre acceptée »    → le chauffeur dont l'offre est retenue (course confirmée ou en attente de paiement)
 // Les chauffeurs dont l'offre a été refusée (autre chauffeur retenu) ne reçoivent plus rien sur cette demande.
+// Pastille de l'icône : à chaque nouvelle demande, ou demande qui quitte la marketplace (annulée / attribuée),
+// chaque téléphone reçoit le nombre de demandes ouvertes sans offre de sa part (mise à jour silencieuse si besoin).
 // Chaque chauffeur peut couper chaque type dans son profil (push_tokens.prefs).
 
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -53,27 +55,60 @@ function decide(type: string, rec: Ride, old: Ride | null): Kind | null {
   return null;
 }
 
+// Pastille de l'icône : nombre de demandes ouvertes sans offre du chauffeur (même calcul que l'app)
+async function badgeCounts(userIds: string[]): Promise<Record<string, number>> {
+  const open: any[] = await rest(`rides?status=in.(waiting,offers)&select=id,client_id`);
+  const out: Record<string, number> = {};
+  if (!userIds.length) return out;
+  const ids = open.map((r) => r.id);
+  const offers: any[] = ids.length ? await rest(`offers?ride_id=in.(${ids.join(",")})&select=ride_id,driver_id`) : [];
+  const offered = new Set(offers.map((o) => o.driver_id + ":" + o.ride_id));
+  for (const u of userIds) out[u] = open.filter((r) => r.client_id !== u && !offered.has(u + ":" + r.id)).length;
+  return out;
+}
+
+async function sendAll(msgs: any[]) {
+  let sent = 0;
+  const dead: string[] = [];
+  for (let i = 0; i < msgs.length; i += 100) {
+    const chunk = msgs.slice(i, i + 100);
+    const r = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(chunk),
+    });
+    const j = await r.json().catch(() => ({}));
+    (j.data || []).forEach((t: any, k: number) => {
+      if (t.status === "ok") sent++;
+      else if (t.details?.error === "DeviceNotRegistered") dead.push(chunk[k].to);
+    });
+  }
+  return { sent, dead };
+}
+
 Deno.serve(async (req) => {
   try {
     const p = await req.json();
     const rec: Ride = p.record, old: Ride | null = p.old_record ?? null;
     const kind = decide(p.type, rec, old);
-    if (!kind) return new Response(JSON.stringify({ skipped: true }), { status: 200 });
+    // La liste des demandes ouvertes a changé (nouvelle demande, demande annulée ou attribuée) → pastilles à jour
+    const wasOpen = !!old && OPEN.includes(old.status), isOpen = !!rec && OPEN.includes(rec.status);
+    const openChanged = (p.type === "INSERT" && isOpen) || (p.type === "UPDATE" && wasOpen !== isOpen);
+    if (!kind && !openChanged) return new Response(JSON.stringify({ skipped: true }), { status: 200 });
 
-    // Destinataires
+    // Destinataires de la notification visible
     let users: string[] | null = null; // null = tous les chauffeurs
     if (kind === "offer_accepted") {
       users = [rec.driver_id];
-    } else if (kind !== "new_request") {
+    } else if (kind && kind !== "new_request") {
       // Offres en cours ou acceptée (pas les offres refusées) + chauffeur attribué
       const offers = await rest(`offers?ride_id=eq.${rec.id}&status=in.(pending,accepted)&select=driver_id`);
       users = [...new Set([...(offers as any[]).map((o) => o.driver_id), rec.driver_id].filter(Boolean))];
-      if (!users.length) return new Response(JSON.stringify({ skipped: "no recipients" }), { status: 200 });
     }
-    const filter = users ? `&user_id=in.(${users.join(",")})` : "";
-    let tokens: any[] = await rest(`push_tokens?select=token,user_id,prefs${filter}`);
-    tokens = tokens.filter((t) => t.user_id !== rec.client_id && (t.prefs?.[kind] ?? true) !== false);
-    if (!tokens.length) return new Response(JSON.stringify({ sent: 0 }), { status: 200 });
+    // Tous les téléphones (pour la pastille), puis filtre pour la notification visible
+    const all: any[] = await rest(`push_tokens?select=token,user_id,prefs`);
+    const visible = kind ? all.filter((t) => t.user_id !== rec.client_id && (!users || users.includes(t.user_id)) && (t.prefs?.[kind] ?? true) !== false) : [];
+    const badges = openChanged ? await badgeCounts([...new Set(all.map((t) => t.user_id))]) : {};
 
     const title = kind === "new_request" ? (rec.is_subcontract ? "Nouvelle sous-traitance" : "Nouvelle demande")
       : kind === "request_updated" ? "Demande modifiée"
@@ -82,29 +117,24 @@ Deno.serve(async (req) => {
     const lead = kind === "offer_accepted" ? `${rec.booking_code || "Course"} est confirmée pour vous.` : "";
     const body = [lead, route(rec), [when(rec), kind === "new_request" ? extra : ""].filter(Boolean).join(" · ")].filter(Boolean).join("\n");
 
-    const msgs = tokens.map((t) => ({ to: t.token, title, body, sound: "default", data: { ride_id: rec.id, kind }, channelId: "default" }));
-    let sent = 0;
-    const dead: string[] = [];
-    for (let i = 0; i < msgs.length; i += 100) {
-      const chunk = msgs.slice(i, i + 100);
-      const r = await fetch("https://exp.host/--/api/v2/push/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(chunk),
-      });
-      const j = await r.json().catch(() => ({}));
-      (j.data || []).forEach((t: any, k: number) => {
-        if (t.status === "ok") sent++;
-        else if (t.details?.error === "DeviceNotRegistered") dead.push(chunk[k].to);
-      });
+    const shown = new Set(visible.map((t) => t.token));
+    const msgs: any[] = visible.map((t) => ({
+      to: t.token, title, body, sound: "default", data: { ride_id: rec.id, kind }, channelId: "default",
+      ...(openChanged ? { badge: badges[t.user_id] ?? 0 } : {}),
+    }));
+    // Les autres téléphones : mise à jour silencieuse de la pastille uniquement
+    if (openChanged) {
+      for (const t of all) if (!shown.has(t.token) && t.user_id !== rec.client_id) msgs.push({ to: t.token, badge: badges[t.user_id] ?? 0, _contentAvailable: true });
     }
+    if (!msgs.length) return new Response(JSON.stringify({ sent: 0 }), { status: 200 });
+    const { sent, dead } = await sendAll(msgs);
     // Jetons d'apps désinstallées : nettoyage
     if (dead.length) {
       await fetch(`${SB_URL}/rest/v1/push_tokens?token=in.(${dead.map((d) => `"${d}"`).join(",")})`, {
         method: "DELETE", headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
       });
     }
-    return new Response(JSON.stringify({ kind, sent }), { status: 200, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ kind, openChanged, sent }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e) }), { status: 500 });
   }
