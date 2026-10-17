@@ -20,14 +20,15 @@ const LABELS: Record<string, string> = {
   ride_date: "date", ride_time: "heure", from_address: "adresse de départ", to_address: "adresse d'arrivée",
   vehicle_type: "gamme", passengers: "passagers", trip_type: "type de course",
   pax: "passager", tel: "téléphone du passager", note_drv: "note pour le chauffeur", note: "note du client",
+  flight: "numéro de vol", train: "numéro de train",
 };
 const tag = (n: any, t: string) => ((String(n || "").match(new RegExp("\\|" + t + ":([^|]*)")) || [])[1] || "").trim();
 // Partie des notes saisie par le client (sans les tags techniques ni la note du chauffeur |offer_note:)
-const clientNote = (n: any) => String(n || "").replace(/\|(pax|tel|pemail|pref|note_drv|offer_note):[^|]*/g, "").trim();
+const clientNote = (n: any) => String(n || "").replace(/\|(pax|tel|pemail|pref|note_drv|offer_note|flight|train):[^|]*/g, "").trim();
 // Ce que le client a modifié (les changements faits par le chauffeur — note au client, étapes — sont ignorés)
 function clientChanges(rec: Ride, old: Ride): string[] {
   const out = WATCHED.filter((k) => String(rec[k] ?? "") !== String(old[k] ?? ""));
-  for (const t of ["pax", "tel", "note_drv"]) if (tag(rec.notes, t) !== tag(old.notes, t)) out.push(t);
+  for (const t of ["pax", "tel", "note_drv", "flight", "train"]) if (tag(rec.notes, t) !== tag(old.notes, t)) out.push(t);
   if (clientNote(rec.notes) !== clientNote(old.notes)) out.push("note");
   return out;
 }

@@ -2221,6 +2221,8 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div class="form-grid">
           <div class="input-group full"><label>D&eacute;part <span style="color:var(--red)">*</span></label><input id="ride-from" placeholder="Gare du Midi, Bruxelles" autocomplete="off"></div>
           <div class="input-group full"><label>Arriv&eacute;e <span style="color:var(--red)">*</span></label><input id="ride-to" placeholder="A&eacute;roport BRU" autocomplete="off"></div>
+          <div class="input-group full tr-grp" id="ride-flight-grp" style="display:none;"><label id="ride-flight-lbl">Num&eacute;ro de vol</label><input id="ride-flight" class="tr-input" placeholder="Ex. SN 3123" autocomplete="off" maxlength="10"><div class="tr-hint" id="ride-flight-hint"></div></div>
+          <div class="input-group full tr-grp" id="ride-train-grp" style="display:none;"><label id="ride-train-lbl">Num&eacute;ro de train</label><input id="ride-train" class="tr-input" placeholder="Ex. IC 1832" autocomplete="off" maxlength="10"><div class="tr-hint" id="ride-train-hint"></div></div>
           <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="ride-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="ride-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="ride-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
@@ -2232,6 +2234,8 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <div id="panel-disposal" style="display:none;">
         <div class="form-grid">
           <div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="disp-from" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>
+          <div class="input-group full tr-grp" id="disp-flight-grp" style="display:none;"><label id="disp-flight-lbl">Num&eacute;ro de vol</label><input id="disp-flight" class="tr-input" placeholder="Ex. SN 3123" autocomplete="off" maxlength="10"><div class="tr-hint" id="disp-flight-hint"></div></div>
+          <div class="input-group full tr-grp" id="disp-train-grp" style="display:none;"><label id="disp-train-lbl">Num&eacute;ro de train</label><input id="disp-train" class="tr-input" placeholder="Ex. IC 1832" autocomplete="off" maxlength="10"><div class="tr-hint" id="disp-train-hint"></div></div>
           <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="disp-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="disp-time" type="time"></div>
           <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
@@ -2673,6 +2677,7 @@ function _attachGoogleAC(){
             el.value = name;
           }
         }
+        if(window._trRefresh) window._trRefresh();
       });
     }
   });
@@ -2702,6 +2707,7 @@ window.attachGPToSeg = function(n){
             el.value = name;
           }
         }
+        if(window._trRefresh) window._trRefresh();
       });
     }
   });
@@ -5276,7 +5282,7 @@ function _buildRideDetailBody(r, opts){
     body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+segRow('green',t('lbl_depart'),from,true)+segRow('red',t('lbl_arrivee'),to,false)+'<div id="'+idPrefix+'detail-route-info" style="padding:4px 0 4px 30px;display:none;"><div style="font-size:11.5px;color:var(--ink2);font-weight:500;" id="'+idPrefix+'detail-route-info-text"></div></div>'+'</div>';
   }
   var rawNotes=r.notes||'';
-  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
+  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight|train):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
   if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div></div>';}
   var noteDrvMatch = rawNotes.match(/\|note_drv:([^|]+)/);
   if(noteDrvMatch){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">Note du client</div><div style="padding:12px;background:var(--blue-bg);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;">'+noteDrvMatch[1].trim()+'</div></div>';}
@@ -5456,7 +5462,7 @@ function _openRideDetailImpl(el){
   }
 
   var rawNotes=r.notes||'';
-  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
+  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight|train):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
   if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){
     body+='<div>'
       +'<div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div>'
@@ -5468,7 +5474,9 @@ function _openRideDetailImpl(el){
 
   // Note: price for cancelled/done rides is shown in the footer (not body)
 
+  body+=(window._trBlockHtml?window._trBlockHtml(r):'');
   var bodyEl=document.getElementById('detail-body');if(bodyEl)bodyEl.innerHTML=body;
+  if(window._trStart) window._trStart(r, gen);
 
   // ── Google Distance Matrix for A→B (gen-protected) ──
   if(!isDisp&&!isMixed&&r.from_address&&r.to_address&&typeof _ltWhenMaps==='function'){
@@ -6127,7 +6135,7 @@ async function _docRideDocument(rideId, mode){
   var paxN=(nR.match(/\|pax:([^|]+)/)||[])[1]||'', paxT=(nR.match(/\|tel:([^|]+)/)||[])[1]||'';
   var noteD=(nR.match(/\|note_drv:([^|]+)/)||[])[1]||'';
   var dur=(nR.match(/Durée:(\d+)/)||[])[1]||'';
-  var cln=nR.replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').trim();
+  var cln=nR.replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight|train):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').trim();
   var code=r.booking_code||r.id.slice(0,8);
   var left, right, kind, boxTitle, boxBody;
 
@@ -6414,7 +6422,7 @@ async function _promoteNotesToDriver(rideId){
     if(notes.includes('|note_drv:')) return;
     // Extract clean base note (strip pax/tel/duration/mixte tags)
     var clean = notes
-      .replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref):[^|]*/g,'')
+      .replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight|train):[^|]*/g,'')
       .replace(/^Mixte:.*$/m,'').replace(/Dur\u00e9e:[^\s|]+/g,'').trim();
     if(!clean) return;
     var newNotes = notes.trimEnd() + '|note_drv:' + clean;
@@ -6824,7 +6832,8 @@ window.editRide = async function(rideId){
   var _nRaw = r.notes||'';
   window._editRidePax = { name:((_nRaw.match(/\|pax:([^|]*)/)||[])[1]||'').trim(), tel:((_nRaw.match(/\|tel:([^|]*)/)||[])[1]||'').trim() };
   window._editHiddenTags = (_nRaw.match(/\|(note_drv|offer_note|pemail|pref):[^|]*/g)||[]).join('');
-  r = Object.assign({}, r, { notes: _nRaw.replace(/\|(pax|tel|note_drv|offer_note|pemail|pref):[^|]*/g,'').trim() });
+  window._editTr = { flight:((_nRaw.match(/\|flight:([^|]*)/)||[])[1]||'').trim(), train:((_nRaw.match(/\|train:([^|]*)/)||[])[1]||'').trim() };
+  r = Object.assign({}, r, { notes: _nRaw.replace(/\|(pax|tel|note_drv|offer_note|pemail|pref|flight|train):[^|]*/g,'').trim() });
 
   // Activate correct trip type tab
   document.querySelectorAll('.trip-type').forEach(function(b){
@@ -6846,6 +6855,7 @@ window.editRide = async function(rideId){
     sv('ride-notes', r.notes||'');
     var paxEl=document.getElementById('ride-pax'); if(paxEl) paxEl.value=r.passengers||1;
     var vehEl=document.getElementById('ride-vehicle'); if(vehEl) vehEl.value=r.vehicle_type||'lowcost';
+    sv('ride-flight', window._editTr.flight); sv('ride-train', window._editTr.train); setTimeout(window._trRefresh,0);
 
   } else if(tripType === 'disposal'){
     sv('disp-from', r.from_address);
@@ -6855,6 +6865,7 @@ window.editRide = async function(rideId){
     var durEl=document.getElementById('disp-duration'); if(durEl) durEl.value=durMatch?durMatch[1]:'2';
     var paxEl2=document.getElementById('disp-pax'); if(paxEl2) paxEl2.value=r.passengers||1;
     var vehEl2=document.getElementById('disp-vehicle'); if(vehEl2) vehEl2.value=r.vehicle_type||'lowcost';
+    sv('disp-flight', window._editTr.flight); sv('disp-train', window._editTr.train); setTimeout(window._trRefresh,0);
     sv('disp-notes', (r.notes||'').replace(/Durée:\d+h?/g,'').trim());
 
   } else if(tripType === 'mixed'){
@@ -6980,6 +6991,12 @@ window.submitRide = async function(){
     if(!from||!to||!date||!time){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
   }
 
+  // Numéro de vol / train (aéroport ou gare au départ ou à l'arrivée)
+  var _tr = window._trCollect ? window._trCollect(tripType) : {};
+  if(_tr.error){ if(err){ err.textContent=_tr.error; err.classList.add('show'); err.style.display=''; } return; }
+  if(_tr.flight) notes = (notes||'') + '|flight:'+_tr.flight;
+  if(_tr.train)  notes = (notes||'') + '|train:'+_tr.train;
+
   // DEMO MODE
   // Inject passenger info
   try{
@@ -7086,6 +7103,139 @@ window.submitRide = async function(){
   }
 };
 
+// ── Numéro de vol / de train ─────────────────────────────────────
+// Si le départ ou l'arrivée est un aéroport → champ « Numéro de vol » ; une gare → « Numéro de train ».
+// Stockés dans rides.notes (tags |flight: et |train:). Le chauffeur confirmé (et le client) voient le statut
+// en temps réel dans le détail de la course (Edge Function transport-status : AeroDataBox pour les vols, iRail pour les trains).
+(function(){
+  var RE_PLANE=/airport|aeroport|luchthaven|flughafen|aeropuerto|aeroporto|zaventem|\bbru\b|\bcrl\b/;
+  var RE_TRAIN=/\bgare\b|station|bahnhof|stazione|estacion|\bhbf\b|centraal|\bmidi\b|\bzuid\b|eurostar|thalys|\btgv\b/;
+  var nrm=function(a){ return String(a||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); };
+  window._trKindOf=function(a){ var s=nrm(a); return { plane:RE_PLANE.test(s), train:RE_TRAIN.test(s) }; };
+  var val=function(id){ var e=document.getElementById(id); return e?e.value:''; };
+  var vis=function(id){ var e=document.getElementById(id); return !!e && e.style.display!=='none'; };
+  function setField(pfx, kind, show, pickup){
+    var g=document.getElementById(pfx+'-'+kind+'-grp'); if(!g) return;
+    g.style.display=show?'':'none';
+    var l=document.getElementById(pfx+'-'+kind+'-lbl'), h=document.getElementById(pfx+'-'+kind+'-hint');
+    if(kind==='flight'){
+      if(l) l.textContent=pickup?'Numéro du vol d’arrivée':'Numéro du vol de départ';
+      if(h) h.textContent=pickup?'Le chauffeur suivra l’heure d’atterrissage en temps réel.':'Le chauffeur verra l’heure de décollage et le terminal en temps réel.';
+    } else {
+      if(l) l.textContent=pickup?'Numéro du train d’arrivée':'Numéro du train de départ';
+      if(h) h.textContent=pickup?'Le chauffeur suivra l’heure d’arrivée et le quai en temps réel.':'Le chauffeur verra l’heure de départ et le quai en temps réel.';
+    }
+  }
+  window._trRefresh=function(){
+    var f=_trKindOf(val('ride-from')), t=_trKindOf(val('ride-to')), d=_trKindOf(val('disp-from'));
+    setField('ride','flight', f.plane||t.plane, f.plane);
+    setField('ride','train',  f.train||t.train, f.train);
+    setField('disp','flight', d.plane, true);
+    setField('disp','train',  d.train, true);
+  };
+  document.addEventListener('input', function(e){
+    var id=e.target&&e.target.id;
+    if(id==='ride-from'||id==='ride-to'||id==='disp-from') _trRefresh();
+    if(e.target&&e.target.classList&&e.target.classList.contains('tr-input')){ var p=e.target.selectionStart; e.target.value=e.target.value.toUpperCase().replace(/[|]/g,''); try{e.target.setSelectionRange(p,p);}catch(_){} }
+  }, true);
+  document.addEventListener('change', function(e){ var id=e.target&&e.target.id; if(id==='ride-from'||id==='ride-to'||id==='disp-from') _trRefresh(); }, true);
+
+  // Numéros saisis (champs visibles seulement), validés
+  window._trCollect=function(tripType){
+    var pfx=tripType==='disposal'?'disp':tripType==='ab'?'ride':null; if(!pfx) return {};
+    var out={};
+    var fl=vis(pfx+'-flight-grp')?val(pfx+'-flight').toUpperCase().replace(/\s+/g,' ').trim():'';
+    var tr=vis(pfx+'-train-grp')?val(pfx+'-train').toUpperCase().replace(/\s+/g,' ').trim():'';
+    if(fl){ if(!/^[A-Z0-9]{2,3} ?\d{1,4}[A-Z]?$/.test(fl)) return {error:'Numéro de vol invalide (ex. SN 3123)'}; out.flight=fl; }
+    if(tr){ if(!/^[A-Z]{0,4} ?\d{1,5}$/.test(tr)) return {error:'Numéro de train invalide (ex. IC 1832)'}; out.train=tr; }
+    return out;
+  };
+
+  // ── Affichage du statut dans le détail ──
+  var tag=function(n,k){ return ((String(n||'').match(new RegExp('\\|'+k+':([^|]*)'))||[])[1]||'').trim(); };
+  var esc=function(x){ return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); };
+  var ICON={
+    flight:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>',
+    train:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="14" rx="3"/><path d="M4 11h16M12 3v8M8 21l2-4M16 21l-2-4"/><circle cx="8.5" cy="14" r=".6" fill="currentColor"/><circle cx="15.5" cy="14" r=".6" fill="currentColor"/></svg>'
+  };
+  function css(){
+    if(document.getElementById('tr-css')) return;
+    var st=document.createElement('style'); st.id='tr-css';
+    st.textContent='.tr-hint{font-size:11.5px;color:#7A867A;margin-top:5px}'
+      +'.tr-card{margin-top:12px;border:1px solid #E6EAE4;border-radius:14px;padding:12px 14px;background:#fff}'
+      +'.tr-hd{display:flex;align-items:center;gap:10px}.tr-ic{width:34px;height:34px;border-radius:10px;background:#EAF4EE;color:#1B5E3B;display:flex;align-items:center;justify-content:center;flex-shrink:0}'
+      +'.tr-ttl{font-weight:700;font-size:14px;color:#1A2E1A}.tr-sub{font-size:12px;color:#7A867A;margin-top:1px}'
+      +'.tr-pill{margin-left:auto;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap}'
+      +'.tr-ok{background:#DFF0E8;color:#1B5E3B}.tr-delayed{background:#FBF0D9;color:#92650A}.tr-cancelled{background:#F9E1DE;color:#C0392B}.tr-done{background:#EEF0EE;color:#4A564A}.tr-live{background:#E2ECF6;color:#1E4D7B}.tr-unknown{background:#EEF0EE;color:#4A564A}'
+      +'.tr-cols{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.tr-col{padding:9px 10px;border-radius:10px;background:#F7F7F7}.tr-col.focus{background:#EAF4EE;box-shadow:inset 0 0 0 1px #CFE6D8}'
+      +'.tr-k{font-size:10.5px;font-weight:700;color:#7A867A;text-transform:uppercase;letter-spacing:.04em}.tr-place{font-size:12.5px;font-weight:600;color:#1A2E1A;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+      +'.tr-time{font-size:19px;font-weight:700;color:#1A2E1A;margin-top:3px;letter-spacing:-.3px}.tr-time s{font-size:12.5px;font-weight:500;color:#9AA49A;margin-right:5px}.tr-time.late{color:#92650A}.tr-time.cx{color:#C0392B}'
+      +'.tr-meta{font-size:11.5px;color:#4A564A;margin-top:3px}.tr-meta b.chg{color:#C0392B}.tr-foot{font-size:11px;color:#9AA49A;margin-top:8px}';
+    document.head.appendChild(st);
+  }
+  var LIVE=['confirmed','pending_payment','active','waiting','offers'];
+  // Qui voit le bloc : le client de la course et le chauffeur attribué (pas les autres chauffeurs de la marketplace)
+  function canSee(r){
+    var uid=currentUser&&currentUser.id;
+    if(currentRole==='admin'||(currentProfile&&currentProfile.role==='admin')) return true;
+    if(r.client_id&&r.client_id===uid) return true;
+    return !!(r.driver_id&&r.driver_id===uid&&['confirmed','pending_payment','active','done'].indexOf(r.status)>=0);
+  }
+  window._trBlockHtml=function(r){
+    var fl=tag(r.notes,'flight'), tr=tag(r.notes,'train');
+    if((!fl&&!tr)||!canSee(r)) return '';
+    css();
+    var live=LIVE.indexOf(r.status)>=0;
+    var card=function(kind,num){
+      return '<div class="tr-card" id="tr-'+kind+'"><div class="tr-hd"><span class="tr-ic">'+ICON[kind]+'</span><div style="min-width:0"><div class="tr-ttl">'+(kind==='flight'?'Vol ':'Train ')+esc(num)+'</div>'
+        +'<div class="tr-sub">'+(live?'Chargement du statut…':'Renseigné par le client')+'</div></div></div></div>';
+    };
+    return '<div id="tr-wrap">'+(fl?card('flight',fl):'')+(tr?card('train',tr):'')+'</div>';
+  };
+  function point(p, label, focus, kind){
+    p=p||{};
+    var late=(p.delay||0)>=(kind==='flight'?10:1), changed=p.est&&p.sched&&p.est!==p.sched;
+    var time=p.cancelled?'<div class="tr-time cx">Supprimé</div>'
+      :'<div class="tr-time'+(late?' late':'')+'">'+(changed?'<s>'+esc(p.sched)+'</s>'+esc(p.est):esc(p.est||p.sched||'—'))+'</div>';
+    var meta=[];
+    if(p.terminal) meta.push('Terminal '+esc(p.terminal));
+    if(p.gate) meta.push('Porte '+esc(p.gate));
+    if(p.belt) meta.push('Tapis '+esc(p.belt));
+    if(p.platform) meta.push(p.platformChanged?'<b class="chg">Quai '+esc(p.platform)+' (modifié)</b>':'Quai '+esc(p.platform));
+    return '<div class="tr-col'+(focus?' focus':'')+'"><div class="tr-k">'+label+'</div><div class="tr-place">'+esc(p.place||'—')+(p.code?' <span style="color:#7A867A;font-weight:500">'+esc(p.code)+'</span>':'')+'</div>'
+      +time+(meta.length?'<div class="tr-meta">'+meta.join(' · ')+'</div>':'')+'</div>';
+  }
+  function render(it){
+    var el=document.getElementById('tr-'+it.kind); if(!el) return;
+    var head='<div class="tr-hd"><span class="tr-ic">'+ICON[it.kind]+'</span><div style="min-width:0"><div class="tr-ttl">'+esc((it.kind==='flight'?'Vol ':'Train ')+(it.ok&&it.label?it.label:it.number))+'</div>'
+      +'<div class="tr-sub">'+esc(it.ok?[it.airline,(it.focus==='arr'?(it.kind==='flight'?'Atterrissage suivi':'Arrivée suivie'):(it.kind==='flight'?'Décollage suivi':'Départ suivi'))].filter(Boolean).join(' · '):(it.message||'Statut indisponible'))+'</div></div>'
+      +(it.ok?'<span class="tr-pill tr-'+esc(it.state||'unknown')+'">'+esc(it.statusText||'')+'</span>':'')+'</div>';
+    if(!it.ok){ el.innerHTML=head; return; }
+    var upd=it.updatedAt?new Date(it.updatedAt):new Date();
+    el.innerHTML=head+'<div class="tr-cols">'+point(it.dep,'Départ',it.focus==='dep',it.kind)+point(it.arr,'Arrivée',it.focus==='arr',it.kind)+'</div>'
+      +'<div class="tr-foot">Mis à jour à '+String(upd.getHours()).padStart(2,'0')+':'+String(upd.getMinutes()).padStart(2,'0')+' · actualisé automatiquement</div>';
+  }
+  window._trStart=function(r, gen){
+    if(!document.getElementById('tr-wrap')||LIVE.indexOf(r.status)<0||typeof sb==='undefined'||!sb||!r.id) return;
+    if(window._trTimer){ clearInterval(window._trTimer); window._trTimer=null; }
+    var load=async function(){
+      if(window._detailGen!==gen||!document.getElementById('tr-wrap')){ clearInterval(window._trTimer); window._trTimer=null; return; }
+      try{
+        var res=await sb.functions.invoke('transport-status',{body:{ride_id:r.id}});
+        if(window._detailGen!==gen) return;
+        if(res.error) throw res.error;
+        ((res.data&&res.data.items)||[]).forEach(render);
+      }catch(e){
+        console.warn('[transport-status]', e);
+        ['flight','train'].forEach(function(k){ var el=document.querySelector('#tr-'+k+' .tr-sub'); if(el&&/Chargement/.test(el.textContent)) el.textContent='Statut momentanément indisponible'; });
+      }
+    };
+    load();
+    window._trTimer=setInterval(load, 60000);
+  };
+  if(document.readyState!=='loading') css(); else document.addEventListener('DOMContentLoaded', css);
+})();
+
 window.cancelRideModal = function(){
   closeModal('m-new-ride');
   // Reset edit mode markers
@@ -7105,10 +7255,11 @@ window.cancelRideModal = function(){
   });
   // Clear all form fields
   ['ride-from','ride-to','ride-date','ride-time','ride-notes',
-   'disp-from','disp-date','disp-time','disp-notes'].forEach(function(id){
+   'disp-from','disp-date','disp-time','disp-notes','ride-flight','ride-train','disp-flight','disp-train'].forEach(function(id){
     var e=document.getElementById(id);if(e)e.value='';
   });
   var dd=document.getElementById('disp-duration');if(dd)dd.value='2';
+  window._editTr=null; if(window._trRefresh) window._trRefresh();
   // Clear mixed segments
   var sc=document.getElementById('mixed-segments');if(sc)sc.innerHTML='';
   _segN=0;
