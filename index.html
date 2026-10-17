@@ -912,6 +912,8 @@ body{background:var(--bg);}
 }
 /* Driver calendar (portrait mobile) */
 @media(max-width:600px){.dcal-bar{flex-wrap:wrap;padding:10px 12px!important;gap:8px!important;}.dcal-bar #d-cal-title,.dcal-bar #cal-title{order:-1;flex:1 1 100%!important;}#page-d-calendar #d-cal-grid,#page-calendar #cal-grid{padding:8px 8px 12px!important;}}
+/* Mobile : le menu tient dans l'écran visible (barre du navigateur comprise), la navigation défile, Déconnexion reste accessible */
+@media(max-width:900px){.app-sidebar{height:100vh;height:100dvh;max-height:-webkit-fill-available;padding-bottom:env(safe-area-inset-bottom);}.app-sidebar .app-nav{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}.app-sidebar .sidebar-header,.app-sidebar #client-help-card,.app-sidebar #fleet-help-card,.app-sidebar .sidebar-footer{flex-shrink:0;}}
 @media(max-width:900px){.app-sidebar{transform:translateX(-100%);}.app-sidebar.open{transform:translateX(0);box-shadow:var(--sh-lg);}.app-main{margin-left:0;}.mobile-topbar{display:flex;}.page{padding:16px;}.stats-row{grid-template-columns:1fr 1fr;gap:10px;}.ride-card{grid-template-columns:44px 1fr auto;grid-template-rows:auto auto auto;gap:4px 10px;padding:12px 14px;}.ride-card>*:nth-child(1){grid-column:1;grid-row:1/4;align-self:center;}.ride-card>*:nth-child(2){grid-column:2;grid-row:1;}.ride-card>*:nth-child(3){grid-column:2/4;grid-row:2;}.ride-card>*:nth-child(4){grid-column:2/4;grid-row:3;}.ride-card>*:nth-child(5){grid-column:3;grid-row:1;}.ride-card>*:nth-child(6){display:none;}.ride-card>svg:last-child{display:none;}.ride-card .ride-card-col-label{display:none;}.ride-card .ride-card-col-val{font-size:12.5px;}#page-d-dashboard.active{min-height:calc(100vh - 52px);}}
 
 .modal-ft .btn{padding:6px 14px;font-size:12px;font-weight:500;}
@@ -5949,7 +5951,7 @@ function _openRideDetailImpl(el){
         var priceLeft=r.final_price?'<div style="margin-right:auto;font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9\u00a0: '+parseFloat(r.final_price).toFixed(0)+' € HTVA</div>':'<div style="margin-right:auto;"></div>';
         ft=priceLeft+closeBtn+'<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')">Accepter</button>';
       } else if(hasMyOffer){
-        ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre \u00e0 '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'+closeBtn;
+        ft=_offerActionsMenu(rId,safeRd)+'<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre \u00e0 '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'+closeBtn;
       } else {
         ft=closeBtn+'<button class="btn btn-green" style="min-width:160px;" onclick="_detailOffer(this)" data-rid="'+rId+'" data-ride=\''+safeRd+'\'>Soumettre une offre</button>';
       }
@@ -5958,7 +5960,7 @@ function _openRideDetailImpl(el){
       var isExtSub2=(r.is_subcontract&&currentUser&&r.client_id!==currentUser.id);
       var hasMyOffer2=_myOffers&&_myOffers[rId];
       if(hasMyOffer2&&!isOwnSub2&&!isExtSub2){
-        ft='<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre \u00e0 '+parseFloat(hasMyOffer2.price).toFixed(0)+'\u20ac</div>'+closeBtn;
+        ft=_offerActionsMenu(rId,safeRd)+'<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">Vous avez soumis une offre \u00e0 '+parseFloat(hasMyOffer2.price).toFixed(0)+'\u20ac</div>'+closeBtn;
       } else if(isExtSub2){
         var subPriceLbl2=r.final_price?parseFloat(r.final_price).toFixed(0)+'\u20ac':'';
         var priceLeft2=r.final_price?'<div style="margin-right:auto;font-size:13px;font-weight:600;color:var(--amber);">Prix demand\u00e9\u00a0: '+parseFloat(r.final_price).toFixed(0)+' € HTVA</div>':'<div style="margin-right:auto;"></div>';
@@ -6435,8 +6437,42 @@ function _rideActionsMenu(rId, canAssign){
   var carIc='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/></svg>';
   var items='<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');generateMissionPdf(\''+id+'\')">'+docIc+'Télécharger l\'ordre de mission</button>';
   if(canAssign) items+='<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openMissionAssignment(\''+id+'\')">'+carIc+'Modifier véhicule / chauffeur</button>';
+  var chatIc='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a8 8 0 01-11.6 7.1L4 20.5l1.4-5A8 8 0 1121 12z"/></svg>';
+  items+='<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');_driverNoteFromMenu(\''+id+'\')">'+chatIc+'Envoyer une note au client</button>';
   return _ftMenu(items);
 }
+// Chauffeur : actions sur une demande où il a déjà fait une offre (modifier / retirer)
+function _offerActionsMenu(rId, safeRd){
+  var id=String(rId).replace(/'/g,'');
+  var close="this.closest('.ft-menu').classList.remove('open');";
+  var tagIc='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L3 13V3h10l7.6 7.6a2 2 0 010 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>';
+  var xIc='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--red);"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  return _ftMenu(
+    '<button class="ft-menu-item" onclick="'+close+'_editOffer(this)" data-rid="'+id+'" data-ride=\''+(safeRd||'')+'\'>'+tagIc+'Modifier mon offre</button>'
+   +'<button class="ft-menu-item" style="color:var(--red);" onclick="'+close+'_withdrawOffer(\''+id+'\')">'+xIc+'Retirer mon offre</button>');
+}
+window._withdrawOffer=async function(rideId){
+  if(!sb||!currentUser) return;
+  var of=(await sb.from('offers').select('id,price').eq('ride_id',rideId).eq('driver_id',currentUser.id).eq('status','pending').maybeSingle()).data;
+  if(!of){ showToast('Offre introuvable ou déjà acceptée'); return; }
+  if(!confirm('Retirer votre offre de '+parseFloat(of.price).toFixed(2).replace('.',',')+' € HTVA ?')) return;
+  var r=await sb.rpc('driver_withdraw_offer',{ p_offer: of.id });
+  if(r.error){
+    var d=await sb.from('offers').delete().eq('id',of.id).eq('status','pending').select('id');
+    if(d.error||!d.data||!d.data.length){ showToast('Retrait impossible'+(d.error?' : '+d.error.message:'')); return; }
+  } else if(r.data===false){ showToast('Cette offre ne peut plus être retirée'); return; }
+  delete _myOffers[rideId];
+  closeModal('m-ride-detail');
+  showToast('✅ Offre retirée');
+  if(typeof loadMarketplace==='function') loadMarketplace();
+  if(typeof loadDriverDashboard==='function') loadDriverDashboard();
+};
+window._driverNoteFromMenu=async function(rideId){
+  if(!sb) return;
+  var rd=(await sb.from('rides').select('notes').eq('id',rideId).maybeSingle()).data;
+  var cur=((rd&&rd.notes||'').match(/\|offer_note:([^|]*)/)||[])[1]||'';
+  openDriverNoteEdit(rideId, cur.trim());
+};
 function _ftMenu(items){
   return '<div class="ft-menu"><button type="button" class="ft-menu-btn" title="Actions" aria-label="Actions" onclick="event.stopPropagation();this.parentElement.classList.toggle(\'open\')"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><div class="ft-menu-list">'+items+'</div></div>';
 }
