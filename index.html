@@ -12009,10 +12009,13 @@ window.openAdminIssueRide=function(rideId){
 window.setAdminIssueStatus=async function(id,status,btn){
   if(!sb) return;
   if(btn){ btn.disabled=true; btn.textContent='…'; }
-  var {error}=await sb.from('ride_reports').update({status:status,resolved_at:status==='resolved'?new Date().toISOString():null}).eq('id',id);
+  var res=await sb.from('ride_reports').update({status:status,resolved_at:status==='resolved'?new Date().toISOString():null}).eq('id',id).select('id');
   // Colonne resolved_at absente (script SQL pas encore relancé) : on met au moins le statut à jour
-  if(error && /resolved_at/.test(error.message||'')) error=(await sb.from('ride_reports').update({status:status}).eq('id',id)).error;
-  if(error){ showToast('Erreur : '+error.message); if(btn) btn.disabled=false; return; }
+  if(res.error && /resolved_at/.test(res.error.message||'')) res=await sb.from('ride_reports').update({status:status}).eq('id',id).select('id');
+  var _reset=function(){ if(btn){ btn.disabled=false; btn.textContent=status==='resolved'?'Marquer trait\u00e9':'Rouvrir'; } };
+  if(res.error){ showToast('Erreur : '+res.error.message); _reset(); return; }
+  // RLS : une mise à jour refusée ne renvoie pas d'erreur, juste 0 ligne
+  if(!res.data||!res.data.length){ showToast('Mise \u00e0 jour refus\u00e9e : r\u00e8gle d\u2019acc\u00e8s admin manquante sur ride_reports'); _reset(); return; }
   showToast(status==='resolved'?'✅ Signalement marqué comme traité':'Signalement rouvert');
   loadAdminIssues();
 };
