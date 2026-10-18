@@ -1471,6 +1471,10 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M2.5 13.5V8.5M6.5 13.5V4.5M10.5 13.5V6.5M14 13.5H1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           Rapports
         </button>
+        <button class="nav-item" data-page="admin-issues" onclick="showPage('admin-issues')" style="position:relative;">
+          <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M7 2.2L1.3 12.2a1.1 1.1 0 001 1.6h11.4a1.1 1.1 0 001-1.6L9 2.2a1.1 1.1 0 00-2 0z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 6.5v3M8 11.6v.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Signalements <span class="nav-badge" id="badge-admin-issues" style="display:none;background:#C0392B;" title="Signalements ouverts"></span>
+        </button>
       </div>
     </nav>
 
@@ -2077,6 +2081,20 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div><h1>Rapports</h1><p>G&eacute;n&eacute;rez les rapports et factures de la plateforme</p></div>
       </div>
       <div id="admin-reports-content"><div class="page-loading"><div class="page-spinner"></div></div></div>
+    </div>
+
+    <!-- Admin: Signalements -->
+    <div id="page-admin-issues" class="page">
+      <div class="pg-head">
+        <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+        <div><h1>Signalements</h1><p>Probl&egrave;mes signal&eacute;s par les clients sur leurs courses</p></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="admin-issues-filters">
+        <button class="btn btn-primary btn-sm" data-f="open" onclick="filterAdminIssues('open',this)">Ouverts</button>
+        <button class="btn btn-secondary btn-sm" data-f="resolved" onclick="filterAdminIssues('resolved',this)">Trait&eacute;s</button>
+        <button class="btn btn-secondary btn-sm" data-f="all" onclick="filterAdminIssues('all',this)">Tous</button>
+      </div>
+      <div id="admin-issues-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
 
     <!-- Admin: Facturation -->
@@ -3840,7 +3858,7 @@ window.showPage = function(pageId){
   const pageNames = { dashboard:t('dashboard'), rides:t('rides'), calendar:'Calendrier', 'd-calendar':'Calendrier', invoices:t('invoices'),
     profile:t('profile'), 'd-dashboard':t('d-dashboard'), marketplace:t('marketplace'), missions:t('missions'),
     'd-invoices':'Factures', 'passengers':'Passagers',
-    'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses', 'admin-billing':'Facturation', 'admin-reports':'Rapports' };
+    'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses', 'admin-billing':'Facturation', 'admin-reports':'Rapports', 'admin-issues':'Signalements' };
   var ptEl=document.getElementById('page-title');if(ptEl)ptEl.textContent=pageNames[pageId]||'';
   var piEl=document.getElementById('page-title-icon');if(piEl){var _srcIc=pg.querySelector('.pg-head-icon');piEl.innerHTML=_srcIc?_srcIc.innerHTML:'';piEl.classList.toggle('has-icon',!!_srcIc);}
 
@@ -3875,6 +3893,7 @@ async function loadPageData(pageId){
     case 'admin-rides':    await loadAdminRides(); break;
     case 'admin-billing':  await loadAdminBilling(); break;
     case 'admin-reports':  await loadAdminReports(); break;
+    case 'admin-issues':   await loadAdminIssues(); break;
   }
 }
 
@@ -10766,7 +10785,16 @@ function _computeFleetStatus(fleet, docs, vehicles, drivers){
 }
 
 // Number of fleets with something waiting for the admin (documents, vehicles, drivers pending)
+async function _refreshAdminIssuesBadge(){
+  var b=document.getElementById('badge-admin-issues'); if(!b||!sb) return;
+  if(currentUser?.email!==ADMIN_EMAIL){ b.style.display='none'; return; }
+  try{
+    var r=await sb.from('ride_reports').select('id',{count:'exact',head:true}).eq('status','open');
+    var n=r.count||0; b.textContent=n; b.style.display=n>0?'inline-block':'none';
+  }catch(e){ b.style.display='none'; }
+}
 async function _refreshAdminFleetsBadge(){
+  _refreshAdminIssuesBadge();
   var b=document.getElementById('badge-admin-fleets'); if(!b||!sb) return;
   if(currentUser?.email!==ADMIN_EMAIL){ b.style.display='none'; return; }
   // Keep it fresh while the admin stays on a page (every 60 s)
@@ -11884,6 +11912,107 @@ window.loadAdminOffers = async function(){
   } catch(e) {
     el.innerHTML = '<div class="page-loading" style="color:var(--red);">Erreur : '+e.message+'</div>';
   }
+};
+
+
+// ── ADMIN : SIGNALEMENTS ─────────────────────────────────────
+var _aiFilter='open', _aiRides={};
+window.filterAdminIssues=function(f,btn){
+  _aiFilter=f;
+  document.querySelectorAll('#admin-issues-filters button').forEach(function(b){ b.className='btn btn-sm '+(b===btn?'btn-primary':'btn-secondary'); });
+  loadAdminIssues();
+};
+window.loadAdminIssues=async function(){
+  var el=document.getElementById('admin-issues-list'); if(!el||!sb) return;
+  el.innerHTML='<div class="page-loading"><div class="page-spinner"></div></div>';
+  var e=function(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+  try{
+    var q=sb.from('ride_reports').select('*').order('created_at',{ascending:false});
+    if(_aiFilter!=='all') q=q.eq('status',_aiFilter);
+    var {data:reps,error}=await q;
+    if(error) throw error;
+    reps=reps||[];
+    _refreshAdminIssuesBadge();
+    if(!reps.length){ el.innerHTML='<div class="empty-state"><p class="empty-text">'+(_aiFilter==='open'?'Aucun signalement ouvert':'Aucun signalement')+'</p></div>'; return; }
+
+    var rideIds=[...new Set(reps.map(function(x){return x.ride_id;}))];
+    var res=await Promise.all([
+      sb.from('rides').select('*').in('id',rideIds),
+      sb.from('offers').select('ride_id,driver_id,vehicle_id,fleet_driver_id').eq('status','accepted').in('ride_id',rideIds)
+    ]);
+    var rides={}; (res[0].data||[]).forEach(function(r){ rides[r.id]=r; }); _aiRides=rides;
+    var offs={}; (res[1].data||[]).forEach(function(o){ offs[o.ride_id]=o; });
+    var pIds=[], vIds=[], fdIds=[];
+    reps.forEach(function(x){ pIds.push(x.client_id); var r=rides[x.ride_id], o=offs[x.ride_id];
+      if(r&&r.client_id) pIds.push(r.client_id);
+      var d=(r&&r.driver_id)||(o&&o.driver_id); if(d) pIds.push(d);
+      if(o&&o.vehicle_id) vIds.push(o.vehicle_id); if(o&&o.fleet_driver_id) fdIds.push(o.fleet_driver_id); });
+    var uniq=function(a){ return [...new Set(a.filter(Boolean))]; };
+    pIds=uniq(pIds); vIds=uniq(vIds); fdIds=uniq(fdIds);
+    var res2=await Promise.all([
+      pIds.length?sb.from('profiles').select('id,first_name,last_name,company_name,client_type,role,email,phone').in('id',pIds):Promise.resolve({data:[]}),
+      vIds.length?sb.from('fleet_vehicles').select('id,brand,model,color,plate').in('id',vIds):Promise.resolve({data:[]}),
+      fdIds.length?sb.from('fleet_drivers').select('id,first_name,last_name,phone').in('id',fdIds):Promise.resolve({data:[]})
+    ]);
+    var profs={}; (res2[0].data||[]).forEach(function(p){ profs[p.id]=p; });
+    var vehs={}; (res2[1].data||[]).forEach(function(v){ vehs[v.id]=v; });
+    var fdrs={}; (res2[2].data||[]).forEach(function(d){ fdrs[d.id]=d; });
+
+    var stLbl={waiting:'En attente',offers:'Offres reçues',pending_payment:'Paiement en cours',confirmed:'Confirmée',active:'En cours',done:'Terminée',cancelled:'Annulée'};
+    var th=function(t,al){ return '<th style="padding:10px 12px;text-align:'+(al||'left')+';font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);white-space:nowrap;">'+t+'</th>'; };
+    var sub=function(t){ return t?'<div style="font-size:11.5px;color:var(--ink3);margin-top:2px;white-space:nowrap;">'+t+'</div>':''; };
+    var td='<td style="padding:10px 12px;vertical-align:top;">';
+
+    var rows=reps.map(function(x){
+      var r=rides[x.ride_id]||{}, o=offs[x.ride_id]||{};
+      var cl=profs[r.client_id||x.client_id];
+      var fleetId=r.driver_id||o.driver_id, fl=profs[fleetId];
+      var fd=fdrs[o.fleet_driver_id], v=vehs[o.vehicle_id];
+      var n=r.notes||'';
+      var pax=((n.match(/\|pax:([^|]+)/)||[])[1]||'').trim(), paxT=((n.match(/\|tel:([^|]+)/)||[])[1]||'').trim();
+      var created=new Date(x.created_at).toLocaleString('fr-BE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+      var rDate=r.ride_date?new Date(r.ride_date+'T00:00:00').toLocaleDateString('fr-BE',{day:'2-digit',month:'2-digit',year:'numeric'})+(r.ride_time?' · '+String(r.ride_time).slice(0,5):''):'—';
+      var trajet=r.trip_type==='disposal'?e((r.from_address||'').split(',')[0])+' (mise à dispo.)':e((r.from_address||'—').split(',')[0])+' → '+e((r.to_address||'—').split(',')[0]);
+      var price=r.final_price?parseFloat(r.final_price).toFixed(2).replace('.',',')+' €':'';
+      var open=x.status!=='resolved';
+      var stBadge=open
+        ?'<span style="font-size:11px;font-weight:700;background:var(--red-bg);color:var(--red);padding:3px 9px;border-radius:20px;white-space:nowrap;">Ouvert</span>'
+        :'<span style="font-size:11px;font-weight:700;background:var(--green-bg);color:var(--green);padding:3px 9px;border-radius:20px;white-space:nowrap;">Traité</span>'+(x.resolved_at?sub(new Date(x.resolved_at).toLocaleDateString('fr-BE')):'');
+      var act='<button class="btn btn-sm '+(open?'btn-primary':'btn-secondary')+'" style="white-space:nowrap;" onclick="setAdminIssueStatus(\''+x.id+'\',\''+(open?'resolved':'open')+'\',this)">'+(open?'Marquer traité':'Rouvrir')+'</button>';
+      return '<tr style="border-bottom:1px solid var(--sand2);">'
+        +td+'<div style="font-size:12.5px;white-space:nowrap;">'+created+'</div></td>'
+        +td+'<a href="#" onclick="event.preventDefault();openAdminIssueRide(\''+x.ride_id+'\')" style="font-family:monospace;font-weight:700;font-size:12px;color:var(--green);white-space:nowrap;">'+e(r.booking_code||String(x.ride_id).slice(0,8))+'</a>'+sub(stLbl[r.status]||r.status||'')+'</td>'
+        +td+'<div style="font-size:12.5px;white-space:nowrap;">'+rDate+'</div>'+sub(trajet)+(price?sub(price):'')+'</td>'
+        +td+'<div style="font-weight:600;white-space:nowrap;">'+e(_arDisplayName(cl))+'</div>'+sub(e(cl&&cl.email))+sub(cl&&cl.phone?'<a href="tel:'+e(cl.phone)+'" style="color:var(--blue);">'+e(cl.phone)+'</a>':'')+(pax?sub('Passager : '+e(pax)+(paxT?' · '+e(paxT):'')):'')+'</td>'
+        +td+'<div style="font-weight:600;white-space:nowrap;">'+(fl?e(_arDisplayName(fl)):'—')+'</div>'+sub(fl&&fl.phone?'<a href="tel:'+e(fl.phone)+'" style="color:var(--blue);">'+e(fl.phone)+'</a>':'')+'</td>'
+        +td+'<div style="white-space:nowrap;">'+(fd?e(((fd.first_name||'')+' '+(fd.last_name||'')).trim()):'—')+'</div>'+sub(fd&&fd.phone?'<a href="tel:'+e(fd.phone)+'" style="color:var(--blue);">'+e(fd.phone)+'</a>':'')+'</td>'
+        +td+'<div style="white-space:nowrap;">'+(v?e(((v.brand||'')+' '+(v.model||'')).trim()):'—')+'</div>'+sub(v?e([v.color,v.plate].filter(Boolean).join(' · ')):'')+'</td>'
+        +td+'<div style="min-width:220px;max-width:360px;white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.45;">'+e(x.message)+'</div></td>'
+        +td+stBadge+'</td>'
+        +td+act+'</td>'
+      +'</tr>';
+    }).join('');
+
+    el.innerHTML='<div class="card" style="overflow:hidden;"><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:1200px;">'
+      +'<thead><tr style="background:var(--sand2);">'+th('Signalé le')+th('Course')+th('Date / trajet')+th('Client')+th('Fleet')+th('Chauffeur')+th('Véhicule')+th('Message')+th('Statut')+th('')+'</tr></thead>'
+      +'<tbody>'+rows+'</tbody></table></div></div>';
+  }catch(err){
+    el.innerHTML='<div class="page-loading" style="color:var(--red);">Erreur : '+e(err.message)+'</div>';
+  }
+};
+window.openAdminIssueRide=function(rideId){
+  var r=_aiRides[rideId]; if(!r) return;
+  var tmp=document.createElement('div');
+  tmp.dataset.ride=JSON.stringify(r);
+  arOpenDetail(tmp);
+};
+window.setAdminIssueStatus=async function(id,status,btn){
+  if(!sb) return;
+  if(btn){ btn.disabled=true; btn.textContent='…'; }
+  var {error}=await sb.from('ride_reports').update({status:status,resolved_at:status==='resolved'?new Date().toISOString():null}).eq('id',id);
+  if(error){ showToast('Erreur : '+error.message); if(btn) btn.disabled=false; return; }
+  showToast(status==='resolved'?'✅ Signalement marqué comme traité':'Signalement rouvert');
+  loadAdminIssues();
 };
 
 window.loadAdminRides = async function(){

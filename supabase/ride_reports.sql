@@ -8,6 +8,8 @@ create table if not exists public.ride_reports (
   created_at  timestamptz not null default now()
 );
 
+alter table public.ride_reports add column if not exists resolved_at timestamptz;
+
 alter table public.ride_reports enable row level security;
 
 -- Le client ne peut signaler que ses propres courses
@@ -23,6 +25,13 @@ drop policy if exists ride_reports_select_own on public.ride_reports;
 create policy ride_reports_select_own on public.ride_reports
   for select to authenticated
   using (client_id = auth.uid() or (auth.jwt() ->> 'email') = 'kb@bleenr.com');
+
+-- Seul l'admin peut changer le statut (ouvert / traité)
+drop policy if exists ride_reports_admin_update on public.ride_reports;
+create policy ride_reports_admin_update on public.ride_reports
+  for update to authenticated
+  using ((auth.jwt() ->> 'email') = 'kb@bleenr.com')
+  with check ((auth.jwt() ->> 'email') = 'kb@bleenr.com');
 
 -- Notification in-app pour l'admin à chaque signalement
 create or replace function public.notify_admin_ride_report()
