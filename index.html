@@ -920,6 +920,25 @@ body{background:var(--bg);}
 
 .modal-ft .btn{padding:6px 13px;font-size:12px;}
 .ride-card>div{min-width:0;}
+
+/* Détail d'une course (client) : blocs véhicule / passager / récapitulatif */
+.rd-card{padding:14px 16px;background:#F7F7F7;border-radius:12px;}
+.rd-cap{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);}
+.rd-row-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.rd-link{background:none;border:none;cursor:pointer;font-size:11.5px;color:var(--blue);font-weight:600;padding:0;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:4px;}
+.rd-strong{font-weight:600;font-size:14px;color:var(--ink);}
+.rd-muted{font-size:12.5px;color:var(--ink3);margin-top:1px;}
+.rd-plate{font-size:12px;color:var(--ink3);font-family:monospace;margin-top:1px;}
+.rd-note{font-size:13px;color:var(--ink2);font-style:italic;line-height:1.45;margin-top:2px;}
+.rd-hr{height:1px;background:#E4E7E2;margin:12px 0;}
+.rd-line{display:flex;align-items:center;gap:12px;padding:4px 0;}
+.rd-ic{width:34px;height:34px;border-radius:10px;background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rd-call{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--blue);text-decoration:none;white-space:nowrap;}
+.rd-pr{display:flex;justify-content:space-between;font-size:13px;color:var(--ink3);padding:3px 0;}
+.rd-pr span:last-child{color:var(--ink);}
+.rd-pr.rd-total{font-size:14px;font-weight:700;color:var(--ink);border-top:1px solid #E4E7E2;margin-top:6px;padding-top:8px;}
+.modal-overlay.rd-panel #detail-extra{margin:12px 24px 0!important;}
+@media(max-width:900px){.modal-overlay.rd-panel #detail-extra{margin:12px 16px 0!important;}}
 </style>
 <script>
 // iPad : même affichage que sur iPhone (on force les règles CSS « mobile »)
@@ -2538,6 +2557,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div class="modal-body" id="detail-body" style="padding:12px 20px;display:flex;flex-direction:column;gap:12px;"></div>
     <div id="detail-map-wrap" style="display:none;margin:0 20px;border-radius:10px;overflow:hidden;height:160px;flex-shrink:0;"><img id="detail-map-img" src="" alt="" style="width:100%;height:165px;object-fit:cover;display:block;" onerror="this.parentElement.style.display='none'"></div>
     <div style="height:0px;flex-shrink:0;" id="detail-map-spacer"></div>
+    <div id="detail-extra" style="display:none;margin:12px 20px 0;flex-shrink:0;"></div>
     <div class="modal-ft" style="margin-top:12px;" id="detail-ft"></div>
   </div>
 </div>
@@ -5754,134 +5774,86 @@ function _openRideDetailImpl(el){
     })();
   }
 
-  // ── All confirmed blocks for CLIENT in correct order: vehicle → passenger → note → price ──
+  // ── Course confirmée (client) : 2 blocs — ① véhicule / chauffeur + note du chauffeur + prix ; ② passager + note au chauffeur ──
   if(isClient && r.status==='confirmed' && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
-    // Pre-inject ordered placeholders synchronously
     var bodyElMain = document.getElementById('detail-body');
     if(bodyElMain){
       bodyElMain.insertAdjacentHTML('beforeend',
-        '<div id="ph-vehicle" class="rd-skel" style="height:86px;"></div>'
-        +'<div id="ph-passenger" class="rd-skel" style="height:74px;"></div>'
-        +'<div id="ph-note" class="rd-skel" style="height:62px;"></div>'
-        +'<div id="ph-price" class="rd-skel" style="height:92px;"></div>'
+        '<div id="ph-fleet" class="rd-skel" style="height:190px;"></div>'
+        +'<div id="ph-passenger" class="rd-skel" style="height:140px;"></div>'
       );
     }
     var _rideIdForPax = r.id;
-    (async function(){
+    (async function(myGen){
       try {
         var notesRaw = r.notes||'';
-        // Fetch all data in parallel
-        var fetchVehicle = r.driver_id
-          ? sb.from('offers').select('message,price,vehicle_id').eq('ride_id',r.id).eq('driver_id',r.driver_id).eq('status','accepted').maybeSingle()
-          : Promise.resolve({data:null});
-        var fetchProfile = currentUser
-          ? sb.from('profiles').select('first_name,last_name,phone').eq('id',currentUser.id).maybeSingle()
-          : Promise.resolve({data:null});
-        var [offerRes, cpRes] = await Promise.all([fetchVehicle, fetchProfile]);
+        var [fd, cpRes] = await Promise.all([
+          _clientFleetData(r),
+          currentUser ? sb.from('profiles').select('first_name,last_name,phone').eq('id',currentUser.id).maybeSingle() : Promise.resolve({data:null})
+        ]);
+        if(window._detailGen!==myGen) return;
 
-        // Fetch vehicle details if needed
-        var offer = offerRes.data;
-        var veh = null;
-        if(offer && offer.vehicle_id){
-          var vehRes = await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',offer.vehicle_id).maybeSingle();
-          veh = vehRes.data;
-        }
-
-        // Fetch driver profile (name + phone)
-        var driverProfile = null;
-        if(r.driver_id){
-          var dpRes = await sb.from('profiles').select('first_name,last_name,phone').eq('id',r.driver_id).maybeSingle();
-          driverProfile = dpRes.data;
-        }
-
-        // ── Vehicle block ──
-        var phVeh = document.getElementById('ph-vehicle');
-        if(phVeh && r.driver_id){
-          var offerMsg = offer && offer.message ? offer.message : null;
+        // ① Véhicule et chauffeur + note du chauffeur + prix
+        var phFleet = document.getElementById('ph-fleet');
+        if(phFleet){
           var offerNoteClient = (notesRaw.match(/\|offer_note:([^|]+)/)||[])[1]||'';
-          var vehLabel = veh ? ((veh.brand||'')+' '+(veh.model||'')).trim() : '—';
-          var vehDesc = [vehLabel, veh&&veh.color?veh.color:null].filter(Boolean).join(' ');
-          var vehPlate = veh && veh.plate ? veh.plate : null;
-          var drvName = driverProfile ? (((driverProfile.first_name||'')+' '+(driverProfile.last_name||'')).trim()) : '';
-          var drvPhone = driverProfile ? (driverProfile.phone||'') : '';
-          var vehicleHtml = '<div style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
-            +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Information du v\u00e9hicule</div>'
-            +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+vehDesc+'</div>'
-            +(vehPlate?'<div style="font-size:12px;color:var(--ink3);font-family:monospace;">'+vehPlate+'</div>':'')
-            +(drvName||drvPhone ? '<div style="margin-top:8px;padding-top:6px;border-top:1px solid #d0e4f7;">'
-              +(drvName?'<div style="font-size:12.5px;font-weight:600;color:var(--ink);">'+drvName+'</div>':'')
-              +(drvPhone?'<div style="font-size:12px;color:var(--ink3);"><a href="tel:'+drvPhone+'" style="color:var(--blue);text-decoration:none;">'+drvPhone+'</a></div>':'')
-              +'</div>' : '')
-            +(offerNoteClient?'<div style="margin-top:8px;font-size:12.5px;color:var(--green);font-style:italic;border-top:1px solid #d0e4f7;padding-top:6px;"><span style="font-style:normal;font-weight:600;color:var(--green);">Message du chauffeur\u00a0: </span>'+offerNoteClient+'</div>':'')
-            +'</div>';
-          phVeh.outerHTML = vehicleHtml;
-        } else if(phVeh){ phVeh.remove(); }
+          phFleet.outerHTML = '<div class="rd-card">'
+            + _rdFleetHtml(fd)
+            + (offerNoteClient ? '<div class="rd-hr"></div><div class="rd-cap">Note du chauffeur</div><div class="rd-note">'+_rdEsc(offerNoteClient.trim())+'</div>' : '')
+            + (fd.price ? '<div class="rd-hr"></div>'+_rdPriceHtml(fd.price, 'Total TVAC') : '')
+            + '</div>';
+        }
 
-        // ── Passenger block ──
+        // ② Passager + note au chauffeur
         var phPax = document.getElementById('ph-passenger');
-        var cp = cpRes.data;
-        if(phPax && cp){
+        if(phPax){
+          var cp = cpRes.data || {};
           var paxMatch = notesRaw.match(/\|pax:([^|]+)/);
           var telMatch = notesRaw.match(/\|tel:([^|]+)/);
           var defName = ((cp.first_name||'')+' '+(cp.last_name||'')).trim() || '—';
           var dispName = paxMatch ? paxMatch[1].trim() : defName;
           var dispPhone = telMatch ? telMatch[1].trim() : (cp.phone||'');
-          var paxHtml = '<div id="pax-info-block" style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
-            +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-              +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Informations du passager</div>'
-              +'<button id="btn-pax-edit" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;font-family:\'DM Sans\',sans-serif;display:flex;align-items:center;gap:4px;"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/><path d="M10 4l2 2"/></svg> Modifier</button>'
-            +'</div>'
-            +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+dispName+'</div>'
-            +(dispPhone?'<div style="font-size:12px;color:var(--ink3);">'+dispPhone+'</div>':'')
-            +'</div>';
-          phPax.outerHTML = paxHtml;
-          // Attach listener after DOM update
-          setTimeout(function(){
-            var btn = document.getElementById('btn-pax-edit');
-            if(btn) btn.addEventListener('click', function(){ openPaxEdit(_rideIdForPax, dispName, dispPhone); });
-          }, 30);
-        } else if(phPax){ phPax.remove(); }
-
-        // ── Note block ──
-        var phNote = document.getElementById('ph-note');
-        if(phNote){
           var noteMatch = notesRaw.match(/\|note_drv:([^|]+)/);
           var currentNote = noteMatch ? noteMatch[1].trim() : '';
-          var noteHtml = '<div id="pax-note-block" style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
-            +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-              +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Note au chauffeur</div>'
-              +'<button id="btn-note-edit" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;font-family:\'DM Sans\',sans-serif;">'+(currentNote?'<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/><path d="M10 4l2 2"/></svg> Modifier':'+ Ajouter')+'</button>'
-            +'</div>'
-            +(currentNote?'<div style="font-size:13px;color:var(--ink2);font-style:italic;">'+currentNote+'</div>':'<div style="font-size:12px;color:var(--ink3);">Aucune note</div>')
-            +'</div>';
-          phNote.outerHTML = noteHtml;
+          var pen = '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/><path d="M10 4l2 2"/></svg>';
+          phPax.outerHTML = '<div class="rd-card" id="pax-info-block">'
+            + '<div class="rd-row-hd"><div class="rd-cap">Informations du passager</div><button id="btn-pax-edit" class="rd-link">'+pen+' Modifier</button></div>'
+            + '<div class="rd-strong">'+_rdEsc(dispName)+'</div>'
+            + (dispPhone ? '<div class="rd-muted">'+_rdEsc(dispPhone)+'</div>' : '')
+            + '<div class="rd-hr"></div>'
+            + '<div class="rd-row-hd"><div class="rd-cap">Note au chauffeur</div><button id="btn-note-edit" class="rd-link">'+(currentNote?pen+' Modifier':'+ Ajouter')+'</button></div>'
+            + (currentNote ? '<div class="rd-note">'+_rdEsc(currentNote)+'</div>' : '<div class="rd-muted">Aucune note</div>')
+            + '</div>';
           setTimeout(function(){
-            var btn = document.getElementById('btn-note-edit');
-            if(btn) btn.addEventListener('click', function(){ openNoteEdit(_rideIdForPax, currentNote); });
+            var b1 = document.getElementById('btn-pax-edit');
+            if(b1) b1.addEventListener('click', function(){ openPaxEdit(_rideIdForPax, dispName, dispPhone); });
+            var b2 = document.getElementById('btn-note-edit');
+            if(b2) b2.addEventListener('click', function(){ openNoteEdit(_rideIdForPax, currentNote); });
           }, 30);
         }
-
-        // ── Price block ──
-        var phPrice = document.getElementById('ph-price');
-        if(phPrice && r.final_price){
-          var _pr = await _ridePrice(r);
-          var tvac = _pr.tvac, htva = _pr.htva, tvaAmt = _pr.tva;
-          var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
-          phPrice.outerHTML = '<div style="padding:12px 14px;background:#F7F7F7;border-radius:var(--r);">'
-            +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Prix</div>'
-            +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Prix HTVA</span><span>'+fmt(htva)+'</span></div>'
-            +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">TVA '+_pr.pct+'%</span><span>'+fmt(tvaAmt)+'</span></div>'
-            +'<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:5px 0 2px;border-top:1px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(tvac)+'</span></div>'
-            +'</div>';
-        } else if(phPrice){ phPrice.remove(); }
-
       } catch(e){
         console.warn('confirmed client blocks error:', e);
-        ['ph-vehicle','ph-passenger','ph-note','ph-price'].forEach(function(pid){
-          var el=document.getElementById(pid); if(el) el.remove();
-        });
+        ['ph-fleet','ph-passenger'].forEach(function(pid){ var el=document.getElementById(pid); if(el) el.remove(); });
       }
-    })();
+    })(gen);
+  }
+
+  // ── Course terminée (client) : récapitulatif sous la carte — véhicule / chauffeur, prix payé HTVA et TVAC ──
+  var _extra = document.getElementById('detail-extra');
+  if(_extra){ _extra.innerHTML=''; _extra.style.display='none'; }
+  if(isClient && r.status==='done' && _extra && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
+    _extra.innerHTML = '<div class="rd-skel" style="height:170px;"></div>'; _extra.style.display='';
+    (async function(myGen){
+      try{
+        var fd = await _clientFleetData(r);
+        if(window._detailGen!==myGen) return;
+        var refunded = r.payment_method==='refunded';
+        _extra.innerHTML = '<div class="rd-card">'
+          + _rdFleetHtml(fd, {title:'Récapitulatif de la course', noPhone:true})
+          + (fd.price ? '<div class="rd-hr"></div>'+_rdPriceHtml(fd.price, refunded?'Total remboursé TVAC':'Total payé TVAC') : '')
+          + '</div>';
+      }catch(e){ console.warn('done summary error:', e); _extra.innerHTML=''; _extra.style.display='none'; }
+    })(gen);
   }
 
   // Footer
@@ -6081,6 +6053,49 @@ function _docBilling(){
   return _docBillingP;
 }
 // HTVA / TVA / TVAC d'une course. Sous-traitance : HTVA = final_price + TVA du pays du transporteur (Admin → Facturation)
+// ── Blocs client du détail d'une course (véhicule / chauffeur, prix) ──
+function _rdEsc(x){ return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+async function _clientFleetData(r){
+  var out={veh:null, drv:null, price:null};
+  if(r.driver_id){
+    var [ofr, dp] = await Promise.all([
+      sb.from('offers').select('vehicle_id,fleet_driver_id').eq('ride_id',r.id).eq('driver_id',r.driver_id).eq('status','accepted').maybeSingle(),
+      sb.from('profiles').select('first_name,last_name,phone,company_name').eq('id',r.driver_id).maybeSingle()
+    ]);
+    var o = ofr.data||{};
+    var [vh, fdr] = await Promise.all([
+      o.vehicle_id ? sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',o.vehicle_id).maybeSingle() : Promise.resolve({data:null}),
+      o.fleet_driver_id ? sb.from('fleet_drivers').select('first_name,last_name,phone').eq('id',o.fleet_driver_id).maybeSingle() : Promise.resolve({data:null})
+    ]);
+    out.veh = vh.data;
+    // Chauffeur de la flotte attribué à la course, sinon le titulaire du compte
+    var d = fdr.data || dp.data;
+    if(d) out.drv = { name:((d.first_name||'')+' '+(d.last_name||'')).trim(), phone:d.phone||'', company:(dp.data&&dp.data.company_name)||'' };
+  }
+  if(r.final_price){ try{ out.price = await _ridePrice(r); }catch(e){} }
+  return out;
+}
+function _rdFleetHtml(fd, opt){
+  opt=opt||{};
+  var v=fd.veh, d=fd.drv;
+  var vName = v ? [((v.brand||'')+' '+(v.model||'')).trim(), v.color||''].filter(Boolean).join(' ') : '';
+  var carIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17v2M18 17v2M3 13l2-6a2 2 0 012-1.5h10A2 2 0 0119 7l2 6v4H3z"/><circle cx="7.5" cy="13.5" r=".8" fill="currentColor"/><circle cx="16.5" cy="13.5" r=".8" fill="currentColor"/></svg>';
+  var userIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
+  var h='<div class="rd-cap" style="margin-bottom:8px;">'+(opt.title||'Véhicule et chauffeur')+'</div>';
+  h+='<div class="rd-line"><span class="rd-ic">'+carIc+'</span><div style="min-width:0"><div class="rd-strong">'+_rdEsc(vName||'Véhicule à confirmer')+'</div>'+(v&&v.plate?'<div class="rd-plate">'+_rdEsc(v.plate)+'</div>':'')+'</div></div>';
+  if(d&&(d.name||d.phone)){
+    h+='<div class="rd-line"><span class="rd-ic">'+userIc+'</span><div style="min-width:0;flex:1"><div class="rd-strong">'+_rdEsc(d.name||'Chauffeur')+'</div>'+(d.company?'<div class="rd-muted">'+_rdEsc(d.company)+'</div>':'')+'</div>'
+      +(d.phone&&!opt.noPhone?'<a class="rd-call" href="tel:'+_rdEsc(d.phone.replace(/[^\d+]/g,''))+'">'+_rdEsc(d.phone)+'</a>':'')+'</div>';
+  }
+  return h;
+}
+function _rdPriceHtml(p, totalLabel){
+  var f=function(v){ return (Number(v)||0).toFixed(2).replace('.',',')+' €'; };
+  return '<div class="rd-cap" style="margin-bottom:6px;">Prix</div>'
+    +'<div class="rd-pr"><span>Prix HTVA</span><span>'+f(p.htva)+'</span></div>'
+    +'<div class="rd-pr"><span>TVA '+p.pct+'%</span><span>'+f(p.tva)+'</span></div>'
+    +'<div class="rd-pr rd-total"><span>'+totalLabel+'</span><span>'+f(p.tvac)+'</span></div>';
+}
 async function _ridePrice(r){
   var p=parseFloat(r&&r.final_price)||0;
   if(!r||!r.is_subcontract){ var h=_rptR2(p/(1+TVA_RATE)); return { htva:h, pct:Math.round(TVA_RATE*100), tva:_rptR2(p-h), tvac:p }; }
