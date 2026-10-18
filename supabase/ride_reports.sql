@@ -55,3 +55,7 @@ drop trigger if exists trg_ride_reports_notify on public.ride_reports;
 create trigger trg_ride_reports_notify
   after insert on public.ride_reports
   for each row execute function public.notify_admin_ride_report();
+
+-- Un seul signalement ouvert par course et par client
+create unique index if not exists ride_reports_one_open
+  on public.ride_reports (ride_id, client_id) where status = 'open';

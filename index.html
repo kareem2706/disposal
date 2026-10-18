@@ -9357,8 +9357,28 @@ window.openNoteEdit = function(rideId, currentNote){
 };
 
 // ── Signaler un problème (client, après prise en charge) ──
-window.openRideProblem = function(rideId){
+window._rideOpenReport = async function(rideId){
+  if(!sb||!currentUser) return null;
+  try{
+    var {data} = await sb.from('ride_reports').select('id,created_at').eq('ride_id',rideId).eq('client_id',currentUser.id).eq('status','open').order('created_at',{ascending:false}).limit(1);
+    return (data&&data[0])||null;
+  }catch(e){ return null; }
+};
+window._showRideReportPending = function(rep){
   var existing = document.getElementById('m-pax-edit'); if(existing) existing.remove();
+  var when = rep&&rep.created_at ? new Date(rep.created_at).toLocaleString('fr-BE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+  document.body.insertAdjacentHTML('beforeend',
+    '<div id="m-pax-edit" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)this.remove();">'
+    +'<div style="background:#EEF4FB;border-radius:16px 16px 0 0;padding:24px 22px 32px;width:100%;max-width:520px;box-shadow:0 -4px 24px rgba(0,0,0,.12);">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B26A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><div style="font-size:15px;font-weight:700;">Signalement en cours de traitement</div></div>'
+      +'<div style="font-size:13.5px;color:var(--ink2);line-height:1.55;">Votre signalement'+(when?' du '+when:'')+' a bien été transmis et est en cours de traitement par l’équipe Bleenr. Vous pourrez en envoyer un nouveau une fois celui-ci traité.</div>'
+      +'<button class="btn btn-primary" style="width:100%;margin-top:18px;" onclick="document.getElementById(\'m-pax-edit\').remove()">J’ai compris</button>'
+    +'</div></div>');
+};
+window.openRideProblem = async function(rideId){
+  var existing = document.getElementById('m-pax-edit'); if(existing) existing.remove();
+  var _open = await window._rideOpenReport(rideId);
+  if(_open){ window._showRideReportPending(_open); return; }
   var fields = '<div style="font-size:13px;color:var(--ink3);margin-bottom:12px;line-height:1.5;">Décrivez le problème rencontré. Votre message est transmis directement à l’équipe Bleenr.</div>'
     +'<div><label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Votre message</label>'
     +'<textarea id="ride-problem-msg" rows="5" maxlength="2000" style="width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;font-family:\'DM Sans\',sans-serif;resize:none;" placeholder="Ex : le chauffeur ne suit pas l’itinéraire, comportement inapproprié, véhicule non conforme…"></textarea></div>';
@@ -9380,6 +9400,8 @@ window.sendRideProblem = async function(rideId){
   var msg = (document.getElementById('ride-problem-msg')?.value||'').trim();
   if(msg.length<5){ showToast('Merci de décrire le problème'); return; }
   if(btn){ btn.disabled=true; btn.textContent='Envoi…'; }
+  var _open = await window._rideOpenReport(rideId);
+  if(_open){ window._showRideReportPending(_open); return; }
   var {error} = await sb.from('ride_reports').insert({ ride_id:rideId, client_id:currentUser.id, message:msg });
   if(error){
     console.error('sendRideProblem error:', error);
