@@ -5886,7 +5886,7 @@ function _openRideDetailImpl(el){
       if(r.status==='active'||r.pickup_at){
         // Après la prise en charge : plus de modification passager / note, mais signalement possible
         var _vOnly=_vItem.slice(_paxItems.length);
-        var _probItem='<button class="ft-menu-item" style="color:var(--red);" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openRideProblem(\''+String(rId).replace(/'/g,'')+'\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Signaler un probl\u00e8me</button>';
+        var _probItem='<button class="ft-menu-item" style="color:var(--red);" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openRideProblem(\''+String(rId).replace(/'/g,'')+'\')"><svg style="color:var(--red);" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Signaler un probl\u00e8me</button>';
         ft=_clientRideMenu(rId,false,false,_vOnly+_probItem)+'<div style="margin-right:auto;"></div>'+closeBtn;
       } else if(_rideCancelLocked(r)){
         ft=_clientRideMenu(rId,false,false,_vItem)+'<div style="margin-right:auto;font-size:12px;color:var(--ink3);">Annulation/Modification impossible \u00e0 moins de '+_refundDelayHours(r)+' h du d\u00e9part</div>'+closeBtn;
