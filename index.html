@@ -5846,7 +5846,7 @@ function _openRideDetailImpl(el){
         var fd = await _clientFleetData(r);
         if(window._detailGen!==myGen) return;
         var refunded = r.payment_method==='refunded';
-        _extra.innerHTML = '<div class="rd-card">'
+        _extra.innerHTML = '<div class="rd-card" style="margin-bottom:20px;">'
           + _rdFleetHtml(fd, {title:'Récapitulatif de la course', noPhone:true})
           + (fd.price ? '<div class="rd-hr"></div>'+_rdPriceHtml(fd.price, refunded?'Total remboursé TVAC':'Total payé TVAC') : '')
           + '</div>';
@@ -5895,7 +5895,8 @@ function _openRideDetailImpl(el){
       }
       if(r.on_way_at||r.status==='active') ft+='<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');openLiveTracking(\''+String(rId).replace(/'/g,'')+'\')">Suivre en direct</button>';
     } else if(r.status==='done'){
-      var priceTagDone = '<div style="margin-right:auto;"></div>';
+      var _probItemDone='<button class="ft-menu-item" style="color:var(--red);" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openRideProblem(\''+String(rId).replace(/'/g,'')+'\')"><svg style="color:var(--red);" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Signaler un probl\u00e8me</button>';
+      var priceTagDone = _clientRideMenu(rId,false,false,_probItemDone)+'<div style="margin-right:auto;"></div>';
       if(r.rated){
         ft=priceTagDone+'<div style="font-size:13px;color:var(--green);font-weight:500;">\u2b50 \u00c9valu\u00e9e</div>'+closeBtn;
       } else {
