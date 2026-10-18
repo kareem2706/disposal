@@ -103,6 +103,18 @@ function build({ type, data = {} }: Payload) {
   const url = `${APP_URL}/`;
 
   switch (type) {
+    case "ride_problem": {
+      const esc = (v?: string) => (v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return {
+        subject: `⚠️ Problème signalé — ${data.code ?? ""}`,
+        html: layout(
+          "Un client signale un problème",
+          `Client : <strong>${esc(data.clientName)}</strong>${data.clientEmail ? ` · ${esc(data.clientEmail)}` : ""}${data.clientPhone ? ` · ${esc(data.clientPhone)}` : ""}${rideTable(data)}<div style="padding:12px 14px;background:#FDECEA;border-radius:10px;color:#8A1F17;white-space:pre-wrap;">${esc(data.message)}</div>`,
+          { label: "Ouvrir Bleenr", url },
+        ),
+      };
+    }
+
     case "ride_created":
       return {
         subject: `Demande publiée — ${data.code ?? ""}`,
