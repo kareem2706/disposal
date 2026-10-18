@@ -5905,7 +5905,7 @@ function _openRideDetailImpl(el){
       if(r.status==='active'||r.pickup_at){
         // Après la prise en charge : plus de modification passager / note, mais signalement possible
         var _vOnly=_vItem.slice(_paxItems.length);
-        var _probItem='<button class="ft-menu-item" style="color:var(--red);" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openRideProblem(\''+String(rId).replace(/'/g,'')+'\')"><svg style="color:var(--red);" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Signaler un probl\u00e8me</button>';
+        var _probItem='<button class="ft-menu-item rd-prob-item" style="color:var(--red);" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openRideProblem(\''+String(rId).replace(/'/g,'')+'\')"><svg style="color:var(--red);" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Signaler un probl\u00e8me</button>';
         ft=_clientRideMenu(rId,false,false,_vOnly+_probItem)+'<div style="margin-right:auto;"></div>'+closeBtn;
       } else if(_rideCancelLocked(r)){
         ft=_clientRideMenu(rId,false,false,_vItem)+'<div style="margin-right:auto;font-size:12px;color:var(--ink3);">Annulation/Modification impossible \u00e0 moins de '+_refundDelayHours(r)+' h du d\u00e9part</div>'+closeBtn;
@@ -5914,7 +5914,7 @@ function _openRideDetailImpl(el){
       }
       if(r.on_way_at||r.status==='active') ft+='<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');openLiveTracking(\''+String(rId).replace(/'/g,'')+'\')">Suivre en direct</button>';
     } else if(r.status==='done'){
-      var _probItemDone='<button class="ft-menu-item" style="color:var(--red);" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openRideProblem(\''+String(rId).replace(/'/g,'')+'\')"><svg style="color:var(--red);" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Signaler un probl\u00e8me</button>';
+      var _probItemDone='<button class="ft-menu-item rd-prob-item" style="color:var(--red);" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openRideProblem(\''+String(rId).replace(/'/g,'')+'\')"><svg style="color:var(--red);" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Signaler un probl\u00e8me</button>';
       var priceTagDone = _clientRideMenu(rId,false,false,_probItemDone)+'<div style="margin-right:auto;"></div>';
       if(r.rated){
         ft=priceTagDone+'<div style="font-size:13px;color:var(--green);font-weight:500;">\u2b50 \u00c9valu\u00e9e</div>'+closeBtn;
@@ -6005,6 +6005,21 @@ function _openRideDetailImpl(el){
     }
   }
   var ftEl=document.getElementById('detail-ft');if(ftEl)ftEl.innerHTML=ft;
+  // Signalement déjà ouvert : l'action est remplacée par un libellé non cliquable
+  if(isClient && ftEl && ftEl.querySelector('.rd-prob-item')){
+    (async function(rid){
+      var rep = await window._rideOpenReport(rid);
+      var it = ftEl.querySelector('.rd-prob-item');
+      if(rep && it){
+        var d=document.createElement('div');
+        d.className='ft-menu-item';
+        d.style.cssText='cursor:default;color:#B26A00;';
+        d.innerHTML='<svg style="color:#B26A00;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Signalement en cours de traitement';
+        d.onclick=function(ev){ ev.stopPropagation(); };
+        it.replaceWith(d);
+      }
+    })(rId);
+  }
   var sp0=document.getElementById('detail-map-spacer');if(sp0)sp0.style.height='0px';
   openModal('m-ride-detail');
 };
@@ -9360,7 +9375,8 @@ window.openNoteEdit = function(rideId, currentNote){
 window._rideOpenReport = async function(rideId){
   if(!sb||!currentUser) return null;
   try{
-    var {data} = await sb.from('ride_reports').select('id,created_at').eq('ride_id',rideId).eq('client_id',currentUser.id).eq('status','open').order('created_at',{ascending:false}).limit(1);
+    var {data,error} = await sb.from('ride_reports').select('id,created_at,status').eq('ride_id',rideId).eq('client_id',currentUser.id).neq('status','resolved').order('created_at',{ascending:false}).limit(1);
+    if(error) console.warn('_rideOpenReport', error);
     return (data&&data[0])||null;
   }catch(e){ return null; }
 };
@@ -9403,6 +9419,7 @@ window.sendRideProblem = async function(rideId){
   var _open = await window._rideOpenReport(rideId);
   if(_open){ window._showRideReportPending(_open); return; }
   var {error} = await sb.from('ride_reports').insert({ ride_id:rideId, client_id:currentUser.id, message:msg });
+  if(error && error.code==='23505'){ window._showRideReportPending(null); return; }
   if(error){
     console.error('sendRideProblem error:', error);
     showToast('Erreur : '+error.message);
@@ -9418,6 +9435,8 @@ window.sendRideProblem = async function(rideId){
   }catch(e){ console.warn('ride_problem mail', e); }
   document.getElementById('m-pax-edit')?.remove();
   showToast('✅ Votre signalement a été envoyé à l’équipe Bleenr');
+  var _pi=document.querySelector('#detail-ft .rd-prob-item');
+  if(_pi){ var _d=document.createElement('div'); _d.className='ft-menu-item'; _d.style.cssText='cursor:default;color:#B26A00;'; _d.innerHTML='<svg style="color:#B26A00;" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Signalement en cours de traitement'; _d.onclick=function(ev){ev.stopPropagation();}; _pi.replaceWith(_d); }
 };
 
 window.savePaxInfo = async function(rideId){
