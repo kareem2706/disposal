@@ -931,6 +931,9 @@ body{background:var(--bg);}
 .rd-plate{font-size:12px;color:var(--ink3);font-family:monospace;margin-top:1px;}
 .rd-note{font-size:13px;color:var(--ink2);font-style:italic;line-height:1.45;margin-top:2px;}
 .rd-hr{height:1px;background:#E4E7E2;margin:12px 0;}
+.rd-card.rd-blue{background:#EEF4FB;}
+.rd-card.rd-blue .rd-hr,.rd-card.rd-blue .rd-pr.rd-total{background:#D0E4F7;border-color:#D0E4F7;}
+.rd-card.rd-blue .rd-pr.rd-total{background:none;}
 .rd-line{display:flex;align-items:center;gap:12px;padding:4px 0;}
 .rd-ic{width:34px;height:34px;border-radius:10px;background:#fff;color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .rd-call{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--blue);text-decoration:none;white-space:nowrap;}
@@ -5775,7 +5778,7 @@ function _openRideDetailImpl(el){
   }
 
   // ── Course confirmée (client) : 2 blocs — ① véhicule / chauffeur + note du chauffeur + prix ; ② passager + note au chauffeur ──
-  if(isClient && r.status==='confirmed' && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
+  if(isClient && (r.status==='confirmed'||r.status==='active') && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     var bodyElMain = document.getElementById('detail-body');
     if(bodyElMain){
       bodyElMain.insertAdjacentHTML('beforeend',
@@ -5797,7 +5800,7 @@ function _openRideDetailImpl(el){
         var phFleet = document.getElementById('ph-fleet');
         if(phFleet){
           var offerNoteClient = (notesRaw.match(/\|offer_note:([^|]+)/)||[])[1]||'';
-          phFleet.outerHTML = '<div class="rd-card">'
+          phFleet.outerHTML = '<div class="rd-card rd-blue">'
             + _rdFleetHtml(fd)
             + (offerNoteClient ? '<div class="rd-hr"></div><div class="rd-cap">Note du chauffeur</div><div class="rd-note">'+_rdEsc(offerNoteClient.trim())+'</div>' : '')
             + (fd.price ? '<div class="rd-hr"></div>'+_rdPriceHtml(fd.price, 'Total TVAC') : '')
@@ -5873,15 +5876,17 @@ function _openRideDetailImpl(el){
         +'<button class="btn btn-primary" onclick="_rdPushUnder(this.dataset.m);openRide(this.dataset.r)" data-m="m-ride-detail" data-r="'+rId+'">Voir les offres &#x2192;</button>';
     } else if(r.status==='pending_payment'){
       ft=closeBtn;
-    } else if(r.status==='confirmed'){
+    } else if(r.status==='confirmed'||r.status==='active'){
       var pdfVoucherBtn = '<button onclick="generateRideVoucher(\''+rId+'\')" class="btn btn-secondary" style="display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Voucher</button>';
       var _vItem='<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');generateRideVoucher(\''+String(rId).replace(/'/g,'')+'\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Télécharger le voucher</button>';
-      if(_rideCancelLocked(r)){
+      if(r.status==='active'||r.pickup_at){
+        ft=_clientRideMenu(rId,false,false,_vItem)+'<div style="margin-right:auto;"></div>'+closeBtn;
+      } else if(_rideCancelLocked(r)){
         ft=_clientRideMenu(rId,false,false,_vItem)+'<div style="margin-right:auto;font-size:12px;color:var(--ink3);">Annulation/Modification impossible \u00e0 moins de '+_refundDelayHours(r)+' h du d\u00e9part</div>'+closeBtn;
       } else {
         ft=_clientRideMenu(rId,false,true,_vItem)+'<div style="margin-right:auto;"></div>'+closeBtn;
       }
-      if(r.on_way_at) ft+='<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');openLiveTracking(\''+String(rId).replace(/'/g,'')+'\')">Suivre en direct</button>';
+      if(r.on_way_at||r.status==='active') ft+='<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');openLiveTracking(\''+String(rId).replace(/'/g,'')+'\')">Suivre en direct</button>';
     } else if(r.status==='done'){
       var priceTagDone = r.final_price
         ? '<div style="margin-right:auto;padding:6px 12px;background:var(--green-bg);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--green);">Montant pay\u00e9\u00a0: '+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</div>'
@@ -8221,8 +8226,9 @@ function tripTypeLabel(t_){
   const m = {ab:'A→B', disposal:'Disposition', mixed:'Mixte'};
   return m[t_] || t_ || '—';
 }
-function todayStr(){ return new Date().toISOString().split('T')[0]; }
-function tomorrowStr(){ const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().split('T')[0]; }
+function _ymdLocal(d){ d=d||new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function todayStr(){ return _ymdLocal(new Date()); }
+function tomorrowStr(){ const d=new Date(); d.setDate(d.getDate()+1); return _ymdLocal(d); }
 
 function showError(el, msg){ el.textContent = msg; el.classList.add('show'); }
 function setLoading(btn, loading, text){
@@ -8875,7 +8881,7 @@ function _renderCalGrid(gridId,titleId,calYear,calMonth,calView,calWS,calRides,p
 var _calY=new Date().getFullYear(),_calM=new Date().getMonth(),_calRides=[],_calView='month',_calWS=null,_calCache={},_calFilter='';
 window.calPrevMonth=function(){if(_calView==='week'){var d=new Date(_calWS);d.setDate(d.getDate()-7);_calWS=d;}else{_calM--;if(_calM<0){_calM=11;_calY--;}}loadCalendar(true);};
 window.calNextMonth=function(){if(_calView==='week'){var d=new Date(_calWS);d.setDate(d.getDate()+7);_calWS=d;}else{_calM++;if(_calM>11){_calM=0;_calY++;}}loadCalendar(true);};
-window.calSetView=function(view,ds){if(!view)return;_calView=view;document.querySelectorAll('.cal-view-btn').forEach(function(b){b.classList.toggle('cal-view-active',b.dataset.view===view);});if(view==='week'){var d=new Date((ds||new Date().toISOString().split('T')[0])+'T00:00:00');var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_calWS=d;_calM=d.getMonth();_calY=d.getFullYear();}loadCalendar(true);};
+window.calSetView=function(view,ds){if(!view)return;_calView=view;document.querySelectorAll('.cal-view-btn').forEach(function(b){b.classList.toggle('cal-view-active',b.dataset.view===view);});if(view==='week'){var d=new Date((ds||_ymdLocal())+'T00:00:00');var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_calWS=d;_calM=d.getMonth();_calY=d.getFullYear();}loadCalendar(true);};
 window.calSetFilter=function(status){
   _calFilter=status;
   var _calColors={
@@ -8900,8 +8906,8 @@ window.calSetFilter=function(status){
 window.loadCalendar=async function(force){
   if(sb&&currentUser&&localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     var s,e;
-    if(_calView==='week'&&_calWS){var we=new Date(_calWS);we.setDate(we.getDate()+6);s=_calWS.toISOString().split('T')[0];e=we.toISOString().split('T')[0];}
-    else{var fd2=new Date(_calY,_calM,1).getDay();fd2=fd2===0?6:fd2-1;var sD=new Date(_calY,_calM,1-fd2);var eD=new Date(_calY,_calM+1,14);s=sD.toISOString().split('T')[0];e=eD.toISOString().split('T')[0];}
+    if(_calView==='week'&&_calWS){var we=new Date(_calWS);we.setDate(we.getDate()+6);s=_ymdLocal(_calWS);e=_ymdLocal(we);}
+    else{var fd2=new Date(_calY,_calM,1).getDay();fd2=fd2===0?6:fd2-1;var sD=new Date(_calY,_calM,1-fd2);var eD=new Date(_calY,_calM+1,14);s=_ymdLocal(sD);e=_ymdLocal(eD);}
     var ck=s+'_'+e;
     if(force||!_calCache[ck]){var res=await sb.from('rides').select('*').eq('client_id',currentUser.id).gte('ride_date',s).lte('ride_date',e);_calCache[ck]=res.data||[];}
     _calRides=_calFilter ? (_calCache[ck]||[]).filter(function(r){return r.status===_calFilter;}) : (_calCache[ck]||[]);
@@ -8914,7 +8920,7 @@ window.loadCalendar=async function(force){
 var _dCalY=new Date().getFullYear(),_dCalM=new Date().getMonth(),_dCalRides=[],_dCalView='month',_dCalWS=null,_dCalCache={},_dCalFilter='';
 window.dCalPrev=function(){if(_dCalView==='week'){var d=new Date(_dCalWS);d.setDate(d.getDate()-7);_dCalWS=d;}else{_dCalM--;if(_dCalM<0){_dCalM=11;_dCalY--;}}loadDriverCalendar(true);};
 window.dCalNext=function(){if(_dCalView==='week'){var d=new Date(_dCalWS);d.setDate(d.getDate()+7);_dCalWS=d;}else{_dCalM++;if(_dCalM>11){_dCalM=0;_dCalY++;}}loadDriverCalendar(true);};
-window.dCalView=function(view,ds){if(!view)return;_dCalView=view;document.querySelectorAll('.d-cal-vbtn').forEach(function(b){b.classList.toggle('d-cal-vactive',b.dataset.view===view);});if(view==='week'){var d=new Date((ds||new Date().toISOString().split('T')[0])+'T00:00:00');var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_dCalWS=d;_dCalM=d.getMonth();_dCalY=d.getFullYear();}loadDriverCalendar(true);};
+window.dCalView=function(view,ds){if(!view)return;_dCalView=view;document.querySelectorAll('.d-cal-vbtn').forEach(function(b){b.classList.toggle('d-cal-vactive',b.dataset.view===view);});if(view==='week'){var d=new Date((ds||_ymdLocal())+'T00:00:00');var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_dCalWS=d;_dCalM=d.getMonth();_dCalY=d.getFullYear();}loadDriverCalendar(true);};
 window.dCalSetFilter=function(status){
   _dCalFilter=status;
   var _dCalColors={
@@ -8939,8 +8945,8 @@ window.dCalSetFilter=function(status){
 window.loadDriverCalendar=async function(force){
   if(sb&&currentUser&&localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     var s,e;
-    if(_dCalView==='week'&&_dCalWS){var we=new Date(_dCalWS);we.setDate(we.getDate()+6);s=_dCalWS.toISOString().split('T')[0];e=we.toISOString().split('T')[0];}
-    else{var fd2=new Date(_dCalY,_dCalM,1).getDay();fd2=fd2===0?6:fd2-1;var sD=new Date(_dCalY,_dCalM,1-fd2);var eD=new Date(_dCalY,_dCalM+1,14);s=sD.toISOString().split('T')[0];e=eD.toISOString().split('T')[0];}
+    if(_dCalView==='week'&&_dCalWS){var we=new Date(_dCalWS);we.setDate(we.getDate()+6);s=_ymdLocal(_dCalWS);e=_ymdLocal(we);}
+    else{var fd2=new Date(_dCalY,_dCalM,1).getDay();fd2=fd2===0?6:fd2-1;var sD=new Date(_dCalY,_dCalM,1-fd2);var eD=new Date(_dCalY,_dCalM+1,14);s=_ymdLocal(sD);e=_ymdLocal(eD);}
     var ck=s+'_'+e;
     if(force||!_dCalCache[ck]){var res=await sb.from('rides').select('*').eq('driver_id',currentUser.id).gte('ride_date',s).lte('ride_date',e);_dCalCache[ck]=res.data||[];}
     _dCalRides=_dCalFilter ? (_dCalCache[ck]||[]).filter(function(r){return r.status===_dCalFilter;}) : (_dCalCache[ck]||[]);
