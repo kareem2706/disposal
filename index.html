@@ -5645,7 +5645,7 @@ function _openRideDetailImpl(el){
     var wrap=document.getElementById('detail-map-wrap');
     if(!wrap)return;
     // Hide map for confirmed rides (client and driver)
-    if((isClient || !isClient) && r.status==='confirmed'){
+    if(r.status==='confirmed'||r.status==='active'){
       wrap.style.display='none';
       var sp=document.getElementById('detail-map-spacer');if(sp)sp.style.height='0px';
     } else {
@@ -5820,19 +5820,14 @@ function _openRideDetailImpl(el){
           var currentNote = noteMatch ? noteMatch[1].trim() : '';
           var pen = '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/><path d="M10 4l2 2"/></svg>';
           phPax.outerHTML = '<div class="rd-card" id="pax-info-block">'
-            + '<div class="rd-row-hd"><div class="rd-cap">Informations du passager</div><button id="btn-pax-edit" class="rd-link">'+pen+' Modifier</button></div>'
+            + '<div class="rd-cap" style="margin-bottom:6px;">Informations du passager</div>'
             + '<div class="rd-strong">'+_rdEsc(dispName)+'</div>'
             + (dispPhone ? '<div class="rd-muted">'+_rdEsc(dispPhone)+'</div>' : '')
             + '<div class="rd-hr"></div>'
-            + '<div class="rd-row-hd"><div class="rd-cap">Note au chauffeur</div><button id="btn-note-edit" class="rd-link">'+(currentNote?pen+' Modifier':'+ Ajouter')+'</button></div>'
+            + '<div class="rd-cap" style="margin-bottom:6px;">Note au chauffeur</div>'
             + (currentNote ? '<div class="rd-note">'+_rdEsc(currentNote)+'</div>' : '<div class="rd-muted">Aucune note</div>')
             + '</div>';
-          setTimeout(function(){
-            var b1 = document.getElementById('btn-pax-edit');
-            if(b1) b1.addEventListener('click', function(){ openPaxEdit(_rideIdForPax, dispName, dispPhone); });
-            var b2 = document.getElementById('btn-note-edit');
-            if(b2) b2.addEventListener('click', function(){ openNoteEdit(_rideIdForPax, currentNote); });
-          }, 30);
+          window._rdPax = { id:_rideIdForPax, name:dispName, phone:dispPhone, note:currentNote };
         }
       } catch(e){
         console.warn('confirmed client blocks error:', e);
@@ -5878,7 +5873,16 @@ function _openRideDetailImpl(el){
       ft=closeBtn;
     } else if(r.status==='confirmed'||r.status==='active'){
       var pdfVoucherBtn = '<button onclick="generateRideVoucher(\''+rId+'\')" class="btn btn-secondary" style="display:flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Voucher</button>';
-      var _vItem='<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');generateRideVoucher(\''+String(rId).replace(/'/g,'')+'\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Télécharger le voucher</button>';
+      // Passager et note au chauffeur : modifiables depuis le menu ⋮
+      (function(){
+        var n=r.notes||'', cpn=((currentProfile&&currentProfile.first_name||'')+' '+(currentProfile&&currentProfile.last_name||'')).trim();
+        window._rdPax={ id:rId, name:((n.match(/\|pax:([^|]+)/)||[])[1]||cpn||'').trim(), phone:((n.match(/\|tel:([^|]+)/)||[])[1]||(currentProfile&&currentProfile.phone)||'').trim(), note:((n.match(/\|note_drv:([^|]+)/)||[])[1]||'').trim() };
+      })();
+      var _hasNote=!!window._rdPax.note;
+      var _penIc='<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      var _paxItems='<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openPaxEdit(window._rdPax.id,window._rdPax.name,window._rdPax.phone)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Modifier les informations du passager</button>'
+        +'<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openNoteEdit(window._rdPax.id,window._rdPax.note)">'+_penIc+(_hasNote?'Modifier la note au chauffeur':'Ajouter une note au chauffeur')+'</button>';
+      var _vItem=_paxItems+'<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');generateRideVoucher(\''+String(rId).replace(/'/g,'')+'\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Télécharger le voucher</button>';
       if(r.status==='active'||r.pickup_at){
         ft=_clientRideMenu(rId,false,false,_vItem)+'<div style="margin-right:auto;"></div>'+closeBtn;
       } else if(_rideCancelLocked(r)){
