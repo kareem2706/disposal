@@ -258,6 +258,26 @@ function build({ type, data = {} }: Payload) {
         ),
       };
 
+    case "ride_completed":
+      return {
+        subject: `Merci d'avoir voyagé avec Bleenr — ${data.code ?? ""}`,
+        html: layout(
+          `Merci${data.clientName ? ", " + data.clientName : ""} !`,
+          `Votre course est terminée. Merci d'avoir fait confiance à Bleenr.${rideTable(data)}
+          <div style="background:#F6F5F2;border-radius:10px;padding:16px 18px;margin:18px 0;">
+            <div style="font-size:13px;font-weight:700;color:#1A1A18;margin-bottom:8px;">⭐ Votre avis compte</div>
+            <div style="font-size:13px;color:#4A4A46;line-height:1.6;">Prenez quelques secondes pour noter votre chauffeur : cela nous aide à garantir un service de qualité.</div>
+          </div>
+          <div style="font-size:13px;color:#4A4A46;line-height:1.6;margin-bottom:6px;">
+            Quelque chose ne s'est pas passé comme prévu ? Vous pouvez <strong>signaler un incident</strong>
+            directement depuis la fiche de votre demande (menu <strong>⋮</strong> → <em>Signaler un problème</em>).
+            Notre équipe vous répondra rapidement.
+          </div>
+          Nous espérons vous revoir très bientôt parmi nous.<br><br>L'équipe Bleenr`,
+          { label: "Noter mon chauffeur", url },
+        ),
+      };
+
     case "offer_accepted_driver":
       return {
         subject: `Offre acceptée — ${data.code ?? ""}`,
@@ -334,6 +354,26 @@ Deno.serve(async (req: Request) => {
     if (!type) throw new Error("Type d'email manquant");
     const data = sanitize(payload?.data);
     build({ type, data });   // type inconnu → erreur avant tout envoi
+
+    // Appel système (déclencheur de la base) : secret partagé, uniquement certains emails
+    const HOOK_SECRET = Deno.env.get("NOTIFY_HOOK_SECRET") ?? "";
+    const hookHdr = req.headers.get("x-hook-secret") ?? "";
+    if (hookHdr) {
+      if (!HOOK_SECRET || hookHdr !== HOOK_SECRET) return json({ ok: false, error: "Non autorisé" }, 403);
+      if (!["ride_completed"].includes(type) || !Array.isArray(payload?.to_user_ids)) {
+        return json({ ok: false, error: "Non autorisé" }, 403);
+      }
+      let sent = 0;
+      for (const id of (payload.to_user_ids as unknown[]).map(String).slice(0, 5)) {
+        const to = await emailOfUser(id);
+        if (!to) continue;
+        const { data: p } = await admin.from("profiles").select("first_name").eq("id", id).maybeSingle();
+        try { await sendOne(to, type, { ...data, clientName: escHtml(p?.first_name ?? "") }); sent++; }
+        catch (e) { console.warn("send-mail system", e); }
+      }
+      console.log("send-mail", type, "(système) sent", sent);
+      return json({ ok: true, sent });
+    }
 
     // Appelant
     const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
