@@ -360,7 +360,8 @@ Deno.serve(async (req: Request) => {
     const hookHdr = req.headers.get("x-hook-secret") ?? "";
     if (hookHdr) {
       if (!HOOK_SECRET || hookHdr !== HOOK_SECRET) return json({ ok: false, error: "Non autorisé" }, 403);
-      if (!["ride_completed"].includes(type) || !Array.isArray(payload?.to_user_ids)) {
+      if (!["ride_completed", "driver_on_way", "ride_no_show", "offer_received", "driver_note", "assignment_changed"].includes(type)
+          || !Array.isArray(payload?.to_user_ids)) {
         return json({ ok: false, error: "Non autorisé" }, 403);
       }
       let sent = 0;

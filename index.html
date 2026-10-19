@@ -6644,7 +6644,7 @@ window.missionStep=async function(rideId, step, btn){
         driverPhone: drv&&drv.phone?drv.phone:''
       });
       delete mail.price;
-      window.sendMailToUsers('driver_on_way', r.client_id, mail);
+      // Email « chauffeur en route » : envoyé par la base (ride_driver_emails.sql), aussi depuis l'app iOS
       showToast('✅ Statut « En chemin » envoyé au client');
     } else if(step==='pickup'){
       showToast('✅ Pick up enregistré');
@@ -6696,7 +6696,7 @@ window._confirmNoShow=async function(btn){
     var r=rows[0];
     var mail=window._mailRideData(r,{ noShowTime:_hhmm(now) });
     delete mail.price;
-    _sendNoShowMail(r.client_id, mail);
+    // Email « absence du client » : envoyé par la base (ride_driver_emails.sql)
     try{ await sb.from('notifications').insert({ user_id:r.client_id, type:'ride_no_show', ride_id:r.id, read:false,
       title:'Absence au rendez-vous (No Show)',
       body:'Votre chauffeur s\u2019est présenté pour la course '+(mail.code||'')+(mail.date?' du '+mail.date+(mail.time?' à '+mail.time:''):'')+', mais vous n\u2019étiez pas au lieu de rendez-vous. La course est clôturée.' }); }catch(_e){}
@@ -8557,7 +8557,7 @@ window.submitOffer = async function(){
     if(rideUpdate.error) console.warn('ride status update error:', rideUpdate.error.message);
 
     // Notify the client that a new offer arrived (only on first submission)
-    if(!hasExisting) _notifyOfferReceived(currentRideId, price);
+    // Email « offre reçue » : envoyé par la base à la création de l'offre (ride_driver_emails.sql)
 
     _myOffers[currentRideId] = { price: price, msg: msg, km: includedKm };
     setLoading(btn, false, 'Soumettre →');
@@ -9355,7 +9355,7 @@ window.saveDriverNote = async function(rideId){
   var {data:updated} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
   // Email the requester about the driver's note
   if(updated && updated.client_id && updated.client_id !== currentUser?.id){
-    window.sendMailToUsers('driver_note', updated.client_id, window._mailRideData(updated, { note: note, noteAction: _hadNote ? 'updated' : 'created' }));
+    // Email « message du chauffeur » : envoyé par la base (ride_driver_emails.sql)
   }
   if(updated){ var tmp=document.createElement('div'); tmp.dataset.ride=JSON.stringify(updated).replace(/'/g,"&#39;"); openRideDetail(tmp); }
 };
@@ -10531,7 +10531,7 @@ window.saveMissionAssignment=async function(){
       changes: chg.join(' et ')
     });
     delete mail.price;
-    window.sendMailToUsers('assignment_changed', r.client_id, mail);
+    // Email « véhicule / chauffeur modifié » : envoyé par la base (ride_driver_emails.sql)
     document.getElementById('m-mission-assign')?.remove();
     showToast('✅ Mission mise à jour — le client a été prévenu');
     if(typeof loadMissions==='function') loadMissions();
