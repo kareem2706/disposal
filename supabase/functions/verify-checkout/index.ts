@@ -1,7 +1,9 @@
 // Supabase Edge Function: verify-checkout
 // Appelée par l'app au retour de Stripe. Vérifie AUPRÈS DE STRIPE que la
-// session est bien payée, puis confirme la course côté serveur
-// (fonction SQL confirm_ride_offer, accessible uniquement avec la clé service_role).
+// session est payée, puis confirme la course côté serveur.
+// Si la course ne peut plus être confirmée (déjà payée par une autre session,
+// annulée entre-temps…), le paiement est remboursé automatiquement.
+// Le webhook stripe-webhook fait la même chose si le client ferme l'onglet.
 // Peut être appelée plusieurs fois sans effet de bord.
 
 import Stripe from "https://esm.sh/stripe@14?target=deno";
@@ -28,6 +30,43 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+// ── Logique commune avec stripe-webhook (garder les deux copies identiques) ──
+async function refundSession(s: Stripe.Checkout.Session) {
+  const pi = typeof s.payment_intent === "string" ? s.payment_intent : s.payment_intent?.id;
+  if (pi) {
+    try {
+      await stripe.refunds.create({ payment_intent: pi }, { idempotencyKey: "bleenr_refund_" + s.id });
+    } catch (e) {
+      const msg = String((e as any)?.code ?? "") + " " + String((e as any)?.message ?? "");
+      if (!/already.*refunded|charge_already_refunded/i.test(msg)) throw e;
+    }
+  }
+  const md = s.metadata ?? {};
+  await admin.from("ride_checkouts").upsert({
+    session_id: s.id, ride_id: md.rideId, offer_id: md.offerId || null, user_id: md.userId || null,
+    amount: Number(s.amount_total ?? 0) / 100, status: "refunded", updated_at: new Date().toISOString(),
+  });
+}
+async function settleSession(s: Stripe.Checkout.Session) {
+  if (s.payment_status !== "paid") return { paid: false, status: s.payment_status };
+  const md = s.metadata ?? {};
+  if (!md.rideId || !md.offerId) return { paid: true, confirmed: false, error: "Métadonnées manquantes" };
+  const amount = Math.round(Number(s.amount_total ?? 0)) / 100;
+  const { data, error } = await admin.rpc("confirm_ride_payment", {
+    p_session: s.id, p_ride: md.rideId, p_offer: md.offerId, p_amount: amount,
+  });
+  if (error) throw new Error("confirm_ride_payment: " + error.message);   // erreur technique : pas de remboursement
+  const row = Array.isArray(data) ? data[0] : data;
+  const result = row?.result as string;
+  if (result === "confirmed" || result === "already") {
+    return { paid: true, confirmed: true, rideId: md.rideId, driverId: row?.driver ?? null, amount };
+  }
+  // duplicate | not_confirmable | refunded → l'argent est rendu au client
+  if (result !== "refunded") await refundSession(s);
+  return { paid: true, confirmed: false, refunded: true, reason: result, amount };
+}
+// ────────────────────────────────────────────────────────────────
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -39,23 +78,12 @@ Deno.serve(async (req: Request) => {
     const { sessionId } = await req.json();
     if (!sessionId || !/^cs_/.test(sessionId)) return json({ error: "Session de paiement invalide" }, 400);
 
-    // Source de vérité : Stripe
-    const s = await stripe.checkout.sessions.retrieve(sessionId);
-    const md = s.metadata ?? {};
-    if (md.userId !== u.user.id) return json({ error: "Paiement d'un autre utilisateur" }, 403);
-    if (s.payment_status !== "paid") return json({ paid: false, status: s.payment_status });
+    const s = await stripe.checkout.sessions.retrieve(sessionId);   // source de vérité : Stripe
+    if ((s.metadata ?? {}).userId !== u.user.id) return json({ error: "Paiement d'un autre utilisateur" }, 403);
 
-    const amount = Math.round(Number(s.amount_total ?? 0)) / 100;
-    const { data: driverId, error } = await admin.rpc("confirm_ride_offer", {
-      p_ride: md.rideId, p_offer: md.offerId, p_amount: amount, p_method: "stripe",
-    });
-    if (error) {
-      console.error("confirm_ride_offer", error);
-      return json({ paid: true, confirmed: false, error: error.message }, 409);
-    }
-    return json({ paid: true, confirmed: true, rideId: md.rideId, driverId, amount });
+    return json(await settleSession(s));
   } catch (e) {
     console.error("verify-checkout", e);
-    return json({ error: "Vérification du paiement impossible" }, 400);
+    return json({ error: "Vérification du paiement impossible" }, 500);
   }
 });

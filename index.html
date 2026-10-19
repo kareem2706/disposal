@@ -3785,6 +3785,12 @@ function enterApp(){
           localStorage.removeItem('stripe_pending_tvac');
           // La course est confirmée par le serveur après vérification du paiement auprès de Stripe
           var vr=await _callEdge('verify-checkout',{sessionId:_sr.session});
+          if(vr && vr.refunded){
+            // Course déjà payée / plus disponible : le serveur a remboursé automatiquement
+            if(typeof loadClientDashboard==='function') await loadClientDashboard();
+            showPaymentResult('error','Paiement rembours\u00e9','Cette course \u00e9tait d\u00e9j\u00e0 pay\u00e9e ou n\u2019est plus disponible. Votre paiement'+(vr.amount?' de '+Number(vr.amount).toFixed(2).replace('.',',')+' \u20ac':'')+' a \u00e9t\u00e9 int\u00e9gralement rembours\u00e9 (d\u00e9lai bancaire de 5 \u00e0 10 jours).');
+            return;
+          }
           if(!vr || !vr.confirmed) throw new Error((vr&&vr.error)||'Paiement non vérifié');
           var payDriverId=vr.driverId||null;
           if(vr.amount) tvac=vr.amount;

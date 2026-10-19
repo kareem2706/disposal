@@ -67,8 +67,27 @@ Deno.serve(async (req: Request) => {
     const APP_URL = (Deno.env.get("APP_URL") || "https://kareem2706.github.io/disposal").replace(/\/+$/, "");
     const asked = String((body as any).returnUrl || "").replace(/[?#].*$/, "").replace(/\/+$/, "");
     const origin = asked && asked.startsWith(APP_URL) ? asked : APP_URL;
+    // 5) Une seule session de paiement ouverte par course :
+    //    les précédentes sont expirées ; si l'une a déjà été payée, on refuse.
+    const { data: prev } = await admin.from("ride_checkouts")
+      .select("session_id").eq("ride_id", rideId).eq("status", "open");
+    for (const p of prev ?? []) {
+      try {
+        const old = await stripe.checkout.sessions.retrieve(p.session_id);
+        if (old.status === "complete") {
+          return json({ error: "Un paiement a déjà été effectué pour cette course. Rechargez la page." }, 409);
+        }
+        if (old.status === "open") await stripe.checkout.sessions.expire(p.session_id);
+      } catch (e) {
+        console.warn("expire previous session", p.session_id, e);
+      }
+      await admin.from("ride_checkouts").update({ status: "expired", updated_at: new Date().toISOString() })
+        .eq("session_id", p.session_id).eq("status", "open");
+    }
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,   // 30 min (minimum Stripe)
       customer_email: user.email || undefined,
       automatic_tax: { enabled: false },
       line_items: [{
@@ -83,6 +102,11 @@ Deno.serve(async (req: Request) => {
       success_url:
         `${origin}/?payment=success&ride=${rideId}&offer=${offerId}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?payment=cancel`,
+    });
+
+    await admin.from("ride_checkouts").insert({
+      session_id: session.id, ride_id: rideId, offer_id: offerId, user_id: user.id,
+      amount: tvac, status: "open",
     });
 
     return json({ url: session.url, amount: tvac });
