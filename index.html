@@ -6100,6 +6100,11 @@ function _docBilling(){
 // HTVA / TVA / TVAC d'une course. Sous-traitance : HTVA = final_price + TVA du pays du transporteur (Admin → Facturation)
 // ── Blocs client du détail d'une course (véhicule / chauffeur, prix) ──
 function _rdEsc(x){ return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+// Nombre de courses créées depuis une date (toutes, pas seulement les siennes) → références BLxx
+async function _ridesCountSince(since){
+  try{ var r=await sb.rpc('rides_count_since',{p_since:since}); if(!r.error && r.data!=null) return Number(r.data)||0; }catch(e){}
+  try{ var c=await sb.from('rides').select('id',{count:'exact',head:true}).gte('created_at',since); return c.count||0; }catch(e){ return 0; }
+}
 async function _clientFleetData(r){
   var out={veh:null, drv:null, price:null};
   if(r.driver_id){
@@ -7134,7 +7139,7 @@ window.submitRide = async function(){
         var yy = String(now.getFullYear()).slice(-2);
         // count rides this month for counter
         var monthStart = now.getFullYear()+'-'+mm+'-01';
-        var {count:rideCount} = await sb.from('rides').select('id',{count:'exact',head:true}).gte('created_at',monthStart+'T00:00:00');
+        var rideCount = await _ridesCountSince(monthStart+'T00:00:00');
         var counter = String((rideCount||1)).padStart(3,'0');
         var bookingCode = 'BL'+typeCode+'-'+mm+yy+counter;
         await sb.from('rides').update({booking_code: bookingCode}).eq('id', newId);
@@ -7693,7 +7698,7 @@ window.submitSubcontract = async function(){
         var _sNow = new Date();
         var _sMm = String(_sNow.getMonth()+1).padStart(2,'0');
         var _sYy = String(_sNow.getFullYear()).slice(-2);
-        var {count:_sCount} = await sb.from('rides').select('id',{count:'exact',head:true}).gte('created_at',_sNow.getFullYear()+'-'+_sMm+'-01T00:00:00');
+        var _sCount = await _ridesCountSince(_sNow.getFullYear()+'-'+_sMm+'-01T00:00:00');
         var _sType = tripType==='ab'?'AB':tripType==='disposal'?'DI':'MX';
         var _sCode = 'BL'+_sType+'-'+_sMm+_sYy+String(_sCount||1).padStart(3,'0');
         await sb.from('rides').update({booking_code:_sCode}).eq('id', result.data.id);
