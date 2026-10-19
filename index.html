@@ -3930,6 +3930,8 @@ async function loadClientDashboard(){
       rides=rr2.data||[];
     }
 
+    await _mergeRidePrivate(rides);
+
     // Step 2: fetch offer counts and min price (separate query avoids RLS join issues)
     if(rides.length > 0){
       const ids = rides.map(r => r.id);
@@ -4001,6 +4003,7 @@ async function loadRides(filter){
     var res = await q;
     if(res.error) console.error('loadRides error:', res.error);
     rides = res.data || [];
+    await _mergeRidePrivate(rides);
     // Fetch offer counts separately
     if(rides.length > 0){
       var ids = rides.map(function(r){ return r.id; });
@@ -4846,6 +4849,7 @@ async function loadMarketplace(){
   let mySubRides = [];
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     const ms = await sb.from('rides').select('*').eq('client_id', currentUser.id).eq('is_subcontract', true).order('ride_date',{ascending:false});
+    if(ms && ms.data) await _mergeRidePrivate(ms.data);
     mySubRides = ms.data || [];
   }
 
@@ -5354,8 +5358,9 @@ window.openRideDetail=function(el){
 
   // Then silently refresh from Supabase, and only re-render if something actually changed
   if(sb && r.id && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
-    sb.from('rides').select('*').eq('id',r.id).maybeSingle().then(function(res){
+    sb.from('rides').select('*').eq('id',r.id).maybeSingle().then(async function(res){
       if(!res || !res.data) return;
+      await _mergeRidePrivate(res.data);   // note complète pour le client (rien pour une fleet non retenue)
       // Ignore if the user already closed the modal or opened another ride
       var stillOpen = document.getElementById('m-ride-detail');
       if(!stillOpen || !stillOpen.classList.contains('open')) return;
@@ -6100,12 +6105,17 @@ async function _ridesCountSince(since){
 }
 // Infos passager d'une demande pas encore confirmée (stockées à part, invisibles des fleets)
 async function _mergeRidePrivate(rides){
-  var list=(Array.isArray(rides)?rides:[rides]).filter(function(r){ return r && (r.status==='waiting'||r.status==='offers') && !/\|pax:/.test(r.notes||''); });
-  if(!list.length||!sb) return rides;
+  var list=(Array.isArray(rides)?rides:[rides]).filter(function(r){ return r && (r.status==='waiting'||r.status==='offers'); });
+  if(!list.length||!sb||localStorage.getItem(DEMO_MODE_KEY)==='1') return rides;
   try{
-    var {data}=await sb.from('ride_private').select('ride_id,tokens').in('ride_id',list.map(function(r){return r.id;}));
-    var m={}; (data||[]).forEach(function(x){ m[x.ride_id]=x.tokens||''; });
-    list.forEach(function(r){ if(m[r.id]) r.notes=(r.notes||'')+m[r.id]; });
+    // Lisible uniquement par le client de la demande (et l'admin) : RLS sur ride_private
+    var {data}=await sb.from('ride_private').select('ride_id,tokens,full_notes').in('ride_id',list.map(function(r){return r.id;}));
+    var m={}; (data||[]).forEach(function(x){ m[x.ride_id]=x; });
+    list.forEach(function(r){
+      var x=m[r.id]; if(!x) return;
+      if(x.full_notes!=null) r.notes=x.full_notes;
+      else if(x.tokens && !/\|pax:/.test(r.notes||'')) r.notes=(r.notes||'')+x.tokens;
+    });
   }catch(e){ console.warn('ride_private', e); }
   return rides;
 }
@@ -8977,7 +8987,7 @@ window.loadCalendar=async function(force){
     if(_calView==='week'&&_calWS){var we=new Date(_calWS);we.setDate(we.getDate()+6);s=_ymdLocal(_calWS);e=_ymdLocal(we);}
     else{var fd2=new Date(_calY,_calM,1).getDay();fd2=fd2===0?6:fd2-1;var sD=new Date(_calY,_calM,1-fd2);var eD=new Date(_calY,_calM+1,14);s=_ymdLocal(sD);e=_ymdLocal(eD);}
     var ck=s+'_'+e;
-    if(force||!_calCache[ck]){var res=await sb.from('rides').select('*').eq('client_id',currentUser.id).gte('ride_date',s).lte('ride_date',e);_calCache[ck]=res.data||[];}
+    if(force||!_calCache[ck]){var res=await sb.from('rides').select('*').eq('client_id',currentUser.id).gte('ride_date',s).lte('ride_date',e);await _mergeRidePrivate(res.data||[]);_calCache[ck]=res.data||[];}
     _calRides=_calFilter ? (_calCache[ck]||[]).filter(function(r){return r.status===_calFilter;}) : (_calCache[ck]||[]);
   }
   if(!_calWS){var d=new Date();var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_calWS=d;}
