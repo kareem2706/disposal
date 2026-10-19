@@ -6197,6 +6197,8 @@ async function _docRideDocument(rideId, mode){
   var {data:ofr} = await sb.from('offers').select('*').eq('ride_id',rideId).eq('status','accepted').maybeSingle();
   var veh=null; if(ofr&&ofr.vehicle_id){ var vr=await sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',ofr.vehicle_id).maybeSingle(); veh=vr.data; }
   var fdrv=null; if(ofr&&ofr.fleet_driver_id){ try{ fdrv=(await sb.from('fleet_drivers').select('first_name,last_name,phone').eq('id',ofr.fleet_driver_id).maybeSingle()).data; }catch(_e){} }
+  // Client : fleet_drivers fermée par RLS → prénom + tél. via la fonction sécurisée
+  if(!fdrv && ofr && ofr.fleet_driver_id){ try{ var _rp=await sb.rpc('ride_assigned_driver',{p_ride:rideId}); if(_rp.data&&_rp.data[0]) fdrv=_rp.data[0]; }catch(_e){} }
   var fdrvName=fdrv?((fdrv.first_name||'')+' '+(fdrv.last_name||'')).trim():'';
   var nR=r.notes||'';
   var paxN=(nR.match(/\|pax:([^|]+)/)||[])[1]||'', paxT=(nR.match(/\|tel:([^|]+)/)||[])[1]||'';
