@@ -4994,12 +4994,14 @@ async function openOffersModal(rideId){
   document.getElementById('offers-list').innerHTML = '<div class="page-loading"><div class="page-spinner"></div></div>';
 
   let offers = [];
+  window._offersLoadErr = '';
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     // Fetch ride data for payment modal route info
-    const { data: rideData } = await sb.from('rides')
+    const { data: rideData, error: rideErr } = await sb.from('rides')
       .select('id, booking_code, from_address, to_address, trip_type, ride_date, ride_time, passengers, vehicle_type, notes')
       .eq('id', rideId)
       .maybeSingle();
+    if(rideErr){ console.error('offers modal ride error:', rideErr); window._offersLoadErr = 'Course : '+(rideErr.message||rideErr.code); }
     _currentPaymentRide = rideData || null;
 
     // Query offers by ride_id only - no status filter, no join
@@ -5007,7 +5009,7 @@ async function openOffersModal(rideId){
       .select('id, ride_id, driver_id, price, message, status, created_at, vehicle_id, included_km')
       .eq('ride_id', rideId)
       .neq('status', 'rejected');
-    if(error){ console.error('offers error:', error.message, error.code); }
+    if(error){ console.error('offers error:', error.message, error.code); window._offersLoadErr = (window._offersLoadErr?window._offersLoadErr+' · ':'')+'Offres : '+(error.message||error.code); }
     offers = data || [];
 
     // Fetch driver profiles separately
@@ -5070,7 +5072,8 @@ async function openOffersModal(rideId){
 
   document.getElementById('offers-list').innerHTML = rideHtml + (offers.length
     ? filtersHtml + '<div id="offers-cards">' + offers.sort(function(a,b){return (a.price||0)-(b.price||0);}).map(function(o){return renderOfferCard(o);}).join('') + '</div>'
-    : '<div class="empty-state"><p class="empty-text">'+t('empty_offers')+'</p></div>');
+    : '<div class="empty-state"><p class="empty-text">'+t('empty_offers')+'</p>'
+      +(window._offersLoadErr?'<p style="margin-top:10px;font-size:12px;color:var(--red);word-break:break-word;">'+String(window._offersLoadErr).replace(/</g,'&lt;')+'</p>':'')+'</div>');
 }
 window.acceptOffer = async function(offerId, driverId, price){
   if(localStorage.getItem(DEMO_MODE_KEY) === '1'){
