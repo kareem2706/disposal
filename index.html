@@ -3024,7 +3024,7 @@ async function checkSession(){
       if((event==='SIGNED_IN'||event==='TOKEN_REFRESHED')&&session&&!_entering&&!_passwordRecoveryActive){
         currentUser=session.user; await loadProfile(); enterApp();
       }
-      if(event==='SIGNED_OUT'){currentUser=null;currentProfile=null;currentRole='client';_entering=false;_passwordRecoveryActive=false;showScreen('landing');}
+      if(event==='SIGNED_OUT'){if(window._closeAllOverlays)_closeAllOverlays();currentUser=null;currentProfile=null;currentRole='client';_entering=false;_passwordRecoveryActive=false;showScreen('landing');}
     });
   }
   try {
@@ -3682,7 +3682,20 @@ window.submitNewPassword = async function(){
   }
 };
 
+// Ferme tout ce qui est ouvert (panneaux de course, fenêtres, menus, suivi en direct) — utilisé à la déconnexion
+window._closeAllOverlays = function(){
+  try{ if(typeof closeLiveTracking==='function' && typeof _lt!=='undefined' && _lt) closeLiveTracking(); }catch(e){}
+  try{ _rdHist=false; _rdHideAll(); }catch(e){}
+  document.querySelectorAll('.modal-overlay.open').forEach(function(m){ m.classList.remove('open','rd-under'); });
+  document.querySelectorAll('.ft-menu.open').forEach(function(m){ m.classList.remove('open'); });
+  ['m-pax-edit'].forEach(function(id){ var el=document.getElementById(id); if(el) el.remove(); });
+  document.body.classList.remove('rd-open','rd-nav');
+  // retire le lien #course/… pour que la course ne se rouvre pas à la prochaine connexion
+  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+};
+
 window.signOut = async function(){
+  _closeAllOverlays();
   if(sb) await sb.auth.signOut();
   currentUser = null;
   currentProfile = null;
