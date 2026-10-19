@@ -2638,10 +2638,10 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 <script>
 (function(){
   var params=new URLSearchParams(window.location.search);
-  var payStatus=params.get('payment'),pRide=params.get('ride'),pOffer=params.get('offer');
+  var payStatus=params.get('payment'),pRide=params.get('ride'),pOffer=params.get('offer'),pSess=params.get('session_id');
   if(!payStatus)return;
   window.history.replaceState({},'',window.location.pathname);
-  window._stripePendingReturn = {status: payStatus, ride: pRide, offer: pOffer};
+  window._stripePendingReturn = {status: payStatus, ride: pRide, offer: pOffer, session: pSess};
   window._stripeResetEntering = true;
 
   // For cancel/error: inject a self-contained overlay that shows immediately
@@ -3783,11 +3783,11 @@ function enterApp(){
         try{
           var tvac=parseFloat(localStorage.getItem('stripe_pending_tvac')||'0');
           localStorage.removeItem('stripe_pending_tvac');
-          var offerRes=await sb.from('offers').select('driver_id').eq('id',_sr.offer).single();
-          var payDriverId=offerRes.data?offerRes.data.driver_id:null;
-          await sb.from('offers').update({status:'accepted'}).eq('id',_sr.offer);
-          await sb.from('offers').update({status:'rejected'}).eq('ride_id',_sr.ride).neq('id',_sr.offer);
-          await sb.from('rides').update({status:'confirmed',payment_method:'stripe',final_price:tvac||null,driver_id:payDriverId}).eq('id',_sr.ride);
+          // La course est confirmée par le serveur après vérification du paiement auprès de Stripe
+          var vr=await _callEdge('verify-checkout',{sessionId:_sr.session});
+          if(!vr || !vr.confirmed) throw new Error((vr&&vr.error)||'Paiement non vérifié');
+          var payDriverId=vr.driverId||null;
+          if(vr.amount) tvac=vr.amount;
           await _promoteNotesToDriver(_sr.ride);
           _notifyRideConfirmed(_sr.ride, payDriverId);
           if(typeof loadClientDashboard==='function') await loadClientDashboard();
@@ -5075,15 +5075,8 @@ window.acceptOffer = async function(offerId, driverId, price){
     return;
   }
   if(!sb) return;
-  // Accept offer, reject others, update ride
-  await sb.from('offers').update({status:'accepted'}).eq('id', offerId);
-  await sb.from('offers').update({status:'rejected'}).eq('ride_id', currentRideId).neq('id', offerId);
-  await sb.from('rides').update({status:'confirmed', driver_id: driverId, final_price: price}).eq('id', currentRideId);
-  await _promoteNotesToDriver(currentRideId);
-  _notifyRideConfirmed(currentRideId, driverId);
-  closeModal('m-view-offers');
-  showToast(t('toast_offer_acc'));
-  await loadClientDashboard();
+  // La confirmation passe obligatoirement par le paiement (validé côté serveur)
+  openPaymentModal(offerId, driverId, price);
 };
 
 // ── Km inclus (mise à disposition) ──
@@ -6105,6 +6098,17 @@ async function _ridesCountSince(since){
   try{ var r=await sb.rpc('rides_count_since',{p_since:since}); if(!r.error && r.data!=null) return Number(r.data)||0; }catch(e){}
   try{ var c=await sb.from('rides').select('id',{count:'exact',head:true}).gte('created_at',since); return c.count||0; }catch(e){ return 0; }
 }
+// Infos passager d'une demande pas encore confirmée (stockées à part, invisibles des fleets)
+async function _mergeRidePrivate(rides){
+  var list=(Array.isArray(rides)?rides:[rides]).filter(function(r){ return r && (r.status==='waiting'||r.status==='offers') && !/\|pax:/.test(r.notes||''); });
+  if(!list.length||!sb) return rides;
+  try{
+    var {data}=await sb.from('ride_private').select('ride_id,tokens').in('ride_id',list.map(function(r){return r.id;}));
+    var m={}; (data||[]).forEach(function(x){ m[x.ride_id]=x.tokens||''; });
+    list.forEach(function(r){ if(m[r.id]) r.notes=(r.notes||'')+m[r.id]; });
+  }catch(e){ console.warn('ride_private', e); }
+  return rides;
+}
 async function _clientFleetData(r){
   var out={veh:null, drv:null, price:null};
   if(r.driver_id){
@@ -6888,6 +6892,7 @@ window.editRide = async function(rideId){
   if(sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     var res = await sb.from('rides').select('*').eq('id',rideId).single();
     r = res.data;
+    if(r) await _mergeRidePrivate(r);
   } else {
     r = getDemoRides().find(function(x){return x.id===rideId;});
   }
@@ -7516,11 +7521,9 @@ window.acceptSubcontract = async function(rideId){
     return;
   }
   try {
-    var res = await sb.from('rides')
-      .update({status:'confirmed', driver_id: currentUser.id})
-      .eq('id', rideId)
-      .in('status',['waiting','offers']);
+    var res = await sb.rpc('accept_subcontract',{p_ride:rideId});
     if(res.error) throw res.error;
+    if(!res.data) throw new Error('Cette course n\u2019est plus disponible');
     _notifyRideConfirmed(rideId, currentUser.id);
     showToast('✅ Course acceptée !');
     if(typeof loadDriverDashboard==='function') await loadDriverDashboard();
@@ -8111,6 +8114,19 @@ window.selectPaymentMethod = function(method){
   }
 };
 
+// Appel d'une Edge Function avec la session de l'utilisateur connecté
+async function _callEdge(name, body){
+  var tok=SB_KEY;
+  try{ var ss=await sb.auth.getSession(); if(ss&&ss.data&&ss.data.session) tok=ss.data.session.access_token; }catch(e){}
+  var resp=await fetch(SB_URL+'/functions/v1/'+name,{
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok,'apikey':SB_KEY},
+    body:JSON.stringify(body||{})
+  });
+  var txt=await resp.text(), data; try{ data=JSON.parse(txt); }catch(e){ data={error:txt.slice(0,150)}; }
+  if(!resp.ok && !data.error) data.error='Erreur serveur ('+resp.status+')';
+  return data;
+}
+
 window.confirmStripeCheckout=async function(amount,totalTvac){
   var btn=document.getElementById('payment-btn-next');
   var errEl=document.getElementById('payment-err');
@@ -8125,13 +8141,9 @@ window.confirmStripeCheckout=async function(amount,totalTvac){
     }
     localStorage.setItem('stripe_pending_tvac',totalTvac.toFixed(2));
     console.log('[stripe] HTVA:', currentOfferAmount, 'TVAC:', totalTvac, 'amount:', amount, 'ride:', currentRideId);
-    var resp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
-      body:JSON.stringify({amount:amount,rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
-    });
-    if(!resp.ok){var errText=await resp.text();throw new Error('Erreur serveur ('+resp.status+'): '+errText.slice(0,100));}
-    var result=await resp.json();
+    // Le montant est recalculé par le serveur à partir de l'offre
+    var result=await _callEdge('create-checkout',{rideId:currentRideId,offerId:currentOfferId});
+    if(result.error) throw new Error(result.error);
     if(!result.url)throw new Error('Lien de paiement manquant');
     window.location.href=result.url;
   }catch(e){
@@ -8162,6 +8174,11 @@ window.paymentGoBack = function(){
 window.confirmPayment = async function(method){
   var errEl = document.getElementById(method === 'bank_transfer' ? 'payment-err-bank' : 'payment-err');
   if(errEl){ errEl.classList.remove('show'); errEl.textContent = ''; }
+  // Confirmation sans paiement Stripe vérifié : désactivée (sécurité, voir confirm_ride_offer côté serveur)
+  if(localStorage.getItem(DEMO_MODE_KEY) !== '1'){
+    if(errEl) showError(errEl, 'Le paiement par virement n\u2019est pas disponible. Merci de payer par carte.');
+    return;
+  }
 
   // Amount is always HTVA × (1 + TVA) = TVAC — no Stripe fee multiplier added to stored price
   var totalTvac = parseFloat((currentOfferAmount * (1 + TVA_RATE)).toFixed(2));
@@ -8239,12 +8256,9 @@ window.confirmStripePayment=async function(){
     // Send amount_cents (integer) to avoid floating point issues
     // amount_cents = totalTvac * 100, already includes 6% TVA — Edge Function must NOT add any tax
     var amountCents = Math.round(totalTvac * 100);
-    var efResp=await fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/create-checkout',{
-      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
-      body:JSON.stringify({amount:totalTvac, amount_cents:amountCents, rideId:currentRideId,offerId:currentOfferId,clientEmail:currentUser?.email||''})
-    });
-    if(!efResp.ok){var et=await efResp.text();throw new Error('Edge Function: '+efResp.status+' '+et.slice(0,100));}
-    var d=await efResp.json();if(!d.url)throw new Error('URL manquante');window.location.href=d.url;
+    var d=await _callEdge('create-checkout',{rideId:currentRideId,offerId:currentOfferId});
+    if(d.error) throw new Error(d.error);
+    if(!d.url)throw new Error('URL manquante');window.location.href=d.url;
   }catch(e){if(btn)setLoading(btn,false,'Payer par carte bancaire');if(errEl)showError(errEl,e.message||'Erreur Stripe');}
 };;
 
@@ -12093,6 +12107,7 @@ window.loadAdminRides = async function(){
     var { data: rides, error } = await q;
     if(error) throw error;
     _arAllRides = rides || [];
+    await _mergeRidePrivate(_arAllRides);
 
     // Confirmed / finished rides whose driver_id was not set: take the fleet from the accepted offer
     var _noDrv=_arAllRides.filter(function(r){ return !r.driver_id && ['confirmed','pending_payment','active','done'].indexOf(r.status)>=0; });
