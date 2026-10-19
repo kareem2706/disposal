@@ -2975,6 +2975,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 function initSupabase(u,k){
   if(sb)return;
   sb=window.supabase.createClient(u||SB_URL,k||SB_KEY,{auth:{storageKey:'disposal-auth',autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
+  // Jeton de session courant : utilisé pour appeler les Edge Functions au nom de l'utilisateur
+  try{
+    sb.auth.getSession().then(function(r){ window._sbToken = r&&r.data&&r.data.session ? r.data.session.access_token : null; });
+    sb.auth.onAuthStateChange(function(_e, sess){ window._sbToken = sess ? sess.access_token : null; });
+  }catch(e){}
 }
 
 let _authListenerRegistered = false;
@@ -6317,7 +6322,7 @@ window.sendMail = function(type, to, data){
   // Same call pattern as create-checkout (plain fetch + explicit headers)
   return fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/send-mail',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+(window._sbToken||SB_KEY),'apikey':SB_KEY},
     body:JSON.stringify({ type: type, to: to, data: data || {} })
   }).then(function(resp){
     return resp.text().then(function(txt){
@@ -6336,7 +6341,7 @@ window.sendMailToUsers = function(type, userIds, data){
   if(!ids.length) return Promise.resolve();
   return fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/send-mail',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+(window._sbToken||SB_KEY),'apikey':SB_KEY},
     body:JSON.stringify({ type: type, to_user_ids: ids, data: data || {} })
   }).then(function(resp){
     return resp.text().then(function(txt){
@@ -6477,7 +6482,7 @@ window._notifyMarketplaceDrivers = function(rideData){
   delete base.passenger;  // nor the passenger identity before accepting
   return fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/send-mail',{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+(window._sbToken||SB_KEY),'apikey':SB_KEY},
     body:JSON.stringify({ type:'new_marketplace_ride', broadcast:'verified_drivers', exclude_user_id: isSub ? rideData.client_id : undefined, data: base })
   }).then(function(resp){
     return resp.text().then(function(txt){
@@ -6695,7 +6700,7 @@ window._confirmNoShow=async function(btn){
 // E-mail « No Show » ; si le modèle n'existe pas encore dans la fonction send-mail, on envoie le texte via le modèle « note du chauffeur »
 function _sendNoShowMail(clientId, data){
   var post=function(type, d){ return fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/send-mail',{
-    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
+    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+(window._sbToken||SB_KEY),'apikey':SB_KEY},
     body:JSON.stringify({ type:type, to_user_ids:[clientId], data:d }) }); };
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'||!clientId) return;
   post('ride_no_show', data).then(function(resp){
