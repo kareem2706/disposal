@@ -6113,9 +6113,16 @@ async function _clientFleetData(r){
       o.fleet_driver_id ? sb.from('fleet_drivers').select('first_name,last_name,phone').eq('id',o.fleet_driver_id).maybeSingle() : Promise.resolve({data:null})
     ]);
     out.veh = vh.data;
-    // Chauffeur de la flotte attribué à la course, sinon le titulaire du compte
-    var d = fdr.data || dp.data;
-    if(d) out.drv = { name:((d.first_name||'')+' '+(d.last_name||'')).trim(), phone:d.phone||'', company:(dp.data&&dp.data.company_name)||'' };
+    // Chauffeur attribué : via RPC (le client n'a pas accès à fleet_drivers)
+    var ad = fdr.data;
+    if(!ad && o.fleet_driver_id){
+      try{ var rp = await sb.rpc('ride_assigned_driver',{p_ride:r.id}); ad = (rp.data&&rp.data[0])||null; }catch(e){}
+    }
+    var fp = dp.data||{};
+    var company = (fp.company_name||'').trim() || ((fp.first_name||'')+' '+(fp.last_name||'')).trim();
+    var first = ad ? (ad.first_name||'').trim() : '';
+    var phone = (ad&&ad.phone) || fp.phone || '';
+    if(company||first||phone) out.drv = { name:[company,first].filter(Boolean).join(' \u2013 '), phone:phone, company:'Chauffeur' };
   }
   if(r.final_price){ try{ out.price = await _ridePrice(r); }catch(e){} }
   return out;
