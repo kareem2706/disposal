@@ -104,7 +104,20 @@ async function sendAll(msgs: any[]) {
   return { sent, dead };
 }
 
+// Secret partagé avec le déclencheur SQL (security_hardening.sql) : sans lui, l'appel est refusé.
+// Tant que NOTIFY_HOOK_SECRET n'est pas configuré, l'ancien comportement est conservé.
+const HOOK_SECRET = Deno.env.get("NOTIFY_HOOK_SECRET") ?? "";
+function sameSecret(a: string, b: string) {
+  if (a.length !== b.length) return false;
+  let d = 0;
+  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+}
+
 Deno.serve(async (req) => {
+  if (HOOK_SECRET && !sameSecret(req.headers.get("x-hook-secret") ?? "", HOOK_SECRET)) {
+    return new Response(JSON.stringify({ error: "forbidden" }), { status: 403 });
+  }
   try {
     const p = await req.json();
     const rec: Ride = p.record, old: Ride | null = p.old_record ?? null;

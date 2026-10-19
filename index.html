@@ -5331,7 +5331,7 @@ function _buildRideDetailBody(r, opts){
   }
   var rawNotes=r.notes||'';
   var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight|train):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
-  if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+cleanNotes+'</div></div>';}
+  if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+_rdEsc(cleanNotes)+'</div></div>';}
   var noteDrvMatch = rawNotes.match(/\|note_drv:([^|]+)/);
   if(noteDrvMatch){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">Note du client</div><div style="padding:12px;background:var(--blue-bg);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;">'+noteDrvMatch[1].trim()+'</div></div>';}
   // Note: prix demandé for subcontract shown in footer only
@@ -5515,7 +5515,7 @@ function _openRideDetailImpl(el){
   if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){
     body+='<div>'
       +'<div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div>'
-      +'<div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">'+(r.status==='personal'?'Note':'Note du client')+'\u00a0: </span>'+cleanNotes+'</div>'
+      +'<div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">'+(r.status==='personal'?'Note':'Note du client')+'\u00a0: </span>'+_rdEsc(cleanNotes)+'</div>'
       +'</div>';
   }
 
@@ -5752,11 +5752,11 @@ function _openRideDetailImpl(el){
           +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Informations du passager</div>'
             +(_isSubPoster && !(r.status==='active'||r.status==='done'||r.pickup_at)?'<button class="sub-pax-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;">'+_editIco+(paxMatch||telMatch?' Modifier':' Ajouter')+'</button>':'')
           +'</div>'
-          +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+cName+'</div>'
-          +(cPhone?'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:'+(noteDriver?'6px':'2px')+';"><a href="tel:'+cPhone+'" style="color:var(--blue);text-decoration:none;">'+cPhone+'</a></div>':'')
+          +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+_rdEsc(cName)+'</div>'
+          +(cPhone?'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:'+(noteDriver?'6px':'2px')+';"><a href="tel:'+_rdEsc(cPhone)+'" style="color:var(--blue);text-decoration:none;">'+_rdEsc(cPhone)+'</a></div>':'')
           +((notesRaw.match(/\|pemail:([^|]+)/)||[])[1]?'<div style="font-size:12.5px;margin-bottom:2px;"><a href="mailto:'+(notesRaw.match(/\|pemail:([^|]+)/)||[])[1].trim()+'" style="color:var(--blue);text-decoration:none;">'+(notesRaw.match(/\|pemail:([^|]+)/)||[])[1].trim()+'</a></div>':'')
           +((notesRaw.match(/\|pref:([^|]+)/)||[])[1]?'<div style="font-size:12.5px;color:var(--ink2);margin-bottom:'+(noteDriver?'6px':'2px')+';"><span style="color:var(--ink3);">Réf. : </span><b>'+(notesRaw.match(/\|pref:([^|]+)/)||[])[1].trim()+'</b></div>':'')
-          +(noteDriver?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;padding-top:4px;border-top:1px solid #d0e4f7;"><span style="font-style:normal;font-weight:600;color:var(--ink2);">Message du client\u00a0: </span>'+noteDriver+'</div>':'')
+          +(noteDriver?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;padding-top:4px;border-top:1px solid #d0e4f7;"><span style="font-style:normal;font-weight:600;color:var(--ink2);">Message du client\u00a0: </span>'+_rdEsc(noteDriver)+'</div>':'')
           +'</div>';
         // Note au client card (editable by driver)
         var noteCard = '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
@@ -5768,7 +5768,7 @@ function _openRideDetailImpl(el){
             +'</button>'
           +'</div>'
           +(offerNote
-            ? '<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+offerNote+'</div>'
+            ? '<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+_rdEsc(offerNote)+'</div>'
             : '<div style="font-size:12px;color:var(--ink4);">Aucune note</div>')
           +'</div>';
         var _phPax=document.getElementById('ph-drv-pax');
@@ -5776,13 +5776,13 @@ function _openRideDetailImpl(el){
         if(_phPax){ _phPax.outerHTML = contactBlock; } else { bodyEl3.insertAdjacentHTML('beforeend', contactBlock); }
         if(r.status==='active'||r.status==='done'||r.pickup_at){
           // Ride in progress: note can no longer be added/edited (read-only if one exists)
-          noteCard = offerNote ? '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">'+(r.is_subcontract?'Note du sous-traitant':'Note au client')+'</div><div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+offerNote+'</div></div>' : '';
+          noteCard = offerNote ? '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">'+(r.is_subcontract?'Note du sous-traitant':'Note au client')+'</div><div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+_rdEsc(offerNote)+'</div></div>' : '';
         }
         if(_isSubPoster){
           // The posting fleet reads the subcontractor's note (written by the fleet who accepted); no note before acceptance
           noteCard = (r.status==='waiting'||r.status==='offers') ? ''
             : '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Note du sous-traitant</div>'
-              +(offerNote?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+offerNote+'</div>':'<div style="font-size:12px;color:var(--ink4);">Aucune note</div>')+'</div>';
+              +(offerNote?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+_rdEsc(offerNote)+'</div>':'<div style="font-size:12px;color:var(--ink4);">Aucune note</div>')+'</div>';
         }
         if(_phNote){ _phNote.outerHTML = noteCard; } else if(noteCard){ bodyEl3.insertAdjacentHTML('beforeend', noteCard); }
         // Attach event via JS (safe for all characters including apostrophes)
@@ -7842,7 +7842,7 @@ function renderOfferCard(o){
       +'<div class="ofc-price"><b>'+priceDisplay+'</b><small>TVAC</small></div>'
     +'</div>'
     +(tags?'<div class="ofc-tags">'+tags+'</div>':'')
-    +(o.message?'<div class="ofc-msg"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>'+o.message+'</span></div>':'')
+    +(o.message?'<div class="ofc-msg"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>'+_rdEsc(o.message)+'</span></div>':'')
     +(details?'<div id="od-detail-'+safeId+'" class="ofc-detail">'+details+'</div>':'')
     +'<div class="ofc-ft">'
       +(details?'<button class="ofc-more" onclick="_toggleOfferDetail(this)">Détails du véhicule<svg id="od-arrow-'+safeId+'" width="12" height="12" viewBox="0 0 12 12" fill="none" style="transition:transform .2s;"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>':'')
@@ -8831,7 +8831,7 @@ async function loadNotifications(){
   list.innerHTML=notifs.map(function(n){
     var diff=(Date.now()-new Date(n.created_at))/1000;
     var ago=diff<60?'il y a quelques secondes':diff<3600?'il y a '+Math.floor(diff/60)+' min':diff<86400?'il y a '+Math.floor(diff/3600)+'h':'il y a '+Math.floor(diff/86400)+' j';
-    return '<div class="notif-item'+(n.read?'':' unread')+'" data-nid="'+n.id+'"><div class="notif-title">'+(n.title||'')+'</div><div class="notif-body">'+(n.body||'')+'</div><div class="notif-time">'+ago+'</div></div>';
+    return '<div class="notif-item'+(n.read?'':' unread')+'" data-nid="'+n.id+'"><div class="notif-title">'+_rdEsc(n.title||'')+'</div><div class="notif-body">'+_rdEsc(n.body||'')+'</div><div class="notif-time">'+ago+'</div></div>';
   }).join('');
   list.onclick=function(e){var el=e.target.closest('[data-nid]');if(el){markNotifRead(el.dataset.nid,el);}};
 }
@@ -9910,13 +9910,7 @@ async function loadFleetProfile(){
 // ── Upload helper ──
 var _bucketChecked=false;
 async function _ensureBucket(){
-  if(_bucketChecked)return;
-  try{
-    var {data}=await sb.storage.getBucket('fleet-docs');
-    if(!data){await sb.storage.createBucket('fleet-docs',{public:true,fileSizeLimit:10485760,allowedMimeTypes:['application/pdf','image/jpeg','image/png','image/webp','image/heic','image/heif']});}
-  }catch(e){
-    try{await sb.storage.createBucket('fleet-docs',{public:true,fileSizeLimit:10485760,allowedMimeTypes:['application/pdf','image/jpeg','image/png','image/webp','image/heic','image/heif']});}catch(e2){}
-  }
+  // Le dossier « fleet-docs » est créé et sécurisé côté Supabase (privé) : rien à faire ici
   _bucketChecked=true;
 }
 async function _uploadFleetFile(file, folder){
@@ -9941,6 +9935,21 @@ function _storagePathFromUrl(url){
   if(idx<0)return null;
   return decodeURIComponent(url.slice(idx+marker.length));
 }
+
+// ── Documents privés : les liens enregistrés (…/object/public/fleet-docs/…) sont ouverts
+// via un lien signé temporaire (5 min), accessible seulement au propriétaire et à l'admin ──
+document.addEventListener('click', function(e){
+  var a = e.target.closest && e.target.closest('a[href*="/object/public/fleet-docs/"]');
+  if(!a || !sb) return;
+  e.preventDefault();
+  var path = _storagePathFromUrl(a.getAttribute('href'));
+  if(!path) return;
+  var w = window.open('', '_blank');   // ouvert tout de suite pour ne pas être bloqué
+  sb.storage.from('fleet-docs').createSignedUrl(path, 300).then(function(r){
+    if(r.error || !r.data){ if(w) w.close(); showToast('Document inaccessible'); return; }
+    if(w) w.location.href = r.data.signedUrl; else window.location.href = r.data.signedUrl;
+  });
+}, true);
 
 // ── Status badge helper ──
 function _sectionStatusHtml(items){
@@ -11975,7 +11984,7 @@ window.loadAdminOffers = async function(){
       var htva = parseFloat(o.price||0);
       var tvac = (htva*(1+TVA_RATE)).toFixed(2).replace('.',',');
       var sBg = statusBg[o.status]||'var(--sand2)', sCol = statusColor[o.status]||'var(--ink4)', sLbl = statusLabel[o.status]||o.status;
-      var msgHtml = o.message ? '<div style="font-size:11px;color:var(--ink4);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">'+o.message+'</div>' : '';
+      var msgHtml = o.message ? '<div style="font-size:11px;color:var(--ink4);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">'+_rdEsc(o.message)+'</div>' : '';
       return '<tr style="border-bottom:1px solid var(--sand2);">'
         +'<td style="padding:10px 14px;font-size:12px;color:var(--ink3);white-space:nowrap;">'+dateStr+'</td>'
         +'<td style="padding:10px 14px;font-size:12px;font-family:monospace;font-weight:600;color:var(--ink2);">'+rideCode+'</td>'
@@ -12263,7 +12272,7 @@ function _arRenderTable(rides, el){
       +'<td style="padding:10px 14px;font-size:12.5px;color:var(--ink3);white-space:nowrap;">'+dateStr+'</td>'
       +'<td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:2px;"><span style="font-size:10px;font-weight:700;background:'+tBg+';color:'+tCol+';padding:2px 8px;border-radius:20px;white-space:nowrap;">'+tLbl+'</span>'+subIcon+'</div></td>'
       +'<td style="padding:10px 14px;font-size:12px;font-family:monospace;font-weight:600;color:var(--ink2);">'+code+'</td>'
-      +'<td style="padding:10px 14px;font-size:13px;font-weight:500;">'+clientName+'</td>'
+      +'<td style="padding:10px 14px;font-size:13px;font-weight:500;">'+_rdEsc(clientName)+'</td>'
       +'<td style="padding:10px 14px;font-size:13px;">'+driverName+'</td>'
       +'<td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;"><span style="font-size:11px;font-weight:600;background:'+sBg+';color:'+sCol+';padding:3px 9px;border-radius:20px;white-space:nowrap;">'+sLbl+'</span>'+refundBadge+'</div></td>'
       +(function(){var pm=r.payment_method||''; var pmMap={'stripe':'💳 Stripe','bank_transfer':'🏦 Virement','non_refundable':'Non remb.','refunded':'✅ Remboursé','cash':'💵 Cash'};var pmLabel=pmMap[pm]||(pm||'—'); return '<td style="padding:10px 14px;font-size:12px;color:var(--ink3);white-space:nowrap;">'+pmLabel+'</td>'; })()
@@ -12301,7 +12310,7 @@ window.arOpenDetail = async function(row){
   if(r.booking_code) infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Code</span><span style="font-size:12px;font-weight:700;font-family:monospace;">'+r.booking_code+'</span></div>';
   var clientName = _arName(r.client_id);
   var driverName = r.driver_id ? _arName(r.driver_id) : '—';
-  if(clientName!=='—') infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Client</span><span style="font-size:12px;font-weight:600;" id="ar-client-name-row">'+clientName+'</span></div>';
+  if(clientName!=='—') infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Client</span><span style="font-size:12px;font-weight:600;" id="ar-client-name-row">'+_rdEsc(clientName)+'</span></div>';
   infoRows += '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--sand2);"><span style="font-size:12px;color:var(--ink3);">Fleet</span><span style="font-size:12px;font-weight:600;" id="ar-driver-name-row">'+driverName+'</span></div>';
   if(r.payment_method){
     var pmMap={'stripe':'💳 Stripe','bank_transfer':'🏦 Virement bancaire','non_refundable':'Non remboursable','refunded':'✅ Remboursé','cash':'💵 Espèces'};
@@ -12498,7 +12507,7 @@ window.arOpenDetail = async function(row){
               +'<div style="font-weight:600;font-size:13.5px;margin-bottom:2px;">'+dName+'</div>'
               +'<div style="font-size:11.5px;color:var(--amber);margin-bottom:6px;">'+dRating+'</div>'
               +vehLine
-              +(o.message?'<div style="font-size:12px;color:var(--ink3);font-style:italic;">'+o.message+'</div>':'')
+              +(o.message?'<div style="font-size:12px;color:var(--ink3);font-style:italic;">'+_rdEsc(o.message)+'</div>':'')
               +statusBadge
             +'</div>'
             +'<div style="text-align:right;flex-shrink:0;">'
