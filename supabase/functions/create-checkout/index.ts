@@ -39,7 +39,8 @@ Deno.serve(async (req: Request) => {
     if (uErr || !u?.user) return json({ error: "Session expirée, reconnectez-vous." }, 401);
     const user = u.user;
 
-    const { rideId, offerId } = await req.json();
+    const body = await req.json();
+    const { rideId, offerId } = body;
     if (!rideId || !offerId) return json({ error: "Paramètres manquants" }, 400);
 
     // 2) La course appartient au client et attend encore une offre
@@ -62,7 +63,10 @@ Deno.serve(async (req: Request) => {
     const unitAmount = Math.round(tvac * 100);
     if (!(unitAmount > 0)) return json({ error: "Montant invalide" }, 400);
 
-    const origin = req.headers.get("origin") || "https://kareem2706.github.io/disposal";
+    // Adresse de retour : celle de l'app (l'en-tête Origin ne contient pas le chemin /disposal)
+    const APP_URL = (Deno.env.get("APP_URL") || "https://kareem2706.github.io/disposal").replace(/\/+$/, "");
+    const asked = String((body as any).returnUrl || "").replace(/[?#].*$/, "").replace(/\/+$/, "");
+    const origin = asked && asked.startsWith(APP_URL) ? asked : APP_URL;
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: user.email || undefined,
