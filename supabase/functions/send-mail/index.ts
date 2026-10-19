@@ -385,16 +385,23 @@ Deno.serve(async (req: Request) => {
     if (Array.isArray(payload?.to_user_ids)) {
       const ids = [...new Set((payload.to_user_ids as unknown[]).map(String))].slice(0, 20);
       let sent = 0;
+      const skipped: { id: string; reason: string }[] = [];
       for (const id of ids) {
         if (!isAdmin) {
-          const { data: ok } = await admin.rpc("users_linked", { p_a: user.id, p_b: id });
-          if (!ok) continue;   // pas de lien de course : ignoré
+          const { data: ok, error: lErr } = await admin.rpc("users_linked", { p_a: user.id, p_b: id });
+          if (lErr) {
+            console.error("users_linked", lErr);
+            return json({ ok: false, error: "users_linked : " + lErr.message + " (security_hardening2.sql exécuté ?)" }, 500);
+          }
+          if (!ok) { skipped.push({ id, reason: "pas de course commune" }); continue; }
         }
         const to = await emailOfUser(id);
-        if (!to) continue;
-        try { await sendOne(to, type, data); sent++; } catch (e) { console.warn("send-mail", id, e); }
+        if (!to) { skipped.push({ id, reason: "adresse introuvable" }); continue; }
+        try { await sendOne(to, type, data); sent++; }
+        catch (e) { console.warn("send-mail", id, e); skipped.push({ id, reason: (e as Error).message }); }
       }
-      return json({ ok: true, sent });
+      console.log("send-mail", type, "from", user.id, "sent", sent, JSON.stringify(skipped));
+      return json({ ok: sent > 0 || ids.length === 0, sent, skipped });
     }
 
     // ── Envoi direct ──

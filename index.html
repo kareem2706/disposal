@@ -6346,7 +6346,7 @@ window.sendMailToUsers = function(type, userIds, data){
   }).then(function(resp){
     return resp.text().then(function(txt){
       var parsed; try{ parsed=JSON.parse(txt); }catch(e){ parsed={raw:txt}; }
-      if(!resp.ok) console.warn('sendMailToUsers', type, resp.status, parsed);
+      if(!resp.ok || parsed.ok===false) console.warn('sendMailToUsers', type, resp.status, parsed);
       return parsed;
     });
   }).catch(function(e){ console.warn('sendMailToUsers', type, e); });
