@@ -6116,7 +6116,7 @@ async function _clientFleetData(r){
     // Chauffeur attribué : via RPC (le client n'a pas accès à fleet_drivers)
     var ad = fdr.data;
     if(!ad && o.fleet_driver_id){
-      try{ var rp = await sb.rpc('ride_assigned_driver',{p_ride:r.id}); ad = (rp.data&&rp.data[0])||null; }catch(e){}
+      try{ var rp = await sb.rpc('ride_assigned_driver',{p_ride:r.id}); if(rp.error) console.warn('ride_assigned_driver', rp.error); ad = (rp.data&&rp.data[0])||null; }catch(e){ console.warn('ride_assigned_driver', e); }
     }
     var fp = dp.data||{};
     var company = (fp.company_name||'').trim() || ((fp.first_name||'')+' '+(fp.last_name||'')).trim();
