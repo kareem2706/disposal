@@ -77,6 +77,9 @@ begin
     raise exception 'Ce véhicule n''appartient pas à votre flotte' using errcode = '42501';
   end if;
   select vehicle_type into v_req from rides where id = p_ride;
+  if exists (select 1 from rides where id = p_ride and coalesce(is_subcontract, false)) then
+    raise exception 'Une sous-traitance s''accepte au prix fixé, sans offre' using errcode = '42501';
+  end if;
   if not fleet_can_serve(v_req) then
     raise exception 'Votre flotte n''a pas de véhicule de la gamme demandée' using errcode = '42501';
   end if;
@@ -92,6 +95,28 @@ begin
 end $$;
 revoke all on function public.api_offer_submit(uuid, numeric, text, uuid, jsonb) from public, anon;
 grant execute on function public.api_offer_submit(uuid, numeric, text, uuid, jsonb) to authenticated;
+
+-- Sous-traitance : acceptée seulement par une fleet validée qui a un véhicule de la gamme
+create or replace function public.accept_subcontract(p_ride uuid)
+returns boolean
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not is_validated_fleet() then
+    raise exception 'Votre flotte doit être validée par Bleenr' using errcode = '42501';
+  end if;
+  if not fleet_can_serve((select vehicle_type from rides where id = p_ride)) then
+    raise exception 'Votre flotte n''a pas de véhicule de la gamme demandée' using errcode = '42501';
+  end if;
+  update rides set status = 'confirmed', driver_id = auth.uid()
+   where id = p_ride
+     and is_subcontract = true
+     and status in ('waiting','offers')
+     and client_id <> auth.uid();
+  return found;
+end $$;
+revoke all on function public.accept_subcontract(uuid) from public, anon;
+grant execute on function public.accept_subcontract(uuid) to authenticated;
 
 -- Pour les notifications push et les e-mails (Edge Functions) : fleets pouvant assurer une gamme
 create or replace function public.fleets_for_class(p_class text)
