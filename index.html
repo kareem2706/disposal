@@ -235,13 +235,16 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 /* ═══ CARDS ═══ */
 .card{background:var(--white);border:1px solid var(--sand3);border-radius:var(--r-lg);overflow:hidden;}
 /* Préférences de notifications (client) */
-.nt-block+.nt-block{margin-top:22px;padding-top:20px;border-top:1px solid var(--sand3);}
-.nt-head{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.nt-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
 .nt-ic{width:34px;height:34px;border-radius:10px;background:var(--green-bg);color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .nt-title{font-weight:600;font-size:13.5px;color:var(--ink);}
 .nt-sub{font-size:12px;color:var(--ink3);margin-top:1px;}
-.nt-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px solid var(--sand2);cursor:pointer;margin:0;}
+.nt-cols,.nt-row{display:grid;grid-template-columns:1fr 64px 64px;align-items:center;gap:6px;}
+.nt-cols{padding:0 0 8px;border-bottom:1px solid var(--sand3);}
+.nt-col{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;}
+.nt-row{padding:11px 0;border-bottom:1px solid var(--sand2);}
 .nt-row:last-child{border-bottom:none;}
+.nt-row .nt-sw{justify-self:center;}
 .nt-lbl{font-size:13px;font-weight:500;color:var(--ink);}
 .nt-desc{font-size:11.5px;color:var(--ink4);margin-top:2px;}
 .nt-sw{position:relative;width:40px;height:23px;flex-shrink:0;}
@@ -1927,16 +1930,13 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div id="pf-notif-card" class="card" style="padding:24px;">
             <!-- Client : préférences enregistrées et appliquées par le serveur -->
             <div id="pf-notif-cli" style="display:none;">
-              <div class="nt-block">
-                <div class="nt-head"><span class="nt-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></span>
-                  <div><div class="nt-title">Notifications</div><div class="nt-sub">Dans l’application (cloche en haut de l’écran)</div></div></div>
-                <div id="nt-list-app"></div>
+              <div class="nt-head"><span class="nt-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg></span>
+                <div><div class="nt-title">Notifications</div><div class="nt-sub" id="nt-mail-sub">Dans l’application et par e-mail</div></div></div>
+              <div class="nt-cols"><span></span>
+                <span class="nt-col" title="Dans l’application (cloche)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>Appli</span>
+                <span class="nt-col" title="Par e-mail"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>E-mail</span>
               </div>
-              <div class="nt-block">
-                <div class="nt-head"><span class="nt-ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
-                  <div><div class="nt-title">Notifications par e-mail</div><div class="nt-sub" id="nt-mail-sub">Envoyées à votre adresse de connexion</div></div></div>
-                <div id="nt-list-email"></div>
-              </div>
+              <div id="nt-list"></div>
             </div>
             <div id="pf-notif-drv">
             <div style="font-weight:600;margin-bottom:14px;font-size:13.5px;">Notifications</div>
@@ -5043,17 +5043,16 @@ function _ntRender(isClient){
   if(drv) drv.style.display=isClient?'none':'block';
   if(!isClient) return;
   var prefs=(currentProfile&&currentProfile.notif_prefs)||{};
-  ['app','email'].forEach(function(ch){
-    var box=document.getElementById('nt-list-'+ch); if(!box) return;
-    var cur=prefs[ch]||{};
-    box.innerHTML=_NT_ITEMS.map(function(it){
-      var on=cur[it.k]!==false;
-      return '<label class="nt-row"><div><div class="nt-lbl">'+it.l+'</div><div class="nt-desc">'+it.d+'</div></div>'
-        +'<span class="nt-sw"><input type="checkbox" role="switch" aria-label="'+it.l+'" data-ch="'+ch+'" data-k="'+it.k+'"'+(on?' checked':'')+' onchange="_ntToggle(this)"><span></span></span></label>';
-    }).join('');
-  });
+  var sw=function(ch,it){
+    var on=((prefs[ch]||{})[it.k])!==false;
+    return '<span class="nt-sw"><input type="checkbox" role="switch" aria-label="'+it.l+(ch==='app'?' — application':' — e-mail')+'" data-ch="'+ch+'" data-k="'+it.k+'"'+(on?' checked':'')+' onchange="_ntToggle(this)"><span></span></span>';
+  };
+  var box=document.getElementById('nt-list');
+  if(box) box.innerHTML=_NT_ITEMS.map(function(it){
+    return '<div class="nt-row"><div><div class="nt-lbl">'+it.l+'</div><div class="nt-desc">'+it.d+'</div></div>'+sw('app',it)+sw('email',it)+'</div>';
+  }).join('');
   var ms=document.getElementById('nt-mail-sub');
-  if(ms&&currentUser&&currentUser.email) ms.textContent='Envoyées à '+currentUser.email;
+  if(ms&&currentUser&&currentUser.email) ms.textContent='Dans l’application et par e-mail ('+currentUser.email+')';
 }
 window._ntToggle=async function(el){
   var ch=el.dataset.ch, k=el.dataset.k, on=el.checked;
@@ -5068,7 +5067,7 @@ window._ntToggle=async function(el){
     return;
   }
   if(res.data&&res.data.notif_prefs&&currentProfile) currentProfile.notif_prefs=res.data.notif_prefs;
-  showToast(on?'🔔 Activé':'🔕 Désactivé');
+  showToast((on?'🔔 Activé':'🔕 Désactivé')+(ch==='app'?' dans l’application':' par e-mail'));
 };
 
 window.saveProfile = async function(){
