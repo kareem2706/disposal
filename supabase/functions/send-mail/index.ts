@@ -65,7 +65,8 @@ async function emailOfUser(id: string): Promise<string | null> {
 // Préférences e-mail du destinataire (Profil → Notifications). Par défaut : activé.
 const PREF_KEY: Record<string, string> = {
   ride_created: "ride_published", offer_received: "offer_received", offer_updated: "offer_updated",
-  ride_confirmed_client: "ride_confirmed", driver_note: "driver_message", driver_on_way: "driver_on_way",
+  ride_confirmed_client: "ride_confirmed", driver_note: "driver_message", assignment_changed: "driver_message",
+  driver_on_way: "driver_on_way",
 };
 async function wantsEmail(userId: string | null | undefined, type: string): Promise<boolean> {
   const key = PREF_KEY[type];

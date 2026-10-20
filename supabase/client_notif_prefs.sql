@@ -8,7 +8,7 @@
 --   offer_received  Nouvelle offre reçue
 --   offer_updated   Mise à jour des offres reçues (offre modifiée / retirée)
 --   ride_confirmed  Course confirmée
---   driver_message  Message d'un chauffeur
+--   driver_message  Message ou modification du chauffeur (note, véhicule, chauffeur)
 --   driver_on_way   Chauffeur en route
 -- Les choix sont appliqués par le serveur (notifications et e-mails).
 -- Par défaut tout est activé.
@@ -24,7 +24,7 @@ returns text language sql immutable as $$
     when 'offer_received' then 'offer_received'
     when 'offer_updated' then 'offer_updated'    when 'offer_withdrawn' then 'offer_updated'
     when 'ride_confirmed' then 'ride_confirmed'  when 'ride_confirmed_client' then 'ride_confirmed'
-    when 'driver_note' then 'driver_message'
+    when 'driver_note' then 'driver_message'     when 'assignment_changed' then 'driver_message'
     when 'driver_on_way' then 'driver_on_way'
   end;
 $$;
@@ -136,7 +136,19 @@ declare r rides%rowtype; o offers%rowtype; v_price text;
 begin
   if tg_op = 'DELETE' then o := old; else o := new; end if;
   select * into r from rides where id = o.ride_id;
-  if not found or r.client_id is null or r.status not in ('waiting','offers') then return null; end if;
+  if not found or r.client_id is null then return null; end if;
+
+  -- Véhicule / chauffeur modifiés sur une mission attribuée → cloche (l'e-mail part de offers_client_mails)
+  if tg_op = 'UPDATE' and new.status = 'accepted' and r.status in ('confirmed','active')
+     and (new.vehicle_id is distinct from old.vehicle_id or new.fleet_driver_id is distinct from old.fleet_driver_id) then
+    perform _api_notify(r.client_id, 'assignment_changed', 'Votre course a été mise à jour',
+      'Le transporteur a modifié ' ||
+      case when new.vehicle_id is distinct from old.vehicle_id and new.fleet_driver_id is distinct from old.fleet_driver_id then 'le véhicule et le chauffeur'
+           when new.vehicle_id is distinct from old.vehicle_id then 'le véhicule' else 'le chauffeur' end ||
+      ' de votre course ' || coalesce(r.booking_code, '') || '.', r.id);
+    return null;
+  end if;
+  if r.status not in ('waiting','offers') then return null; end if;
   v_price := replace(to_char(round(coalesce(o.price,0) * 1.06, 2), 'FM999999990.00'), '.', ',') || ' €';
 
   if tg_op = 'UPDATE' then

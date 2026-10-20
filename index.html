@@ -5034,7 +5034,7 @@ var _NT_ITEMS=[
   {k:'offer_received', l:'Nouvelle offre reçue',          d:'Un chauffeur vous propose un prix'},
   {k:'offer_updated',  l:'Mise à jour des offres reçues', d:'Une offre est modifiée ou retirée'},
   {k:'ride_confirmed', l:'Course confirmée',              d:'Paiement reçu, votre chauffeur est réservé'},
-  {k:'driver_message', l:'Message d’un chauffeur',        d:'Votre chauffeur vous envoie une note'},
+  {k:'driver_message', l:'Message ou modification du chauffeur', d:'Note du chauffeur, changement de véhicule ou de chauffeur'},
   {k:'driver_on_way',  l:'Chauffeur en route',            d:'Votre chauffeur part vers le lieu de prise en charge'}
 ];
 function _ntRender(isClient){
@@ -5850,7 +5850,7 @@ function _openRideDetailImpl(el){
     if(_drvBody){
       _drvBody.insertAdjacentHTML('beforeend',
         '<div id="ph-drv-pax" class="rd-skel" style="height:82px;"></div>'
-        +'<div id="ph-drv-note" class="rd-skel" style="height:66px;"></div>'
+        +'<div id="ph-drv-note" class="rd-skel" style="height:150px;"></div>'
       );
     }
     (async function(){
@@ -5860,10 +5860,23 @@ function _openRideDetailImpl(el){
         var driverIdForOffer = r.driver_id || (currentUser ? currentUser.id : null);
         var [cRes, offerRes2] = await Promise.all([
           sb.from('profiles').select('first_name,last_name').eq('id',r.client_id).maybeSingle(),
-          driverIdForOffer ? sb.from('offers').select('message').eq('ride_id',r.id).eq('driver_id',driverIdForOffer).eq('status','accepted').maybeSingle() : Promise.resolve({data:null})
+          driverIdForOffer ? sb.from('offers').select('message,vehicle_id,fleet_driver_id').eq('ride_id',r.id).eq('driver_id',driverIdForOffer).eq('status','accepted').maybeSingle() : Promise.resolve({data:null})
         ]);
         var cp = cRes.data;
         var offerForNote = offerRes2.data;
+        // Véhicule et chauffeur assignés (offre acceptée)
+        var _asgVeh=null, _asgDrv=null;
+        if(offerForNote){
+          try{
+            var _ar=await Promise.all([
+              offerForNote.vehicle_id ? sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',offerForNote.vehicle_id).maybeSingle() : Promise.resolve({data:null}),
+              offerForNote.fleet_driver_id && !_isSubPoster ? sb.from('fleet_drivers').select('first_name,last_name,phone').eq('id',offerForNote.fleet_driver_id).maybeSingle() : Promise.resolve({data:null})
+            ]);
+            _asgVeh=_ar[0].data; _asgDrv=_ar[1].data;
+            // Donneur d'ordre d'une sous-traitance : le chauffeur de l'autre flotte via la fonction serveur
+            if(!_asgDrv && offerForNote.fleet_driver_id){ var _rp=await sb.rpc('ride_assigned_driver',{p_ride:r.id}); _asgDrv=(_rp.data&&_rp.data[0])||null; }
+          }catch(_e){ console.warn('assignment fetch', _e); }
+        }
         if(!cp){
           // Still show note card even without client profile
           cp = {first_name:'', last_name:''};
@@ -5919,11 +5932,39 @@ function _openRideDetailImpl(el){
             : '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Note du sous-traitant</div>'
               +(offerNote?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+_rdEsc(offerNote)+'</div>':'<div style="font-size:12px;color:var(--ink4);">Aucune note</div>')+'</div>';
         }
+        // Bloc « Véhicule et chauffeur » (+ note au client) une fois la mission attribuée
+        if(r.status!=='waiting' && r.status!=='offers'){
+          var _carIc='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M5 17a2 2 0 01-2-2v-3l2-5h14l2 5v3a2 2 0 01-2 2M5 17v2M19 17v2"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/></svg>';
+          var _usrIc='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>';
+          var _locked=!!(r.on_way_at||r.pickup_at||r.status==='active'||r.status==='done');
+          var _canAsg=!_isSubPoster && !_locked && r.driver_id===currentUser.id;
+          var _vehTxt=_asgVeh ? [_asgVeh.brand,_asgVeh.model].filter(Boolean).join(' ')+(_asgVeh.color?' · '+_asgVeh.color:'') : '';
+          var _drvTxt=_asgDrv ? ((_asgDrv.first_name||'')+' '+(_asgDrv.last_name||'')).trim() : '';
+          var _row=function(ic,main,extra){ return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;">'
+            +'<span style="width:30px;height:30px;border-radius:9px;background:#fff;color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+ic+'</span>'
+            +'<div style="flex:1;min-width:0;font-size:13px;">'+main+'</div>'+(extra||'')+'</div>'; };
+          var _none='<span style="color:var(--ink4);">Non assigné</span>';
+          var _noteHtml=(noteCard||'').replace(/^<div id="[^"]*" style="[^"]*">/,'').replace(/<\/div>$/,'');
+          var asgBlock='<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
+            +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'
+              +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">'+(_isSubPoster?'Véhicule et chauffeur du sous-traitant':'Véhicule et chauffeur')+'</div>'
+              +(_canAsg?'<button class="drv-asg-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;font-family:\'DM Sans\',sans-serif;">'+_editIco+' Modifier</button>':'')
+            +'</div>'
+            +_row(_carIc, _vehTxt?'<b>'+_rdEsc(_vehTxt)+'</b>':_none,
+                  _asgVeh&&_asgVeh.plate?'<span style="font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.04em;background:#fff;border:1.5px solid #B9CCE0;border-radius:6px;padding:3px 8px;color:var(--ink);white-space:nowrap;">'+_rdEsc(_asgVeh.plate)+'</span>':'')
+            +_row(_usrIc, _drvTxt?'<b>'+_rdEsc(_drvTxt)+'</b>':_none,
+                  _asgDrv&&_asgDrv.phone?'<a href="tel:'+_rdEsc(_asgDrv.phone)+'" style="font-size:12.5px;color:var(--blue);text-decoration:none;white-space:nowrap;">'+_rdEsc(_asgDrv.phone)+'</a>':'')
+            +(_noteHtml?'<div style="border-top:1px solid #d0e4f7;margin-top:6px;padding-top:10px;">'+_noteHtml+'</div>':'')
+            +'</div>';
+          noteCard=asgBlock;
+        }
         if(_phNote){ _phNote.outerHTML = noteCard; } else if(noteCard){ bodyEl3.insertAdjacentHTML('beforeend', noteCard); }
         // Attach event via JS (safe for all characters including apostrophes)
         setTimeout(function(){
           var pbtn = bodyEl3.querySelector('.sub-pax-btn');
           if(pbtn) pbtn.addEventListener('click', function(){ openPaxEdit(r.id, paxMatch?paxMatch[1].trim():'', telMatch?telMatch[1].trim():''); });
+          var abtn = bodyEl3.querySelector('.drv-asg-btn');
+          if(abtn) abtn.addEventListener('click', function(){ openMissionAssignment(r.id); });
           var btn = bodyEl3.querySelector('.drv-note-btn');
           if(btn) btn.addEventListener('click', function(){
             openDriverNoteEdit(this.dataset.rid, this.dataset.note);
