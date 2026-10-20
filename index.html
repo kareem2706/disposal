@@ -6058,11 +6058,46 @@ function _openRideDetailImpl(el){
         var fd = await _clientFleetData(r);
         if(window._detailGen!==myGen) return;
         var refunded = r.payment_method==='refunded';
-        _extra.innerHTML = '<div class="rd-card" style="margin-bottom:20px;">'
-          + _rdFleetHtml(fd, {title:'Récapitulatif de la course', noPhone:true})
-          + (fd.price ? '<div class="rd-hr"></div>'+_rdPriceHtml(fd.price, refunded?'Total remboursé TVAC':'Total payé TVAC') : '')
-          + '</div>';
+        var n=r.notes||'', cpn=((currentProfile&&currentProfile.first_name||'')+' '+(currentProfile&&currentProfile.last_name||'')).trim();
+        // Rappel de la course : passager puis véhicule et chauffeur (même présentation que la fleet)
+        _extra.innerHTML = '<div style="margin-bottom:20px;">'+_rdInfoBlocks({
+          pax:{ name:_rdTag(n,'pax')||cpn, phone:_rdTag(n,'tel')||(currentProfile&&currentProfile.phone)||'', email:_rdTag(n,'pemail'), ref:_rdTag(n,'pref'), note:_rdTag(n,'note_drv') },
+          paxNoteLabel:'Note au chauffeur',
+          veh:fd.veh, drv:fd.drv ? { name:fd.drv.name, phone:fd.drv.phone } : null,
+          drvNoteLabel:'Note du chauffeur', drvNote:_rdTag(n,'offer_note'),
+          priceHtml: fd.price ? _rdPriceHtml(fd.price, refunded?'Total remboursé TVAC':'Total payé TVAC') : ''
+        })+'</div>';
       }catch(e){ console.warn('done summary error:', e); _extra.innerHTML=''; _extra.style.display='none'; }
+    })(gen);
+  }
+
+  // ── Course terminée (fleet) : rappel sous la carte — passager puis véhicule et chauffeur ──
+  if(!isClient && r.status==='done' && _extra && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
+    _extra.innerHTML = '<div class="rd-skel" style="height:230px;"></div>'; _extra.style.display='';
+    (async function(myGen){
+      try{
+        var _poster = !!(r.is_subcontract && currentUser && r.client_id===currentUser.id);
+        var [ofr, cpr] = await Promise.all([
+          r.driver_id ? sb.from('offers').select('vehicle_id,fleet_driver_id').eq('ride_id',r.id).eq('driver_id',r.driver_id).eq('status','accepted').maybeSingle() : Promise.resolve({data:null}),
+          r.client_id && !_poster ? sb.from('profiles').select('first_name,last_name,phone').eq('id',r.client_id).maybeSingle() : Promise.resolve({data:null})
+        ]);
+        var o=ofr.data||{}, cp=cpr.data||{};
+        var [vh, fdr] = await Promise.all([
+          o.vehicle_id ? sb.from('fleet_vehicles').select('brand,model,color,plate').eq('id',o.vehicle_id).maybeSingle() : Promise.resolve({data:null}),
+          o.fleet_driver_id && !_poster ? sb.from('fleet_drivers').select('first_name,last_name,phone').eq('id',o.fleet_driver_id).maybeSingle() : Promise.resolve({data:null})
+        ]);
+        var dv=fdr.data;
+        if(!dv && o.fleet_driver_id){ try{ var rp=await sb.rpc('ride_assigned_driver',{p_ride:r.id}); dv=(rp.data&&rp.data[0])||null; }catch(_e){} }
+        if(window._detailGen!==myGen) return;
+        var n=r.notes||'';
+        _extra.innerHTML = '<div style="margin-bottom:20px;">'+_rdInfoBlocks({
+          pax:{ name:_rdTag(n,'pax')||((cp.first_name||'')+' '+(cp.last_name||'')).trim(), phone:_rdTag(n,'tel')||cp.phone||'', email:_rdTag(n,'pemail'), ref:_rdTag(n,'pref'), note:_rdTag(n,'note_drv') },
+          paxNoteLabel:'Message du client',
+          veh:vh.data, drv: dv ? { name:((dv.first_name||'')+' '+(dv.last_name||'')).trim(), phone:dv.phone||'' } : null,
+          vehTitle: _poster ? 'Véhicule et chauffeur du sous-traitant' : 'Véhicule et chauffeur',
+          drvNoteLabel: r.is_subcontract ? 'Note du sous-traitant' : 'Note au client', drvNote:_rdTag(n,'offer_note')
+        })+'</div>';
+      }catch(e){ console.warn('done fleet summary error:', e); _extra.innerHTML=''; _extra.style.display='none'; }
     })(gen);
   }
 
@@ -6341,6 +6376,41 @@ async function _clientFleetData(r){
   if(r.final_price){ try{ out.price = await _ridePrice(r); }catch(e){} }
   return out;
 }
+// ── Blocs « Informations du passager » et « Véhicule et chauffeur » (même présentation fleet / client) ──
+function _rdInfoBlocks(o){
+  var row=function(ic,main,extra){ return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;">'
+    +'<span style="width:30px;height:30px;border-radius:9px;background:#fff;color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+ic+'</span>'
+    +'<div style="flex:1;min-width:0;font-size:13px;">'+main+'</div>'+(extra||'')+'</div>'; };
+  var I={
+    usr:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>',
+    car:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M5 17a2 2 0 01-2-2v-3l2-5h14l2 5v3a2 2 0 01-2 2M5 17v2M19 17v2"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/></svg>',
+    mail:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+    ref:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L2 12V2h10l8.6 8.6a2 2 0 010 2.8z"/><circle cx="7" cy="7" r="1.5"/></svg>'
+  };
+  var box='padding:12px 14px;background:#EEF4FB;border-radius:var(--r);';
+  var cap=function(t){ return '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:4px;">'+t+'</div>'; };
+  var sub=function(t,txt){ return '<div style="border-top:1px solid #d0e4f7;margin-top:6px;padding-top:10px;">'+cap(t)
+    +(txt?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+_rdEsc(txt)+'</div>':'<div style="font-size:12px;color:var(--ink4);">Aucune note</div>')+'</div>'; };
+  var tel=function(ph){ return ph?'<a href="tel:'+_rdEsc(String(ph).replace(/[^\d+]/g,''))+'" style="font-size:12.5px;color:var(--blue);text-decoration:none;white-space:nowrap;">'+_rdEsc(ph)+'</a>':''; };
+  var none='<span style="color:var(--ink4);">Non renseigné</span>';
+  var p=o.pax||{}, v=o.veh, d=o.drv;
+  var h='<div style="'+box+'">'+cap('Informations du passager')
+    +row(I.usr, p.name?'<b>'+_rdEsc(p.name)+'</b>':none, tel(p.phone))
+    +(p.email?row(I.mail,'<a href="mailto:'+_rdEsc(p.email)+'" style="color:var(--blue);text-decoration:none;">'+_rdEsc(p.email)+'</a>'):'')
+    +(p.ref?row(I.ref,'<span style="color:var(--ink3);">Réf. : </span><b>'+_rdEsc(p.ref)+'</b>'):'')
+    +(o.paxNoteLabel?sub(o.paxNoteLabel, p.note):'')
+    +'</div>';
+  var vTxt=v?[((v.brand||'')+' '+(v.model||'')).trim(), v.color||''].filter(Boolean).join(' · '):'';
+  h+='<div style="'+box+'margin-top:12px;">'+cap(o.vehTitle||'Véhicule et chauffeur')
+    +row(I.car, vTxt?'<b>'+_rdEsc(vTxt)+'</b>':none,
+         v&&v.plate?'<span style="font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.04em;background:#fff;border:1.5px solid #B9CCE0;border-radius:6px;padding:3px 8px;color:var(--ink);white-space:nowrap;">'+_rdEsc(v.plate)+'</span>':'')
+    +row(I.usr, d&&d.name?'<b>'+_rdEsc(d.name)+'</b>':none, d?tel(d.phone):'')
+    +(o.drvNoteLabel?sub(o.drvNoteLabel, o.drvNote):'')
+    +(o.priceHtml?'<div style="border-top:1px solid #d0e4f7;margin-top:6px;padding-top:10px;">'+o.priceHtml+'</div>':'')
+    +'</div>';
+  return h;
+}
+function _rdTag(n,t){ return (((n||'').match(new RegExp('\\|'+t+':([^|]+)'))||[])[1]||'').trim(); }
 function _rdFleetHtml(fd, opt){
   opt=opt||{};
   var v=fd.veh, d=fd.drv;
