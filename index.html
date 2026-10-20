@@ -6544,9 +6544,10 @@ async function _docRideDocument(rideId, mode){
     if(_nc) notes.push(['Note du client', _nc]);
     if(noteO) notes.push(['Note du chauffeur', noteO]);
   } else {
-    if(cln) notes.push(['Note du client', cln]);
-    if(noteD) notes.push(['Note spéciale', noteD]);
-    if(noteO) notes.push(['Note au client', noteO]);
+    // Ordre de mission : mêmes notes que le voucher
+    var _nm=(noteD||cln||'').trim();
+    if(_nm) notes.push(['Note du client', _nm]);
+    if(noteO) notes.push(['Note du chauffeur', noteO]);
   }
 
   var sum='';
