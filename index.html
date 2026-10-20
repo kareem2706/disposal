@@ -6517,8 +6517,17 @@ window._notifyRideUpdated = async function(rideId, changes, note){
     // pas d'e-mail pour eux ; les autres champs (date, heure, adresses…) sont signalés à toutes les fleets ayant fait une offre
     if(r.status==='waiting' || r.status==='offers'){
       changes = (changes||[]).filter(function(c){ return !/note|passager/i.test(c); });
-      note = '';
       if(!changes.length) return;
+      // Toutes les fleets vérifiées sont prévenues (la demande peut intéresser d'autres chauffeurs) ;
+      // le contenu de l'e-mail est construit par le serveur à partir de la course
+      if(localStorage.getItem(DEMO_MODE_KEY)==='1') return;
+      fetch(SB_URL+'/functions/v1/send-mail',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+((await _userToken(false))||SB_KEY),'apikey':SB_KEY},
+        body:JSON.stringify({ type:'ride_updated', broadcast:'verified_drivers', ride_id:r.id, exclude_user_id:r.client_id, data:{ changes: changes.join(', ') } })
+      }).then(function(resp){ if(!resp.ok) resp.text().then(function(t){ console.warn('ride_updated broadcast', resp.status, t); }); })
+        .catch(function(e){ console.warn('ride_updated broadcast', e); });
+      return;
     }
     var ids = [];
     if(r.driver_id) ids.push(r.driver_id);

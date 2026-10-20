@@ -399,10 +399,30 @@ Deno.serve(async (req: Request) => {
     if (!user) return json({ ok: false, error: "Connexion requise" }, 401);
     if (!isAdmin && limited("from:" + user.id, 60)) return json({ ok: false, error: "Trop d'envois, réessayez plus tard" }, 429);
 
-    // ── Envoi groupé aux fleets vérifiées (nouvelle demande publiée) ──
+    // ── Envoi groupé aux fleets vérifiées ──
     if (payload?.broadcast === "verified_drivers") {
-      if (type !== "new_marketplace_ride") return json({ ok: false, error: "Non autorisé" }, 403);
-      if (!isAdmin) {
+      if (type !== "new_marketplace_ride" && type !== "ride_updated") return json({ ok: false, error: "Non autorisé" }, 403);
+      if (type === "ride_updated") {
+        // Demande modifiée : contenu construit ici à partir de la course (jamais la note ni le passager)
+        const { data: r } = await admin.from("rides")
+          .select("id, client_id, status, booking_code, ride_date, ride_time, from_address, to_address, trip_type")
+          .eq("id", String(payload?.ride_id ?? "")).maybeSingle();
+        if (!r || (!isAdmin && r.client_id !== user.id) || !["waiting", "offers"].includes(r.status)) {
+          return json({ ok: false, error: "Non autorisé" }, 403);
+        }
+        if (!isAdmin && limited("upd:" + r.id, 10)) return json({ ok: false, error: "Trop d'envois pour cette demande" }, 429);
+        const LBL = ["date", "heure", "départ", "arrivée", "passagers", "véhicule", "type de course"];
+        const chg = String(payload?.data?.changes ?? "").split(",").map((x) => x.trim()).filter((x) => LBL.includes(x));
+        const day = r.ride_date ? String(r.ride_date).slice(0, 10).split("-").reverse().join("/") : "";
+        const short = (a?: string | null) => String(a ?? "").split(",")[0].trim();
+        Object.keys(data).forEach((k) => delete data[k]);
+        Object.assign(data, sanitize({
+          code: r.booking_code ?? String(r.id).slice(0, 8), date: day, time: String(r.ride_time ?? "").slice(0, 5),
+          from: short(r.from_address), to: r.trip_type === "disposal" ? "Mise à disposition" : short(r.to_address),
+          changes: chg.join(", "),
+        }));
+        if (!chg.length) return json({ ok: true, sent: 0 });
+      } else if (!isAdmin) {
         const since = new Date(Date.now() - 15 * 60_000).toISOString();
         const { count } = await admin.from("rides").select("id", { count: "exact", head: true })
           .eq("client_id", user.id).in("status", ["waiting", "offers"]).gte("created_at", since);
