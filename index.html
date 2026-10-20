@@ -6537,8 +6537,17 @@ async function _docRideDocument(rideId, mode){
     }
   }
   var notes=[];
-  if(cln) notes.push(['Note du client', cln]);
-  if(noteD) notes.push([mode==='voucher'?'Note au chauffeur':'Note spéciale', noteD]);
+  var noteO=((nR.match(/\|offer_note:([^|]+)/)||[])[1]||'').trim();
+  if(mode==='voucher'){
+    // Voucher : note du client (pour le chauffeur) et note du chauffeur (pour le client)
+    var _nc=(noteD||cln||'').trim();
+    if(_nc) notes.push(['Note du client', _nc]);
+    if(noteO) notes.push(['Note du chauffeur', noteO]);
+  } else {
+    if(cln) notes.push(['Note du client', cln]);
+    if(noteD) notes.push(['Note spéciale', noteD]);
+    if(noteO) notes.push(['Note au client', noteO]);
+  }
 
   var sum='';
   if(r.final_price){

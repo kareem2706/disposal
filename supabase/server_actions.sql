@@ -20,7 +20,8 @@
 -- Les garde-fous s'appliquent aussi pendant une action serveur (drapeau bleenr.as_user)
 create or replace function public._is_app_user()
 returns boolean language sql stable as $$
-  select (current_user in ('authenticated','anon') or current_setting('bleenr.as_user', true) = '1')
+  -- coalesce : réglage absent (Edge Functions, paiement Stripe…) = « non », jamais « inconnu »
+  select (current_user in ('authenticated','anon') or coalesce(current_setting('bleenr.as_user', true), '') = '1')
      and coalesce(auth.jwt() ->> 'email','') <> 'kb@bleenr.com';
 $$;
 
