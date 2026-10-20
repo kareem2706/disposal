@@ -62,6 +62,18 @@ async function emailOfUser(id: string): Promise<string | null> {
   const { data } = await admin.auth.admin.getUserById(id);
   return data?.user?.email?.toLowerCase() ?? null;
 }
+// Préférences e-mail du destinataire (Profil → Notifications). Par défaut : activé.
+const PREF_KEY: Record<string, string> = {
+  ride_created: "ride_published", offer_received: "offer_received", offer_updated: "offer_updated",
+  ride_confirmed_client: "ride_confirmed", driver_note: "driver_message", driver_on_way: "driver_on_way",
+};
+async function wantsEmail(userId: string | null | undefined, type: string): Promise<boolean> {
+  const key = PREF_KEY[type];
+  if (!key || !userId) return true;
+  const { data } = await admin.from("profiles").select("notif_prefs").eq("id", userId).maybeSingle();
+  return (data?.notif_prefs as any)?.email?.[key] !== false;
+}
+
 async function sendOne(to: string, type: string, data: Record<string, string>) {
   if (limited("to:" + to, 30)) throw new Error("Trop d'envois pour ce destinataire, réessayez plus tard");
   const { subject, html } = build({ type, data });
@@ -162,6 +174,18 @@ function build({ type, data = {} }: Payload) {
           "Vous avez reçu une offre",
           `Bonjour ${data.clientName ?? ""},<br><br>Un chauffeur vous a envoyé une offre pour votre course.${rideTable(data)}Connectez-vous pour la consulter et la confirmer.`,
           { label: "Consulter l'offre", url },
+        ),
+      };
+
+    case "offer_updated":
+      return {
+        subject: `${data.action === "withdrawn" ? "Une offre a été retirée" : "Une offre a été modifiée"} — ${data.code ?? ""}`,
+        html: layout(
+          data.action === "withdrawn" ? "Une offre a été retirée" : "Une offre a été mise à jour",
+          `Bonjour ${data.clientName ?? ""},<br><br>${data.action === "withdrawn"
+            ? "Un chauffeur a retiré son offre sur votre demande. Les autres offres restent valables et votre demande reste visible par les chauffeurs."
+            : `Un chauffeur a modifié son offre sur votre demande${data.price ? ` : <strong>${data.price} TVAC</strong>` : ""}.`}${rideTable({ ...data, price: "" })}Connectez-vous pour consulter vos offres.`,
+          { label: "Voir mes offres", url },
         ),
       };
 
@@ -360,12 +384,13 @@ Deno.serve(async (req: Request) => {
     const hookHdr = req.headers.get("x-hook-secret") ?? "";
     if (hookHdr) {
       if (!HOOK_SECRET || hookHdr !== HOOK_SECRET) return json({ ok: false, error: "Non autorisé" }, 403);
-      if (!["ride_completed", "driver_on_way", "ride_no_show", "offer_received", "driver_note", "assignment_changed"].includes(type)
+      if (!["ride_completed", "driver_on_way", "ride_no_show", "offer_received", "offer_updated", "driver_note", "assignment_changed"].includes(type)
           || !Array.isArray(payload?.to_user_ids)) {
         return json({ ok: false, error: "Non autorisé" }, 403);
       }
       let sent = 0;
       for (const id of (payload.to_user_ids as unknown[]).map(String).slice(0, 5)) {
+        if (!(await wantsEmail(id, type))) continue;   // désactivé par le destinataire
         const to = await emailOfUser(id);
         if (!to) continue;
         const { data: p } = await admin.from("profiles").select("first_name").eq("id", id).maybeSingle();
@@ -471,6 +496,7 @@ Deno.serve(async (req: Request) => {
           }
           if (!ok) { skipped.push({ id, reason: "pas de course commune" }); continue; }
         }
+        if (!(await wantsEmail(id, type))) { skipped.push({ id, reason: "désactivé par le destinataire" }); continue; }
         const to = await emailOfUser(id);
         if (!to) { skipped.push({ id, reason: "adresse introuvable" }); continue; }
         try { await sendOne(to, type, data); sent++; }
@@ -485,6 +511,7 @@ Deno.serve(async (req: Request) => {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) throw new Error("Adresse email invalide");
     const allowed = isAdmin || to === user.email?.toLowerCase() || (to === ADMIN_EMAIL && type === "ride_problem");
     if (!allowed) return json({ ok: false, error: "Destinataire non autorisé" }, 403);
+    if (to === user.email?.toLowerCase() && !(await wantsEmail(user.id, type))) return json({ ok: true, skipped: "désactivé par le destinataire" });
     return json({ ok: true, id: await sendOne(to, type, data) });
   } catch (e) {
     return json({ ok: false, error: (e as Error).message }, 400);
