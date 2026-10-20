@@ -2331,7 +2331,8 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div class="input-group"><label>V&eacute;hicule &agrave; assigner <span style="color:var(--red)">*</span></label><select id="offer-vehicle-select"><option value="">-- Choisir un v&eacute;hicule --</option></select></div>
         <div id="offer-vehicle-err" style="font-size:12px;color:var(--red);display:none;margin-top:4px;">Aucun v&eacute;hicule de cette gamme. Ajoutez-en un dans votre profil.</div>
       </div>
-      <div class="input-group"><label>Votre prix (&euro; HTVA) <span style="color:var(--red)">*</span><span id="offer-comm-note" style="font-size:11px;font-weight:400;color:var(--ink3);display:block;margin-top:2px;">Le prix inclut la commission de la plateforme</span></label><input id="offer-price" type="number" min="1" step="1" placeholder="85" style="font-size:22px;font-weight:600;font-family:'DM Sans',sans-serif;"></div>
+      <div class="input-group"><label>Votre prix (&euro; HTVA) <span style="color:var(--red)">*</span><span id="offer-comm-note" style="font-size:11px;font-weight:400;color:var(--ink3);display:block;margin-top:2px;">Le prix inclut la commission de la plateforme</span></label><input id="offer-price" type="number" min="1" step="1" placeholder="85" style="font-size:22px;font-weight:600;font-family:'DM Sans',sans-serif;" oninput="_offerNetUpdate()">
+        <div id="offer-net" style="display:none;margin-top:8px;padding:10px 12px;background:var(--green-bg);border-radius:var(--r);font-size:13px;color:var(--ink2);line-height:1.5;"></div></div>
       <div id="offer-km-wrap" style="display:none;"></div>
       <div class="input-group"><label>Message au client (optionnel)</label><textarea id="offer-msg" rows="2" placeholder="BMW 7 Series, disponible 15 min avant…"></textarea></div>
       <div id="offer-err" class="auth-error"></div>
@@ -5160,8 +5161,24 @@ function _readOfferKm(){
   return ok?{ok:true, km:km}:{ok:false};
 }
 
+// Montant net pour la fleet : prix HTVA − commission Bleenr (taux du pays de la fleet, Admin → Facturation)
+var _offerCommRate=null;
+window._offerNetUpdate=function(){
+  var box=document.getElementById('offer-net'), el=document.getElementById('offer-price'); if(!box||!el) return;
+  var p=parseFloat(String(el.value).replace(',','.'));
+  if(!(p>0) || _offerCommRate==null){ box.style.display='none'; return; }
+  var comm=Math.round(p*_offerCommRate)/100, net=Math.round((p-comm)*100)/100;
+  var f=function(v){ return v.toFixed(2).replace('.',',')+' €'; };
+  box.innerHTML='Vous recevrez <b style="color:var(--green);font-size:15px;">'+f(net)+' HTVA</b>'
+    +'<div style="font-size:12px;color:var(--ink3);">'+f(p)+' − commission Bleenr '+_pctTxt(_offerCommRate)+' % ('+f(comm)+')</div>';
+  box.style.display='block';
+};
 window.openOfferModal = function(rideId, summary, rideObj){
-  _commPct(currentProfile&&currentProfile.address_country).then(function(p){ var n=document.getElementById('offer-comm-note'); if(n) n.textContent='Le prix inclut la commission de la plateforme ('+_pctTxt(p)+' %)'; });
+  _offerCommRate=null;
+  _commPct(currentProfile&&currentProfile.address_country).then(function(p){
+    var n=document.getElementById('offer-comm-note'); if(n) n.textContent='Le prix inclut la commission de la plateforme ('+_pctTxt(p)+' %)';
+    _offerCommRate=parseFloat(p)||0; _offerNetUpdate();
+  });
   currentRideId = rideId;
   var sumEl = document.getElementById('offer-ride-summary');
   sumEl.style.display = 'block';
@@ -5181,6 +5198,7 @@ window.openOfferModal = function(rideId, summary, rideObj){
   var existing = _myOffers && currentRideId ? _myOffers[rideId] : null;
   document.getElementById('offer-price').value = existing ? existing.price : '';
   document.getElementById('offer-msg').value   = existing ? (existing.msg||'') : '';
+  _offerNetUpdate();
   document.getElementById('offer-err').classList.remove('show');
   // Disable price and message fields if offer already submitted (cannot be modified)
   var priceEl = document.getElementById('offer-price');
