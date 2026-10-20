@@ -11,7 +11,7 @@
 //  • toutes les données sont échappées (aucun HTML ou lien injecté) ;
 //  • le destinataire est lu dans auth.users, pas dans profiles (modifiable).
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("MAIL_FROM") ?? "Bleenr <noreply@bleenr.com>";

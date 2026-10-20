@@ -4,8 +4,8 @@
 // recalculé ici à partir du prix HTVA de l'offre en base (+ TVA 6 %),
 // après avoir vérifié que l'utilisateur connecté est bien le client de la course.
 
-import Stripe from "https://esm.sh/stripe@14?target=deno";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import Stripe from "npm:stripe@14.25.0";
+import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
   apiVersion: "2023-10-16",
