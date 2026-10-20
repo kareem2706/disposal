@@ -3987,7 +3987,8 @@ async function loadClientDashboard(){
   var confirmed=rides.filter(function(r){return r.status==='confirmed'||r.status==='active'||r.status==='done'||r.status==='pending_payment';}).length;
   var pending=rides.filter(function(r){return r.status==='waiting';}).length;
   var withOffer=rides.filter(function(r){return r.status==='offers';}).length;
-  var total=rides.filter(function(r){return r.status==='done'||r.status==='confirmed';}).reduce(function(s,r){return s+(r.final_price?parseFloat(r.final_price):0);},0);
+  // Une course payée est comptabilisée une fois pour toutes : confirmée, en chemin, en cours ou terminée
+  var total=rides.filter(function(r){return (r.status==='confirmed'||r.status==='active'||r.status==='done')&&!r.is_subcontract;}).reduce(function(s,r){return s+(r.final_price?parseFloat(r.final_price):0);},0);
   // Cancelled non-refundable: client paid and won't get refund → include in total payé
   var paidCancelled=rides.filter(function(r){return r.status==='cancelled'&&r.final_price&&r.payment_method==='non_refundable';}).reduce(function(s,r){return s+parseFloat(r.final_price);},0);
   // Refunded: was charged but refunded → deduct from total payé
@@ -6512,6 +6513,13 @@ window._notifyRideUpdated = async function(rideId, changes, note){
   try{
     var {data:r} = await sb.from('rides').select('*').eq('id',rideId).maybeSingle();
     if(!r || r.status==='cancelled' || r.status==='done') return;
+    // Demande pas encore confirmée : la note et le passager sont privés (invisibles des fleets) →
+    // pas d'e-mail pour eux ; les autres champs (date, heure, adresses…) sont signalés à toutes les fleets ayant fait une offre
+    if(r.status==='waiting' || r.status==='offers'){
+      changes = (changes||[]).filter(function(c){ return !/note|passager/i.test(c); });
+      note = '';
+      if(!changes.length) return;
+    }
     var ids = [];
     if(r.driver_id) ids.push(r.driver_id);
     try{
@@ -7152,7 +7160,7 @@ window.submitRide = async function(){
     var result;
     if(editId){
       var _prevRide = null;
-      try{ _prevRide = (await sb.from('rides').select('*').eq('id', editId).maybeSingle()).data; }catch(e){}
+      try{ _prevRide = (await sb.from('rides').select('*').eq('id', editId).maybeSingle()).data; if(_prevRide) await _mergeRidePrivate(_prevRide); }catch(e){}
       // Une demande qui a déjà reçu des offres garde son statut « offers » (les offres restent visibles)
       if(_prevRide && _prevRide.status && _prevRide.status!=='waiting') delete rideData.status;
       result = await sb.from('rides').update(rideData).eq('id', editId).eq('client_id', currentUser.id);
