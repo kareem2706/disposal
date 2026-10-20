@@ -3685,6 +3685,7 @@ window.submitNewPassword = async function(){
 
 // Ferme tout ce qui est ouvert (panneaux de course, fenêtres, menus, suivi en direct) — utilisé à la déconnexion
 window._closeAllOverlays = function(){
+  try{ if(_liveCh){ sb.removeChannel(_liveCh); _liveCh=null; } }catch(e){}
   try{ if(typeof closeLiveTracking==='function' && typeof _lt!=='undefined' && _lt) closeLiveTracking(); }catch(e){}
   try{ _rdHist=false; _rdHideAll(); }catch(e){}
   document.querySelectorAll('.modal-overlay.open').forEach(function(m){ m.classList.remove('open','rd-under'); });
@@ -8918,6 +8919,51 @@ function subscribeRealtime(){
   if(!sb||!currentUser)return;loadNotifications();
   try{sb.channel('notifs_'+currentUser.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'user_id=eq.'+currentUser.id},function(pl){loadNotifications();var n=pl.new;if(n&&n.title)showToast('🔔 '+n.title);}).subscribe();}catch(e){}
   if(!window._notifPoll)window._notifPoll=setInterval(loadNotifications,15000);
+  _subscribeLiveData();
+}
+
+// ── Mises à jour en direct (courses + offres) : la page, la fiche ouverte et la liste des offres
+// se rafraîchissent seules, sans recharger la page. Les règles d'accès (RLS) filtrent ce que chacun reçoit.
+var _liveCh=null, _liveT=null, _liveBusy=false;
+function _subscribeLiveData(){
+  if(!sb||!currentUser||localStorage.getItem(DEMO_MODE_KEY)==='1') return;
+  try{ if(_liveCh) sb.removeChannel(_liveCh); }catch(e){}
+  var isCli = currentRole==='client' && currentUser.email!==ADMIN_EMAIL;
+  var soon=function(){ if(_liveT) clearTimeout(_liveT); _liveT=setTimeout(_liveRefresh, 700); };
+  _liveCh=sb.channel('live_'+currentUser.id)
+    .on('postgres_changes', isCli ? {event:'*',schema:'public',table:'rides',filter:'client_id=eq.'+currentUser.id} : {event:'*',schema:'public',table:'rides'}, soon)
+    .on('postgres_changes', {event:'*',schema:'public',table:'offers'}, soon)
+    .subscribe();
+}
+function _isOpen(id){ var m=document.getElementById(id); return !!(m&&m.classList.contains('open')); }
+async function _liveRefresh(){
+  if(_liveBusy||!sb||!currentUser) return;
+  _liveBusy=true;
+  try{
+    // Une saisie est en cours (paiement, offre, formulaire…) : on ne touche à rien
+    var busyForms=['m-payment','m-submit-offer','m-new-ride','m-subcontract','m-pax-edit','m-rate','m-mission-assign'];
+    if(busyForms.some(_isOpen) || document.getElementById('m-pax-edit')) { _liveBusy=false; return; }
+    // 1) Page affichée
+    var pg=document.querySelector('.page.active');
+    if(pg) await loadPageData(pg.id.replace(/^page-/,''));
+    // 2) Liste des offres ouverte
+    if(_isOpen('m-view-offers') && currentRideId && currentRole==='client'){ await openOffersModal(currentRideId); }
+    // 3) Fiche de course ouverte (au premier plan)
+    else if(_isOpen('m-ride-detail') && window._lastDetailRide){
+      var old=window._lastDetailRide;
+      var res=await sb.from('rides').select('*').eq('id',old.id).maybeSingle();
+      if(res&&res.data){
+        await _mergeRidePrivate(res.data);
+        var f=res.data, changed=['status','notes','final_price','driver_id','payment_method','ride_date','ride_time','from_address','to_address','on_way_at','pickup_at','passengers','vehicle_type']
+          .some(function(k){ return String(f[k]==null?'':f[k]) !== String(old[k]==null?'':old[k]); });
+        if(changed && _isOpen('m-ride-detail') && window._lastDetailRide && window._lastDetailRide.id===f.id){
+          var el=document.createElement('div'); el.dataset.ride=JSON.stringify(f).replace(/'/g,"&#39;");
+          _openRideDetailImpl(el);
+        }
+      }
+    }
+  }catch(e){ console.warn('[live]', e); }
+  _liveBusy=false;
 }
 
 
