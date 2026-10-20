@@ -422,12 +422,27 @@ Deno.serve(async (req: Request) => {
           changes: chg.join(", "),
         }));
         if (!chg.length) return json({ ok: true, sent: 0 });
-      } else if (!isAdmin) {
-        const since = new Date(Date.now() - 15 * 60_000).toISOString();
-        const { count } = await admin.from("rides").select("id", { count: "exact", head: true })
-          .eq("client_id", user.id).in("status", ["waiting", "offers"]).gte("created_at", since);
-        if (!count) return json({ ok: false, error: "Non autorisé" }, 403);
-        if (limited("broadcast:" + user.id, 5)) return json({ ok: false, error: "Trop d'envois groupés" }, 429);
+      } else {
+        // Nouvelle demande : contenu construit ici à partir de la course (le navigateur ne fournit que son id)
+        const { data: r } = await admin.from("rides")
+          .select("id, client_id, status, booking_code, ride_date, ride_time, from_address, to_address, trip_type, is_subcontract, final_price, created_at")
+          .eq("id", String(payload?.ride_id ?? "")).maybeSingle();
+        const recent = r?.created_at && Date.now() - new Date(r.created_at).getTime() < 15 * 60_000;
+        if (!r || !["waiting", "offers"].includes(r.status) || (!isAdmin && (r.client_id !== user.id || !recent))) {
+          return json({ ok: false, error: "Non autorisé" }, 403);
+        }
+        if (limited("mkt:" + r.id, 1, 24 * 3600_000)) return json({ ok: true, sent: 0, skipped: "déjà envoyé" });
+        if (!isAdmin && limited("broadcast:" + user.id, 5)) return json({ ok: false, error: "Trop d'envois groupés" }, 429);
+        const TL: Record<string, string> = { ab: "A → B", disposal: "Mise à disposition", mixed: "Course mixte" };
+        const day = r.ride_date ? String(r.ride_date).slice(0, 10).split("-").reverse().join("/") : "";
+        Object.keys(data).forEach((k) => delete data[k]);
+        Object.assign(data, sanitize({
+          code: r.booking_code ?? String(r.id).slice(0, 8), date: day, time: String(r.ride_time ?? "").slice(0, 5),
+          from: r.from_address ?? "", to: r.to_address || TL[r.trip_type ?? ""] || "",
+          // prix fixe uniquement pour une sous-traitance (jamais le prix d'un client)
+          price: r.is_subcontract && r.final_price ? Number(r.final_price).toFixed(2).replace(".", ",") + " € HTVA" : "",
+        }));
+        if (r.is_subcontract) payload.exclude_user_id = r.client_id;
       }
       const { data: drivers } = await admin.from("profiles")
         .select("id, first_name").eq("role", "driver").eq("fleet_verified", "validated").limit(500);
