@@ -472,9 +472,14 @@ Deno.serve(async (req: Request) => {
       }
       const { data: drivers } = await admin.from("profiles")
         .select("id, first_name").eq("role", "driver").eq("fleet_verified", "validated").limit(500);
+      // Uniquement les fleets qui ont un véhicule de la gamme demandée (vehicle_class_filter.sql)
+      const { data: rcls } = await admin.from("rides").select("vehicle_type").eq("id", String(payload?.ride_id ?? "")).maybeSingle();
+      const { data: okFleets, error: fErr } = await admin.rpc("fleets_for_class", { p_class: rcls?.vehicle_type ?? null });
+      const allowedFleets = fErr ? null : new Set(((okFleets as unknown[]) ?? []).map((x: any) => String(typeof x === "object" && x ? Object.values(x)[0] : x)));
       let sent = 0;
       for (const d of drivers ?? []) {
         if (d.id === user.id || d.id === payload?.exclude_user_id) continue;
+        if (allowedFleets && !allowedFleets.has(d.id)) continue;
         try {
           const to = await emailOfUser(d.id);
           if (to) { await sendOne(to, type, { ...data, driverName: escHtml(d.first_name ?? "") }); sent++; }

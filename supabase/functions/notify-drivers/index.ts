@@ -83,15 +83,37 @@ function decide(type: string, rec: Ride, old: Ride | null): Kind | null {
   return null;
 }
 
-// Pastille de l'icône : nombre de demandes ouvertes sans offre du chauffeur (même calcul que l'app)
+// Gamme demandée → classes de véhicule acceptées (identique à vehicle_class_filter.sql)
+const CLASS_VEHICLES: Record<string, string[]> = {
+  lowcost: ["lowcost", "business", "van", "luxe"], business: ["business", "van", "luxe"], van: ["van"], luxe: ["luxe"],
+};
+let fleetVeh: Map<string, string[]> | null = null;
+async function loadFleetVehicles() {
+  const rows: any[] = await rest(`fleet_vehicles?select=fleet_id,vehicle_class,active,status`);
+  fleetVeh = new Map();
+  for (const v of rows) {
+    if (v.active === false || v.status === "rejected") continue;
+    fleetVeh.set(v.fleet_id, [...(fleetVeh.get(v.fleet_id) || []), v.vehicle_class]);
+  }
+}
+// La fleet a-t-elle un véhicule de la gamme demandée ? (sans gamme : au moins un véhicule)
+function canServe(fleetId: string, cls?: string | null) {
+  const mine = fleetVeh?.get(fleetId) || [];
+  if (!mine.length) return false;
+  if (!cls) return true;
+  const ok = CLASS_VEHICLES[cls] || [cls];
+  return mine.some((c) => ok.includes(c));
+}
+
+// Pastille de l'icône : nombre de demandes ouvertes sans offre du chauffeur, de sa gamme (même calcul que l'app)
 async function badgeCounts(userIds: string[]): Promise<Record<string, number>> {
-  const open: any[] = await rest(`rides?status=in.(waiting,offers)&select=id,client_id`);
+  const open: any[] = await rest(`rides?status=in.(waiting,offers)&select=id,client_id,vehicle_type`);
   const out: Record<string, number> = {};
   if (!userIds.length) return out;
   const ids = open.map((r) => r.id);
   const offers: any[] = ids.length ? await rest(`offers?ride_id=in.(${ids.join(",")})&select=ride_id,driver_id`) : [];
   const offered = new Set(offers.map((o) => o.driver_id + ":" + o.ride_id));
-  for (const u of userIds) out[u] = open.filter((r) => r.client_id !== u && !offered.has(u + ":" + r.id)).length;
+  for (const u of userIds) out[u] = open.filter((r) => r.client_id !== u && !offered.has(u + ":" + r.id) && canServe(u, r.vehicle_type)).length;
   return out;
 }
 
@@ -137,11 +159,15 @@ Deno.serve(async (req) => {
     const openChanged = (p.type === "INSERT" && isOpen) || (p.type === "UPDATE" && wasOpen !== isOpen);
     if (!kind && !openChanged) return new Response(JSON.stringify({ skipped: true }), { status: 200 });
 
+    await loadFleetVehicles();
     // Destinataires de la notification visible
     let users: string[] | null = null; // null = tous les chauffeurs
-    if (kind === "offer_accepted") {
+    if (kind === "new_request") {
+      // Uniquement les fleets qui ont un véhicule de la gamme demandée
+      users = [...(fleetVeh?.keys() || [])].filter((f) => canServe(f, rec.vehicle_type));
+    } else if (kind === "offer_accepted") {
       users = [rec.driver_id];
-    } else if (kind && kind !== "new_request") {
+    } else if (kind) {
       // Offres en cours ou acceptée (pas les offres refusées) + chauffeur attribué
       const offers = await rest(`offers?ride_id=eq.${rec.id}&status=in.(pending,accepted)&select=driver_id`);
       users = [...new Set([...(offers as any[]).map((o) => o.driver_id), rec.driver_id].filter(Boolean))];
