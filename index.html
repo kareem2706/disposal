@@ -5896,15 +5896,25 @@ function _openRideDetailImpl(el){
         var drvNoteId = 'drv-note-card-'+r.id;
 
         var _editIco='<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/><path d="M10 4l2 2"/></svg>';
+        var _pxRow=function(ic,main,extra){ return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;">'
+          +'<span style="width:30px;height:30px;border-radius:9px;background:#fff;color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+ic+'</span>'
+          +'<div style="flex:1;min-width:0;font-size:13px;">'+main+'</div>'+(extra||'')+'</div>'; };
+        var _pxUsr='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>';
+        var _pxMail='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>';
+        var _pxRef='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L2 12V2h10l8.6 8.6a2 2 0 010 2.8z"/><circle cx="7" cy="7" r="1.5"/></svg>';
+        var _pxEmail=((notesRaw.match(/\|pemail:([^|]+)/)||[])[1]||'').trim();
+        var _pxPref=((notesRaw.match(/\|pref:([^|]+)/)||[])[1]||'').trim();
         var contactBlock = '<div style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
-          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Informations du passager</div>'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Informations du passager</div>'
             +(_isSubPoster && !(r.status==='active'||r.status==='done'||r.pickup_at)?'<button class="sub-pax-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;">'+_editIco+(paxMatch||telMatch?' Modifier':' Ajouter')+'</button>':'')
           +'</div>'
-          +'<div style="font-weight:600;font-size:14px;margin-bottom:2px;">'+_rdEsc(cName)+'</div>'
-          +(cPhone?'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:'+(noteDriver?'6px':'2px')+';"><a href="tel:'+_rdEsc(cPhone)+'" style="color:var(--blue);text-decoration:none;">'+_rdEsc(cPhone)+'</a></div>':'')
-          +((notesRaw.match(/\|pemail:([^|]+)/)||[])[1]?'<div style="font-size:12.5px;margin-bottom:2px;"><a href="mailto:'+(notesRaw.match(/\|pemail:([^|]+)/)||[])[1].trim()+'" style="color:var(--blue);text-decoration:none;">'+(notesRaw.match(/\|pemail:([^|]+)/)||[])[1].trim()+'</a></div>':'')
-          +((notesRaw.match(/\|pref:([^|]+)/)||[])[1]?'<div style="font-size:12.5px;color:var(--ink2);margin-bottom:'+(noteDriver?'6px':'2px')+';"><span style="color:var(--ink3);">Réf. : </span><b>'+(notesRaw.match(/\|pref:([^|]+)/)||[])[1].trim()+'</b></div>':'')
-          +(noteDriver?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;padding-top:4px;border-top:1px solid #d0e4f7;"><span style="font-style:normal;font-weight:600;color:var(--ink2);">Message du client\u00a0: </span>'+_rdEsc(noteDriver)+'</div>':'')
+          +_pxRow(_pxUsr, '<b>'+_rdEsc(cName)+'</b>',
+                  cPhone?'<a href="tel:'+_rdEsc(cPhone)+'" style="font-size:12.5px;color:var(--blue);text-decoration:none;white-space:nowrap;">'+_rdEsc(cPhone)+'</a>':'')
+          +(_pxEmail?_pxRow(_pxMail, '<a href="mailto:'+_rdEsc(_pxEmail)+'" style="color:var(--blue);text-decoration:none;">'+_rdEsc(_pxEmail)+'</a>'):'')
+          +(_pxPref?_pxRow(_pxRef, '<span style="color:var(--ink3);">Réf. : </span><b>'+_rdEsc(_pxPref)+'</b>'):'')
+          +(noteDriver?'<div style="border-top:1px solid #d0e4f7;margin-top:6px;padding-top:10px;">'
+              +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Message du client</div>'
+              +'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+_rdEsc(noteDriver)+'</div></div>':'')
           +'</div>';
         // Note au client card (editable by driver)
         var noteCard = '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
