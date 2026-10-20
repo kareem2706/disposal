@@ -8152,15 +8152,38 @@ window.selectPaymentMethod = function(method){
 };
 
 // Appel d'une Edge Function avec la session de l'utilisateur connecté
+// Jeton de session valide (rafraîchi s'il expire dans moins d'une minute)
+async function _userToken(forceRefresh){
+  try{
+    var s=null;
+    if(!forceRefresh){ var g=await sb.auth.getSession(); s=g&&g.data?g.data.session:null; }
+    if(forceRefresh || !s || (s.expires_at && s.expires_at*1000 < Date.now()+60000)){
+      var r=await sb.auth.refreshSession();
+      if(r&&r.data&&r.data.session) s=r.data.session;
+    }
+    if(s&&s.access_token){ window._sbToken=s.access_token; return s.access_token; }
+  }catch(e){ console.warn('[session]', e); }
+  return window._sbToken||null;
+}
 async function _callEdge(name, body){
-  var tok=SB_KEY;
-  try{ var ss=await sb.auth.getSession(); if(ss&&ss.data&&ss.data.session) tok=ss.data.session.access_token; }catch(e){}
-  var resp=await fetch(SB_URL+'/functions/v1/'+name,{
-    method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok,'apikey':SB_KEY},
-    body:JSON.stringify(body||{})
-  });
-  var txt=await resp.text(), data; try{ data=JSON.parse(txt); }catch(e){ data={error:txt.slice(0,150)}; }
-  if(!resp.ok && !data.error) data.error='Erreur serveur ('+resp.status+')';
+  var call=async function(tok){
+    var resp=await fetch(SB_URL+'/functions/v1/'+name,{
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok,'apikey':SB_KEY},
+      body:JSON.stringify(body||{})
+    });
+    var txt=await resp.text(), data; try{ data=JSON.parse(txt); }catch(e){ data={error:txt.slice(0,150)}; }
+    if(!resp.ok && !data.error) data.error='Erreur serveur ('+resp.status+')';
+    data._status=resp.status;
+    return data;
+  };
+  var tok=await _userToken(false);
+  if(!tok) return { error:'Votre session a expiré. Merci de vous reconnecter.' };
+  var data=await call(tok);
+  // Jeton refusé : on rafraîchit la session et on réessaie une fois
+  if(data._status===401){
+    var tok2=await _userToken(true);
+    if(tok2 && tok2!==tok) data=await call(tok2);
+  }
   return data;
 }
 
