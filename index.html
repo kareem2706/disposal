@@ -4020,7 +4020,8 @@ async function loadClientDashboard(){
   var _s4='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 6.5A7 7 0 1018.5 17.5"/><path d="M4 10.5h10M4 13.5h10"/></svg>';
   var confirmed=rides.filter(function(r){return r.status==='confirmed'||r.status==='active'||r.status==='done'||r.status==='pending_payment';}).length;
   var pending=rides.filter(function(r){return r.status==='waiting';}).length;
-  var withOffer=rides.filter(function(r){return r.status==='offers';}).length;
+  // Nombre total d'offres en attente sur les demandes ouvertes (pas le nombre de demandes)
+  var withOffer=rides.filter(function(r){return r.status==='offers'||r.status==='waiting';}).reduce(function(n,r){return n+(r._offerCount||0);},0);
   // Une course payée est comptabilisée une fois pour toutes : confirmée, en chemin, en cours ou terminée
   var total=rides.filter(function(r){return (r.status==='confirmed'||r.status==='active'||r.status==='done')&&!r.is_subcontract;}).reduce(function(s,r){return s+(r.final_price?parseFloat(r.final_price):0);},0);
   // Cancelled non-refundable: client paid and won't get refund → include in total payé

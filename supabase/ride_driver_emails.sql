@@ -115,6 +115,12 @@ begin
     -- Nouvelle offre (prix TVAC affiché au client)
     perform _send_mail_hook('offer_received', r.client_id, _ride_mail_data(r) ||
       jsonb_build_object('price', replace(to_char(round(coalesce(new.price,0) * 1.06, 2), 'FM999999990.00'), '.', ',') || ' €'));
+    -- Notification dans l'application (cloche) — met aussi l'écran du client à jour
+    insert into notifications (user_id, type, title, body, ride_id, read)
+    values (r.client_id, 'offer_received', 'Nouvelle offre reçue',
+            'Un chauffeur vous propose ' || replace(to_char(round(coalesce(new.price,0) * 1.06, 2), 'FM999999990.00'), '.', ',') ||
+            ' € TVAC pour votre demande ' || coalesce(r.booking_code, '') || '.',
+            r.id, false);
     return new;
   end if;
 
