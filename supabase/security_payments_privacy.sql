@@ -26,6 +26,7 @@ create policy ride_private_read on public.ride_private
 revoke all on public.ride_private from anon;
 revoke insert, update, delete on public.ride_private from authenticated;
 grant select on public.ride_private to authenticated;
+grant all on public.ride_private to service_role;
 -- (aucune écriture directe : seul le trigger ci-dessous écrit dans cette table)
 
 -- Extrait les jetons sensibles d'une note

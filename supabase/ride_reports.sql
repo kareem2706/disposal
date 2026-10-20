@@ -12,6 +12,12 @@ alter table public.ride_reports add column if not exists resolved_at timestamptz
 
 alter table public.ride_reports enable row level security;
 
+-- Droits explicites (Supabase ne les donne plus automatiquement aux nouvelles tables à partir du 30/10/2026).
+-- Lecture encadrée par les règles RLS ; écritures uniquement par les fonctions serveur (api_*) et les Edge Functions.
+revoke all on public.ride_reports from anon;
+grant select on public.ride_reports to authenticated;
+grant all on public.ride_reports to service_role;
+
 -- Le client ne peut signaler que ses propres courses
 drop policy if exists ride_reports_insert_own on public.ride_reports;
 create policy ride_reports_insert_own on public.ride_reports

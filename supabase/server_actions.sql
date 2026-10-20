@@ -183,6 +183,7 @@ create policy profile_bank_read on public.profile_bank for select to authenticat
 revoke all on public.profile_bank from anon;
 revoke insert, update, delete, truncate on public.profile_bank from authenticated;
 grant select on public.profile_bank to authenticated;
+grant all on public.profile_bank to service_role;
 
 do $$
 begin

@@ -16,6 +16,12 @@ create index if not exists push_tokens_user_idx on public.push_tokens(user_id);
 
 alter table public.push_tokens enable row level security;
 
+-- Droits explicites (Supabase ne les donne plus automatiquement aux nouvelles tables à partir du 30/10/2026).
+-- Lecture encadrée par les règles RLS ; écritures uniquement par les fonctions serveur (api_*) et les Edge Functions.
+revoke all on public.push_tokens from anon;
+grant select on public.push_tokens to authenticated;
+grant all on public.push_tokens to service_role;
+
 -- Chaque chauffeur ne voit et ne gère que ses propres téléphones.
 -- L'Edge Function notify-drivers lit toute la table avec la clé service (RLS contournée).
 drop policy if exists push_tokens_own_select on public.push_tokens;
