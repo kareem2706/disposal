@@ -6423,7 +6423,9 @@ function _rdFleetHtml(fd, opt){
   var carIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17v2M18 17v2M3 13l2-6a2 2 0 012-1.5h10A2 2 0 0119 7l2 6v4H3z"/><circle cx="7.5" cy="13.5" r=".8" fill="currentColor"/><circle cx="16.5" cy="13.5" r=".8" fill="currentColor"/></svg>';
   var userIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
   var h='<div class="rd-cap" style="margin-bottom:8px;">'+(opt.title||'Véhicule et chauffeur')+'</div>';
-  h+='<div class="rd-line"><span class="rd-ic">'+carIc+'</span><div style="min-width:0"><div class="rd-strong">'+_rdEsc(vName||'Véhicule à confirmer')+'</div>'+(v&&v.plate?'<div class="rd-plate">'+_rdEsc(v.plate)+'</div>':'')+'</div></div>';
+  // Plaque à droite, sur la même ligne (comme le rappel des courses terminées)
+  h+='<div class="rd-line"><span class="rd-ic">'+carIc+'</span><div style="min-width:0;flex:1"><div class="rd-strong">'+_rdEsc(vName||'Véhicule à confirmer')+'</div></div>'
+    +(v&&v.plate?'<span style="margin-left:auto;font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.04em;background:#fff;border:1.5px solid #B9CCE0;border-radius:6px;padding:3px 8px;color:var(--ink);white-space:nowrap;">'+_rdEsc(v.plate)+'</span>':'')+'</div>';
   if(d&&(d.name||d.phone)){
     h+='<div class="rd-line"><span class="rd-ic">'+userIc+'</span><div style="min-width:0;flex:1"><div class="rd-strong">'+_rdEsc(d.name||'Chauffeur')+'</div>'+(d.company?'<div class="rd-muted">'+_rdEsc(d.company)+'</div>':'')+'</div>'
       +(d.phone&&!opt.noPhone?'<a class="rd-call" href="tel:'+_rdEsc(d.phone.replace(/[^\d+]/g,''))+'">'+_rdEsc(d.phone)+'</a>':'')+'</div>';
