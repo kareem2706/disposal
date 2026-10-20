@@ -26,9 +26,19 @@ const tag = (n: any, t: string) => ((String(n || "").match(new RegExp("\\|" + t 
 // Partie des notes saisie par le client (sans les tags techniques ni la note du chauffeur |offer_note:)
 const clientNote = (n: any) => String(n || "").replace(/\|(pax|tel|pemail|pref|note_drv|offer_note|flight|train):[^|]*/g, "").trim();
 // Ce que le client a modifié (les changements faits par le chauffeur — note au client, étapes — sont ignorés)
+// Note du client telle que recopiée automatiquement en « note pour le chauffeur » à la confirmation
+// (même calcul que confirm_ride_payment / _promoteNotesToDriver)
+const promotedNote = (n: any) =>
+  String(n || "").replace(/\|(pax|tel|pemail|pref|flight|train):[^|]*/g, "").replace(/^Mixte:.*$/m, "")
+    .replace(/Durée:[^\s|]+/g, "").replace(/\s+/g, " ").trim();
 function clientChanges(rec: Ride, old: Ride): string[] {
   const out = WATCHED.filter((k) => String(rec[k] ?? "") !== String(old[k] ?? ""));
-  for (const t of ["pax", "tel", "note_drv", "flight", "train"]) if (tag(rec.notes, t) !== tag(old.notes, t)) out.push(t);
+  for (const t of ["pax", "tel", "note_drv", "flight", "train"]) {
+    if (tag(rec.notes, t) === tag(old.notes, t)) continue;
+    // Recopie automatique de la note du client à la confirmation : ce n'est pas une modification du client
+    if (t === "note_drv" && !tag(old.notes, t) && tag(rec.notes, t).replace(/\s+/g, " ") === promotedNote(old.notes)) continue;
+    out.push(t);
+  }
   if (clientNote(rec.notes) !== clientNote(old.notes)) out.push("note");
   return out;
 }
