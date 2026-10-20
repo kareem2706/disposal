@@ -112,6 +112,8 @@ begin
   if not found or r.client_id is null then return new; end if;
 
   if tg_op = 'INSERT' then
+    -- Offre créée déjà acceptée (sous-traitance acceptée) : pas d'« offre reçue »
+    if coalesce(new.status, 'pending') <> 'pending' then return new; end if;
     -- Nouvelle offre (prix TVAC affiché au client)
     perform _send_mail_hook('offer_received', r.client_id, _ride_mail_data(r) ||
       jsonb_build_object('price', replace(to_char(round(coalesce(new.price,0) * 1.06, 2), 'FM999999990.00'), '.', ',') || ' €'));

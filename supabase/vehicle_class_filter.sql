@@ -113,10 +113,43 @@ begin
      and is_subcontract = true
      and status in ('waiting','offers')
      and client_id <> auth.uid();
-  return found;
+  if not found then return false; end if;
+  -- Offre « acceptée » au prix fixé : elle porte le véhicule et le chauffeur assignés ensuite
+  insert into offers (ride_id, driver_id, price, status)
+  select p_ride, auth.uid(), (select final_price from rides where id = p_ride), 'accepted'
+   where not exists (select 1 from offers where ride_id = p_ride and status = 'accepted');
+  return true;
 end $$;
 revoke all on function public.accept_subcontract(uuid) from public, anon;
 grant execute on function public.accept_subcontract(uuid) to authenticated;
+
+-- Véhicule / chauffeur d'une mission : enregistrés sur l'offre retenue (créée si besoin,
+-- ex. sous-traitance acceptée avant ce script). Erreur explicite si rien n'est enregistré.
+create or replace function public.fleet_update_assignment(p_ride uuid, p_vehicle uuid, p_driver uuid default null)
+returns void language plpgsql security definer set search_path = public as $$
+declare v_price numeric;
+begin
+  if not exists (select 1 from rides where id = p_ride and driver_id = auth.uid()
+                 and status in ('confirmed','pending_payment')
+                 and on_way_at is null and pickup_at is null) then
+    raise exception 'Mission introuvable ou non modifiable' using errcode = '42501';
+  end if;
+  if not exists (select 1 from fleet_vehicles where id = p_vehicle and fleet_id = auth.uid()) then
+    raise exception 'Véhicule invalide' using errcode = '42501';
+  end if;
+  if p_driver is not null and not exists (select 1 from fleet_drivers where id = p_driver and fleet_id = auth.uid()) then
+    raise exception 'Chauffeur invalide' using errcode = '42501';
+  end if;
+  update offers set vehicle_id = p_vehicle, fleet_driver_id = p_driver
+   where ride_id = p_ride and driver_id = auth.uid() and status = 'accepted';
+  if not found then
+    select final_price into v_price from rides where id = p_ride;
+    insert into offers (ride_id, driver_id, price, status, vehicle_id, fleet_driver_id)
+    values (p_ride, auth.uid(), v_price, 'accepted', p_vehicle, p_driver);
+  end if;
+end $$;
+revoke all on function public.fleet_update_assignment(uuid, uuid, uuid) from public, anon;
+grant execute on function public.fleet_update_assignment(uuid, uuid, uuid) to authenticated;
 
 -- Pour les notifications push et les e-mails (Edge Functions) : fleets pouvant assurer une gamme
 create or replace function public.fleets_for_class(p_class text)
