@@ -5792,8 +5792,8 @@ function _openRideDetailImpl(el){
         var _phPax=document.getElementById('ph-drv-pax');
         var _phNote=document.getElementById('ph-drv-note');
         if(_phPax){ _phPax.outerHTML = contactBlock; } else { bodyEl3.insertAdjacentHTML('beforeend', contactBlock); }
-        if(r.status==='active'||r.status==='done'||r.pickup_at){
-          // Ride in progress: note can no longer be added/edited (read-only if one exists)
+        if(r.status==='active'||r.status==='done'||r.pickup_at||r.on_way_at){
+          // Dès « En chemin » : la note ne peut plus être ajoutée ni modifiée (lecture seule si elle existe)
           noteCard = offerNote ? '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">'+(r.is_subcontract?'Note du sous-traitant':'Note au client')+'</div><div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+_rdEsc(offerNote)+'</div></div>' : '';
         }
         if(_isSubPoster){
