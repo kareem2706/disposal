@@ -447,6 +447,23 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 #m-noshow .ns-confirm{background:#B3261E;color:#fff;border:none;}
 #m-noshow .ns-confirm:hover{background:#9A1F18;}
 @media(max-width:600px){ #m-noshow.open{align-items:flex-end;padding:0;} #m-noshow .ns-modal{max-width:100%;width:100%;border-radius:20px 20px 0 0;margin:0;} #m-noshow .ns-ft{padding-bottom:calc(22px + env(safe-area-inset-bottom));} }
+#m-uiconfirm .ns-modal{max-width:400px;border-radius:20px;overflow:hidden;}
+#m-uiconfirm .ns-ic{width:56px;height:56px;border-radius:50%;background:#FDE7E4;color:#B3261E;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+#m-uiconfirm .ns-title{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+#m-uiconfirm .ns-sub{font-size:13.5px;color:var(--ink2);line-height:1.5;margin-bottom:16px;}
+#m-uiconfirm .ns-ride{background:var(--sand);border-radius:12px;padding:11px 14px;text-align:left;font-size:12.5px;color:var(--ink2);margin-bottom:14px;}
+#m-uiconfirm .ns-ride b{color:var(--ink);font-size:13px;}
+#m-uiconfirm .ns-ride .ns-code{font-family:ui-monospace,Menlo,monospace;font-size:11px;font-weight:700;color:var(--ink3);letter-spacing:.03em;}
+#m-uiconfirm .ns-list{list-style:none;margin:0;padding:0;text-align:left;display:flex;flex-direction:column;gap:7px;}
+#m-uiconfirm .ns-list li{display:flex;gap:9px;font-size:12.5px;color:var(--ink2);line-height:1.45;}
+#m-uiconfirm .ns-list li span{flex-shrink:0;width:18px;height:18px;border-radius:50%;background:var(--green-bg);color:var(--green);font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+#m-uiconfirm .ns-ft{border-top:none;padding:16px 24px 22px;gap:10px;display:flex;}
+#m-uiconfirm .ns-ft .btn{flex:1 1 0;white-space:nowrap;height:44px;justify-content:center;border-radius:999px;font-size:14px;font-weight:600;padding:0 12px;}
+#m-uiconfirm .ns-confirm{background:#B3261E;color:#fff;border:none;}
+#m-uiconfirm .ns-confirm:hover{background:#9A1F18;}
+@media(max-width:600px){ #m-uiconfirm.open{align-items:flex-end;padding:0;} #m-uiconfirm .ns-modal{max-width:100%;width:100%;border-radius:20px 20px 0 0;margin:0;} #m-uiconfirm .ns-ft{padding-bottom:calc(22px + env(safe-area-inset-bottom));} }
+#m-uiconfirm .ns-ic.ok{background:var(--green-bg);color:var(--green);}
+#m-uiconfirm .ns-confirm.ok{background:var(--green);}
 /* Bouton « Évaluer » compact (PC et mobile) */
 .modal-overlay .modal-ft > .btn.ft-rate,.modal-overlay.rd-panel:not(.rd-form) .modal-ft > .btn.btn-primary.ft-rate{padding:6px 14px!important;font-size:12.5px!important;font-weight:600;height:auto!important;min-height:0;border-radius:999px;flex:0 0 auto!important;}
 @media(max-width:900px){
@@ -2613,6 +2630,21 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div class="modal-ft ns-ft">
       <button class="btn btn-secondary" onclick="closeModal('m-noshow')">Annuler</button>
       <button class="btn ns-confirm" id="ns-confirm-btn" onclick="_confirmNoShow(this)">Confirmer</button>
+    </div>
+  </div>
+</div>
+<!-- Confirmation générique (même design que « Client absent ») -->
+<div class="modal-overlay" id="m-uiconfirm" style="z-index:950;">
+  <div class="modal ns-modal">
+    <div class="modal-body" style="padding:26px 24px 8px;text-align:center;">
+      <div class="ns-ic" id="uic-ic"></div>
+      <div class="ns-title" id="uic-title"></div>
+      <div class="ns-sub" id="uic-sub"></div>
+      <div class="ns-ride" id="uic-ride" style="display:none;"></div>
+    </div>
+    <div class="modal-ft ns-ft">
+      <button class="btn btn-secondary" id="uic-cancel">Annuler</button>
+      <button class="btn ns-confirm" id="uic-ok">Confirmer</button>
     </div>
   </div>
 </div>
@@ -6610,11 +6642,48 @@ function _offerActionsMenu(rId, safeRd){
     '<button class="ft-menu-item" onclick="'+close+'_editOffer(this)" data-rid="'+id+'" data-ride=\''+(safeRd||'')+'\'>'+tagIc+'Modifier mon offre</button>'
    +'<button class="ft-menu-item" style="color:var(--red);" onclick="'+close+'_withdrawOffer(\''+id+'\')">'+xIc+'Retirer mon offre</button>');
 }
+// Fenêtre de confirmation au design Bleenr (remplace confirm() du navigateur). Renvoie une promesse true/false.
+window._uiConfirm=function(o){
+  o=o||{};
+  return new Promise(function(resolve){
+    var m=document.getElementById('m-uiconfirm'); if(!m){ resolve(window.confirm(String(o.title||''))); return; }
+    var e=function(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+    var ic=document.getElementById('uic-ic');
+    ic.className='ns-ic'+(o.danger?'':' ok');
+    ic.innerHTML='<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(o.icon||'<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>')+'</svg>';
+    document.getElementById('uic-title').textContent=o.title||'Confirmer ?';
+    document.getElementById('uic-sub').innerHTML=o.sub||'';
+    var rb=document.getElementById('uic-ride'), r=o.ride;
+    if(r){
+      var route=r.trip_type==='disposal'?e((r.from_address||'').split(',')[0])+' · mise à disposition':e((r.from_address||'—').split(',')[0])+' → '+e((r.to_address||'—').split(',')[0]);
+      var dt=r.ride_date?new Date(r.ride_date+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short'})+(r.ride_time?' · '+String(r.ride_time).slice(0,5):''):'';
+      rb.innerHTML=(r.booking_code?'<div class="ns-code">'+e(r.booking_code)+'</div>':'')+'<b>'+route+'</b>'+(dt?'<div>'+e(dt)+'</div>':'');
+      rb.style.display='';
+    } else rb.style.display='none';
+    var okB=document.getElementById('uic-ok'), noB=document.getElementById('uic-cancel');
+    okB.textContent=o.confirm||'Confirmer'; okB.className='btn ns-confirm'+(o.danger?'':' ok');
+    noB.textContent=o.cancel||'Annuler';
+    var done=function(v){ okB.onclick=noB.onclick=m.onclick=null; document.removeEventListener('keydown',key); m.classList.remove('open'); resolve(v); };
+    var key=function(ev){ if(ev.key==='Escape') done(false); };
+    okB.onclick=function(){ done(true); };
+    noB.onclick=function(){ done(false); };
+    m.onclick=function(ev){ if(ev.target===m) done(false); };
+    document.addEventListener('keydown',key);
+    m.classList.add('open');
+  });
+};
 window._withdrawOffer=async function(rideId){
   if(!sb||!currentUser) return;
   var of=(await sb.from('offers').select('id,price').eq('ride_id',rideId).eq('driver_id',currentUser.id).eq('status','pending').maybeSingle()).data;
   if(!of){ showToast('Offre introuvable ou déjà acceptée'); return; }
-  if(!confirm('Retirer votre offre de '+parseFloat(of.price).toFixed(2).replace('.',',')+' € HTVA ?')) return;
+  var _rr=(window._lastDetailRide&&window._lastDetailRide.id===rideId)?window._lastDetailRide:null;
+  var ok=await _uiConfirm({
+    title:'Retirer votre offre ?',
+    sub:'Votre offre de <b>'+parseFloat(of.price).toFixed(2).replace('.',',')+' € HTVA</b> sera supprimée. Le client ne la verra plus et la demande reste disponible sur la marketplace.',
+    ride:_rr, confirm:'Retirer l’offre', danger:true,
+    icon:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L2 12V2h10l8.6 8.6a2 2 0 010 2.8z"/><circle cx="7" cy="7" r="1.5"/>'
+  });
+  if(!ok) return;
   var r=await sb.rpc('driver_withdraw_offer',{ p_offer: of.id });
   if(r.error){
     var d=await sb.from('offers').delete().eq('id',of.id).eq('status','pending').select('id');
