@@ -6031,10 +6031,13 @@ function _openRideDetailImpl(el){
           var noteMatch = notesRaw.match(/\|note_drv:([^|]+)/);
           var currentNote = noteMatch ? noteMatch[1].trim() : '';
           var pen = '<svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/><path d="M10 4l2 2"/></svg>';
+          var _paxIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
+          // Même présentation que le bloc véhicule / chauffeur : icône + nom + téléphone sur une ligne
           phPax.outerHTML = '<div class="rd-card" id="pax-info-block">'
-            + '<div class="rd-cap" style="margin-bottom:6px;">Informations du passager</div>'
-            + '<div class="rd-strong">'+_rdEsc(dispName)+'</div>'
-            + (dispPhone ? '<div class="rd-muted">'+_rdEsc(dispPhone)+'</div>' : '')
+            + '<div class="rd-cap" style="margin-bottom:8px;">Informations du passager</div>'
+            + '<div class="rd-line"><span class="rd-ic">'+_paxIc+'</span><div style="min-width:0;flex:1"><div class="rd-strong">'+_rdEsc(dispName)+'</div></div>'
+              + (dispPhone ? '<a class="rd-call" href="tel:'+_rdEsc(dispPhone.replace(/[^\d+]/g,''))+'">'+_rdEsc(dispPhone)+'</a>' : '')
+            + '</div>'
             + '<div class="rd-hr"></div>'
             + '<div class="rd-cap" style="margin-bottom:6px;">Note au chauffeur</div>'
             + (currentNote ? '<div class="rd-note">'+_rdEsc(currentNote)+'</div>' : '<div class="rd-muted">Aucune note</div>')
