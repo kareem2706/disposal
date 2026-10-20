@@ -8986,7 +8986,7 @@ window.markAllRead=async function(){if(!sb||!currentUser)return;await sb.from('n
 window.toggleNotifPanel=function(){var p=document.getElementById('notif-panel');if(!p)return;var open=p.classList.toggle('open');if(open)loadNotifications();};
 function subscribeRealtime(){
   if(!sb||!currentUser)return;loadNotifications();
-  try{sb.channel('notifs_'+currentUser.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'user_id=eq.'+currentUser.id},function(pl){loadNotifications();var n=pl.new;if(n&&n.title)showToast('🔔 '+n.title);}).subscribe();}catch(e){}
+  try{sb.channel('notifs_'+currentUser.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'user_id=eq.'+currentUser.id},function(pl){loadNotifications();if(window._liveRefreshSoon)window._liveRefreshSoon();var n=pl.new;if(n&&n.title)showToast('🔔 '+n.title);}).subscribe();}catch(e){}
   if(!window._notifPoll)window._notifPoll=setInterval(loadNotifications,15000);
   _subscribeLiveData();
 }
@@ -8999,6 +8999,7 @@ function _subscribeLiveData(){
   try{ if(_liveCh) sb.removeChannel(_liveCh); }catch(e){}
   var isCli = currentRole==='client' && currentUser.email!==ADMIN_EMAIL;
   var soon=function(){ if(_liveT) clearTimeout(_liveT); _liveT=setTimeout(_liveRefresh, 700); };
+  window._liveRefreshSoon=soon;
   _liveCh=sb.channel('live_'+currentUser.id)
     .on('postgres_changes', isCli ? {event:'*',schema:'public',table:'rides',filter:'client_id=eq.'+currentUser.id} : {event:'*',schema:'public',table:'rides'}, soon)
     .on('postgres_changes', {event:'*',schema:'public',table:'offers'}, soon)
