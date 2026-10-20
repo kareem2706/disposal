@@ -3108,13 +3108,6 @@ async function _applySignupRole(role, clientType, company){
     if(!r.error && r.data === role) return true;
     if(r.error) console.warn('[signup role] rpc', r.error.message);
   }catch(e){ console.warn('[signup role] rpc', e); }
-  try{
-    var upd = { role: role, client_type: ct };
-    if(company) upd.company_name = company;
-    var u = await sb.from('profiles').update(upd).eq('id', currentUser.id).select('role').maybeSingle();
-    if(!u.error && u.data && u.data.role === role) return true;
-    console.warn('[signup role] update refused', u.error ? u.error.message : 'role unchanged (RLS)');
-  }catch(e){ console.warn('[signup role] update', e); }
   return false;
 }
 
@@ -3161,8 +3154,9 @@ async function loadProfile(){
     if(!data.first_name && meta2.first_name){ updates.first_name = meta2.first_name; currentProfile.first_name = meta2.first_name; }
     if(!data.last_name && meta2.last_name){ updates.last_name = meta2.last_name; currentProfile.last_name = meta2.last_name; }
     if(!data.company_name && meta2.company_name){ updates.company_name = meta2.company_name; currentProfile.company_name = meta2.company_name; }
+    // Synchronisation (e-mail, téléphone, nom…) faite par le serveur à partir du compte
     if(Object.keys(updates).length > 0){
-      try{sb.from('profiles').update(updates).eq('id', currentUser.id).then(function(){},function(){});}catch(ex){}
+      try{sb.rpc('api_profile_sync').then(function(){},function(){});}catch(ex){}
     }
   } else {
     // Profile doesn't exist — create it (e.g. Google OAuth first login)
@@ -3188,7 +3182,7 @@ async function loadProfile(){
       avatar_url: meta.avatar_url || meta.picture || null,
     };
     try {
-      var {data:created} = await sb.from('profiles').insert(newProfile).select().single();
+      var {data:created} = await sb.rpc('api_profile_sync');
       currentProfile = created || newProfile;
       // Insert refused (profile pre-created by a trigger) or stored with another role → force the chosen one
       if(!_isAdminAcc && meta.role){
@@ -3359,7 +3353,7 @@ async function _afterCodeSignup(){
   if(!currentUser) return;
   var isNew = currentUser.created_at && (Date.now()-new Date(currentUser.created_at).getTime() < 30*60*1000);
   if(!isNew) return; // adresse déjà inscrite : simple connexion
-  try{ if(x.vat && currentProfile && !currentProfile.vat_number){ await sb.from('profiles').update({vat_number:x.vat}).eq('id',currentUser.id); currentProfile.vat_number=x.vat; } }catch(e){}
+  try{ if(x.vat && currentProfile && !currentProfile.vat_number){ await sb.rpc('api_profile_update',{p:{vat_number:x.vat}}); currentProfile.vat_number=x.vat; } }catch(e){}
   try{
     var m=x.meta||{};
     window.sendMail(m.role==='driver' ? 'welcome_driver' : 'welcome_client', currentUser.email, { name:(m.first_name||'').trim(), isPro: m.client_type==='pro' ? 'yes' : 'no' });
@@ -3372,7 +3366,7 @@ async function _legacySignupWithPassword(email, pwd, meta, role, clientType, fna
   if(error){ if(errEl){errEl.textContent=error.message;errEl.classList.add('show');} return; }
   if(data?.user){
     var profileData = {id:data.user.id, email:email, role:role, client_type:role==='driver' ? null : (clientType||'perso'), first_name:fname||null, last_name:lname||null, company_name:company||null};
-    try{ await sb.from('profiles').upsert(profileData); }catch(ex){ console.warn('profile upsert error',ex); }
+    try{ await sb.rpc('api_profile_sync'); if(profileData.vat_number) await sb.rpc('api_profile_update',{p:{vat_number:profileData.vat_number}}); }catch(ex){ console.warn('profile sync error',ex); }
     // Welcome email — sent after the profile exists so the recipient check passes
     try{
       window.sendMail(role==='driver' ? 'welcome_driver' : 'welcome_client', email, {
@@ -4313,8 +4307,8 @@ async function _autoCompleteOverdueRides(confirmedRides){
     }
     if(endTime&&now>endTime){
       try{
-        var res=await sb.from('rides').update({status:'done'}).eq('id',r.id).eq('status','confirmed');
-        if(!res.error)updated++;
+        var res=await sb.rpc('api_ride_complete',{ p_ride:r.id });
+        if(!res.error && res.data)updated++;
       }catch(e){console.error('auto-complete error:',e);}
     }
   }
@@ -4335,8 +4329,8 @@ async function _autoCancelOverdueRides(pendingRides){
     if(isNaN(rideStart))continue;
     if(now>rideStart){
       try{
-        var res=await sb.from('rides').update({status:'cancelled'}).eq('id',r.id).in('status',['waiting','offers']).select('id');
-        if(!res.error && res.data && res.data.length){ cancelled++; _notifyOfferDriversCancelled(r,'expired'); }
+        var res=await sb.rpc('api_ride_expire',{ p_ride:r.id });
+        if(!res.error && res.data){ cancelled++; _notifyOfferDriversCancelled(r,'expired'); }
       }catch(e){}
     }
   }
@@ -4415,11 +4409,11 @@ async function _trkSend(pos){
   try{
     if(_trkNativeGeo()){
       var _ss=(await sb.auth.getSession()).data.session;
-      var _res=await Capacitor.registerPlugin('CapacitorHttp').request({ url:SB_URL+'/rest/v1/ride_locations?on_conflict=ride_id', method:'POST',
-        headers:{ apikey:SB_KEY, Authorization:'Bearer '+(_ss?_ss.access_token:SB_KEY), 'Content-Type':'application/json', Prefer:'resolution=merge-duplicates,return=minimal' }, data:rows });
+      var _res=await Capacitor.registerPlugin('CapacitorHttp').request({ url:SB_URL+'/rest/v1/rpc/api_location_push', method:'POST',
+        headers:{ apikey:SB_KEY, Authorization:'Bearer '+(_ss?_ss.access_token:SB_KEY), 'Content-Type':'application/json' }, data:{ p_rows: rows } });
       if(!_res || _res.status>=300) throw new Error('HTTP '+(_res?_res.status:'?'));
     } else {
-      var {error}=await sb.from('ride_locations').upsert(rows,{onConflict:'ride_id'});
+      var {error}=await sb.rpc('api_location_push',{ p_rows: rows });
       if(error) throw error;
     }
     var t=new Date().toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -5019,7 +5013,7 @@ window.saveProfile = async function(){
   Object.keys(updates).forEach(function(k){ if(updates[k]===undefined) delete updates[k]; });
 
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
-    const { error } = await sb.from('profiles').update(updates).eq('id', currentUser.id);
+    const { error } = await sb.rpc('api_profile_update', { p: updates });
     if(error){ showToast('Erreur: ' + error.message); return; }
   }
   Object.assign(currentProfile, updates);
@@ -5809,12 +5803,7 @@ function _openRideDetailImpl(el){
 
         // Initialize offer_note from offer message if not set yet
         var existingOfferNote = notesRaw.match(/\|offer_note:([^|]+)/);
-        if(!existingOfferNote && offerForNote && offerForNote.message){
-          var initNote = offerForNote.message.trim();
-          var updatedNotes = notesRaw.trimEnd() + '|offer_note:' + initNote;
-          sb.from('rides').update({notes: updatedNotes}).eq('id', r.id).then(function(){}, function(){});
-          notesRaw = updatedNotes;
-        }
+        // (le message de l'offre est recopié en note au client par le serveur à la confirmation)
         var offerNote = (notesRaw.match(/\|offer_note:([^|]+)/)||[])[1]||'';
         var drvNoteId = 'drv-note-card-'+r.id;
 
@@ -6492,7 +6481,7 @@ window._notifyOfferDriversCancelled = async function(ride, reason){
     var body = 'La demande '+code+(when?' du '+when:'')+', sur laquelle vous aviez envoyé une offre, '
       + (expired ? 'a été annulée automatiquement : aucune offre n’a été acceptée avant l’heure de départ.' : 'a été annulée par le client.')
       + ' Votre offre n’est plus valable.';
-    await sb.from('notifications').insert(ids.map(function(d){ return {user_id:d,type:'ride_cancelled',title:title,body:body,ride_id:ride.id,read:false}; }));
+    // (notification « cloche » envoyée par le serveur : api_ride_expire / api_ride_cancel)
     var base = Object.assign(window._mailRideData(ride), { audience:'driver', reason: expired?'expired':'client' });
     delete base.passenger;
     window.sendMailToUsers('ride_cancelled', ids, base);
@@ -6609,8 +6598,7 @@ async function _promoteNotesToDriver(rideId){
       .replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight|train):[^|]*/g,'')
       .replace(/^Mixte:.*$/m,'').replace(/Dur\u00e9e:[^\s|]+/g,'').trim();
     if(!clean) return;
-    var newNotes = notes.trimEnd() + '|note_drv:' + clean;
-    await sb.from('rides').update({notes: newNotes}).eq('id',rideId);
+    // (fait par le serveur à la confirmation : déclencheur c_rides_confirm_notes)
   }catch(e){ console.warn('_promoteNotesToDriver error',e); }
 }
 
@@ -6686,10 +6674,8 @@ window._withdrawOffer=async function(rideId){
   });
   if(!ok) return;
   var r=await sb.rpc('driver_withdraw_offer',{ p_offer: of.id });
-  if(r.error){
-    var d=await sb.from('offers').delete().eq('id',of.id).eq('status','pending').select('id');
-    if(d.error||!d.data||!d.data.length){ showToast('Retrait impossible'+(d.error?' : '+d.error.message:'')); return; }
-  } else if(r.data===false){ showToast('Cette offre ne peut plus être retirée'); return; }
+  if(r.error){ showToast('Retrait impossible : '+r.error.message); return; }
+  else if(r.data===false){ showToast('Cette offre ne peut plus être retirée'); return; }
   delete _myOffers[rideId];
   closeModal('m-ride-detail');
   showToast('✅ Offre retirée');
@@ -6732,10 +6718,9 @@ window.missionStep=async function(rideId, step, btn){
           : step==='pickup' ? { pickup_at:now, status:'active' }
           : { completed_at:now, status:'done' };
   try{
-    var {data:rows,error}=await sb.from('rides').update(upd).eq('id',rideId).eq('driver_id',currentUser.id).in('status',['confirmed','active']).select('*');
+    var {data:r,error}=await sb.rpc('api_mission_step',{ p_ride:rideId, p_step:step });
     if(error) throw error;
-    if(!rows||!rows.length) throw new Error('Mise à jour refusée');
-    var r=rows[0];
+    if(!r) throw new Error('Mise à jour refusée');
     if(step==='on_way'){
       // Client is told the driver is on the way (vehicle / driver details included)
       var veh=null, drv=null;
@@ -6792,8 +6777,8 @@ window._confirmNoShow=async function(btn){
   if(btn){ btn.disabled=true; btn.textContent='Enregistrement…'; }
   var now=new Date().toISOString();
   try{
-    var {data:rows,error}=await sb.from('rides').update({ completed_at:now, no_show_at:now, status:'done' })
-      .eq('id',rideId).eq('driver_id',currentUser.id).eq('status','confirmed').not('on_way_at','is',null).is('pickup_at',null).select('*');
+    var {data:_ns,error}=await sb.rpc('api_mission_no_show',{ p_ride:rideId });
+    var rows=_ns?[_ns]:[];
     if(error){
       if(/no_show_at/.test(error.message||'')) throw new Error('la colonne « no_show_at » manque dans Supabase (exécuter supabase/rides_no_show.sql)');
       throw error;
@@ -6802,10 +6787,7 @@ window._confirmNoShow=async function(btn){
     var r=rows[0];
     var mail=window._mailRideData(r,{ noShowTime:_hhmm(now) });
     delete mail.price;
-    // Email « absence du client » : envoyé par la base (ride_driver_emails.sql)
-    try{ await sb.from('notifications').insert({ user_id:r.client_id, type:'ride_no_show', ride_id:r.id, read:false,
-      title:'Absence au rendez-vous (No Show)',
-      body:'Votre chauffeur s\u2019est présenté pour la course '+(mail.code||'')+(mail.date?' du '+mail.date+(mail.time?' à '+mail.time:''):'')+', mais vous n\u2019étiez pas au lieu de rendez-vous. La course est clôturée.' }); }catch(_e){}
+    // E-mail et notification « absence du client » : envoyés par le serveur
     showToast('✅ No Show enregistré — le client a été prévenu');
     closeModal('m-noshow');
     closeModal('m-ride-detail');
@@ -6833,8 +6815,9 @@ function _sendNoShowMail(clientId, data){
 window.completeRide=async function(rideId){
   if(!sb)return;
   try{
-    var {error}=await sb.from('rides').update({status:'done'}).eq('id',rideId).eq('status','confirmed');
+    var {data:_ok,error}=await sb.rpc('api_ride_complete',{ p_ride:rideId });
     if(error)throw error;
+    if(!_ok)throw new Error('Clôture refusée');
     closeModal('m-ride-detail');
     showToast('\u2705 Course termin\u00e9e');
     if(typeof loadDriverDashboard==='function')await loadDriverDashboard();
@@ -7000,7 +6983,8 @@ window.confirmDeleteRide = async function(){
       // beyond the delay = refundable, keep the original payment_method (bank_transfer/stripe)
     }
     var _cancelRefundable = (cancelUpdate.payment_method!=='non_refundable');
-    var res=await sb.from('rides').update(cancelUpdate).eq('id',rideId).eq('client_id',currentUser.id);
+    var res=await sb.rpc('api_ride_cancel',{ p_ride:rideId });
+    if(!res.error && res.data) _cancelRefundable = res.data.refundable !== false;   // calculé par le serveur
     if(!res.error) _notifyRideCancelled(rideId, _cancelRefundable, dIds);
     _pendingDeleteId = null;
     if(btn){ btn.disabled=false; btn.textContent='Oui, annuler'; }
@@ -7011,8 +6995,7 @@ window.confirmDeleteRide = async function(){
       if(dIds.length>0){
         var _cr=rideForCancel||{}, _cc=_cr.booking_code||String(rideId).slice(0,8);
         var _cw=(_cr.ride_date?formatDate(_cr.ride_date):'')+(_cr.ride_time?' à '+String(_cr.ride_time).slice(0,5):'');
-        dIds=dIds.filter(function(d,i,a){ return d && a.indexOf(d)===i; });
-        await sb.from('notifications').insert(dIds.map(function(d){return{user_id:d,type:'ride_cancelled',title:'Demande annulée',body:'La demande '+_cc+(_cw?' du '+_cw:'')+', sur laquelle vous aviez envoyé une offre, a été annulée par le client. Votre offre n’est plus valable.',ride_id:rideId,read:false};}));
+        // (notification « cloche » aux fleets envoyée par le serveur)
       }
     }
   } catch(e){
@@ -7261,7 +7244,7 @@ window.submitRide = async function(){
       try{ _prevRide = (await sb.from('rides').select('*').eq('id', editId).maybeSingle()).data; if(_prevRide) await _mergeRidePrivate(_prevRide); }catch(e){}
       // Une demande qui a déjà reçu des offres garde son statut « offers » (les offres restent visibles)
       if(_prevRide && _prevRide.status && _prevRide.status!=='waiting') delete rideData.status;
-      result = await sb.from('rides').update(rideData).eq('id', editId).eq('client_id', currentUser.id);
+      result = await sb.rpc('api_ride_update', { p_ride: editId, p: rideData });
       if(!result.error && _prevRide){
         var _chg = [];
         if(_prevRide.ride_date !== rideData.ride_date) _chg.push('date');
@@ -7275,24 +7258,11 @@ window.submitRide = async function(){
         if(_chg.length) _notifyRideUpdated(editId, _chg);
       }
     } else {
-      result = await sb.from('rides').insert(rideData).select('id').single();
-      // Generate booking code after insert: BL + type(2 chars) + MMYY + counter 3 digits
+      // Création par le serveur (référence BLxx-MMAA### calculée par le serveur)
+      result = await sb.rpc('api_ride_create', { p: rideData });
       if(result.data && result.data.id){
-        var newId = result.data.id;
-        var typeCode = tripType==='disposal'?'AB':tripType==='mixed'?'MX':'AB';
-        // actually: AB->AB, disposal->DI, mixed->MX
-        typeCode = tripType==='ab'?'AB':tripType==='disposal'?'DI':'MX';
-        var now = new Date();
-        var mm = String(now.getMonth()+1).padStart(2,'0');
-        var yy = String(now.getFullYear()).slice(-2);
-        // count rides this month for counter
-        var monthStart = now.getFullYear()+'-'+mm+'-01';
-        var rideCount = await _ridesCountSince(monthStart+'T00:00:00');
-        var counter = String((rideCount||1)).padStart(3,'0');
-        var bookingCode = 'BL'+typeCode+'-'+mm+yy+counter;
-        await sb.from('rides').update({booking_code: bookingCode}).eq('id', newId);
-        rideData.booking_code = bookingCode; // so the emails carry the request id
-        rideData.id = newId;
+        rideData.booking_code = result.data.booking_code; // so the emails carry the request id
+        rideData.id = result.data.id;
       }
     }
     if(result.error) throw result.error;
@@ -7836,20 +7806,11 @@ window.submitSubcontract = async function(){
   };
 
   try {
-    var result = await sb.from('rides').insert(rideData).select('id').single();
+    // Création par le serveur (vérifie que la fleet est validée ; référence calculée par le serveur)
+    var result = await sb.rpc('api_ride_create', { p: rideData });
     if(result.error) throw result.error;
-    // Booking code (same scheme as client requests) so the emails carry the request id
     if(result.data && result.data.id){
-      try{
-        var _sNow = new Date();
-        var _sMm = String(_sNow.getMonth()+1).padStart(2,'0');
-        var _sYy = String(_sNow.getFullYear()).slice(-2);
-        var _sCount = await _ridesCountSince(_sNow.getFullYear()+'-'+_sMm+'-01T00:00:00');
-        var _sType = tripType==='ab'?'AB':tripType==='disposal'?'DI':'MX';
-        var _sCode = 'BL'+_sType+'-'+_sMm+_sYy+String(_sCount||1).padStart(3,'0');
-        await sb.from('rides').update({booking_code:_sCode}).eq('id', result.data.id);
-        rideData.booking_code = _sCode;
-      }catch(e){ console.warn('subcontract booking code', e); }
+      rideData.booking_code = result.data.booking_code;
       rideData.id = result.data.id;
     }
     // Requester confirmation + alert to the other verified drivers
@@ -8356,61 +8317,7 @@ window.confirmPayment = async function(method){
     return;
   }
 
-  if(!sb || !currentRideId || !currentOfferId){ return; }
-
-  var btn = document.getElementById(method === 'bank_transfer' ? 'payment-btn-confirm-bank' : 'payment-btn-confirm-stripe');
-  if(btn) setLoading(btn, true, 'Traitement…');
-
-  var { error: acceptErr } = await sb.from('offers').update({status:'accepted'}).eq('id', currentOfferId);
-  if(acceptErr){
-    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Paiement effectu\u00e9' : 'Payer \u2192');
-    if(errEl){ showError(errEl, acceptErr.message); }
-    return;
-  }
-  var { error: rejectErr } = await sb.from('offers').update({status:'rejected'}).eq('ride_id', currentRideId).neq('id', currentOfferId);
-  if(rejectErr){
-    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Paiement effectu\u00e9' : 'Payer \u2192');
-    if(errEl){ showError(errEl, rejectErr.message); }
-    return;
-  }
-
-  var rideUpdates = {
-    status: method === 'bank_transfer' ? 'pending_payment' : 'confirmed',
-    driver_id: currentDriverId,
-    final_price: totalTvac,
-    payment_method: method
-  };
-  console.log('[confirmPayment] updating ride', currentRideId, 'driver_id:', currentDriverId, 'price:', currentOfferAmount);
-  // If driver_id is missing, fetch it from the accepted offer
-  if(!currentDriverId && currentOfferId){
-    var {data:ofData}=await sb.from('offers').select('driver_id').eq('id',currentOfferId).single();
-    if(ofData&&ofData.driver_id){rideUpdates.driver_id=ofData.driver_id;console.log('[confirmPayment] fetched driver_id from offer:',ofData.driver_id);}
-  }
-  var { error } = await sb.from('rides').update(rideUpdates).eq('id', currentRideId);
-
-  if(error){
-    if(btn) setLoading(btn, false, method === 'bank_transfer' ? 'Paiement effectu\u00e9' : 'Payer \u2192');
-    if(errEl){ showError(errEl, error.message); }
-    return;
-  }
-
-  // Email the driver whose offer was accepted
-  if(method === 'bank_transfer'){
-    try{
-      var {data:_accR} = await sb.from('rides').select('*').eq('id', currentRideId).maybeSingle();
-      if(_accR){
-        var _accData = window._mailRideData(_accR, { payment: 'bank_transfer' });
-        delete _accData.price;
-        window.sendMailToUsers('offer_accepted_driver', _accR.driver_id || rideUpdates.driver_id, _accData);
-      }
-    }catch(e){ console.warn('offer accepted mail', e); }
-  } else {
-    _notifyRideConfirmed(currentRideId, rideUpdates.driver_id);
-  }
-
-  closeModal('m-payment');
-  showToast(t('toast_offer_acc'));
-  await loadClientDashboard();
+  // Paiement : uniquement par Stripe, confirmé par le serveur (verify-checkout / stripe-webhook)
 };
 
 window.confirmStripePayment=async function(){
@@ -8656,34 +8563,10 @@ window.submitOffer = async function(){
   err.classList.remove('show');
 
   try {
-    // Check for existing offer
-    var chk = await sb.from('offers')
-      .select('id')
-      .eq('ride_id', currentRideId)
-      .eq('driver_id', currentUser.id)
-      .maybeSingle();
-    if(chk.error) throw chk.error;
-    var hasExisting = !!(chk.data);
-
-    var offerResult;
-    if(hasExisting){
-      offerResult = await sb.from('offers')
-        .update({ price: price, message: msg || null, vehicle_id: selectedVehicleId || null, included_km: includedKm })
-        .eq('ride_id', currentRideId)
-        .eq('driver_id', currentUser.id);
-    } else {
-      offerResult = await sb.from('offers')
-        .insert({ ride_id: currentRideId, driver_id: currentUser.id,
-                  price: price, message: msg || null, status: 'pending', vehicle_id: selectedVehicleId || null, included_km: includedKm });
-    }
+    // Offre créée ou modifiée par le serveur (fleet validée, demande ouverte, véhicule de la flotte)
+    var offerResult = await sb.rpc('api_offer_submit', { p_ride: currentRideId, p_price: price, p_message: msg || null,
+                                                         p_vehicle: selectedVehicleId || null, p_km: includedKm || null });
     if(offerResult.error) throw offerResult.error;
-
-    // Always update ride status to 'offers' (works if status is 'waiting' or already 'offers')
-    var rideUpdate = await sb.from('rides')
-      .update({ status: 'offers' })
-      .eq('id', currentRideId)
-      .in('status', ['waiting', 'offers']);
-    if(rideUpdate.error) console.warn('ride status update error:', rideUpdate.error.message);
 
     // Notify the client that a new offer arrived (only on first submission)
     // Email « offre reçue » : envoyé par la base à la création de l'offre (ride_driver_emails.sql)
@@ -8982,8 +8865,8 @@ async function loadNotifications(){
   }).join('');
   list.onclick=function(e){var el=e.target.closest('[data-nid]');if(el){markNotifRead(el.dataset.nid,el);}};
 }
-window.markNotifRead=async function(id,el){if(el)el.classList.remove('unread');if(sb)await sb.from('notifications').update({read:true}).eq('id',id);loadNotifications();};
-window.markAllRead=async function(){if(!sb||!currentUser)return;await sb.from('notifications').update({read:true}).eq('user_id',currentUser.id).eq('read',false);loadNotifications();};
+window.markNotifRead=async function(id,el){if(el)el.classList.remove('unread');if(sb)await sb.rpc('api_notif_read',{p_id:id});loadNotifications();};
+window.markAllRead=async function(){if(!sb||!currentUser)return;await sb.rpc('api_notif_read',{p_id:null});loadNotifications();};
 window.toggleNotifPanel=function(){var p=document.getElementById('notif-panel');if(!p)return;var open=p.classList.toggle('open');if(open)loadNotifications();};
 function subscribeRealtime(){
   if(!sb||!currentUser)return;loadNotifications();
@@ -9384,8 +9267,8 @@ window._editPersonalFromDetail=function(){
 window.deletePersonalMission=function(id){
   _fleetConfirm('Supprimer cette mission ?','La mission personnelle sera d\u00e9finitivement supprim\u00e9e.',async function(){
     // Permanent delete (personal missions only)
-    var res=await sb.from('rides').delete().eq('id',id).eq('status','personal').select('id');
-    if(res.error||!res.data||!res.data.length){
+    var res=await sb.rpc('api_personal_delete',{ p_id:id });
+    if(res.error||!res.data){
       console.error('delete personal mission error:',res.error);
       showToast('Suppression impossible'+(res.error?' : '+res.error.message:' (droits insuffisants)'));
       return;
@@ -9466,11 +9349,7 @@ window.savePersonalMission=async function(btn){
 
   try{
     var res;
-    if(editId){
-      res=await sb.from('rides').update(rideData).eq('id',editId).eq('status','personal');
-    }else{
-      res=await sb.from('rides').insert(rideData);
-    }
+    res=await sb.rpc('api_personal_save',{ p_id: editId||null, p: rideData });
     if(res.error)throw res.error;
     if(btn)setLoading(btn,false,'Enregistrer');
     closeModal('m-personal-mission');
@@ -9520,9 +9399,7 @@ window.saveDriverNote = async function(rideId){
   var {data:rd, error:fetchErr} = await sb.from('rides').select('notes').eq('id',rideId).maybeSingle();
   if(fetchErr){ showToast('Erreur: '+fetchErr.message); if(btn){btn.disabled=false;btn.textContent='Enregistrer';} return; }
   var _hadNote = /\|offer_note:/.test(rd?.notes||'');
-  var notes = (rd?.notes||'').replace(/\|offer_note:[^|]*/g,'').trimEnd();
-  if(note) notes += '|offer_note:'+note;
-  var {error} = await sb.from('rides').update({notes:notes}).eq('id',rideId);
+  var {error} = await sb.rpc('api_ride_driver_note',{ p_ride:rideId, p_note:note });
   if(error){ console.error('saveDriverNote error:', error); showToast('Erreur: '+error.message); if(btn){btn.disabled=false;btn.textContent='Enregistrer';} return; }
   document.getElementById('m-pax-edit')?.remove();
   showToast('✅ Note mise à jour');
@@ -9658,7 +9535,7 @@ window.sendRideProblem = async function(rideId){
   if(btn){ btn.disabled=true; btn.textContent='Envoi…'; }
   var _open = await window._rideOpenReport(rideId);
   if(_open){ window._showRideReportPending(_open); return; }
-  var {error} = await sb.from('ride_reports').insert({ ride_id:rideId, client_id:currentUser.id, message:msg });
+  var {error} = await sb.rpc('api_report_ride',{ p_ride:rideId, p_message:msg });
   if(error && error.code==='23505'){ window._showRideReportPending(null); return; }
   if(error){
     console.error('sendRideProblem error:', error);
@@ -9685,12 +9562,8 @@ window.savePaxInfo = async function(rideId){
   if(btn){ btn.disabled=true; btn.textContent='Enregistrement…'; }
   var name  = (document.getElementById('pax-edit-name')?.value||'').trim();
   var phone = (document.getElementById('pax-edit-phone')?.value||'').trim();
-  var {data:rd, error:fetchErr} = await sb.from('rides').select('notes').eq('id',rideId).maybeSingle();
-  if(fetchErr){ showToast('Erreur: '+fetchErr.message); if(btn){btn.disabled=false;btn.textContent='Enregistrer';} return; }
-  var notes = (rd?.notes||'').replace(/\|pax:[^|]*/g,'').replace(/\|tel:[^|]*/g,'').trimEnd();
-  if(name)  notes += '|pax:'+name;
-  if(phone) notes += '|tel:'+phone;
-  var {error} = await sb.from('rides').update({notes:notes}).eq('id',rideId);
+  // Le serveur met à jour le passager dans la note complète (y compris la partie privée)
+  var {error} = await sb.rpc('api_ride_set_tags',{ p_ride:rideId, p_tags:{ pax:name, tel:phone } });
   if(error){ console.error('savePaxInfo error:', error); showToast('Erreur: '+error.message); if(btn){btn.disabled=false;btn.textContent='Enregistrer';} return; }
   _notifyRideUpdated(rideId, ['passager']);
   document.getElementById('m-pax-edit')?.remove();
@@ -9706,11 +9579,7 @@ window.saveNoteInfo = async function(rideId){
   var btn = document.querySelector('#m-pax-edit .btn-primary');
   if(btn){ btn.disabled=true; btn.textContent='Enregistrement…'; }
   var note = (document.getElementById('pax-edit-note')?.value||'').trim();
-  var {data:rd, error:fetchErr} = await sb.from('rides').select('notes').eq('id',rideId).maybeSingle();
-  if(fetchErr){ showToast('Erreur: '+fetchErr.message); if(btn){btn.disabled=false;btn.textContent='Enregistrer';} return; }
-  var notes = (rd?.notes||'').replace(/\|note_drv:[^|]*/g,'').trimEnd();
-  if(note) notes += '|note_drv:'+note;
-  var {error} = await sb.from('rides').update({notes:notes}).eq('id',rideId);
+  var {error} = await sb.rpc('api_ride_set_tags',{ p_ride:rideId, p_tags:{ note_drv:note } });
   if(error){ console.error('saveNoteInfo error:', error); showToast('Erreur: '+error.message); if(btn){btn.disabled=false;btn.textContent='Enregistrer';} return; }
   _notifyRideUpdated(rideId, ['note au chauffeur'], note);
   document.getElementById('m-pax-edit')?.remove();
@@ -9807,43 +9676,9 @@ window.submitRating=async function(){
   if(!rideId){showToast('Erreur: course introuvable');return;}
   if(sb&&!localStorage.getItem(DEMO_MODE_KEY)){
     try{
-      // Get the driver_id for this ride
-      var {data:ride,error:rideErr}=await sb.from('rides').select('driver_id').eq('id',rideId).single();
-      if(rideErr) throw rideErr;
-      if(ride&&ride.driver_id){
-        // Check if rating already exists for this ride
-        var {data:existingRating} = await sb.from('ratings').select('id').eq('ride_id',rideId).maybeSingle();
-        var insErr;
-        if(existingRating){
-          // Update existing rating
-          var {error:updRatErr} = await sb.from('ratings').update({score:score,comment:comment||null}).eq('ride_id',rideId);
-          insErr = updRatErr;
-        } else {
-          // Insert new rating
-          var {error:newRatErr} = await sb.from('ratings').insert({ride_id:rideId,driver_id:ride.driver_id,client_id:currentUser.id,score:score,comment:comment||null});
-          insErr = newRatErr;
-        }
-        if(insErr) throw insErr;
-        // Recalculate driver avg rating from all their ratings
-        var {data:allRatings,error:ratErr}=await sb.from('ratings').select('score').eq('driver_id',ride.driver_id);
-        if(ratErr) throw ratErr;
-        if(allRatings&&allRatings.length>0){
-          var avg=allRatings.reduce(function(s,r){return s+r.score;},0)/allRatings.length;
-          var newRating=Math.round(avg*10)/10;
-          // Use RPC to bypass RLS (client can't directly update another user's profile)
-          var {error:rpcErr} = await sb.rpc('update_driver_rating', {driver_id: ride.driver_id});
-          if(rpcErr){
-            // Fallback: try direct update (works if RLS allows it)
-            console.warn('RPC failed, trying direct update:', rpcErr.message);
-            var {error:updErr}=await sb.from('profiles').update({rating:newRating,rating_count:allRatings.length}).eq('id',ride.driver_id);
-            if(updErr) console.warn('Direct update also failed:', updErr.message);
-          } else {
-            console.log('[rating] RPC updated driver',ride.driver_id,'→',newRating,'('+allRatings.length+' ratings)');
-          }
-        }
-      }
-      // Mark ride as rated
-      await sb.from('rides').update({rated:true}).eq('id',rideId);
+      // Note enregistrée par le serveur (course terminée du client ; moyenne de la fleet recalculée par le serveur)
+      var {error:rateErr}=await sb.rpc('api_rate_ride',{ p_ride:rideId, p_score:score, p_comment:comment||null });
+      if(rateErr) throw rateErr;
     }catch(e){console.error('rating error:',e);showToast('Erreur lors de l\'évaluation: '+(e.message||e));return;}
   }
   closeModal('m-rate');
@@ -9976,6 +9811,12 @@ function loadProfileForm(){
     _pfSetupDriverTabs(_PF_TABS_DRIVER,'driver');
     set('pf-iban',_pfFmtIban(currentProfile.iban||''));set('pf-bic',currentProfile.bic||'');
     set('pf-bank-holder',currentProfile.bank_holder||co||'');
+    // Coordonnées bancaires : table privée profile_bank (lisible par la fleet et l'admin uniquement)
+    if(sb && currentUser) sb.from('profile_bank').select('iban,bic,bank_holder').eq('user_id',currentUser.id).maybeSingle().then(function(res){
+      var b=res&&res.data; if(!b) return;
+      Object.assign(currentProfile,{iban:b.iban,bic:b.bic,bank_holder:b.bank_holder});
+      set('pf-iban',_pfFmtIban(b.iban||'')); set('pf-bic',b.bic||''); if(b.bank_holder) set('pf-bank-holder',b.bank_holder);
+    },function(){});
   } else {
     var _pro=(role==='client'&&ct==='pro');
     _pfSetupDriverTabs(_pfTabsClient(_pro), _pro?'client-pro':'client-perso');
@@ -10081,8 +9922,8 @@ window.saveBankInfo=async function(){
   if(bic && !/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bic)) return fail('BIC invalide (8 ou 11 caractères).');
   var upd={ iban:iban||null, bic:bic||null, bank_holder:holder||null };
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
-    var {error}=await sb.from('profiles').update(upd).eq('id',currentUser.id);
-    if(error) return fail(/column/i.test(error.message||'') ? 'Champs bancaires non installés : exécutez profiles_bank.sql dans Supabase.' : 'Erreur : '+error.message);
+    var {error}=await sb.rpc('api_bank_save',{ p_iban:iban||null, p_bic:bic||null, p_holder:holder||null });
+    if(error) return fail(/function/i.test(error.message||'') ? 'Exécutez server_actions.sql dans Supabase.' : 'Erreur : '+error.message);
   }
   Object.assign(currentProfile,upd);
   var ib=document.getElementById('pf-iban'); if(ib) ib.value=_pfFmtIban(iban);
@@ -10232,11 +10073,11 @@ window.saveFleetDoc=async function(){
       // Delete old file from storage
       var oldPath=_storagePathFromUrl(existingDoc.file_url);
       if(oldPath){try{await sb.storage.from('fleet-docs').remove([oldPath]);}catch(e){}}
-      var {error}=await sb.from('fleet_documents').update({doc_name:fileInput.files[0].name,file_url:url}).eq('id',existingDoc.id);
+      var {error}=await sb.rpc('api_doc_save',{ p_kind:'fleet', p_owner:null, p_doc:existingDoc.id, p:{doc_name:fileInput.files[0].name,file_url:url} });
       if(error)throw error;
       showToast('Document remplac\u00e9');
     } else {
-      var {error}=await sb.from('fleet_documents').insert({fleet_id:currentUser.id,doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url});
+      var {error}=await sb.rpc('api_doc_save',{ p_kind:'fleet', p_owner:null, p_doc:null, p:{doc_type:typeEl.value,doc_name:fileInput.files[0].name,file_url:url} });
       if(error)throw error;
       showToast('Document ajout\u00e9');
     }
@@ -10261,7 +10102,7 @@ window.deleteFleetDoc=function(id){
       var storagePath=_storagePathFromUrl(doc.file_url);
       if(storagePath){try{await sb.storage.from('fleet-docs').remove([storagePath]);}catch(e){}}
     }
-    await sb.from('fleet_documents').delete().eq('id',id);
+    await sb.rpc('api_doc_delete',{ p_kind:'fleet', p_doc:id });
     await loadFleetDocs();showToast('Document supprim\u00e9');
   });
 };
@@ -10475,11 +10316,11 @@ async function _docFormSave(defs, existing, table, fk, fkVal, folder){
       if(file){
         var url=await _uploadFleetFile(file, folder);
         var r;
-        if(old) r=await sb.from(table).update({file_url:url,doc_name:file.name,expires_at:exp,reminder_sent_at:null}).eq('id',old.id);
-        else { var row={doc_type:d.type,doc_name:file.name,file_url:url,expires_at:exp}; row[fk]=fkVal; r=await sb.from(table).insert(row); }
+        var _kind = table==='driver_documents' ? 'driver' : 'vehicle';
+        r=await sb.rpc('api_doc_save',{ p_kind:_kind, p_owner:fkVal, p_doc: old ? old.id : null, p:{doc_type:d.type,doc_name:file.name,file_url:url,expires_at:exp} });
         if(r.error) throw r.error;
       } else if(old && String(old.expires_at||'').slice(0,10)!==(exp||'')){
-        var u=await sb.from(table).update({expires_at:exp,reminder_sent_at:null}).eq('id',old.id);
+        var u=await sb.rpc('api_doc_save',{ p_kind: table==='driver_documents' ? 'driver' : 'vehicle', p_owner:fkVal, p_doc:old.id, p:{expires_at:exp} });
         if(u.error) throw u.error;
       }
     }catch(e){ console.error('[docs] '+d.type,e); errors.push(d.label+' : '+(e.message||e)); }
@@ -10553,10 +10394,10 @@ window.saveVehicle=async function(){
     if(vehId){
       var _vUpd={brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities};
       if(!seatsLocked)_vUpd.seats=seats;
-      var {error}=await sb.from('fleet_vehicles').update(_vUpd).eq('id',vehId);
+      var {error}=await sb.rpc('api_vehicle_save',{ p_id:vehId, p:_vUpd });
       if(error)throw error;
     } else {
-      var {data:veh,error}=await sb.from('fleet_vehicles').insert({fleet_id:currentUser.id,brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities,seats:seats}).select().single();
+      var {data:veh,error}=await sb.rpc('api_vehicle_save',{ p_id:null, p:{brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities,seats:seats} });
       if(error)throw error;
       vehId=veh.id;
     }
@@ -10623,9 +10464,9 @@ window.deleteVehicle=function(id){
     if(vDocs&&vDocs.length>0){
       var paths=vDocs.map(function(d){return _storagePathFromUrl(d.file_url);}).filter(Boolean);
       if(paths.length>0){try{await sb.storage.from('fleet-docs').remove(paths);}catch(e){}}
-      await sb.from('vehicle_documents').delete().eq('vehicle_id',id);
     }
-    await sb.from('fleet_vehicles').delete().eq('id',id);
+    var _dv=await sb.rpc('api_vehicle_delete',{ p_id:id });
+    if(_dv.error){ showToast('Suppression impossible : '+_dv.error.message); return; }
     await loadFleetVehicles();showToast('V\u00e9hicule supprim\u00e9');
   });
 };
@@ -10679,19 +10520,9 @@ window.saveMissionAssignment=async function(){
   if(!vChanged && !dChanged){ document.getElementById('m-mission-assign')?.remove(); return; }
   if(btn){ btn.disabled=true; btn.textContent='Enregistrement...'; }
   try{
-    // Server-side function first (checks ownership, bypasses offer RLS), direct update as fallback
-    var ok=false;
+    // Fonction serveur (vérifie la mission, le véhicule et le chauffeur de la flotte)
     var rpc=await sb.rpc('fleet_update_assignment',{ p_ride:r.id, p_vehicle:vId, p_driver:dId||null });
-    if(!rpc.error) ok=true;
-    else {
-      console.warn('[assignment] rpc', rpc.error.message);
-      if(_maOffer){
-        var u=await sb.from('offers').update({ vehicle_id:vId, fleet_driver_id:dId||null }).eq('id',_maOffer.id).select('id');
-        if(u.error) throw u.error;
-        ok=!!(u.data&&u.data.length);
-      }
-    }
-    if(!ok) throw new Error('Modification refusée par la base (droits insuffisants)');
+    if(rpc.error) throw new Error(rpc.error.message||'Modification refusée');
     // Email the client (or the driver who posted the subcontract)
     var veh=null, drv=null;
     try{
@@ -10803,10 +10634,10 @@ window.saveDriver=async function(){
   try{
     var drvId=window._editDriverId;
     if(drvId){
-      var {error}=await sb.from('fleet_drivers').update({first_name:fname,last_name:lname,phone:phone||null,email:email||null,license_region:license}).eq('id',drvId);
+      var {error}=await sb.rpc('api_fleet_driver_save',{ p_id:drvId, p:{first_name:fname,last_name:lname,phone:phone||null,email:email||null,license_region:license} });
       if(error)throw error;
     } else {
-      var {data:drv,error}=await sb.from('fleet_drivers').insert({fleet_id:currentUser.id,first_name:fname,last_name:lname,phone:phone||null,email:email||null,license_region:license}).select().single();
+      var {data:drv,error}=await sb.rpc('api_fleet_driver_save',{ p_id:null, p:{first_name:fname,last_name:lname,phone:phone||null,email:email||null,license_region:license} });
       if(error)throw error;
       drvId=drv.id;
     }
@@ -10826,9 +10657,9 @@ window.deleteDriver=function(id){
     if(dDocs&&dDocs.length>0){
       var paths=dDocs.map(function(d){return _storagePathFromUrl(d.file_url);}).filter(Boolean);
       if(paths.length>0){try{await sb.storage.from('fleet-docs').remove(paths);}catch(e){}}
-      await sb.from('driver_documents').delete().eq('driver_id',id);
     }
-    await sb.from('fleet_drivers').delete().eq('id',id);
+    var _dd=await sb.rpc('api_fleet_driver_delete',{ p_id:id });
+    if(_dd.error){ showToast('Suppression impossible : '+_dd.error.message); return; }
     await loadFleetDriversList();showToast('Chauffeur supprim\u00e9');
   });
 };
@@ -11026,7 +10857,7 @@ function _adminActionBtns(table, id, status){
 window.adminSetStatus=async function(table, id, newStatus){
   if(!sb) return;
   try{
-    var {error}=await sb.from(table).update({status:newStatus}).eq('id',id);
+    var {error}=await sb.rpc('api_admin_save',{ p_table:table, p_id:id, p_data:{status:newStatus} });
     if(error) throw error;
     showToast(newStatus==='validated'?'V\u00e9rifi\u00e9 !':newStatus==='rejected'?'Rejet\u00e9':'Statut mis \u00e0 jour');
     _refreshAdminFleetsBadge();
@@ -11043,10 +10874,8 @@ window.adminSetStatus=async function(table, id, newStatus){
 window.adminSetFleetVerified=async function(fleetId, newStatus){
   if(!sb) return;
   try{
-    var {data:updRows,error}=await sb.from('profiles').update({fleet_verified:newStatus}).eq('id',fleetId).select('id,fleet_verified');
+    var {error}=await sb.rpc('api_admin_save',{ p_table:'profiles', p_id:fleetId, p_data:{fleet_verified:newStatus} });
     if(error) throw error;
-    // RLS silently filters the update (no error, 0 row) when the admin has no UPDATE right on profiles
-    if(!updRows||updRows.length===0) throw new Error('Mise \u00e0 jour refus\u00e9e par la base (droits RLS sur profiles)');
     showToast(newStatus==='validated'?'Fleet v\u00e9rifi\u00e9e !':'Statut mis \u00e0 jour');
     if(_adminFleetDetailId){
       await showFleetDetail(_adminFleetDetailId);
@@ -11226,9 +11055,8 @@ window.adminSaveFleetIdentity=async function(){
   if(!upd.company_name && !upd.first_name && !upd.last_name){ showError(err,'Indiquez au moins un nom de soci\u00e9t\u00e9 ou un contact'); return; }
   if(btn){ btn.disabled=true; btn.textContent='Enregistrement...'; }
   try{
-    var {data:rows,error}=await sb.from('profiles').update(upd).eq('id',id).select('id');
+    var {error}=await sb.rpc('api_admin_save',{ p_table:'profiles', p_id:id, p_data:upd });
     if(error) throw error;
-    if(!rows||!rows.length) throw new Error('Mise \u00e0 jour refus\u00e9e par la base (droits RLS sur profiles)');
     showToast('\u2705 Donn\u00e9es de la fleet mises \u00e0 jour');
     await showFleetDetail(id);
   }catch(e){
@@ -11572,9 +11400,8 @@ window.saveAdminBilling=async function(){
   row.updated_at=new Date().toISOString();
   if(btn){btn.disabled=true;btn.textContent='Enregistrement...';}
   try{
-    var {data,error}=await sb.from('billing_settings').upsert(row,{onConflict:'id'}).select('id');
+    var {error}=await sb.rpc('api_admin_save',{ p_table:'billing_settings', p_id:String(row.id||1), p_data:row });
     if(error) throw error;
-    if(!data||!data.length) throw new Error('Enregistrement refusé par la base (droits RLS)');
     _refundRules=d.list; // apply immediately in this session
     _docBillingP=null;   // invoices / reports reload the new settings
     showToast('✅ Données de facturation enregistrées');
@@ -11633,9 +11460,8 @@ window.adminSaveClient=async function(){
   if(!isPro && !upd.first_name){ showError(err,'Pr\u00e9nom requis'); return; }
   if(btn){ btn.disabled=true; btn.textContent='Enregistrement...'; }
   try{
-    var {data:rows,error}=await sb.from('profiles').update(upd).eq('id',id).select('id');
+    var {error}=await sb.rpc('api_admin_save',{ p_table:'profiles', p_id:id, p_data:upd });
     if(error) throw error;
-    if(!rows||!rows.length) throw new Error('Mise \u00e0 jour refus\u00e9e par la base (droits RLS sur profiles)');
     closeModal('m-admin-client');
     showToast('\u2705 Donn\u00e9es du client mises \u00e0 jour');
     await loadAdminClients();
@@ -11890,29 +11716,15 @@ async function _invPeople(ids){
 }
 
 // Sequential number, stored in fleet_invoices (same number when re-generated).
-// RPC invoice_number works for the admin, the fleet and the client; direct table access as fallback (admin).
+// RPC invoice_number works for the admin, the fleet and the client.
 async function _invNumber(fleetId, kind, clientId, period, a, count){
   try{
     var r=await sb.rpc('invoice_number',{ p_fleet:fleetId, p_client:clientId||null, p_period:period, p_kind:kind,
       p_htva:a.htva, p_vat_rate:a.vatRate, p_vat:a.vat, p_tvac:a.tvac, p_rc:!!a.rc, p_count:count });
     if(!r.error && r.data) return { number:r.data };
   }catch(e){}
-  var amounts={ amount_htva:a.htva, vat_rate:a.vatRate, vat_amount:a.vat, amount_tvac:a.tvac, reverse_charge:!!a.rc };
-  var pre='BL-'+(kind==='prestation'?'P':'C')+'-'+period.slice(0,4)+'-';
-  try{
-    var q=sb.from('fleet_invoices').select('id,number').eq('fleet_id',fleetId).eq('period',period).eq('kind',kind);
-    q = clientId ? q.eq('client_id',clientId) : q.is('client_id',null);
-    var ex=await q.maybeSingle();
-    if(ex.error) throw ex.error;
-    if(ex.data){ await sb.from('fleet_invoices').update(Object.assign({rides_count:count},amounts)).eq('id',ex.data.id); return { number:ex.data.number }; }
-    var cnt=await sb.from('fleet_invoices').select('id',{count:'exact',head:true}).like('number',pre+'%');
-    var ins=await sb.from('fleet_invoices').insert(Object.assign({fleet_id:fleetId,client_id:clientId||null,period:period,kind:kind,number:pre+String((cnt.count||0)+1).padStart(4,'0'),rides_count:count},amounts)).select('number').single();
-    if(ins.error) throw ins.error;
-    return { number:ins.data.number };
-  }catch(e){
-    console.warn('invoice number', e);
-    return { number:'PROVISOIRE', warn:'Numéro de facture non enregistré (fonction invoice_number absente ou droits insuffisants) : document provisoire.' };
-  }
+  // Numéro attribué uniquement par le serveur (fonction invoice_number)
+  return { number:'PROVISOIRE', warn:'Numéro de facture non enregistré (fonction invoice_number indisponible) : document provisoire.' };
 }
 
 function _invPage(o){
@@ -12299,9 +12111,8 @@ window.openAdminIssueRide=function(rideId){
 window.setAdminIssueStatus=async function(id,status,btn){
   if(!sb) return;
   if(btn){ btn.disabled=true; btn.textContent='…'; }
-  var res=await sb.from('ride_reports').update({status:status,resolved_at:status==='resolved'?new Date().toISOString():null}).eq('id',id).select('id');
-  // Colonne resolved_at absente (script SQL pas encore relancé) : on met au moins le statut à jour
-  if(res.error && /resolved_at/.test(res.error.message||'')) res=await sb.from('ride_reports').update({status:status}).eq('id',id).select('id');
+  var res=await sb.rpc('api_admin_save',{ p_table:'ride_reports', p_id:id, p_data:{status:status,resolved_at:status==='resolved'?new Date().toISOString():null} });
+
   var _reset=function(){ if(btn){ btn.disabled=false; btn.textContent=status==='resolved'?'Marquer trait\u00e9':'Rouvrir'; } };
   if(res.error){ showToast('Erreur : '+res.error.message); _reset(); return; }
   // RLS : une mise à jour refusée ne renvoie pas d'erreur, juste 0 ligne
@@ -12724,7 +12535,7 @@ window.adminMarkRefunded = async function(rideId){
   if(btn){ btn.disabled=true; btn.textContent='Traitement…'; }
   try {
     // Mark ride as refunded by clearing final_price (or add a refunded flag if available)
-    var { error } = await sb.from('rides').update({payment_method:'refunded'}).eq('id', rideId).eq('status','cancelled');
+    var { error } = await sb.rpc('api_admin_save',{ p_table:'rides', p_id:rideId, p_data:{payment_method:'refunded'} });
     if(error) throw error;
     closeModal('m-ar-detail');
     showToast('✅ Remboursement marqué comme effectué');
@@ -12741,8 +12552,7 @@ window.adminConfirmPayment = async function(rideId){
   var btn = document.querySelector('#ar-detail-ft .btn-green');
   if(btn){ btn.disabled=true; btn.textContent='Confirmation…'; }
   try {
-    var { error } = await sb.from('rides').update({status:'confirmed'}).eq('id', rideId).eq('status','pending_payment');
-    if(!error) await _promoteNotesToDriver(rideId);
+    var { error } = await sb.rpc('api_admin_save',{ p_table:'rides', p_id:rideId, p_data:{status:'confirmed'} });
     if(error) throw error;
     _notifyRideConfirmed(rideId);
     closeModal('m-ar-detail');
@@ -13080,9 +12890,7 @@ window.savePassenger = async function(){
   var errEl = document.getElementById('pax-err');
   if(!fname||!lname){ if(errEl){errEl.textContent='Prénom et nom requis';errEl.classList.add('show');} return; }
   var payload = {first_name:fname,last_name:lname,phone:phone||null,email:email||null,client_id:currentUser.id};
-  var {error} = _editPassengerId
-    ? await sb.from('passengers').update(payload).eq('id',_editPassengerId)
-    : await sb.from('passengers').insert(payload);
+  var {error} = await sb.rpc('api_passenger_save',{ p_id:_editPassengerId||null, p:payload });
   if(error){ if(errEl){errEl.textContent=error.message;errEl.classList.add('show');} return; }
   closeModal('m-passenger');
   showToast(_editPassengerId ? '✅ Passager mis à jour' : '✅ Passager ajouté');
@@ -13092,7 +12900,7 @@ window.savePassenger = async function(){
 window.deletePassenger = async function(id){
   if(!sb) return;
   _fleetConfirm('Supprimer ce passager ?','Cette action est irréversible.',async function(){
-    await sb.from('passengers').delete().eq('id',id);
+    await sb.rpc('api_passenger_delete',{ p_id:id });
     showToast('Passager supprimé');
     await loadPassengersList();
   });
