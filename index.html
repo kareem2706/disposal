@@ -234,6 +234,42 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 
 /* ═══ CARDS ═══ */
 .card{background:var(--white);border:1px solid var(--sand3);border-radius:var(--r-lg);overflow:hidden;}
+/* Admin : campagnes e-mail */
+.cmp-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start;}
+@media(max-width:1100px){.cmp-grid{grid-template-columns:1fr;}}
+.cmp-col{display:flex;flex-direction:column;gap:18px;min-width:0;}
+.cmp-card{padding:20px 22px;overflow:visible;}
+.cmp-sticky{position:sticky;top:12px;}
+.cmp-h{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14.5px;color:var(--ink);margin-bottom:14px;}
+.cmp-n{width:24px;height:24px;border-radius:50%;background:var(--green-bg);color:var(--green);font-size:12px;display:flex;align-items:center;justify-content:center;}
+.cmp-seg{display:inline-flex;background:var(--sand2);border-radius:10px;padding:3px;margin-bottom:12px;}
+.cmp-seg button{border:none;background:transparent;padding:7px 20px;border-radius:8px;font:600 12.5px 'DM Sans',sans-serif;color:var(--ink3);cursor:pointer;}
+.cmp-seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);}
+.cmp-tools{display:flex;gap:8px;margin-bottom:10px;}
+.cmp-tools input{flex:1;min-width:0;}
+.cmp-tools select{width:auto;flex-shrink:0;}
+.cmp-all{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--ink);padding:9px 12px;background:var(--sand);border-radius:10px;cursor:pointer;margin:0 0 6px;}
+.cmp-all input,.cmp-item input{width:16px;height:16px;accent-color:var(--green);margin:0;flex-shrink:0;}
+.cmp-count{margin-left:auto;font-weight:500;color:var(--ink3);font-size:12px;}
+.cmp-list{max-height:340px;overflow:auto;border:1px solid var(--sand3);border-radius:10px;}
+.cmp-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--sand2);cursor:pointer;margin:0;}
+.cmp-item:last-child{border-bottom:none;}
+.cmp-item:hover{background:var(--sand);}
+.cmp-item.off{opacity:.55;cursor:default;}
+.cmp-nm{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cmp-em{font-size:11.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cmp-tag{margin-left:auto;flex-shrink:0;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--sand2);color:var(--ink3);}
+.cmp-tag.ok{background:var(--green-bg);color:var(--green);}
+.cmp-tag.no{background:#F8E1DE;color:#B3261E;}
+.cmp-hint{font-size:11.5px;color:var(--ink3);margin-top:6px;line-height:1.5;}
+.cmp-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:600px){.cmp-row2{grid-template-columns:1fr;}}
+.cmp-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px;}
+.cmp-prev-sub{margin-left:auto;font-weight:500;font-size:12px;color:var(--ink3);max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#cmp-preview{width:100%;height:620px;border:1px solid var(--sand3);border-radius:10px;background:#F6F5F2;}
+.cmp-hist{width:100%;border-collapse:collapse;font-size:12.5px;}
+.cmp-hist th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);padding:6px 8px;border-bottom:1px solid var(--sand3);}
+.cmp-hist td{padding:8px;border-bottom:1px solid var(--sand2);vertical-align:middle;}
 /* Préférences de notifications (client) */
 .nt-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
 .nt-ic{width:34px;height:34px;border-radius:10px;background:var(--green-bg);color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -1513,6 +1549,10 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M7 2.2L1.3 12.2a1.1 1.1 0 001 1.6h11.4a1.1 1.1 0 001-1.6L9 2.2a1.1 1.1 0 00-2 0z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 6.5v3M8 11.6v.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           Signalements <span class="nav-badge" id="badge-admin-issues" style="display:none;background:#C0392B;" title="Signalements ouverts"></span>
         </button>
+        <button class="nav-item" data-page="admin-campaigns" onclick="showPage('admin-campaigns')">
+          <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="3" width="13" height="10" rx="1.8" stroke="currentColor" stroke-width="1.3"/><path d="M2 4.5l6 4.2 6-4.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Campagnes e-mail
+        </button>
       </div>
     </nav>
 
@@ -2145,6 +2185,57 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <button class="btn btn-secondary btn-sm" data-f="all" onclick="filterAdminIssues('all',this)">Tous</button>
       </div>
       <div id="admin-issues-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
+    </div>
+
+    <!-- Admin: Campagnes e-mail -->
+    <div id="page-admin-campaigns" class="page">
+      <div class="pg-head">
+        <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6.5l9 6.5 9-6.5"/></svg></div>
+        <div><h1>Campagnes e-mail</h1><p>Offres et nouveaut&eacute;s envoy&eacute;es aux fleets ou aux clients</p></div>
+      </div>
+      <div class="cmp-grid">
+        <div class="cmp-col">
+          <div class="card cmp-card">
+            <div class="cmp-h"><span class="cmp-n">1</span>Destinataires</div>
+            <div class="cmp-seg" id="cmp-aud">
+              <button class="on" data-a="clients" onclick="_cmpAudience('clients')">Clients</button>
+              <button data-a="fleets" onclick="_cmpAudience('fleets')">Fleets</button>
+            </div>
+            <div class="cmp-tools">
+              <input id="cmp-q" placeholder="Rechercher un nom, une soci&eacute;t&eacute;, un e-mail&hellip;" oninput="_cmpRenderList()">
+              <select id="cmp-filter" onchange="_cmpRenderList()"></select>
+            </div>
+            <label class="cmp-all"><input type="checkbox" id="cmp-all" onchange="_cmpToggleAll(this.checked)"> <span>Tout s&eacute;lectionner</span><span class="cmp-count" id="cmp-count"></span></label>
+            <div class="cmp-list" id="cmp-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
+          </div>
+          <div class="card cmp-card">
+            <div class="cmp-h"><span class="cmp-n">2</span>Contenu</div>
+            <div class="input-group"><label>Objet de l&apos;e-mail</label><input id="cmp-subject" maxlength="200" placeholder="Ex : Nouveau chez Bleenr : r&eacute;servez vos transferts a&eacute;roport" oninput="_cmpChanged()"></div>
+            <div class="input-group"><label>Titre (dans l&apos;e-mail)</label><input id="cmp-title" maxlength="200" placeholder="Ex : Bonjour {prenom}, d&eacute;couvrez nos nouveaut&eacute;s" oninput="_cmpChanged()"></div>
+            <div class="input-group"><label>Message</label><textarea id="cmp-body" rows="9" placeholder="Votre texte&hellip;" oninput="_cmpChanged()"></textarea>
+              <div class="cmp-hint">Une ligne vide = nouveau paragraphe &middot; <b>**texte**</b> = gras &middot; <b>{prenom}</b> = pr&eacute;nom du destinataire &middot; les liens https:// deviennent cliquables</div></div>
+            <div class="cmp-row2">
+              <div class="input-group"><label>Bouton (facultatif)</label><input id="cmp-cta-label" maxlength="60" placeholder="Ex : R&eacute;server maintenant" oninput="_cmpChanged()"></div>
+              <div class="input-group"><label>Lien du bouton</label><input id="cmp-cta-url" maxlength="500" placeholder="https://&hellip;" oninput="_cmpChanged()"></div>
+            </div>
+            <div id="cmp-err" class="auth-error"></div>
+            <div class="cmp-actions">
+              <button class="btn btn-secondary" id="cmp-test" onclick="_cmpSend('test')">M&apos;envoyer un test</button>
+              <button class="btn btn-green" id="cmp-send" onclick="_cmpSend('send')">Envoyer la campagne</button>
+            </div>
+          </div>
+        </div>
+        <div class="cmp-col">
+          <div class="card cmp-card cmp-sticky">
+            <div class="cmp-h"><span class="cmp-n">3</span>Aper&ccedil;u <span class="cmp-prev-sub" id="cmp-prev-subject"></span></div>
+            <iframe id="cmp-preview" title="Aper&ccedil;u de l&apos;e-mail" sandbox=""></iframe>
+          </div>
+          <div class="card cmp-card">
+            <div class="cmp-h">Historique</div>
+            <div id="cmp-history"><div class="page-loading"><div class="page-spinner"></div></div></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Admin: Facturation -->
@@ -3932,6 +4023,181 @@ async function _showPaymentSuccess(rideId, amount){
   document.body.appendChild(ov);
 }
 
+// ── ADMIN : CAMPAGNES E-MAIL ─────────────────────────────────────
+// Envoi par l'Edge Function « campaign » (admin uniquement, désinscrits exclus par le serveur).
+var _cmp={ aud:'clients', people:{clients:null,fleets:null}, sel:{clients:{},fleets:{}}, previewT:null };
+var _CMP_DRAFT='bleenr_campaign_draft';
+function _cmpEsc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+// Mise en forme identique à render() dans supabase/functions/campaign/index.ts
+function _cmpInline(s, prenom){
+  return _cmpEsc(s).replace(/\{prenom\}/g,_cmpEsc(prenom))
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/(https:\/\/[^\s<]+[^\s<.,;:!?)])/g,'<a href="$1" style="color:#1B5E3B;font-weight:600;">$1</a>');
+}
+function _cmpRender(c, prenom){
+  var paras=String(c.body||'').replace(/\r/g,'').split(/\n\s*\n/).map(function(x){return x.trim();}).filter(Boolean)
+    .map(function(x){ return '<p style="margin:0 0 14px;">'+_cmpInline(x,prenom).replace(/\n/g,'<br>')+'</p>'; }).join('');
+  var cta=(c.cta_label && /^https:\/\//.test(c.cta_url||''))
+    ? '<tr><td style="padding:8px 28px 0;"><a href="'+_cmpEsc(c.cta_url)+'" style="display:inline-block;background:#1B5E3B;color:#FFFFFF;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">'+_cmpEsc(c.cta_label)+'</a></td></tr>' : '';
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+    +'<body style="margin:0;padding:0;background:#F6F5F2;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Helvetica,Arial,sans-serif;">'
+    +'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F5F2;padding:32px 16px;"><tr><td align="center">'
+    +'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);">'
+    +'<tr><td style="padding:26px 28px 0;"><div style="font-size:22px;font-weight:700;color:#1B5E3B;letter-spacing:-.02em;">Bleenr</div></td></tr>'
+    +'<tr><td style="padding:20px 28px 0;">'+(c.title?'<h1 style="margin:0 0 14px;font-size:20px;font-weight:700;color:#1A1A18;">'+_cmpInline(c.title,prenom)+'</h1>':'')
+    +'<div style="font-size:14.5px;line-height:1.65;color:#4A4A46;">'+(paras||'<p style="margin:0;color:#B0B0AA;">Votre message apparaîtra ici…</p>')+'</div></td></tr>'+cta
+    +'<tr><td style="padding:26px 28px 28px;"><div style="border-top:1px solid #EDEBE6;padding-top:16px;font-size:12px;color:#8A8A84;line-height:1.5;">Vous recevez cet e-mail car vous avez un compte Bleenr.<br><a href="#" style="color:#8A8A84;">Se désinscrire des offres et nouveautés Bleenr</a></div></td></tr>'
+    +'</table></td></tr></table></body></html>';
+}
+function _cmpContent(){
+  var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
+  return { subject:g('cmp-subject').trim(), title:g('cmp-title').trim(), body:g('cmp-body'), cta_label:g('cmp-cta-label').trim(), cta_url:g('cmp-cta-url').trim() };
+}
+function _cmpFill(c){
+  var set=function(id,v){ var e=document.getElementById(id); if(e) e.value=v||''; };
+  set('cmp-subject',c.subject); set('cmp-title',c.title); set('cmp-body',c.body); set('cmp-cta-label',c.cta_label); set('cmp-cta-url',c.cta_url);
+  _cmpChanged();
+}
+window._cmpChanged=function(){
+  clearTimeout(_cmp.previewT);
+  _cmp.previewT=setTimeout(function(){
+    var c=_cmpContent();
+    var fr=document.getElementById('cmp-preview'); if(fr) fr.srcdoc=_cmpRender(c,'Karim');
+    var ps=document.getElementById('cmp-prev-subject'); if(ps) ps.textContent=c.subject?'Objet : '+c.subject.replace(/\{prenom\}/g,'Karim'):'';
+    try{ localStorage.setItem(_CMP_DRAFT, JSON.stringify(c)); }catch(e){}
+  }, 150);
+};
+function _cmpName(p){
+  var person=((p.first_name||'')+' '+(p.last_name||'')).trim();
+  return (p.company_name||'').trim() ? p.company_name.trim()+(person?' · '+person:'') : (person||p.email||'—');
+}
+function _cmpOptedOut(p){ return !!(p.notif_prefs && p.notif_prefs.email && p.notif_prefs.email.marketing===false); }
+async function _cmpLoadPeople(aud){
+  if(_cmp.people[aud]) return _cmp.people[aud];
+  var res=await sb.from('profiles').select('id,email,first_name,last_name,company_name,role,client_type,fleet_verified,notif_prefs')
+    .eq('role', aud==='fleets'?'driver':'client').order('company_name',{ascending:true,nullsFirst:false}).limit(3000);
+  _cmp.people[aud]=(res.data||[]).filter(function(p){ return p.email && String(p.email).toLowerCase()!==ADMIN_EMAIL; })
+    .sort(function(a,b){ return _cmpName(a).localeCompare(_cmpName(b),'fr'); });
+  return _cmp.people[aud];
+}
+function _cmpVisible(){
+  var q=((document.getElementById('cmp-q')||{}).value||'').trim().toLowerCase();
+  var f=(document.getElementById('cmp-filter')||{}).value||'all';
+  return (_cmp.people[_cmp.aud]||[]).filter(function(p){
+    if(f==='validated' && p.fleet_verified!=='validated') return false;
+    if(f==='pending' && p.fleet_verified==='validated') return false;
+    if(f==='pro' && p.client_type!=='pro') return false;
+    if(f==='perso' && p.client_type==='pro') return false;
+    if(!q) return true;
+    return (_cmpName(p)+' '+(p.email||'')).toLowerCase().indexOf(q)>=0;
+  });
+}
+window._cmpRenderList=function(){
+  var box=document.getElementById('cmp-list'); if(!box) return;
+  var list=_cmpVisible(), sel=_cmp.sel[_cmp.aud];
+  if(!list.length){ box.innerHTML='<div style="padding:22px;text-align:center;font-size:13px;color:var(--ink3);">Aucun '+(_cmp.aud==='fleets'?'fleet':'client')+'</div>'; }
+  else box.innerHTML=list.map(function(p){
+    var off=_cmpOptedOut(p);
+    var tag=off?'<span class="cmp-tag no">Désinscrit</span>'
+      : _cmp.aud==='fleets' ? (p.fleet_verified==='validated'?'<span class="cmp-tag ok">Validée</span>':'<span class="cmp-tag">En attente</span>')
+      : '<span class="cmp-tag">'+(p.client_type==='pro'?'Pro':'Particulier')+'</span>';
+    return '<label class="cmp-item'+(off?' off':'')+'"><input type="checkbox" data-id="'+_cmpEsc(p.id)+'"'+(sel[p.id]&&!off?' checked':'')+(off?' disabled':'')+' onchange="_cmpPick(this)">'
+      +'<div style="min-width:0;"><div class="cmp-nm">'+_cmpEsc(_cmpName(p))+'</div><div class="cmp-em">'+_cmpEsc(p.email)+'</div></div>'+tag+'</label>';
+  }).join('');
+  _cmpCount();
+};
+function _cmpCount(){
+  var list=_cmpVisible().filter(function(p){return !_cmpOptedOut(p);}), sel=_cmp.sel[_cmp.aud];
+  var n=Object.keys(sel).filter(function(k){return sel[k];}).length;
+  var c=document.getElementById('cmp-count'); if(c) c.textContent=n+' sélectionné'+(n>1?'s':'')+' sur '+(_cmp.people[_cmp.aud]||[]).filter(function(p){return !_cmpOptedOut(p);}).length;
+  var all=document.getElementById('cmp-all'); if(all){ all.checked=list.length>0 && list.every(function(p){return sel[p.id];}); }
+  var b=document.getElementById('cmp-send'); if(b) b.textContent=n?'Envoyer à '+n+' '+(_cmp.aud==='fleets'?'fleet':'client')+(n>1?'s':''):'Envoyer la campagne';
+}
+window._cmpPick=function(el){ _cmp.sel[_cmp.aud][el.dataset.id]=el.checked; _cmpCount(); };
+window._cmpToggleAll=function(on){
+  _cmpVisible().forEach(function(p){ if(!_cmpOptedOut(p)) _cmp.sel[_cmp.aud][p.id]=on; });
+  _cmpRenderList();
+};
+window._cmpAudience=async function(aud){
+  _cmp.aud=aud;
+  document.querySelectorAll('#cmp-aud button').forEach(function(b){ b.classList.toggle('on', b.dataset.a===aud); });
+  var f=document.getElementById('cmp-filter');
+  if(f) f.innerHTML=aud==='fleets'
+    ? '<option value="all">Toutes les fleets</option><option value="validated">Validées</option><option value="pending">Non validées</option>'
+    : '<option value="all">Tous les clients</option><option value="pro">Professionnels</option><option value="perso">Particuliers</option>';
+  var box=document.getElementById('cmp-list'); if(box) box.innerHTML='<div class="page-loading"><div class="page-spinner"></div></div>';
+  await _cmpLoadPeople(aud);
+  _cmpRenderList();
+};
+async function _cmpHistory(){
+  var el=document.getElementById('cmp-history'); if(!el) return;
+  var res=await sb.from('email_campaigns').select('*').order('created_at',{ascending:false}).limit(30);
+  if(res.error){ el.innerHTML='<div style="font-size:12.5px;color:var(--ink3);">Historique indisponible (exécutez email_campaigns.sql).</div>'; return; }
+  var rows=res.data||[]; window._cmpHist=rows;
+  el.innerHTML=rows.length ? '<table class="cmp-hist"><tr><th>Date</th><th>Public</th><th>Objet</th><th style="text-align:right;">Envoyés</th><th></th></tr>'
+    + rows.map(function(c,i){
+      return '<tr><td style="white-space:nowrap;">'+new Date(c.created_at).toLocaleDateString('fr-BE',{day:'2-digit',month:'2-digit',year:'2-digit'})+'</td>'
+        +'<td>'+(c.audience==='fleets'?'Fleets':'Clients')+'</td><td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_cmpEsc(c.subject)+'</td>'
+        +'<td style="text-align:right;white-space:nowrap;">'+c.sent+(c.skipped?' <span style="color:var(--ink4);" title="Désinscrits ou sans adresse">(+'+c.skipped+' exclus)</span>':'')+'</td>'
+        +'<td style="text-align:right;"><button class="btn btn-secondary btn-sm" onclick="_cmpReuse('+i+')">Réutiliser</button></td></tr>';
+    }).join('')+'</table>'
+    : '<div style="font-size:12.5px;color:var(--ink3);">Aucune campagne envoyée pour le moment.</div>';
+}
+window._cmpReuse=function(i){
+  var c=(window._cmpHist||[])[i]; if(!c) return;
+  _cmpFill(c); if(c.audience!==_cmp.aud) _cmpAudience(c.audience);
+  showToast('Contenu repris : choisissez les destinataires puis envoyez');
+};
+window._cmpSend=async function(action){
+  var err=document.getElementById('cmp-err'); if(err){ err.classList.remove('show'); err.textContent=''; }
+  var fail=function(m){ if(err){ err.textContent=m; err.classList.add('show'); } };
+  var c=_cmpContent();
+  if(!c.subject) return fail('Indiquez l’objet de l’e-mail.');
+  if(!c.body.trim()) return fail('Écrivez le message.');
+  if(c.cta_label && !/^https:\/\//.test(c.cta_url)) return fail('Le lien du bouton doit commencer par https://');
+  var payload=Object.assign({ action:action, audience:_cmp.aud }, c);
+  if(action==='send'){
+    var sel=_cmp.sel[_cmp.aud], ids=Object.keys(sel).filter(function(k){return sel[k];});
+    if(!ids.length) return fail('Sélectionnez au moins un destinataire.');
+    var total=(_cmp.people[_cmp.aud]||[]).filter(function(p){return !_cmpOptedOut(p);}).length;
+    var who=ids.length+' '+(_cmp.aud==='fleets'?'fleet':'client')+(ids.length>1?'s':'');
+    var ok=await _uiConfirm({ title:'Envoyer la campagne ?', sub:'« <b>'+_cmpEsc(c.subject)+'</b> » sera envoyé à <b>'+who+'</b>'+(ids.length===total?' (tous)':'')+'. Cet envoi ne peut pas être annulé.',
+      confirm:'Envoyer', icon:'<rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6.5l9 6.5 9-6.5"/>' });
+    if(!ok) return;
+    payload.user_ids=ids;
+  }
+  var btn=document.getElementById(action==='send'?'cmp-send':'cmp-test'), lbl=btn?btn.textContent:'';
+  if(btn){ btn.disabled=true; btn.textContent='Envoi…'; }
+  var r=await _callEdge('campaign', payload);
+  if(btn){ btn.disabled=false; btn.textContent=lbl; }
+  if(r.error) return fail(/not found|404/i.test(String(r.error))?'La fonction « campaign » n’est pas encore déployée dans Supabase.':r.error);
+  if(action==='test'){ showToast('✉️ Test envoyé à '+ADMIN_EMAIL); return; }
+  showToast('✅ Campagne envoyée : '+r.sent+' e-mail'+(r.sent>1?'s':'')+(r.skipped?' · '+r.skipped+' exclu'+(r.skipped>1?'s':''):''));
+  if(r.errors&&r.errors.length) fail('Certains envois ont échoué : '+r.errors.join(' · '));
+  _cmp.sel[_cmp.aud]={}; _cmpRenderList(); _cmpHistory();
+};
+async function loadAdminCampaigns(){
+  if(!sb||currentUser?.email!==ADMIN_EMAIL) return;
+  if(!document.getElementById('cmp-subject').value){
+    try{ var d=JSON.parse(localStorage.getItem(_CMP_DRAFT)||'null'); if(d) _cmpFill(d); }catch(e){}
+  }
+  _cmpChanged();
+  await _cmpAudience(_cmp.aud);
+  _cmpHistory();
+}
+
+// Retour du lien « Se désinscrire » d'une campagne
+(function(){
+  try{
+    var q=new URLSearchParams(location.search), u=q.get('unsubscribed');
+    if(u===null) return;
+    history.replaceState(null,'',location.pathname+location.hash);
+    setTimeout(function(){
+      if(typeof showToast==='function') showToast(u==='1'?'✅ Vous êtes désinscrit des offres et nouveautés Bleenr':'Lien de désinscription invalide ou expiré');
+    }, 1200);
+  }catch(e){}
+})();
+
 // ── NAVIGATION ────────────────────────────────────────
 window.showPage = function(pageId){
   if(document.querySelector('.modal-overlay.rd-panel.open')){ _rdHist=false; _rdHideAll(); try{ if(history.state&&history.state.rd) history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
@@ -3943,7 +4209,7 @@ window.showPage = function(pageId){
   const pageNames = { dashboard:t('dashboard'), rides:t('rides'), calendar:'Calendrier', 'd-calendar':'Calendrier', invoices:t('invoices'),
     profile:t('profile'), 'd-dashboard':t('d-dashboard'), marketplace:t('marketplace'), missions:t('missions'),
     'd-invoices':'Factures', 'passengers':'Passagers',
-    'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses', 'admin-billing':'Facturation', 'admin-reports':'Rapports', 'admin-issues':'Signalements' };
+    'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses', 'admin-billing':'Facturation', 'admin-reports':'Rapports', 'admin-issues':'Signalements', 'admin-campaigns':'Campagnes e-mail' };
   var ptEl=document.getElementById('page-title');if(ptEl)ptEl.textContent=pageNames[pageId]||'';
   var piEl=document.getElementById('page-title-icon');if(piEl){var _srcIc=pg.querySelector('.pg-head-icon');piEl.innerHTML=_srcIc?_srcIc.innerHTML:'';piEl.classList.toggle('has-icon',!!_srcIc);}
 
@@ -3979,6 +4245,7 @@ async function loadPageData(pageId){
     case 'admin-billing':  await loadAdminBilling(); break;
     case 'admin-reports':  await loadAdminReports(); break;
     case 'admin-issues':   await loadAdminIssues(); break;
+    case 'admin-campaigns': await loadAdminCampaigns(); break;
   }
 }
 
@@ -5035,7 +5302,8 @@ var _NT_ITEMS=[
   {k:'offer_updated',  l:'Mise à jour des offres reçues', d:'Une offre est modifiée ou retirée'},
   {k:'ride_confirmed', l:'Course confirmée',              d:'Paiement reçu, votre chauffeur est réservé'},
   {k:'driver_message', l:'Message ou modification du chauffeur', d:'Note du chauffeur, changement de véhicule ou de chauffeur'},
-  {k:'driver_on_way',  l:'Chauffeur en route',            d:'Votre chauffeur part vers le lieu de prise en charge'}
+  {k:'driver_on_way',  l:'Chauffeur en route',            d:'Votre chauffeur part vers le lieu de prise en charge'},
+  {k:'marketing',      l:'Offres et nouveautés Bleenr',   d:'Nos actualités et promotions, de temps en temps', emailOnly:true}
 ];
 function _ntRender(isClient){
   var cli=document.getElementById('pf-notif-cli'), drv=document.getElementById('pf-notif-drv');
@@ -5049,7 +5317,7 @@ function _ntRender(isClient){
   };
   var box=document.getElementById('nt-list');
   if(box) box.innerHTML=_NT_ITEMS.map(function(it){
-    return '<div class="nt-row"><div><div class="nt-lbl">'+it.l+'</div><div class="nt-desc">'+it.d+'</div></div>'+sw('app',it)+sw('email',it)+'</div>';
+    return '<div class="nt-row"><div><div class="nt-lbl">'+it.l+'</div><div class="nt-desc">'+it.d+'</div></div>'+(it.emailOnly?'<span style="justify-self:center;color:var(--ink4);">—</span>':sw('app',it))+sw('email',it)+'</div>';
   }).join('');
   var ms=document.getElementById('nt-mail-sub');
   if(ms&&currentUser&&currentUser.email) ms.textContent='Dans l’application et par e-mail ('+currentUser.email+')';
