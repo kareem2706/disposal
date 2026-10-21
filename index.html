@@ -4834,7 +4834,7 @@ window.openLiveTracking = async function(rideId){
   document.getElementById('lt-driver').innerHTML='<div style="width:46px;height:46px;border-radius:50%;background:#EAF7EF;color:#1B5E3B;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+esc(initials||'—')+'</div>'
     +'<div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:700;color:#1A2E1A;">'+esc(dName)+'</div>'
       +'<div style="font-size:12.5px;color:#5A7A5A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(vName||'—')+'</div></div>'
-    +(veh&&veh.plate?'<div style="flex-shrink:0;font-family:monospace;font-weight:700;font-size:13px;background:#F2F2F2;border:1.5px solid #DDD;border-radius:6px;padding:4px 8px;">'+esc(veh.plate)+'</div>':'')
+    +(veh&&veh.plate?'<div style="flex-shrink:0;font-family:monospace;font-weight:700;font-size:13px;background:#fff;color:#C0392B;border:1.5px solid #C0392B;border-radius:6px;padding:4px 8px;">'+esc(veh.plate)+'</div>':'')
     +(drv&&drv.phone?'<a href="tel:'+esc(drv.phone)+'" aria-label="Appeler" style="flex-shrink:0;width:42px;height:42px;border-radius:50%;background:#1B5E3B;display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.4 1.8.7 2.7a2 2 0 01-.5 2.1L8 9.8a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.6 2.7.7a2 2 0 011.7 2z"/></svg></a>':'');
   _ltRenderStatus(); setSheetVar();
 
@@ -6238,7 +6238,7 @@ function _openRideDetailImpl(el){
               +(_canAsg?'<button class="drv-asg-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;font-family:\'DM Sans\',sans-serif;">'+_editIco+' Modifier</button>':'')
             +'</div>'
             +_row(_carIc, _vehTxt?'<b>'+_rdEsc(_vehTxt)+'</b>':_none,
-                  _asgVeh&&_asgVeh.plate?'<span style="font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.04em;background:#fff;border:1.5px solid #B9CCE0;border-radius:6px;padding:3px 8px;color:var(--ink);white-space:nowrap;">'+_rdEsc(_asgVeh.plate)+'</span>':'')
+                  _asgVeh&&_asgVeh.plate?'<span style="font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.04em;background:#fff;border:1.5px solid #C0392B;border-radius:6px;padding:3px 8px;color:#C0392B;white-space:nowrap;">'+_rdEsc(_asgVeh.plate)+'</span>':'')
             +_row(_usrIc, _drvTxt?'<b>'+_rdEsc(_drvTxt)+'</b>':_none,
                   _asgDrv&&_asgDrv.phone?'<a href="tel:'+_rdEsc(_asgDrv.phone)+'" style="font-size:12.5px;color:var(--blue);text-decoration:none;white-space:nowrap;">'+_rdEsc(_asgDrv.phone)+'</a>':'')
             +(_noteHtml?'<div style="border-top:1px solid #d0e4f7;margin-top:6px;padding-top:10px;">'+_noteHtml+'</div>':'')
@@ -6685,7 +6685,7 @@ function _rdInfoBlocks(o){
   var vTxt=v?[((v.brand||'')+' '+(v.model||'')).trim(), v.color||''].filter(Boolean).join(' · '):'';
   h+='<div style="'+box+'margin-top:12px;">'+cap(o.vehTitle||'Véhicule et chauffeur')
     +row(I.car, vTxt?'<b>'+_rdEsc(vTxt)+'</b>':none,
-         v&&v.plate?'<span style="font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.04em;background:#fff;border:1.5px solid #B9CCE0;border-radius:6px;padding:3px 8px;color:var(--ink);white-space:nowrap;">'+_rdEsc(v.plate)+'</span>':'')
+         v&&v.plate?'<span style="font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.04em;background:#fff;border:1.5px solid #C0392B;border-radius:6px;padding:3px 8px;color:#C0392B;white-space:nowrap;">'+_rdEsc(v.plate)+'</span>':'')
     +row(I.usr, d&&d.name?'<b>'+_rdEsc(d.name)+'</b>':none, d?tel(d.phone):'')
     +(o.drvNoteLabel?sub(o.drvNoteLabel, o.drvNote):'')
     +(o.priceHtml?'<div style="border-top:1px solid #d0e4f7;margin-top:6px;padding-top:10px;">'+o.priceHtml+'</div>':'')
@@ -6702,7 +6702,7 @@ function _rdFleetHtml(fd, opt){
   var h='<div class="rd-cap" style="margin-bottom:8px;">'+(opt.title||'Véhicule et chauffeur')+'</div>';
   // Plaque à droite, sur la même ligne (comme le rappel des courses terminées)
   h+='<div class="rd-line"><span class="rd-ic">'+carIc+'</span><div style="min-width:0;flex:1"><div class="rd-strong">'+_rdEsc(vName||'Véhicule à confirmer')+'</div></div>'
-    +(v&&v.plate?'<span style="margin-left:auto;font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.04em;background:#fff;border:1.5px solid #B9CCE0;border-radius:6px;padding:3px 8px;color:var(--ink);white-space:nowrap;">'+_rdEsc(v.plate)+'</span>':'')+'</div>';
+    +(v&&v.plate?'<span style="margin-left:auto;font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.04em;background:#fff;border:1.5px solid #C0392B;border-radius:6px;padding:3px 8px;color:#C0392B;white-space:nowrap;">'+_rdEsc(v.plate)+'</span>':'')+'</div>';
   if(d&&(d.name||d.phone)){
     h+='<div class="rd-line"><span class="rd-ic">'+userIc+'</span><div style="min-width:0;flex:1"><div class="rd-strong">'+_rdEsc(d.name||'Chauffeur')+'</div>'+(d.company?'<div class="rd-muted">'+_rdEsc(d.company)+'</div>':'')+'</div>'
       +(d.phone&&!opt.noPhone?'<a class="rd-call" href="tel:'+_rdEsc(d.phone.replace(/[^\d+]/g,''))+'">'+_rdEsc(d.phone)+'</a>':'')+'</div>';
