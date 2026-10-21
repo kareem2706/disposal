@@ -5122,9 +5122,19 @@ async function loadDriverDashboard(){
   var scoreDisplay = liveRating !== null ? liveRating.toFixed(1)+' \u2605' : ((currentProfile&&currentProfile.rating)?currentProfile.rating.toFixed(1)+' \u2605':'\u2014');
 
     var dI=function(s,bg){return '<div class="stat-card-icon" style="background:'+bg+'">'+s+'</div>';};
+  // Au moins une sous-traitance terminée ce mois : répartition clients / sous-traitances
+  var _doneSplitHtml=function(list){
+    var subs=list.filter(function(r){return r.is_subcontract;}).length, cli=list.length-subs;
+    if(!subs) return '';
+    var ic=function(bg,col,path){ return '<span style="width:16px;height:16px;border-radius:50%;background:'+bg+';color:'+col+';display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">'+path+'</svg></span>'; };
+    return '<div style="display:flex;flex-direction:column;gap:3px;margin-top:6px;font-size:11.5px;color:var(--ink3);">'
+      +'<span style="display:flex;align-items:center;gap:6px;">'+ic('var(--green-bg)','var(--green)','<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>')+'<b style="color:var(--ink);">'+cli+'</b> client'+(cli>1?'s':'')+'</span>'
+      +'<span style="display:flex;align-items:center;gap:6px;">'+ic('var(--amber-bg)','var(--amber)','<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>')+'<b style="color:var(--ink);">'+subs+'</b> sous-traitance'+(subs>1?'s':'')+'</span>'
+      +'</div>';
+  };
   document.getElementById('driver-stats').innerHTML=
     '<div class="stat-card"'+(upcomingMissions.length?' onclick="showPage(\'missions\')" style="cursor:pointer;" title="Voir mes missions à venir"':'')+'>'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>','var(--green-bg)')+'<div class="stat-label">Missions \u00e0 venir</div><div class="stat-val">'+upcomingMissions.length+'</div></div>'
-    +'<div class="stat-card" onclick="_goDoneMissions()" style="cursor:pointer;" title="Voir les missions terminées">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>','var(--blue-bg)')+'<div class="stat-label">Ce mois</div><div class="stat-val">'+monthMissions.length+'</div></div>'
+    +'<div class="stat-card" onclick="_goDoneMissions()" style="cursor:pointer;" title="Voir les missions terminées">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>','var(--blue-bg)')+'<div class="stat-label">Ce mois</div><div class="stat-val">'+monthMissions.length+'</div>'+_doneSplitHtml(monthMissions)+'</div>'
     +'<div class="stat-card" onclick="showPage(\'d-invoices\')" style="cursor:pointer;" title="Voir la facturation">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 6.5A7 7 0 1018.5 17.5"/><path d="M4 10.5h10M4 13.5h10"/></svg>','var(--red-bg)')+'<div class="stat-label">Revenus</div><div class="stat-val stat-money">'+(revenueNet>0?revenueNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>'
     +'<div class="stat-card">'+dI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>','#FFF3DC')+'<div class="stat-label">Score</div><div class="stat-val">'+scoreDisplay+'</div></div>';
 
