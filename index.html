@@ -4186,6 +4186,13 @@ async function loadAdminCampaigns(){
   _cmpHistory();
 }
 
+// Tri des listes de courses : la plus récente (date / heure de la course) en haut
+function _byNewest(a,b){
+  var ka=(a.ride_date||'')+' '+String(a.ride_time||'').slice(0,5)+' '+(a.created_at||'');
+  var kb=(b.ride_date||'')+' '+String(b.ride_time||'').slice(0,5)+' '+(b.created_at||'');
+  return kb.localeCompare(ka);
+}
+
 // Retour du lien « Se désinscrire » d'une campagne
 (function(){
   try{
@@ -4335,9 +4342,7 @@ async function loadClientDashboard(){
   _renderDriverActiveRides(rides.filter(_inProgress), 'active-ride-wrap', true);
 
   // Non-terminated rides sorted by ride_date asc for dashboard (oldest first), max 3 (rides in progress shown above)
-  const recent = rides.filter(function(r){ return r.status !== 'done' && r.status !== 'cancelled' && !_inProgress(r); }).slice().sort(function(a,b){
-    return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||''));
-  }).slice(0, 3);
+  const recent = rides.filter(function(r){ return r.status !== 'done' && r.status !== 'cancelled' && !_inProgress(r); }).slice().sort(_byNewest).slice(0, 3);
 
   document.getElementById('recent-rides-list').innerHTML = recent.length
     ? recent.map(r => renderRideItem(r)).join('')
@@ -4372,11 +4377,7 @@ async function loadRides(filter){
     rides = getDemoRides().filter(function(r){ return filter==='all'||r.status===filter; });
   }
 
-  rides.sort(function(a,b){
-    var da=(a.ride_date||'')+(a.ride_time||'');
-    var db=(b.ride_date||'')+(b.ride_time||'');
-    return db.localeCompare(da); // most recent first
-  });
+  rides.sort(_byNewest); // most recent first
   // Map offer counts
   if(typeof rides[0] !== 'undefined') rides.forEach(function(r){ r._offerCount = r._offerCount!==undefined?r._offerCount:(r.offers&&r.offers[0]?parseInt(r.offers[0].count)||0:0); });
   document.getElementById('all-rides-list').innerHTML = rides.length
@@ -4403,7 +4404,7 @@ async function loadInvoices(){
     ]);
     rides = [...(doneRes.data||[]), ...((cancelledRes.data||[]).filter(r=>r.payment_method&&r.payment_method!=='refunded'))];
     rides = rides.filter(function(r){ return !r.is_subcontract; }); // sous-traitances : hors facturation
-    rides.sort(function(a,b){ return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||'')); });
+    rides.sort(_byNewest);
   } else {
     rides = getDemoRides().filter(r => r.status === 'done' || (r.status==='cancelled'&&r.final_price));
   }
@@ -5147,9 +5148,7 @@ async function loadDriverDashboard(){
   _renderDriverActiveRides(_drvInProgress);
   _syncDriverTracking(_drvInProgress.filter(function(r){ return r.driver_id===uid; }));
 
-  var latestPending = pending.filter(_driverCanHandleRide).slice().sort(function(a,b){
-    return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||''));
-  });
+  var latestPending = pending.filter(_driverCanHandleRide).slice().sort(_byNewest);
   document.getElementById('driver-latest-requests').innerHTML = latestPending.length
     ? latestPending.slice(0,3).map(function(r){ var isMine=r.is_subcontract&&currentUser&&r.client_id===currentUser.id; return renderMkItem(r, r.is_subcontract, isMine); }).join('')
     : `<div class="empty-state"><p class="empty-text">${t('empty_marketplace')}</p></div>`;
@@ -5197,15 +5196,15 @@ async function loadMarketplace(){
       sb.from('rides').select('*').in('status', ['waiting', 'offers']).or('is_subcontract.is.null,is_subcontract.eq.false').order('ride_date',{ascending:true}).order('ride_time',{ascending:true}),
       sb.from('rides').select('*').in('status', ['waiting', 'offers']).eq('is_subcontract',true).order('ride_date',{ascending:true}).order('ride_time',{ascending:true})
     ]);
-    clientRides = c.data || [];
-    subRides    = s.data || [];
+    clientRides = (c.data || []).sort(_byNewest);
+    subRides    = (s.data || []).sort(_byNewest);
 
     // Badge hidden per spec
     const badge = document.getElementById('badge-marketplace');
     if(badge){ badge.style.display = 'none'; }
   } else {
     clientRides = getDemoMarketplace();
-    clientRides.sort(function(a,b){ return ((a.ride_date||'')+(a.ride_time||'')).localeCompare((b.ride_date||'')+(b.ride_time||'')); });
+    clientRides.sort(_byNewest);
     subRides = [];
   }
 
@@ -5285,9 +5284,9 @@ async function loadMissions(){
     missions = getDemoMissions().filter(r => MISSIONS_ALL.includes(r.status));
   }
 
-  const upcoming   = missions.filter(function(r){return r.status==='confirmed'||r.status==='active';});
-  const done       = missions.filter(function(r){return r.status==='done';});
-  const cancelled  = missions.filter(function(r){return r.status==='cancelled';});
+  const upcoming   = missions.filter(function(r){return r.status==='confirmed'||r.status==='active';}).sort(_byNewest);
+  const done       = missions.filter(function(r){return r.status==='done';}).sort(_byNewest);
+  const cancelled  = missions.filter(function(r){return r.status==='cancelled';}).sort(_byNewest);
 
   document.getElementById('ms-upcoming').innerHTML = upcoming.length
     ? upcoming.map(r => renderRideItem(r)).join('')
@@ -13217,7 +13216,7 @@ window._renderDriverInvoiceMonth = async function(){
     .not('final_price','is',null)
     .gte('ride_date',from).lte('ride_date',to)
     .order('ride_date',{ascending:true});
-  var monthRides = (data||[]).filter(function(r){ return !r.is_subcontract; }); // sous-traitances : hors facturation
+  var monthRides = (data||[]).filter(function(r){ return !r.is_subcontract; }).sort(_byNewest); // sous-traitances : hors facturation
   window._dInvCurrentData = monthRides;
 
   var fmt = function(v){ return parseFloat(v).toFixed(2).replace('.',',')+' €'; };
