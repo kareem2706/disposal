@@ -484,6 +484,71 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .seg-type-btn{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1.5px solid var(--sand3);background:#fff;color:var(--ink2);font-family:'DM Sans',sans-serif;transition:all var(--t);}
 .seg-type-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;}
 
+/* Landing — aperçu de l'application après « Recevoir des offres » */
+.ldd{position:fixed;inset:0;z-index:9000;background:var(--ld);color:#F5F1E8;overflow-y:auto;overflow-x:hidden;opacity:0;transition:opacity .35s}
+.ldd.in{opacity:1}
+.ldd-x{position:absolute;top:18px;right:20px;width:42px;height:42px;border-radius:50%;border:1px solid rgba(245,241,232,.25);background:transparent;color:#F5F1E8;font-size:20px;cursor:pointer;z-index:2}
+.ldd-x:hover{background:rgba(245,241,232,.08)}
+.ldd-head{max-width:760px;margin:0 auto;padding:48px 24px 0;text-align:center}
+.ldd-head .ld-eye{color:var(--lmi)}
+.ldd-head h2{font-size:clamp(38px,5vw,64px);line-height:1;margin-top:14px}
+.ldd-head p{color:rgba(245,241,232,.7);font-size:15px;line-height:1.6;margin-top:16px}
+.ldd-row{display:flex;gap:26px;padding:30px max(24px,calc((100vw - 1354px)/2)) 20px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.ldd-row::-webkit-scrollbar{display:none}
+.ldd-step{flex:0 0 250px;scroll-snap-align:center;opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}
+.ldd.in .ldd-step{opacity:1;transform:none}
+.ldd-lbl{display:flex;align-items:center;gap:10px;margin-bottom:14px;font-size:13px;font-weight:600;color:#F5F1E8}
+.ldd-lbl span{width:26px;height:26px;border-radius:50%;background:var(--lg2);display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+.ldd-ph{width:250px;height:520px;border-radius:38px;background:#0A0F0C;padding:9px;box-shadow:0 30px 60px -20px rgba(0,0,0,.6),inset 0 0 0 1.5px rgba(255,255,255,.08)}
+.ldd-sc{position:relative;height:100%;border-radius:30px;background:#F6F5F2;color:#1A1A18;overflow:hidden;font-size:11.5px;display:flex;flex-direction:column}
+.ldd-sb{display:flex;justify-content:space-between;align-items:center;padding:12px 20px 6px;font-size:10.5px;font-weight:600}
+.ldd-sb i{width:70px;height:20px;border-radius:12px;background:#0A0F0C;position:absolute;left:50%;top:7px;transform:translateX(-50%)}
+.ldd-top{padding:6px 16px 10px;display:flex;align-items:center;justify-content:space-between}
+.ldd-top b{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:#1B5E3B;letter-spacing:.06em;text-transform:uppercase}
+.ldd-av{width:24px;height:24px;border-radius:50%;background:#1B5E3B;color:#fff;font-size:9.5px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.ldd-bd{flex:1;padding:0 12px 12px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.ldd-h{font-size:15px;font-weight:700;padding:2px 4px 2px}
+.ldd-card{background:#fff;border-radius:14px;padding:11px 12px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.ldd-k{font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8A8A84;margin-bottom:3px}
+.ldd-v{font-size:12px;font-weight:600;line-height:1.35;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ldd-route{display:grid;grid-template-columns:12px 1fr;gap:4px 8px;align-items:start}
+.ldd-dot{width:8px;height:8px;border-radius:50%;border:2px solid #1B5E3B;margin-top:3px}
+.ldd-dot.e{background:#1B5E3B}
+.ldd-line{width:2px;height:14px;background:#D9D6CE;margin:-2px 0 -2px 4px}
+.ldd-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ldd-chips{display:flex;gap:5px;flex-wrap:wrap}
+.ldd-chip{padding:5px 9px;border-radius:20px;border:1.5px solid #E4E1D9;font-size:10.5px;font-weight:600;color:#4A4A46;background:#fff}
+.ldd-chip.on{border-color:#1B5E3B;background:#EAF3EE;color:#1B5E3B}
+.ldd-btn{margin-top:auto;background:#1B5E3B;color:#fff;border-radius:12px;padding:11px;text-align:center;font-weight:700;font-size:12px}
+.ldd-btn.o{background:#fff;color:#1B5E3B;border:1.5px solid #1B5E3B}
+.ldd-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:20px;font-size:10px;font-weight:700}
+.ldd-pill.w{background:#FFF4E0;color:#B26A00}.ldd-pill.g{background:#EAF3EE;color:#1B5E3B}.ldd-pill.b{background:#E8F0FB;color:#2456A6}
+.ldd-pulse{position:relative;width:86px;height:86px;margin:14px auto 6px}
+.ldd-pulse:before,.ldd-pulse:after{content:'';position:absolute;inset:0;border-radius:50%;background:#1B5E3B;opacity:.18;animation:lddP 2.2s infinite}
+.ldd-pulse:after{animation-delay:1.1s}
+.ldd-pulse b{position:absolute;inset:22px;border-radius:50%;background:#1B5E3B;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px}
+@keyframes lddP{0%{transform:scale(.45);opacity:.35}100%{transform:scale(1.15);opacity:0}}
+.ldd-c{text-align:center;color:#6B6B68;line-height:1.45;font-size:11px}
+.ldd-off{display:flex;gap:9px;align-items:center}
+.ldd-off .lo{width:30px;height:30px;border-radius:9px;background:#EAF3EE;color:#1B5E3B;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.ldd-off .nm{font-weight:700;font-size:11.5px}.ldd-off .sm{font-size:10px;color:#8A8A84;margin-top:1px}
+.ldd-off>div:nth-child(2){min-width:0;flex:1}.ldd-off .pr{margin-left:auto;text-align:right;font-weight:700;font-size:13.5px;white-space:nowrap;flex:0 0 auto}
+.ldd-off .pr small{display:block;font-size:9.5px;color:#8A8A84;font-weight:500}
+.ldd-card.best{box-shadow:0 0 0 1.5px #1B5E3B}
+.ldd-acc{margin-top:8px;background:#1B5E3B;color:#fff;border-radius:9px;padding:7px;text-align:center;font-weight:700;font-size:11px}
+.ldd-sum{display:flex;justify-content:space-between;padding:3px 0;color:#4A4A46}
+.ldd-sum.t{border-top:1px solid #EDEBE6;margin-top:5px;padding-top:8px;font-weight:700;color:#1A1A18;font-size:13px}
+.ldd-cardnum{height:30px;border:1.5px solid #E4E1D9;border-radius:9px;display:flex;align-items:center;padding:0 10px;gap:8px;font-weight:600;color:#4A4A46;margin-top:6px}
+.ldd-cardnum i{width:22px;height:14px;border-radius:3px;background:linear-gradient(135deg,#1B5E3B,#A9D4B0)}
+.ldd-plate{display:inline-block;padding:1px 6px;border:1.5px solid #C0392B;color:#C0392B;border-radius:5px;font-weight:700;font-size:10px;letter-spacing:.04em}
+.ldd-map{height:120px;border-radius:14px;background:#E4EDE6;position:relative;overflow:hidden}
+.ldd-map svg{position:absolute;inset:0;width:100%;height:100%}
+.ldd-foot{text-align:center;padding:20px 24px 70px}
+.ldd-foot .ld-btn{font-size:15px;padding:18px 38px}
+.ldd-foot p{margin-top:16px;font-size:13px;color:rgba(245,241,232,.6)}
+.ldd-foot a{color:var(--lmi)!important;cursor:pointer;text-decoration:underline!important}
+.ldd-hint{display:none;text-align:center;font-size:12px;color:rgba(245,241,232,.5)}
+@media(max-width:700px){.ldd-head{padding-top:70px}.ldd-row{gap:18px;padding-left:calc(50vw - 125px);padding-right:calc(50vw - 125px)}.ldd-hint{display:block}}
 .pac-container{z-index:10000!important;font-family:"DM Sans",sans-serif;font-size:13px;border-radius:var(--r);box-shadow:var(--sh-lg);}
 .pac-item{padding:7px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--sand3);}
 .pac-item:hover,.pac-item-selected{background:var(--sand);}
@@ -2361,7 +2426,7 @@ if(window.google&&window.google.maps&&window.google.maps.places){initGooglePlace
 window._gpReady=initGooglePlaces;
 
 function _attachGoogleAC(){
-  var ids = ['ride-from','ride-to','disp-from','sub-from','sub-to','sub-disp-from','pm-from','pm-to','pm-dispo-location'];
+  var ids = ['ld-from','ld-to','ride-from','ride-to','disp-from','sub-from','sub-to','sub-disp-from','pm-from','pm-to','pm-dispo-location'];
   ids.forEach(function(id){
     var el = document.getElementById(id);
     if(el && !el._gp){
@@ -7233,8 +7298,83 @@ document.getElementById('screen-landing') && (function(){
   var d = $('ld-date'); if(d && !d.value){ var t = new Date(Date.now()+864e5); d.value = t.toISOString().slice(0,10); }
   $('ld-book-go').onclick = function(){
     try{ sessionStorage.setItem('bleenr_landing_draft', JSON.stringify({ mode:mode, from:$('ld-from').value, to:$('ld-to').value, duration:$('ld-dur').value, date:$('ld-date').value, time:$('ld-time').value })); }catch(e){}
-    showLandingAuth('register');
+    _ldDemo({ mode:mode, from:$('ld-from').value, to:$('ld-to').value, dur:$('ld-dur').value, durTxt:$('ld-dur').selectedOptions[0] ? $('ld-dur').selectedOptions[0].textContent : '', date:$('ld-date').value, time:$('ld-time').value });
   };
+
+  // Aperçu de l'application avec des données de test (aucune donnée n'est envoyée)
+  function _ldDemo(f){
+    var E = function(x){ return String(x == null ? '' : x).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+    var heure = f.mode === 'heure';
+    var from = (f.from || '').trim() || 'Gare de Bruxelles-Midi, Bruxelles';
+    var to = (f.to || '').trim() || 'A\u00e9roport de Bruxelles (BRU), Zaventem';
+    var dt = f.date ? new Date(f.date + 'T12:00:00') : new Date(Date.now() + 864e5);
+    var dTxt = dt.toLocaleDateString('fr-BE', { weekday:'short', day:'numeric', month:'short' });
+    var when = E(dTxt) + ' \u00b7 ' + E(f.time || '09:00');
+    var hrs = parseInt(f.dur, 10) || 3;
+    var p1 = heure ? 65 * hrs : 85, p2 = Math.round(p1 * 1.12), p3 = Math.round(p1 * 1.28);
+    var eur = function(n){ return n.toFixed(2).replace('.', ',') + ' \u20ac'; };
+    var code = 'BLDI-' + String(1026000 + Math.floor(Math.random() * 900));
+    var route = '<div class="ldd-route"><div class="ldd-dot"></div><div><div class="ldd-k">D\u00e9part</div><div class="ldd-v">' + E(from) + '</div></div>'
+      + (heure ? '<div></div><div style="margin-top:4px"><div class="ldd-k">Mise \u00e0 disposition</div><div class="ldd-v">' + E(f.durTxt || (hrs + ' heures')) + '</div></div>'
+               : '<div class="ldd-line"></div><div></div><div class="ldd-dot e"></div><div><div class="ldd-k">Arriv\u00e9e</div><div class="ldd-v">' + E(to) + '</div></div>')
+      + '</div>';
+    var shell = function(inner){ return '<div class="ldd-ph"><div class="ldd-sc"><div class="ldd-sb"><span>9:41</span><i></i><span>\u25cf\u25cf\u25cf</span></div><div class="ldd-top"><b>Bleenr</b><div class="ldd-av">JD</div></div><div class="ldd-bd">' + inner + '</div></div></div>'; };
+    var offer = function(ini, nm, sub, pr, best){ return '<div class="ldd-card' + (best ? ' best' : '') + '"><div class="ldd-off"><div class="lo">' + ini + '</div><div><div class="nm">' + nm + '</div><div class="sm">' + sub + '</div></div><div class="pr">' + eur(pr) + '<small>prix fixe</small></div></div>' + (best ? '<div class="ldd-acc">Accepter cette offre</div>' : '') + '</div>'; };
+    var steps = [
+      ['Votre demande', shell(
+        '<div class="ldd-h">Nouvelle demande</div>'
+        + '<div class="ldd-chips"><span class="ldd-chip' + (heure ? '' : ' on') + '">Aller simple</span><span class="ldd-chip' + (heure ? ' on' : '') + '">\u00c0 l\'heure</span></div>'
+        + '<div class="ldd-card">' + route + '</div>'
+        + '<div class="ldd-2"><div class="ldd-card"><div class="ldd-k">Date</div><div class="ldd-v">' + E(dTxt) + '</div></div><div class="ldd-card"><div class="ldd-k">Heure</div><div class="ldd-v">' + E(f.time || '09:00') + '</div></div></div>'
+        + '<div class="ldd-card"><div class="ldd-k">Gamme</div><div class="ldd-chips" style="margin-top:5px"><span class="ldd-chip">Economy</span><span class="ldd-chip on">Business</span><span class="ldd-chip">Van</span></div></div>'
+        + '<div class="ldd-card"><div class="ldd-k">Passagers</div><div class="ldd-v">2 passagers \u00b7 2 bagages</div></div>'
+        + '<div class="ldd-btn">Publier la demande</div>')],
+      ['Demande en attente', shell(
+        '<div class="ldd-h">Ma course</div>'
+        + '<div><span class="ldd-pill w">\u25cf En attente d\'offres</span></div>'
+        + '<div class="ldd-pulse"><b>\u2709</b></div>'
+        + '<div class="ldd-c">Votre demande a \u00e9t\u00e9 envoy\u00e9e aux chauffeurs v\u00e9rifi\u00e9s de votre r\u00e9gion. Vous recevez leurs offres ici et par e-mail.</div>'
+        + '<div class="ldd-card"><div class="ldd-k">' + code + ' \u00b7 ' + when + '</div>' + route + '</div>'
+        + '<div class="ldd-btn o">Modifier la demande</div>')],
+      ['Vous recevez des offres', shell(
+        '<div class="ldd-h">3 offres re\u00e7ues</div>'
+        + '<div><span class="ldd-pill b">\u25cf Offres re\u00e7ues</span></div>'
+        + offer('LC', 'Lumi\u00e8re Chauffeurs', '\u2605 4,9 \u00b7 Mercedes Classe E', p1, true)
+        + offer('AV', 'Avenue Private Cars', '\u2605 4,8 \u00b7 BMW S\u00e9rie 5', p2)
+        + offer('NS', 'North Star VTC', '\u2605 4,7 \u00b7 Audi A6', p3)
+        + '<div class="ldd-c" style="margin-top:auto">Vous choisissez l\'offre qui vous convient. Le prix ne bouge plus.</div>')],
+      ['Paiement s\u00e9curis\u00e9', shell(
+        '<div class="ldd-h">Paiement</div>'
+        + '<div class="ldd-card"><div class="ldd-k">' + code + ' \u00b7 ' + when + '</div>' + route + '</div>'
+        + '<div class="ldd-card"><div class="ldd-sum"><span>Lumi\u00e8re Chauffeurs</span><span>Business</span></div><div class="ldd-sum t"><span>Total</span><span>' + eur(p1) + '</span></div></div>'
+        + '<div class="ldd-card"><div class="ldd-k">Carte bancaire</div><div class="ldd-cardnum"><i></i>\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 4242</div></div>'
+        + '<div class="ldd-c">\ud83d\udd12 Paiement chiffr\u00e9, facture envoy\u00e9e par e-mail</div>'
+        + '<div class="ldd-btn">Payer ' + eur(p1) + '</div>')],
+      ['Course confirm\u00e9e', shell(
+        '<div class="ldd-h">Course confirm\u00e9e</div>'
+        + '<div><span class="ldd-pill g">\u2713 Confirm\u00e9e</span></div>'
+        + '<div class="ldd-map"><svg viewBox="0 0 220 120" preserveAspectRatio="none"><path d="M0 30 L220 18 M0 80 L220 95 M60 0 L75 120 M160 0 L150 120" stroke="#fff" stroke-width="6" fill="none"/><path d="M30 95 C70 80 90 40 130 45 S180 25 195 20" stroke="#1B5E3B" stroke-width="3" fill="none" stroke-dasharray="5 4"/><circle cx="30" cy="95" r="6" fill="#fff" stroke="#1B5E3B" stroke-width="3"/><circle cx="195" cy="20" r="6" fill="#1B5E3B"/></svg></div>'
+        + '<div class="ldd-card"><div class="ldd-off"><div class="lo">TM</div><div><div class="nm">Thomas M. \u00b7 votre chauffeur</div><div class="sm">Mercedes Classe E noire</div></div></div><div style="margin-top:8px"><span class="ldd-plate">1-ABC-234</span></div></div>'
+        + '<div class="ldd-card"><div class="ldd-k">' + when + '</div>' + route + '</div>'
+        + '<div class="ldd-c" style="margin-top:auto">Vous \u00eates pr\u00e9venu quand votre chauffeur est en route.</div>')]
+    ];
+    var old = document.getElementById('ld-demo'); if(old) old.remove();
+    var o = document.createElement('div');
+    o.id = 'ld-demo'; o.className = 'ldd'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true');
+    o.innerHTML = '<button class="ldd-x" aria-label="Fermer">\u2715</button>'
+      + '<div class="ldd-head"><div class="ld-eye">Aper\u00e7u \u00b7 donn\u00e9es de d\u00e9monstration</div><h2 class="ld-serif">Voici la suite de <em>votre course</em></h2><p>Votre demande est pr\u00eate. Cr\u00e9ez votre compte gratuit pour la publier et recevoir les offres de chauffeurs v\u00e9rifi\u00e9s.</p></div>'
+      + '<div class="ldd-row">' + steps.map(function(s, i){ return '<div class="ldd-step" style="transition-delay:' + (i * 0.08) + 's"><div class="ldd-lbl"><span>' + (i + 1) + '</span>' + s[0] + '</div>' + s[1] + '</div>'; }).join('') + '</div>'
+      + '<div class="ldd-hint">\u2190 Faites d\u00e9filer \u2192</div>'
+      + '<div class="ldd-foot"><button class="ld-btn" id="ld-demo-go">Cr\u00e9er un compte &rarr;</button><p>Gratuit et sans engagement. D\u00e9j\u00e0 client ? <a id="ld-demo-login">Se connecter</a></p></div>';
+    L.appendChild(o);
+    var close = function(){ o.classList.remove('in'); document.removeEventListener('keydown', esc); setTimeout(function(){ o.remove(); }, 350); };
+    var esc = function(e){ if(e.key === 'Escape') close(); };
+    document.addEventListener('keydown', esc);
+    o.querySelector('.ldd-x').onclick = close;
+    $('ld-demo-go').onclick = function(){ close(); showLandingAuth('register'); };
+    $('ld-demo-login').onclick = function(){ close(); showLandingAuth('login'); };
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ o.classList.add('in'); }); });
+  }
 
   // in-page links
   [].slice.call(L.querySelectorAll('[data-ld-go]')).forEach(function(b){
