@@ -1140,6 +1140,28 @@ body{background:var(--bg);}
 .rd-pr{display:flex;justify-content:space-between;font-size:13px;color:var(--ink3);padding:3px 0;}
 .rd-pr span:last-child{color:var(--ink);}
 .rd-pr.rd-total{font-size:14px;font-weight:700;color:var(--ink);border-top:1px solid #E4E7E2;margin-top:6px;padding-top:8px;}
+/* Course confirmée (client) : « Bon voyage » — voucher, chauffeur, véhicule */
+.rdv-hero{position:relative;overflow:hidden;background:linear-gradient(160deg,#1E6B45,#14492E);color:#fff;border-radius:14px;padding:16px 18px 15px;}
+.rdv-hero:after{content:'';position:absolute;right:-36px;top:-36px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none;}
+.rdv-hero small{display:block;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.8;}
+.rdv-hero b{display:block;font-size:21px;font-weight:700;margin-top:4px;letter-spacing:-.01em;}
+.rdv-hero p{font-size:13px;opacity:.9;margin-top:4px;line-height:1.45;}
+.rdv-vch{display:flex;align-items:center;gap:12px;border:1.5px dashed #B5D8C2;background:#F4FAF6;border-radius:12px;padding:11px 12px;}
+.rdv-vch .vi,.rdv-row .vi{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rdv-vch .vi{background:#fff;color:var(--green);border:1px solid #DDEFE3;}
+.rdv-t{font-weight:600;font-size:14px;color:var(--ink);}
+.rdv-s{font-size:12px;color:var(--ink3);margin-top:1px;line-height:1.35;}
+.rdv-dl{margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:6px;background:var(--green);color:#fff;border:none;border-radius:20px;padding:8px 14px;font:600 12.5px 'DM Sans',sans-serif;cursor:pointer;}
+.rdv-dl:hover{filter:brightness(1.1);}
+.rdv-row{display:flex;align-items:center;gap:12px;border:1px solid #ECEAE5;border-radius:12px;padding:11px 12px;}
+.rdv-row .vi{background:#E3F1E8;color:var(--green);}
+.rdv-row>div:nth-child(2){min-width:0;flex:1;}
+.rdv-plate{display:inline-block;font-family:monospace;font-size:11.5px;font-weight:700;letter-spacing:.04em;border:1.5px solid #C0392B;color:#C0392B;border-radius:6px;padding:1px 7px;margin-left:6px;white-space:nowrap;vertical-align:1px;background:#fff;}
+.rdv-call{margin-left:auto;flex-shrink:0;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green);background:#F1F7F3;text-decoration:none;}
+.rdv-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.rdv-tiles div{background:#F1F1EF;border-radius:10px;padding:9px 10px;font-size:11.5px;color:var(--ink3);line-height:1.35;}
+.rdv-tiles b{display:block;color:var(--ink);font-size:12px;margin-bottom:2px;}
+@media(max-width:420px){.rdv-dl span{display:none;}.rdv-dl{padding:9px 11px;}.rdv-hero b{font-size:19px;}}
 .modal-overlay.rd-panel #detail-extra{margin:12px 24px 0!important;}
 @media(max-width:900px){.modal-overlay.rd-panel #detail-extra{margin:12px 16px 0!important;}}
 </style>
@@ -6402,6 +6424,23 @@ function _openRideDetailImpl(el){
       );
     }
     var _rideIdForPax = r.id;
+    // « Bon voyage » : bandeau de confirmation + voucher en tête du détail
+    if(bodyElMain){
+      var _fn=((currentProfile&&currentProfile.first_name)||'').trim();
+      var _rdD=r.ride_date?new Date(r.ride_date+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short'}):'';
+      _rdD=_rdD?(_rdD.charAt(0).toUpperCase()+_rdD.slice(1)).replace(/\./g,''):'';
+      var _short=function(a){ return String(a||'').split(',')[0].trim(); };
+      var _trj=_short(cleanAddr(r.from_address||''))+(isDisp||isMixed?'':(r.to_address?' \u2192 '+_short(r.to_address):''));
+      var _heroT=r.status==='active'||r.pickup_at ? 'Bonne route'+(_fn?', '+_fn:'')+' !'
+        : r.on_way_at ? 'Votre chauffeur est en route' : 'Bon voyage'+(_fn?', '+_fn:'')+' !';
+      var _dlIc='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>';
+      var _docIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>';
+      bodyElMain.insertAdjacentHTML('afterbegin',
+        '<div class="rdv-hero"><small>Course confirmée'+(r.booking_code?' \u00b7 '+_rdEsc(r.booking_code):'')+'</small><b>'+_rdEsc(_heroT)+'</b>'
+          +'<p>'+_rdEsc([_rdD+(r.ride_time?' \u00e0 '+r.ride_time.slice(0,5):''), _trj].filter(Boolean).join(' \u00b7 '))+'</p></div>'
+        +'<div class="rdv-vch"><div class="vi">'+_docIc+'</div><div style="min-width:0"><div class="rdv-t">Voucher de transport</div><div class="rdv-s">\u00c0 pr\u00e9senter \u00e0 votre chauffeur \u00b7 PDF</div></div>'
+          +'<button class="rdv-dl" type="button" onclick="generateRideVoucher(\''+String(r.id).replace(/'/g,'')+'\')">'+_dlIc+'<span>T\u00e9l\u00e9charger</span></button></div>');
+    }
     (async function(myGen){
       try {
         var notesRaw = r.notes||'';
@@ -6415,11 +6454,26 @@ function _openRideDetailImpl(el){
         var phFleet = document.getElementById('ph-fleet');
         if(phFleet){
           var offerNoteClient = (notesRaw.match(/\|offer_note:([^|]+)/)||[])[1]||'';
-          phFleet.outerHTML = '<div class="rd-card rd-blue">'
-            + _rdFleetHtml(fd)
-            + (offerNoteClient ? '<div class="rd-hr"></div><div class="rd-cap">Note du chauffeur</div><div class="rd-note">'+_rdEsc(offerNoteClient.trim())+'</div>' : '')
-            + (fd.price ? '<div class="rd-hr"></div>'+_rdPriceHtml(fd.price, 'Total TVAC') : '')
-            + '</div>';
+          var _v=fd.veh, _d=fd.drv;
+          var _uIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
+          var _cIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17v2M18 17v2M3 13l2-6a2 2 0 012-1.5h10A2 2 0 0119 7l2 6v4H3z"/><circle cx="7.5" cy="13.5" r=".8" fill="currentColor"/><circle cx="16.5" cy="13.5" r=".8" fill="currentColor"/></svg>';
+          var _pIc='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h4l2 5-2.5 1.5a11 11 0 004 4L15 12l5 2v4a2 2 0 01-2 2A16 16 0 014 6a2 2 0 012-2z"/></svg>';
+          var _picked=r.status==='active'||!!r.pickup_at;
+          var _drvSub=_picked?'Vous \u00eates \u00e0 bord' : r.on_way_at?'En route vers le point de d\u00e9part' : 'Il vous attend au point de d\u00e9part \u00e0 l\u2019heure pr\u00e9vue';
+          var _vName=_v?((_v.brand||'')+' '+(_v.model||'')).trim():'';
+          var _vSub=[_v&&_v.color||'', ({lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'})[r.vehicle_type]||''].filter(Boolean).join(' \u00b7 ');
+          phFleet.outerHTML =
+            '<div class="rdv-row"><div class="vi">'+_uIc+'</div><div><div class="rdv-t">'+(_d&&_d.name?_rdEsc(_d.name)+' <span style="font-weight:400;color:var(--ink3);">\u00b7 votre chauffeur</span>':'Chauffeur bient\u00f4t confirm\u00e9')+'</div>'
+              +'<div class="rdv-s">'+(_d&&_d.name?_drvSub:'Votre transporteur attribue le chauffeur avant le d\u00e9part')+'</div></div>'
+              +(_d&&_d.phone?'<a class="rdv-call" href="tel:'+_rdEsc(String(_d.phone).replace(/[^\d+]/g,''))+'" title="'+_rdEsc(_d.phone)+'">'+_pIc+'</a>':'')+'</div>'
+            +'<div class="rdv-row"><div class="vi">'+_cIc+'</div><div><div class="rdv-t">'+(_vName?_rdEsc(_vName):'V\u00e9hicule \u00e0 confirmer')+(_v&&_v.plate?'<span class="rdv-plate">'+_rdEsc(_v.plate)+'</span>':'')+'</div>'
+              +(_vSub?'<div class="rdv-s">'+_rdEsc(_vSub)+'</div>':'')+'</div></div>'
+            +((offerNoteClient||fd.price)?'<div class="rd-card rd-blue">'
+              + (offerNoteClient ? '<div class="rd-cap">Note du chauffeur</div><div class="rd-note">'+_rdEsc(offerNoteClient.trim())+'</div>' : '')
+              + (offerNoteClient&&fd.price ? '<div class="rd-hr"></div>' : '')
+              + (fd.price ? _rdPriceHtml(fd.price, 'Total TVAC') : '')
+              + '</div>':'')
+            +(_picked?'':'<div class="rdv-tiles"><div><b>Avant la course</b>D\u00e9tails envoy\u00e9s par e-mail</div><div><b>Le jour J</b>Alerte \u00ab\u00a0chauffeur en route\u00a0\u00bb</div><div><b>Apr\u00e8s la course</b>Facture et avis</div></div>');
         }
 
         // ② Passager + note au chauffeur
@@ -9381,8 +9435,9 @@ document.getElementById('screen-landing') && (function(){
     };
     var I = function(n, st){ return '<svg viewBox="0 0 24 24"' + (st ? ' style="' + st + '"' : '') + '>' + P[n] + '</svg>'; };
     var heure = f.mode === 'heure';
-    var from = (f.from || '').trim() || 'Gare du Midi, 1060 Saint-Gilles, Belgique';
-    var to = (f.to || '').trim() || "Pl. de l'Atomium 1, 1020 Bruxelles, Belgique";
+    var _ok = function(v){ v = String(v || '').trim(); return v.indexOf('@') > -1 ? '' : v; }; // ignore l'e-mail inséré par le remplissage auto du navigateur
+    var from = _ok(f.from) || 'Gare du Midi, 1060 Saint-Gilles, Belgique';
+    var to = _ok(f.to) || "Pl. de l'Atomium 1, 1020 Bruxelles, Belgique";
     var short = function(a){ return String(a).split(',')[0].trim(); };
     var dt = f.date ? new Date(f.date + 'T12:00:00') : new Date(Date.now() + 864e5);
     var tm = E(f.time || '09:00');
