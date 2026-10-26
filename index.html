@@ -6066,13 +6066,13 @@ function _openRideDetailImpl(el){
       }
     }
     var _routeInner=segRow('green',t('lbl_pickup'),from,'',true)+dispDurHtml+segRow('red',t('lbl_end_mission'),'','',false)+dispKmHtml;
-    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+_routeInner+'</div>';
+    body+='<div class="rd-route" style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+_routeInner+'</div>';
   } else {
     var _routeInner2=segRow('green',t('lbl_depart'),from,'',true)+segRow('red',t('lbl_arrivee'),to,'',false)
       +'<div id="detail-route-info" style="padding:4px 0 4px 30px;display:none;">'
       +'<div style="font-size:11.5px;color:var(--ink2);font-weight:500;" id="detail-route-info-text"></div>'
       +'</div>';
-    body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+_routeInner2+'</div>';
+    body+='<div class="rd-route" style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+_routeInner2+'</div>';
   }
 
   var rawNotes=r.notes||'';
@@ -6430,7 +6430,8 @@ function _openRideDetailImpl(el){
       var _rdD=r.ride_date?new Date(r.ride_date+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short'}):'';
       _rdD=_rdD?(_rdD.charAt(0).toUpperCase()+_rdD.slice(1)).replace(/\./g,''):'';
       var _short=function(a){ return String(a||'').split(',')[0].trim(); };
-      var _trj=_short(cleanAddr(r.from_address||''))+(isDisp||isMixed?'':(r.to_address?' \u2192 '+_short(r.to_address):''));
+      var _durM=(r.notes||'').match(/Durée:([^\s|,]+)/);
+      var _trj=_short(cleanAddr(r.from_address||''))+(isMixed?'':isDisp?(_durM?' \u00b7 Mise \u00e0 disposition '+_durM[1]:''):(r.to_address?' \u2192 '+_short(r.to_address):''));
       var _heroT=r.status==='active'||r.pickup_at ? 'Bonne route'+(_fn?', '+_fn:'')+' !'
         : r.on_way_at ? 'Votre chauffeur est en route' : 'Bon voyage'+(_fn?', '+_fn:'')+' !';
       var _dlIc='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>';
@@ -6440,6 +6441,9 @@ function _openRideDetailImpl(el){
           +'<p>'+_rdEsc([_rdD+(r.ride_time?' \u00e0 '+r.ride_time.slice(0,5):''), _trj].filter(Boolean).join(' \u00b7 '))+'</p></div>'
         +'<div class="rdv-vch"><div class="vi">'+_docIc+'</div><div style="min-width:0"><div class="rdv-t">Voucher de transport</div><div class="rdv-s">\u00c0 pr\u00e9senter \u00e0 votre chauffeur \u00b7 PDF</div></div>'
           +'<button class="rdv-dl" type="button" onclick="generateRideVoucher(\''+String(r.id).replace(/'/g,'')+'\')">'+_dlIc+'<span>T\u00e9l\u00e9charger</span></button></div>');
+      // Date, passagers et trajet sont dans le bandeau : on retire les pastilles et la carte du trajet (sauf course mixte)
+      var _chipsEl=bodyElMain.querySelector('.rmc-wrap'); if(_chipsEl) _chipsEl.remove();
+      if(!isMixed){ var _rtEl=bodyElMain.querySelector('.rd-route'); if(_rtEl) _rtEl.remove(); }
     }
     (async function(myGen){
       try {
@@ -6468,11 +6472,7 @@ function _openRideDetailImpl(el){
               +(_d&&_d.phone?'<a class="rdv-call" href="tel:'+_rdEsc(String(_d.phone).replace(/[^\d+]/g,''))+'" title="'+_rdEsc(_d.phone)+'">'+_pIc+'</a>':'')+'</div>'
             +'<div class="rdv-row"><div class="vi">'+_cIc+'</div><div><div class="rdv-t">'+(_vName?_rdEsc(_vName):'V\u00e9hicule \u00e0 confirmer')+(_v&&_v.plate?'<span class="rdv-plate">'+_rdEsc(_v.plate)+'</span>':'')+'</div>'
               +(_vSub?'<div class="rdv-s">'+_rdEsc(_vSub)+'</div>':'')+'</div></div>'
-            +((offerNoteClient||fd.price)?'<div class="rd-card rd-blue">'
-              + (offerNoteClient ? '<div class="rd-cap">Note du chauffeur</div><div class="rd-note">'+_rdEsc(offerNoteClient.trim())+'</div>' : '')
-              + (offerNoteClient&&fd.price ? '<div class="rd-hr"></div>' : '')
-              + (fd.price ? _rdPriceHtml(fd.price, 'Total TVAC') : '')
-              + '</div>':'')
+            +(offerNoteClient?'<div class="rd-card rd-blue"><div class="rd-cap">Note du chauffeur</div><div class="rd-note">'+_rdEsc(offerNoteClient.trim())+'</div></div>':'')
             +(_picked?'':'<div class="rdv-tiles"><div><b>Avant la course</b>D\u00e9tails envoy\u00e9s par e-mail</div><div><b>Le jour J</b>Alerte \u00ab\u00a0chauffeur en route\u00a0\u00bb</div><div><b>Apr\u00e8s la course</b>Facture et avis</div></div>');
         }
 
