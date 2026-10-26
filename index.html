@@ -830,6 +830,18 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ldm-of .ft{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #ECEAE5;margin-top:14px;padding-top:12px;color:#4D5A52;font-size:14.5px}
 .ldm-of .ch{background:#1B5E3B;color:#fff;border-radius:20px;padding:10px 26px;font-weight:700;font-size:15.5px}
 .ldm-of.best .ch{animation:ldmPulse 1.8s infinite}
+.ldm-trip{background:linear-gradient(160deg,#1E6B45,#14492E);color:#fff;border-radius:16px;padding:22px 22px 20px;position:relative;overflow:hidden}
+.ldm-trip:after{content:'';position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.07)}
+.ldm-trip small{font-size:11.5px;font-weight:700;letter-spacing:.1em;opacity:.8}.ldm-trip b{display:block;font-size:26px;margin-top:6px}.ldm-trip p{font-size:14.5px;opacity:.9;margin-top:6px;line-height:1.5}
+.ldm-vch{margin-top:14px;border:1.5px dashed #B5D8C2;background:#F4FAF6;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px}
+.ldm-vch .vi{width:44px;height:44px;border-radius:11px;background:#fff;color:#1B5E3B;display:flex;align-items:center;justify-content:center;border:1px solid #DDEFE3}.ldm-vch .vi svg{width:22px;height:22px}
+.ldm-vch b{display:block;font-size:15.5px}.ldm-vch span{font-size:13px;color:#5A6B60}
+.ldm-vch .dl{margin-left:auto;background:#1B5E3B;color:#fff;border-radius:20px;padding:9px 16px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:7px;animation:ldmPulse 1.8s infinite}.ldm-vch .dl svg{width:16px;height:16px}
+.ldm-blk{margin-top:12px;border:1px solid #ECEAE5;border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:12px;font-size:14.5px}
+.ldm-blk .vi{width:38px;height:38px;border-radius:10px;background:#E3F1E8;color:#1B5E3B;display:flex;align-items:center;justify-content:center}
+.ldm-blk b{font-weight:600}.ldm-blk span{color:#5A6B60;font-size:13.5px}
+.ldm-plate{display:inline-block;padding:1px 7px;border:1.5px solid #C0392B;color:#C0392B;border-radius:6px;font-weight:700;font-size:12.5px;letter-spacing:.04em;margin-left:6px}
+.ldm-steps2{margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.ldm-steps2 div{background:#F1F1EF;border-radius:12px;padding:11px 12px;font-size:13px;color:#4D5A52;line-height:1.4}.ldm-steps2 b{display:block;color:#1A2B22;font-size:13.5px;margin-bottom:2px}
 .ldm-blur{position:absolute;inset:0;filter:blur(4px);opacity:.55}
 .ldm-veil{position:absolute;inset:0;background:rgba(60,60,58,.45);display:flex;align-items:center;justify-content:center}
 .ldm-mod{width:500px;border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 30px 60px rgba(0,0,0,.3)}
@@ -9365,7 +9377,7 @@ document.getElementById('screen-landing') && (function(){
       car:'<path d="M5 16V12l2-5h10l2 5v4z"/><circle cx="8.5" cy="13.5" r=".8"/><circle cx="15.5" cy="13.5" r=".8"/><path d="M5 16v2M19 16v2"/>', user:'<circle cx="12" cy="8" r="4"/><path d="M5 20c1-4 4-6 7-6s6 2 7 6"/>',
       pin:'<path d="M12 21s-6-6-6-11a6 6 0 0 1 12 0c0 5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>', ok:'<path d="M5 12.5l4.5 4.5L19 7.5"/>', back:'<path d="M15 6l-6 6 6 6"/>', arr:'<path d="M5 12h14M13 6l6 6-6 6"/>',
       bolt:'<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>', wifi:'<path d="M4 9a12 12 0 0 1 16 0M7 12.5a7 7 0 0 1 10 0M10 16a3 3 0 0 1 4 0"/>', drop:'<path d="M12 4s5 6 5 10a5 5 0 0 1-10 0c0-4 5-10 5-10z"/>', eur:'<path d="M17 6.5A6 6 0 0 0 7.5 9M17 17.5A6 6 0 0 1 7.5 15M5 10.5h8M5 13.5h8"/>',
-      chev:'<path d="M9 6l6 6-6 6"/>', down:'<path d="M6 9l6 6 6-6"/>'
+      chev:'<path d="M9 6l6 6-6 6"/>', down:'<path d="M6 9l6 6 6-6"/>', dl:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', phone:'<path d="M6 4h4l2 5-2.5 1.5a11 11 0 0 0 4 4L15 12l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 4 6a2 2 0 0 1 2-2z"/>'
     };
     var I = function(n, st){ return '<svg viewBox="0 0 24 24"' + (st ? ' style="' + st + '"' : '') + '>' + P[n] + '</svg>'; };
     var heure = f.mode === 'heure';
@@ -9426,6 +9438,11 @@ document.getElementById('screen-landing') && (function(){
       + '<div class="ldm-li"><span>Trajet</span><b>' + trajet + '</b></div><div class="ldm-li"><span>Montant payé</span><b>' + eur(p1) + ' TVAC</b></div>'
       + '<p>Un e-mail de confirmation vous a été envoyé avec le détail de votre réservation.</p><div class="ldm-mbt"><div>Mes demandes</div><div>Continuer</div></div></div></div></div>';
 
+    var tripBody = '<div class="ldm-trip"><small>COURSE CONFIRMÉE · ' + code + '</small><b>Bon voyage, Julie !</b><p>' + dLong + ' à ' + tm + ' · ' + trajet + '</p></div>'
+      + '<div class="ldm-vch"><div class="vi">' + I('doc') + '</div><div><b>Voucher de transport</b><span>À présenter à votre chauffeur · PDF</span></div><div class="dl">' + I('dl') + 'Télécharger</div></div>'
+      + '<div class="ldm-blk"><div class="vi">' + I('user') + '</div><div><b>Thomas M.</b> · votre chauffeur<br><span>Il vous attend au point de départ, 10 min avant l\'heure</span></div><div style="margin-left:auto;color:#1B5E3B">' + I('phone') + '</div></div>'
+      + '<div class="ldm-blk"><div class="vi">' + I('car') + '</div><div><b>Mercedes-Benz Classe E</b><span class="ldm-plate">1-ABC-234</span><br><span>Noire · Business</span></div></div>'
+      + '<div class="ldm-steps2"><div><b>Avant la course</b>Détails envoyés par e-mail</div><div><b>Le jour J</b>Alerte « chauffeur en route »</div><div><b>Après la course</b>Facture et avis</div></div>';
     var base = { done:23, wait:0, offers:0, paid:'1 489,30 €' };
     var mk = function(o){ var x = {}; for(var k in base) x[k] = base[k]; for(var k2 in o) x[k2] = o[k2]; return x; };
     var screens = [
@@ -9436,7 +9453,9 @@ document.getElementById('screen-landing') && (function(){
       { t:'Offres reçues', c:'Les offres arrivent : prix fixe TVAC, véhicule, avis et message du chauffeur.',
         h:'<div class="ldm">' + side + main(mk({ offers:2, bell:4, hl:'offers', row:row('<span class="ldm-pill b">● 2 offres</span>', 'Voir offres') })) + drawer(I('back') + code + ' · 2 offres reçues', offersBody) + '</div>' },
       { t:'Paiement', c:'Vous choisissez l\'offre qui vous convient et payez en ligne : la course est réservée.',
-        h:'<div class="ldm"><div class="ldm-blur" style="display:flex">' + side + main(mk({ done:24, paid:'1 558,20 €', row:row('<span class="ldm-pill g">● Confirmée</span>', eur(p1)) })) + '</div>' + modal + '</div>' }
+        h:'<div class="ldm"><div class="ldm-blur" style="display:flex">' + side + main(mk({ done:24, paid:'1 558,20 €', row:row('<span class="ldm-pill g">● Confirmée</span>', eur(p1)) })) + '</div>' + modal + '</div>' },
+      { t:'Bon voyage', c:'Téléchargez votre voucher de transport et attendez votre chauffeur : il vous prévient quand il est en route.',
+        h:'<div class="ldm">' + side + main(mk({ done:24, paid:'1 558,20 €', row:row('<span class="ldm-pill g">● Confirmée</span>', eur(p1)) })) + drawer(I('back') + code + ' · Confirmée', tripBody) + '</div>' }
     ];
 
     var old = document.getElementById('ld-demo'); if(old) old.remove();
