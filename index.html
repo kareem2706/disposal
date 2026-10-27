@@ -5737,9 +5737,8 @@ async function openOffersModal(rideId){
   if(_rr){
     var _sa=function(x){ return String(cleanAddr(x)||'').split(',')[0].trim(); };
     var _from=_sa(_rr.from_address), _to=_rr.trip_type==='disposal'?'Mise à disposition':_sa(_rr.to_address);
-    rideHtml='<div class="ofs-ride">'+_rideMetaChips(_rr)
-      +'<div class="ofs-route"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>'
-      +'<span>'+(_from||'—')+'</span>'+(_to?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span>'+_to+'</span>':'')+'</div></div>';
+    rideHtml='<div class="ofs-ride">'+_rideMetaChips(_rr)+_routeBlockHtml(_rr,'ofs')+'</div>';
+    setTimeout(function(){ _routeBlockDist(_rr,'ofs'); },0);
   }
   var filtersHtml=_n>1?('<div class="ofs-bar">'
     +'<div class="ofs-seg">'
@@ -7063,6 +7062,28 @@ function _rdInfoBlocks(o){
     +(o.priceHtml?'<div style="border-top:1px solid #d0e4f7;margin-top:6px;padding-top:10px;">'+o.priceHtml+'</div>':'')
     +'</div>';
   return h;
+}
+// Zone « Départ / Arrivée » (même rendu que la fiche et le paiement) + distance calculée par Google
+function _routeBlockHtml(r, pfx){
+  var isDisp=r.trip_type==='disposal', isMixed=r.trip_type==='mixed';
+  var dur=((r.notes||'').match(/Durée:([^\s|,]+)/)||[])[1]||'';
+  var gIc='<svg width="14" height="18" viewBox="0 0 24 30" fill="#1B5E3B"><path d="M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>';
+  var rIc='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
+  var row=function(ic,lab,val,line){ return '<div style="display:flex;gap:14px;"><div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;"><div style="margin-top:3px;">'+ic+'</div>'
+    +(line?'<div style="width:2px;flex:1;background:var(--sand3);min-height:10px;margin-top:2px;"></div>':'')+'</div>'
+    +'<div style="flex:1;min-width:0;padding-bottom:'+(line?'8px':'2px')+';"><div class="detail-seg-label">'+lab+'</div><div class="detail-seg-addr">'+val+'</div></div></div>'; };
+  var h='<div class="pay-route">'+row(gIc,isDisp?'LIEU DE PRISE EN CHARGE':'DÉPART',_addrNameHtml(cleanAddr(r.from_address||'—')),true);
+  if(isDisp) h+=row(rIc,'MISE À DISPOSITION','<span class="seg-ad" style="margin:0">'+(dur?_rdEsc(dur):'—')+'</span>',false);
+  else if(isMixed) h+=row(rIc,'COURSE MIXTE','<span class="seg-ad" style="margin:0">Plusieurs trajets</span>',false);
+  else h+=row(rIc,'ARRIVÉE',_addrNameHtml(r.to_address||'—'),false)+'<div id="'+pfx+'-dist" class="rd-dist" style="display:none;font-size:12.5px;color:var(--ink3);"></div>';
+  return h+'</div>';
+}
+function _routeBlockDist(r, pfx){
+  if(r.trip_type==='disposal'||r.trip_type==='mixed'||!r.from_address||!r.to_address||typeof google==='undefined'||!google.maps||!google.maps.DistanceMatrixService) return;
+  (new google.maps.DistanceMatrixService()).getDistanceMatrix({origins:[r.from_address],destinations:[r.to_address],travelMode:google.maps.TravelMode.DRIVING,language:'fr'},function(res,st){
+    var e=res&&res.rows&&res.rows[0]&&res.rows[0].elements&&res.rows[0].elements[0], el=document.getElementById(pfx+'-dist');
+    if(st==='OK'&&e&&e.status==='OK'&&el){ el.textContent=e.distance.text+' · environ '+e.duration.text; el.style.display='block'; }
+  });
 }
 // Adresse affichée « Nom du lieu » en gras + rue / ville en dessous (pays retiré) — même rendu partout
 function _addrNameHtml(a){
