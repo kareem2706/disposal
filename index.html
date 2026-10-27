@@ -1192,6 +1192,12 @@ body{background:var(--bg);}
 .rdv-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;position:relative;z-index:1;}
 .rdv-chips span{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border-radius:8px;padding:4px 9px;font-size:12px;font-weight:600;}
 .rdv-hero .rdv-chips+p{margin-top:9px;}
+.rdv-rateln{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #F0EEE9;margin-top:4px;padding-top:10px;flex-wrap:wrap;}
+.rdv-stars{display:inline-flex;flex-direction:row-reverse;gap:2px;}
+.rdv-stars span{font-size:24px;line-height:1;color:#D5D2CB;cursor:pointer;transition:color .12s,transform .12s;}
+.rdv-stars:not(.on) span:hover,.rdv-stars:not(.on) span:hover~span{color:#F5B100;}
+.rdv-stars:not(.on) span:hover{transform:scale(1.15);}
+.rdv-stars.on span{cursor:default;}.rdv-stars.on span.f{color:#F5B100;}
 .rdv-rate{display:flex;align-items:center;gap:6px;margin:8px 0 2px auto;background:var(--green);color:#fff;border:none;border-radius:20px;padding:7px 14px;font:700 13px 'DM Sans',sans-serif;cursor:pointer;}
 .rdv-rate i{font-style:normal;color:#F5C451;font-size:14px;}
 .rdv-rated{display:table;margin:8px 0 2px auto;background:#F1F7F3;color:var(--green);border-radius:20px;padding:7px 14px;font-weight:600;font-size:13px;}
@@ -6600,7 +6606,7 @@ function _openRideDetailImpl(el){
           +(trjD?'<p>'+_rdEsc(trjD)+'</p>':'')+'</div>'
         +routeKeep
         +'<div id="ph-done" class="rd-skel" style="height:190px;"></div>'
-        +'<button type="button" class="rdv-promo" onclick="closeModal(\'m-ride-detail\');var b=document.querySelector(\'#nav-cta-client .sidebar-cta\');if(b)b.click();">'
+        +'<button type="button" class="rdv-promo" onclick="_rdNewRide()">'
           +'<span class="rdv-promo-t"><small>Un autre d\u00e9placement pr\u00e9vu ?</small>R\u00e9servez votre prochain trajet</span>'
           +'<span class="rdv-promo-go"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>';
       (async function(myGen){
@@ -6619,9 +6625,13 @@ function _openRideDetailImpl(el){
             +ln(uIc,(first?_rdEsc(first):(d&&d.fleet?_rdEsc(d.fleet):'Votre chauffeur'))+(first&&d.fleet?' <span style="font-weight:400;color:var(--ink3);">· '+_rdEsc(d.fleet)+'</span>':''),'Votre chauffeur pour cette course')
             +ln(cIc,(vName?_rdEsc(vName):'Véhicule')+(v&&v.plate?'<span class="rdv-plate">'+_rdEsc(v.plate)+'</span>':''),vSub?_rdEsc(vSub):'')
             +(r.rated
-              ? '<div class="rdv-rated">⭐ Merci pour votre avis !</div>'
-              : '<button type="button" class="rdv-rate" data-r="'+_rdEsc(r.id)+'" data-f="'+_rdEsc(from)+'" data-rd=\''+rdData+'\' onclick="openRateModal(this.dataset.r,this.dataset.f,this.dataset.rd)"><i>\u2605</i>\u00c9valuer</button>')
+              ? '<div class="rdv-rateln" id="rdv-rated"><span class="rdv-t" style="font-size:13px;">Merci pour votre avis !</span><span class="rdv-stars on"></span></div>'
+              : '<div class="rdv-rateln"><span class="rdv-t" style="font-size:13px;">Comment s\u2019est pass\u00e9e votre course ?</span>'
+                +'<span class="rdv-stars" data-r="'+_rdEsc(r.id)+'" data-f="'+_rdEsc(from)+'" data-rd=\''+rdData+'\'>'
+                +[5,4,3,2,1].map(function(k){ return '<span role="button" title="'+k+'/5" onclick="_rdRate(this.parentNode,'+k+')">\u2605</span>'; }).join('')+'</span></div>')
             +'</div>';
+          if(r.rated){ try{ var rt=(await sb.from('ratings').select('score').eq('ride_id',r.id).maybeSingle()).data; var st=document.querySelector('#rdv-rated .rdv-stars');
+            if(st&&rt&&rt.score){ var h=''; for(var k=5;k>=1;k--) h+='<span class="'+(k<=rt.score?'f':'')+'">\u2605</span>'; st.innerHTML=h; } }catch(_e){} }
         }catch(e){ console.warn('done client error:', e); var ph2=document.getElementById('ph-done'); if(ph2) ph2.remove(); }
       })(gen);
     }
@@ -9788,6 +9798,21 @@ function _subscribeLiveData(){
     .on('postgres_changes', {event:'*',schema:'public',table:'offers'}, soon)
     .subscribe();
 }
+// Ferme la fiche puis ouvre « Nouvelle demande » une fois le retour d'historique terminé
+// (sinon le popstate de la fermeture refermait aussitôt le formulaire)
+window._rdNewRide=function(){
+  var done=false;
+  var go=function(){ if(done) return; done=true; window.removeEventListener('popstate',go);
+    setTimeout(function(){ var b=document.querySelector('#nav-cta-client .sidebar-cta'); if(b) b.click(); }, 80); };
+  window.addEventListener('popstate',go);
+  closeModal('m-ride-detail');
+  setTimeout(go, 450);
+};
+// Note choisie directement depuis la fiche : ouvre l'évaluation avec les étoiles déjà cochées
+window._rdRate=async function(el,score){
+  await openRateModal(el.dataset.r, el.dataset.f, el.dataset.rd);
+  if(score && document.getElementById('stars-display')) rateSet(score);
+};
 async function _asgSig(rideId){
   if(!sb||!rideId||localStorage.getItem(DEMO_MODE_KEY)==='1') return null;
   try{
