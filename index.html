@@ -1121,7 +1121,8 @@ body{background:var(--bg);}
 .nr-chev{color:#9AA59E;font-size:24px;flex-shrink:0;}
 .nr-back{display:none;background:none;border:none;padding:0 0 10px;color:var(--green);font:600 13px 'DM Sans',sans-serif;cursor:pointer;}
 #m-new-ride.nr-flow #nr-type-grp{display:none;}
-#m-new-ride.nr-flow .nr-back{display:inline-block;}
+/* Formulaire : retour au choix du type par la flèche ‹ de l'en-tête (ordinateur et mobile) */
+#m-new-ride.nr-flow:not(.nr-pick) .modal-hd .rd-back{display:flex!important;}
 #m-new-ride.nr-pick .nr-choose{display:flex;}
 #m-new-ride.nr-pick .modal-body,#m-new-ride.nr-pick .modal-ft{display:none!important;}
 @media(max-width:480px){.nr-st span{display:none;}.nr-st.on span{display:block;position:absolute;top:30px;white-space:nowrap;}.nr-steps{padding-bottom:30px;}}
