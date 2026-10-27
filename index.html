@@ -1192,9 +1192,9 @@ body{background:var(--bg);}
 .rdv-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;position:relative;z-index:1;}
 .rdv-chips span{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.14);border-radius:8px;padding:4px 9px;font-size:12px;font-weight:600;}
 .rdv-hero .rdv-chips+p{margin-top:9px;}
-.rdv-rate{margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--green);color:#fff;border:none;border-radius:22px;padding:11px;font:700 14px 'DM Sans',sans-serif;cursor:pointer;}
-.rdv-rate i{font-style:normal;color:#F5C451;letter-spacing:2px;}
-.rdv-rated{margin-top:10px;text-align:center;background:#F1F7F3;color:var(--green);border-radius:22px;padding:10px;font-weight:600;font-size:13.5px;}
+.rdv-rate{display:flex;align-items:center;gap:6px;margin:8px 0 2px auto;background:var(--green);color:#fff;border:none;border-radius:20px;padding:7px 14px;font:700 13px 'DM Sans',sans-serif;cursor:pointer;}
+.rdv-rate i{font-style:normal;color:#F5C451;font-size:14px;}
+.rdv-rated{display:table;margin:8px 0 2px auto;background:#F1F7F3;color:var(--green);border-radius:20px;padding:7px 14px;font-weight:600;font-size:13px;}
 .rdv-promo{position:relative;display:block;width:100%;height:190px;border:none;border-radius:18px;overflow:hidden;cursor:pointer;padding:0;text-align:left;background:#1d2b22 url(assets/story/05-depart.jpg?v=3) center 60%/cover no-repeat;font-family:'DM Sans',sans-serif;}
 .rdv-promo:before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.72) 100%);}
 .rdv-promo-t{position:absolute;left:20px;bottom:18px;right:96px;color:#fff;font-size:22px;font-weight:600;line-height:1.15;letter-spacing:-.01em;}
@@ -6620,7 +6620,7 @@ function _openRideDetailImpl(el){
             +ln(cIc,(vName?_rdEsc(vName):'Véhicule')+(v&&v.plate?'<span class="rdv-plate">'+_rdEsc(v.plate)+'</span>':''),vSub?_rdEsc(vSub):'')
             +(r.rated
               ? '<div class="rdv-rated">⭐ Merci pour votre avis !</div>'
-              : '<button type="button" class="rdv-rate" data-r="'+_rdEsc(r.id)+'" data-f="'+_rdEsc(from)+'" data-rd=\''+rdData+'\' onclick="openRateModal(this.dataset.r,this.dataset.f,this.dataset.rd)"><i>★★★★★</i>Évaluer votre course</button>')
+              : '<button type="button" class="rdv-rate" data-r="'+_rdEsc(r.id)+'" data-f="'+_rdEsc(from)+'" data-rd=\''+rdData+'\' onclick="openRateModal(this.dataset.r,this.dataset.f,this.dataset.rd)"><i>\u2605</i>\u00c9valuer</button>')
             +'</div>';
         }catch(e){ console.warn('done client error:', e); var ph2=document.getElementById('ph-done'); if(ph2) ph2.remove(); }
       })(gen);
