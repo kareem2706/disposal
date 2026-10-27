@@ -2813,7 +2813,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div class="modal-body" style="padding:20px 22px;">
       <div class="form-grid"><div class="input-group"><label>Marque <span style="color:var(--red)">*</span></label><select id="veh-brand" onchange="populateVehModels()"><option value="">-- Choisir --</option></select></div><div class="input-group"><label>Mod&egrave;le <span style="color:var(--red)">*</span></label><select id="veh-model"><option value="">-- Choisir une marque --</option></select></div></div>
       <div class="form-grid"><div class="input-group"><label>Ann&eacute;e <span style="color:var(--red)">*</span></label><input id="veh-year" type="number" min="2000" max="2035" placeholder="2023"><div style="font-size:11px;color:var(--ink3);margin-top:4px;">Selon la l&eacute;gislation, le v&eacute;hicule doit avoir <b>7 ans maximum</b>.</div></div><div class="input-group"><label>Couleur</label><input id="veh-color" placeholder="Noir"></div></div>
-      <div class="form-grid"><div class="input-group"><label>Gamme <span style="color:var(--red)">*</span></label><select id="veh-class" onchange="_applyVehSeatsRule(true)"><option value="lowcost">Economy</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div><div class="input-group"><label>Plaque</label><input id="veh-plate" placeholder="T-ABC-123"></div></div>
+      <div class="form-grid"><div class="input-group"><label class="veh-lbl">Gamme <span style="color:var(--red)">*</span> <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="veh-class" onchange="_applyVehSeatsRule(true)"><option value="lowcost">Economy</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div><div class="input-group"><label>Plaque</label><input id="veh-plate" placeholder="T-ABC-123"></div></div>
       <div class="form-grid"><div class="input-group"><label>Places assises <span style="color:var(--red)">*</span></label><input id="veh-seats" type="number" min="1" step="1" inputmode="numeric" placeholder="ex. 3"></div><div></div></div>
       <div style="border-top:1px solid var(--sand3);margin:14px 0;padding-top:14px;">
         <div style="font-size:12px;font-weight:600;margin-bottom:10px;">&Eacute;quipements</div>
@@ -9396,7 +9396,7 @@ window._evAdd=function(d){
   div.innerHTML='<div class="ev-vh"><span class="n"></span><span class="ev-ttl"></span><span class="tl"><button type="button" onclick="_evDup(this)">Dupliquer</button><button type="button" class="ev-del" onclick="_evDel(this)">Supprimer</button></span></div>'
     +'<div class="form-grid">'
     +'<div class="input-group"><label>Type de trajet</label><select class="ev-type" onchange="_evType(this)"><option value="ab">Trajet simple (A → B)</option><option value="disposal">Mise à disposition</option></select></div>'
-    +'<div class="input-group"><label>Gamme</label><select class="ev-cls">'+_evClassOpts()+'</select></div>'
+    +'<div class="input-group"><label class="veh-lbl">Gamme <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select class="ev-cls">'+_evClassOpts()+'</select></div>'
     +'<div class="input-group full"><label class="ev-from-lbl">Départ <span style="color:var(--red)">*</span></label><input class="ev-from" autocomplete="off" placeholder="Adresse, gare, aéroport" value="'+e(d.from)+'"></div>'
     +'<div class="input-group full ev-to-grp"><label>Arrivée <span style="color:var(--red)">*</span></label><input class="ev-to" autocomplete="off" placeholder="Destination" value="'+e(d.to)+'"></div>'
     +'<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input class="ev-date" type="date" min="'+min+'" value="'+e(d.date)+'"></div>'
@@ -9752,10 +9752,10 @@ window.openVehGuide = function(){
   if(old){ old.remove(); return; }
 
   var GUIDE = [
-    ['Economy', 'Tout type de v\u00e9hicule'],
+    ['Economy', 'Tout type de v\u00e9hicule de 3 \u00e0 7 places'],
     ['Business', 'Mercedes Classe E ou \u00e9quivalent'],
     ['Luxe',     'Mercedes Classe S ou \u00e9quivalent'],
-    ['Van',      'Mercedes Classe V ou \u00e9quivalent'],
+    ['Van',      'Mercedes Classe V'],
     ['Bus',      'V\u00e9hicule de type bus, minibus, autocar\u2026']
   ];
 
@@ -10019,7 +10019,7 @@ document.getElementById('screen-landing') && (function(){
     { c:'Economy', m:'Toyota Prius, Skoda Octavia ou similaire', pax:3, bag:3, d:"Un voyage pour tous les budgets : le m\u00eame chauffeur v\u00e9rifi\u00e9 et le m\u00eame prix fixe, au tarif le plus doux." },
     { c:'Business', m:'Mercedes Classe E, BMW S\u00e9rie 5 ou similaire', pax:3, bag:3, d:"La r\u00e9f\u00e9rence pour les rendez-vous d'affaires et les transferts a\u00e9roport. Discr\u00e8te, confortable, toujours impeccable." },
     { c:'Premi\u00e8re', m:'Mercedes Classe S, BMW S\u00e9rie 7 ou similaire', pax:3, bag:3, d:"L'espace arri\u00e8re d'un salon et un silence de cabine, pour les occasions qui comptent." },
-    { c:'Van', m:'Mercedes Classe V ou similaire', pax:7, bag:7, d:"Pour les familles, les \u00e9quipes et les valises nombreuses \u2014 sans renoncer au confort." },
+    { c:'Van', m:'Mercedes Classe V', pax:7, bag:7, d:"Pour les familles, les \u00e9quipes et les valises nombreuses \u2014 sans renoncer au confort." },
     { c:'Autocar', m:'Minibus et autocars de 16 \u00e0 50 places', pax:50, bag:50, d:"Pour les groupes, s\u00e9minaires et \u00e9v\u00e9nements : un seul v\u00e9hicule, un seul chauffeur, tout le monde ensemble." }
   ];
   var tabs = [].slice.call($('ld-cls-tabs').children), imgs = [].slice.call($('ld-cls-img').children), info = $('ld-cls-info');
