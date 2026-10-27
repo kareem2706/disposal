@@ -6494,7 +6494,8 @@ function _openRideDetailImpl(el){
     var _rideIdForPax = r.id;
     // « Bon voyage » : bandeau de confirmation + voucher en tête du détail
     if(bodyElMain){
-      var _fn=((currentProfile&&currentProfile.first_name)||'').trim();
+      // Nom du passager (toujours) ; à défaut, le prénom du compte
+      var _fn=_rdTag(r.notes,'pax')||((currentProfile&&currentProfile.first_name)||'').trim();
       var _rdD=r.ride_date?new Date(r.ride_date+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short'}):'';
       _rdD=_rdD?(_rdD.charAt(0).toUpperCase()+_rdD.slice(1)).replace(/\./g,''):'';
       var _short=function(a){ return String(a||'').split(',')[0].trim(); };
@@ -6585,7 +6586,7 @@ function _openRideDetailImpl(el){
   if(isClient && r.status==='done' && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     var bodyD=document.getElementById('detail-body');
     if(bodyD){
-      var n0=r.notes||'', fn0=((currentProfile&&currentProfile.first_name)||'').trim();
+      var n0=r.notes||'', fn0=_rdTag(n0,'pax')||((currentProfile&&currentProfile.first_name)||'').trim();
       var paxN=_rdTag(n0,'pax')||((currentProfile&&currentProfile.first_name||'')+' '+(currentProfile&&currentProfile.last_name||'')).trim();
       var dD=r.ride_date?new Date(r.ride_date+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,''):'';
       dD=dD?dD.charAt(0).toUpperCase()+dD.slice(1):'';
