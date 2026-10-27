@@ -1125,6 +1125,18 @@ body{background:var(--bg);}
 #m-new-ride.nr-pick .nr-choose{display:flex;}
 #m-new-ride.nr-pick .modal-body,#m-new-ride.nr-pick .modal-ft{display:none!important;}
 @media(max-width:480px){.nr-st span{display:none;}.nr-st.on span{display:block;position:absolute;top:30px;white-space:nowrap;}.nr-steps{padding-bottom:30px;}}
+/* Fiche d'une course : en-tête, trajet éclairci, instructions */
+.rd-hd2{display:flex;flex-direction:column;gap:3px;min-width:0;line-height:1.2;}
+.rd-hd2-code{font-size:17px;font-weight:700;color:var(--ink);font-family:'DM Sans',sans-serif;letter-spacing:0;}
+.rd-hd2-sub{font-size:13.5px;font-weight:400;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#m-ride-detail .modal-title{flex:1;min-width:0;}
+#m-ride-detail .modal-body > div[style*="background:#F7F7F7"]{background:#FCFCFB!important;border:1px solid #F0EEE9;}
+.detail-seg-addr .seg-nm{display:block;font-weight:700;font-size:15px;color:var(--ink);}
+.detail-seg-addr .seg-ad{display:block;font-size:13px;color:var(--ink3);margin-top:2px;font-weight:400;}
+.rd-dist{margin:10px 0 0 30px;padding-top:9px;border-top:1px solid #F2F0EC;}
+.rd-dist div{font-size:12.5px!important;color:var(--ink3)!important;font-weight:400!important;}
+.rd-instr{border:1px solid #ECEAE5;border-radius:12px;padding:12px 14px;}
+@media(max-width:900px){ #m-ride-detail .rmc-wrap{flex-wrap:wrap!important;} #m-ride-detail .rmc-row{flex-wrap:wrap!important;} }
 /* Bouton « Fermer » des pieds de page masqué partout (la croix / flèche en haut ferme la fenêtre) */
 .modal-ft .m-close-mob{display:none!important;}
 .modal-ft:not(:has(> :not(.m-close-mob))){display:none!important;}
@@ -6014,7 +6026,7 @@ function _triggerDistanceMatrix(r, result, idPrefix){
   if(!result.isDisp&&!result.isMixed&&r.from_address&&r.to_address&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
     (new google.maps.DistanceMatrixService()).getDistanceMatrix({origins:[r.from_address],destinations:[r.to_address],travelMode:google.maps.TravelMode.DRIVING,language:'fr'},function(res,st){
       var ie=document.getElementById(idPrefix+'detail-route-info'),te=document.getElementById(idPrefix+'detail-route-info-text');
-      if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){var el=res.rows[0].elements[0];if(ie&&te){te.textContent=el.distance.text+' - +/- '+el.duration.text;ie.style.display='block';}}
+      if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){var el=res.rows[0].elements[0];if(ie&&te){te.textContent=el.distance.text+' \u00b7 environ '+el.duration.text;ie.style.display='block';}}
     });
   }
   if(result.isMixed&&result.mixedSegs.length&&typeof google!=='undefined'&&google.maps&&google.maps.DistanceMatrixService){
@@ -6073,6 +6085,10 @@ function _rideMetaChips(r){
   if(r.passengers) chips.push('<span style="'+soft+'">'+ico('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>')+r.passengers+' passager'+(r.passengers>1?'s':'')+'</span>');
   if(r.vehicle_type){ var vl={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'}[r.vehicle_type]||r.vehicle_type;
     chips.push('<span style="'+soft+'">'+ico('<path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>')+vl+'</span>'); }
+  var _fl=_rdTag(r.notes,'flight'), _tr=_rdTag(r.notes,'train');
+  var tsoft='display:inline-flex;align-items:center;gap:6px;background:#E8F0FB;color:#2456A6;border:1px solid #CFDDF3;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:700;white-space:nowrap;';
+  if(_fl) chips.push('<span style="'+tsoft+'">'+ico('<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>')+'Vol '+_rdEsc(_fl.toUpperCase())+'</span>');
+  if(_tr) chips.push('<span style="'+tsoft.replace('#E8F0FB','#F1ECFA').replace('#2456A6','#6A45B5').replace('#CFDDF3','#E0D5F3')+'">'+ico('<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8.5 14h.01M15.5 14h.01M9 17l-2 4M15 17l2 4"/>')+'Train '+_rdEsc(_tr.toUpperCase())+'</span>');
   if(!chips.length) return '';
   var first=r.ride_date?chips.shift():'';
   return '<div class="rmc-wrap">'
@@ -6103,7 +6119,15 @@ function _openRideDetailImpl(el){
   var _subIc = r.is_subcontract
         ? ' <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--amber-bg);color:var(--amber);vertical-align:middle;margin-left:4px;" title="Sous-traitée"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>'
         : '';
-  var fullTitle = r.booking_code ? '<span class="rd-code">'+r.booking_code+'</span><span class="rd-sep"> — </span><span class="rd-sub">'+subTitle+_subIc+'</span>' : '<span class="rd-sub">'+subTitle+_subIc+'</span>';
+  // En-tête : code en gras, puis « Type · Ville → Ville »
+  var _city=function(a){ var ps=String(a||'').split(',').map(function(x){return x.trim();}).filter(Boolean);
+    for(var i=ps.length-1;i>=0;i--){ var m=ps[i].match(/^(?:[A-Z]{1,2}-?)?\d{4,5}\s+(.+)$/); if(m) return m[1]; }
+    return ps.length>2?ps[ps.length-2]:(ps[0]||''); };
+  var _tLbl=isMixed?'Course mixte':isDisp?'Mise \u00e0 disposition':'Course simple';
+  var _durH=((r.notes||'').match(/Durée:([^\s|,]+)/)||[])[1]||'';
+  var _route=isMixed?(mixedSegs.length?mixedSegs.length+' trajets':''):isDisp?[_city(r.from_address),_durH].filter(Boolean).join(' \u00b7 '):[_city(r.from_address),_city(r.to_address)].filter(Boolean).join(' \u2192 ');
+  var _sub2=_rdEsc(_tLbl+(_route?' \u00b7 '+_route:''));
+  var fullTitle = '<span class="rd-hd2">'+(r.booking_code?'<b class="rd-hd2-code">'+_rdEsc(r.booking_code)+_subIc+'</b>':'')+'<span class="rd-hd2-sub">'+_sub2+(r.booking_code?'':_subIc)+'</span></span>';
   if(titleEl) titleEl.innerHTML = fullTitle;
 
   // Header row: big title + status pill
@@ -6117,11 +6141,19 @@ function _openRideDetailImpl(el){
 
   
   // Helper: one segment row (dot + line/no-line + content)
+    // Adresse : nom du lieu en gras, rue / ville en dessous (pays retiré)
+    function _segAddr(a){
+      if(!a||a==='—') return '—';
+      var ps=String(a).split(',').map(function(x){return x.trim();}).filter(Boolean);
+      if(ps.length>1 && /^(belgique|belgium|belgi\u00eb|france|luxembourg|nederland|pays-bas|netherlands|deutschland|allemagne|germany|united kingdom|royaume-uni|suisse|schweiz|switzerland)$/i.test(ps[ps.length-1])) ps.pop();
+      if(ps.length<2) return '<b class="seg-nm">'+_rdEsc(ps[0]||a)+'</b>';
+      return '<b class="seg-nm">'+_rdEsc(ps[0])+'</b><span class="seg-ad">'+_rdEsc(ps.slice(1).join(', '))+'</span>';
+    }
     function segRow(dot, label, addr, time2, withLine){
     var iconGreen='<svg width="14" height="18" viewBox="0 0 24 30" fill="#1B5E3B"><path d="M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>';
     var iconRed='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
     var ico=dot==='green'?iconGreen:iconRed;
-    return '<div style="display:flex;gap:14px;">'      +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'        +'<div style="margin-top:3px;flex-shrink:0;">'+ico+'</div>'        +(withLine?'<div style="width:2px;flex:1;background:var(--sand3);min-height:14px;margin-top:2px;"></div>':'')      +'</div>'      +'<div style="flex:1;min-width:0;'+(withLine?'padding-bottom:10px':'padding-bottom:2px')+';">'        +'<div class="detail-seg-label">'+label+'</div>'        +'<div class="detail-seg-addr">'+(addr||'—')+'</div>'      +'</div>'    +'</div>';
+    return '<div style="display:flex;gap:14px;">'      +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'        +'<div style="margin-top:3px;flex-shrink:0;">'+ico+'</div>'        +(withLine?'<div style="width:2px;flex:1;background:var(--sand3);min-height:14px;margin-top:2px;"></div>':'')      +'</div>'      +'<div style="flex:1;min-width:0;'+(withLine?'padding-bottom:10px':'padding-bottom:2px')+';">'        +'<div class="detail-seg-label">'+label+'</div>'        +'<div class="detail-seg-addr">'+_segAddr(addr)+'</div>'      +'</div>'    +'</div>';
   }
 
     // Route rows
@@ -6182,7 +6214,7 @@ function _openRideDetailImpl(el){
     body+='<div class="rd-route" style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+_routeInner+'</div>';
   } else {
     var _routeInner2=segRow('green',t('lbl_depart'),from,'',true)+segRow('red',t('lbl_arrivee'),to,'',false)
-      +'<div id="detail-route-info" style="padding:4px 0 4px 30px;display:none;">'
+      +'<div id="detail-route-info" class="rd-dist" style="display:none;">'
       +'<div style="font-size:11.5px;color:var(--ink2);font-weight:500;" id="detail-route-info-text"></div>'
       +'</div>';
     body+='<div class="rd-route" style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+_routeInner2+'</div>';
@@ -6191,17 +6223,16 @@ function _openRideDetailImpl(el){
   var rawNotes=r.notes||'';
   var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight|train):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
   if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){
-    body+='<div>'
-      +'<div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div>'
-      +'<div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">'+(r.status==='personal'?'Note':'Note du client')+'\u00a0: </span>'+_rdEsc(cleanNotes)+'</div>'
-      +'</div>';
+    body+='<div class="rd-instr"><div class="rd-cap" style="margin-bottom:4px;">'+(r.status==='personal'?'Note':'Instructions du client')+'</div>'
+      +'<div style="font-size:14px;color:var(--ink);line-height:1.45;">'+_rdEsc(cleanNotes)+'</div></div>';
   }
 
   // Note: prix demandé for subcontract shown in footer only
 
   // Note: price for cancelled/done rides is shown in the footer (not body)
 
-  body+=(window._trBlockHtml?window._trBlockHtml(r):'');
+  // Vol / train : pastille à côté de la gamme (demande ouverte) ; bloc de suivi une fois la course attribuée
+  if(r.status!=='waiting' && r.status!=='offers') body+=(window._trBlockHtml?window._trBlockHtml(r):'');
   var bodyEl=document.getElementById('detail-body');if(bodyEl)bodyEl.innerHTML=body;
   if(window._trStart) window._trStart(r, gen);
 
@@ -9204,7 +9235,7 @@ function setLoading(btn, loading, text){
 function _tagModalClose(m){ if(!m||m.id==='m-confirm-delete') return; m.querySelectorAll('.modal-ft button').forEach(function(b){ if((b.textContent||'').trim()==='Fermer') b.classList.add('m-close-mob'); }); }
 window.openModal  = id => { var _m=document.getElementById(id); if(!_m) return; _tagModalClose(_m); if(_m.classList.contains('rd-panel')) _rdEnsureBack(_m); _m.classList.add('open'); if(_m.classList.contains('rd-panel')) _rdOpened(id); };
 // ── Nouvelle demande : étape 1 « type de trajet » puis étape 2 « création de la demande » ──
-var _NR_STEPS=['Type de trajet','Cr\u00e9ation de la demande','Attente des offres','S\u00e9lection d\u2019une offre','Paiement'];
+var _NR_STEPS=['Type','Demande','Offres','Choix','Paiement'];
 window._nrStepsHtml=function(cur){
   return _NR_STEPS.map(function(t,i){ var n=i+1, c=n<cur?'done':n===cur?'on':'';
     return '<div class="nr-st '+c+'"><i>'+(n<cur?'\u2713':n)+'</i><span>'+t+'</span></div>'; }).join('');
