@@ -6018,6 +6018,11 @@ function _openRideDetailImpl(el){
   var r;
   try{ r=JSON.parse(el.dataset.ride.replace(/&#39;/g,"'")); }catch(e){return;}
   window._lastDetailRide=r;
+  // Empreinte du véhicule / chauffeur attribués : la fiche se met à jour dès qu'ils changent
+  if(!window._lastDetailAsg || window._lastDetailAsg.id!==r.id){
+    window._lastDetailAsg={ id:r.id, sig:null };
+    _asgSig(r.id).then(function(sg){ if(window._lastDetailAsg && window._lastDetailAsg.id===r.id) window._lastDetailAsg.sig=sg; });
+  }
   var gen=++window._detailGen;
   var isClient=currentRole==='client';
   var isMixed=r.trip_type==='mixed',isDisp=r.trip_type==='disposal';
@@ -9734,6 +9739,13 @@ function _subscribeLiveData(){
     .on('postgres_changes', {event:'*',schema:'public',table:'offers'}, soon)
     .subscribe();
 }
+async function _asgSig(rideId){
+  if(!sb||!rideId||localStorage.getItem(DEMO_MODE_KEY)==='1') return null;
+  try{
+    var o=(await sb.from('offers').select('vehicle_id,fleet_driver_id').eq('ride_id',rideId).eq('status','accepted').maybeSingle()).data;
+    return o ? (o.vehicle_id||'')+'|'+(o.fleet_driver_id||'') : '';
+  }catch(e){ return null; }
+}
 function _isOpen(id){ var m=document.getElementById(id); return !!(m&&m.classList.contains('open')); }
 async function _liveRefresh(){
   if(_liveBusy||!sb||!currentUser) return;
@@ -9755,6 +9767,9 @@ async function _liveRefresh(){
         await _mergeRidePrivate(res.data);
         var f=res.data, changed=['status','notes','final_price','driver_id','payment_method','ride_date','ride_time','from_address','to_address','on_way_at','pickup_at','passengers','vehicle_type']
           .some(function(k){ return String(f[k]==null?'':f[k]) !== String(old[k]==null?'':old[k]); });
+        // Véhicule ou chauffeur attribué modifié (offre retenue)
+        var sg=await _asgSig(f.id), la=window._lastDetailAsg;
+        if(sg!==null && la && la.id===f.id){ if(la.sig!==null && la.sig!==sg) changed=true; la.sig=sg; }
         if(changed && _isOpen('m-ride-detail') && window._lastDetailRide && window._lastDetailRide.id===f.id){
           var el=document.createElement('div'); el.dataset.ride=JSON.stringify(f).replace(/'/g,"&#39;");
           _openRideDetailImpl(el);
@@ -11387,6 +11402,11 @@ window.saveMissionAssignment=async function(){
     document.getElementById('m-mission-assign')?.remove();
     showToast('✅ Mission mise à jour — le client a été prévenu');
     if(typeof loadMissions==='function') loadMissions();
+    // Fiche de la course ouverte derrière : affiche tout de suite le nouveau véhicule / chauffeur
+    if(_isOpen('m-ride-detail') && window._lastDetailRide && window._lastDetailRide.id===r.id){
+      if(window._lastDetailAsg && window._lastDetailAsg.id===r.id) window._lastDetailAsg.sig='\u0000';
+      _liveRefresh();
+    }
   }catch(e){
     showError(err,'Erreur : '+(e.message||e));
     if(btn){ btn.disabled=false; btn.textContent='Enregistrer'; }
