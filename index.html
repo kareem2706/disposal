@@ -9393,7 +9393,7 @@ window._evAdd=function(d){
     +'<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input class="ev-time" type="time" value="'+e(d.time)+'"></div>'
     +'<div class="input-group ev-dur-grp" style="display:none;"><label>Durée (heures)</label><input class="ev-dur" type="number" min="1" max="24" value="'+e(d.dur||'3')+'"></div>'
     +'<div class="input-group"><label>Passagers</label><select class="ev-pax">'+[1,2,3,4,5,6,7,8,9,10,12,14,16,20,30,50].map(function(k){ return '<option'+(String(k)===String(d.pax||1)?' selected':'')+'>'+k+'</option>'; }).join('')+'</select></div>'
-    +'<div class="input-group ev-pax-grp full" style="display:none;"><label>Passager de ce véhicule</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><input class="ev-pname" maxlength="120" placeholder="Nom et prénom" value="'+e(d.pname)+'"><input class="ev-pphone" maxlength="40" placeholder="Téléphone" inputmode="tel" value="'+e(d.pphone)+'"></div></div>'
+    +'<div class="input-group ev-pax-grp full" style="display:none;"><label>Contact pour ce véhicule</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><input class="ev-pname" maxlength="120" placeholder="Nom et prénom" value="'+e(d.pname)+'"><input class="ev-pphone" maxlength="40" placeholder="Téléphone" inputmode="tel" value="'+e(d.pphone)+'"></div></div>'
     +'</div>';
   box.appendChild(div);
   if(d.type){ div.querySelector('.ev-type').value=d.type; _evType(div.querySelector('.ev-type')); }
