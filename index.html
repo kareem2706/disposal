@@ -359,7 +359,7 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 .offer-card{background:var(--sand);border:1.5px solid var(--sand3);border-radius:var(--r-lg);padding:16px;margin-bottom:9px;transition:border-color var(--t);}
 .offer-card:hover{border-color:var(--ink3);}
 /* Offres reçues (version « plein écran ») */
-.ofs-ride{background:var(--sand);border-radius:14px;padding:12px 14px;margin-bottom:14px;display:flex;flex-direction:column;gap:9px;}
+.ofs-ride{margin-bottom:14px;display:flex;flex-direction:column;gap:10px;}
 .ofs-route{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--ink);min-width:0;}
 .ofs-route span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .ofs-route svg{flex-shrink:0;color:var(--ink3);}
@@ -397,7 +397,7 @@ body.rd-nav .modal-overlay.rd-panel.open:not(.rd-under) .modal-title{flex:1;min-
 /* Confirmation et paiement (version « plein écran ») */
 #m-payment.rd-panel .modal{max-height:none;}
 #m-payment .modal-ft .btn-green{padding:12px 28px!important;font-size:15px!important;font-weight:600!important;border-radius:999px!important;justify-content:center;}
-.pay-ride{background:var(--sand);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:12.5px;}
+.pay-ride{margin-bottom:12px;font-size:12.5px;}
 .pay-ride .rmc-wrap{margin-bottom:12px;}
 .pay-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);}
 .pay-offer{display:flex;align-items:center;gap:12px;border:1.5px solid var(--sand3);border-radius:14px;padding:12px 14px;margin-bottom:12px;background:#fff;}
@@ -1136,6 +1136,9 @@ body{background:var(--bg);}
 .rd-dist{margin:10px 0 0 30px;padding-top:9px;border-top:1px solid #F2F0EC;}
 .rd-dist div{font-size:12.5px!important;color:var(--ink3)!important;font-weight:400!important;}
 .rd-instr{border:1px solid #ECEAE5;border-radius:12px;padding:12px 14px;}
+/* Récapitulatif de la course (offres, paiement) : même zone claire que la fiche */
+.ofs-route,.pay-route{background:#FCFCFB;border:1px solid #F0EEE9;border-radius:14px;padding:12px 14px;}
+.pay-route .rd-dist{margin-left:30px;}
 /* Pastilles date / passagers / gamme / vol : même fond clair que le trajet, texte non gras */
 #m-ride-detail .rmc-wrap span[style]{background:#FCFCFB!important;border:1px solid #F0EEE9!important;color:var(--ink)!important;font-weight:400!important;}
 #m-ride-detail .rmc-wrap span[style] span{color:var(--ink3)!important;}
@@ -6081,18 +6084,18 @@ function _rideMetaChips(r){
     var d=new Date(r.ride_date+'T00:00:00');
     var day=d.toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'');
     day=day.charAt(0).toUpperCase()+day.slice(1);
-    chips.push('<span style="display:inline-flex;align-items:center;gap:7px;background:#1B5E3B;color:#fff;border-radius:9px;padding:6px 11px;font-size:13.5px;font-weight:700;white-space:nowrap;">'
+    chips.push('<span style="display:inline-flex;align-items:center;gap:7px;background:#FCFCFB;color:var(--ink);border:1px solid #F0EEE9;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:400;white-space:nowrap;">'
       +ico('<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/>')+day
       +(r.ride_time?'<span style="opacity:.55;font-weight:400;">|</span>'+ico('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')+r.ride_time.slice(0,5):'')+'</span>');
   }
-  var soft='display:inline-flex;align-items:center;gap:6px;background:var(--sand2);color:var(--ink);border:1px solid var(--sand3);border-radius:9px;padding:5px 10px;font-size:13px;font-weight:600;white-space:nowrap;';
+  var soft='display:inline-flex;align-items:center;gap:6px;background:#FCFCFB;color:var(--ink);border:1px solid #F0EEE9;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:400;white-space:nowrap;';
   if(r.passengers) chips.push('<span style="'+soft+'">'+ico('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>')+r.passengers+' passager'+(r.passengers>1?'s':'')+'</span>');
   if(r.vehicle_type){ var vl={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'}[r.vehicle_type]||r.vehicle_type;
     chips.push('<span style="'+soft+'">'+ico('<path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>')+vl+'</span>'); }
   var _fl=_rdTag(r.notes,'flight'), _tr=_rdTag(r.notes,'train');
-  var tsoft='display:inline-flex;align-items:center;gap:6px;background:#E8F0FB;color:#2456A6;border:1px solid #CFDDF3;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:700;white-space:nowrap;';
+  var tsoft='display:inline-flex;align-items:center;gap:6px;background:#FCFCFB;color:var(--ink);border:1px solid #F0EEE9;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:400;white-space:nowrap;';
   if(_fl) chips.push('<span style="'+tsoft+'">'+ico('<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>')+'Vol '+_rdEsc(_fl.toUpperCase())+'</span>');
-  if(_tr) chips.push('<span style="'+tsoft.replace('#E8F0FB','#F1ECFA').replace('#2456A6','#6A45B5').replace('#CFDDF3','#E0D5F3')+'">'+ico('<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8.5 14h.01M15.5 14h.01M9 17l-2 4M15 17l2 4"/>')+'Train '+_rdEsc(_tr.toUpperCase())+'</span>');
+  if(_tr) chips.push('<span style="'+tsoft+'">'+ico('<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8.5 14h.01M15.5 14h.01M9 17l-2 4M15 17l2 4"/>')+'Train '+_rdEsc(_tr.toUpperCase())+'</span>');
   if(!chips.length) return '';
   var first=r.ride_date?chips.shift():'';
   return '<div class="rmc-wrap">'
@@ -7060,6 +7063,14 @@ function _rdInfoBlocks(o){
     +(o.priceHtml?'<div style="border-top:1px solid #d0e4f7;margin-top:6px;padding-top:10px;">'+o.priceHtml+'</div>':'')
     +'</div>';
   return h;
+}
+// Adresse affichée « Nom du lieu » en gras + rue / ville en dessous (pays retiré) — même rendu partout
+function _addrNameHtml(a){
+  if(!a||a==='\u2014'||a==='—') return '\u2014';
+  var ps=String(a).split(',').map(function(x){return x.trim();}).filter(Boolean);
+  if(ps.length>1 && /^(belgique|belgium|belgi\u00eb|france|luxembourg|nederland|pays-bas|netherlands|deutschland|allemagne|germany|united kingdom|royaume-uni|suisse|schweiz|switzerland)$/i.test(ps[ps.length-1])) ps.pop();
+  if(ps.length<2) return '<b class="seg-nm">'+_rdEsc(ps[0]||a)+'</b>';
+  return '<b class="seg-nm">'+_rdEsc(ps[0])+'</b><span class="seg-ad">'+_rdEsc(ps.slice(1).join(', '))+'</span>';
 }
 function _rdTag(n,t){ return (((n||'').match(new RegExp('\\|'+t+':([^|]+)'))||[])[1]||'').trim(); }
 function _rdFleetHtml(fd, opt){
@@ -8889,7 +8900,7 @@ window.openPaymentModal = function(offerId, driverId, amount){
       var toLabel = isDisp ? '\u2014' : to;
       var iconGreen='<svg width="14" height="18" viewBox="0 0 24 30" fill="#1B5E3B"><path d="M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>';
       var iconRed='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
-      var html=_rideMetaChips(r);
+      var html=_rideMetaChips(r)+'<div class="pay-route">';
       // Departure
       html+='<div style="display:flex;gap:14px;">'
         +'<div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;">'
@@ -8897,8 +8908,8 @@ window.openPaymentModal = function(offerId, driverId, amount){
           +'<div style="width:2px;flex:1;background:var(--sand3);min-height:10px;margin-top:2px;"></div>'
         +'</div>'
         +'<div style="flex:1;min-width:0;padding-bottom:6px;">'
-          +'<div class="detail-seg-label">LIEU DE PRISE EN CHARGE</div>'
-          +'<div style="font-size:13px;font-weight:500;">'+from+'</div>'
+          +'<div class="detail-seg-label">'+(isDisp?'LIEU DE PRISE EN CHARGE':'D\u00c9PART')+'</div>'
+          +'<div class="detail-seg-addr">'+_addrNameHtml(from)+'</div>'
         +'</div>'
       +'</div>';
       // Duration line for disposal
@@ -8918,7 +8929,7 @@ window.openPaymentModal = function(offerId, driverId, amount){
         +'</div>'
         +'<div style="flex:1;min-width:0;padding-bottom:2px;">'
           +'<div class="detail-seg-label">'+(isDisp?'FIN DE MISSION':'ARRIV\u00c9E')+'</div>'
-          +'<div style="font-size:13px;font-weight:500;">'+toLabel+'</div>'
+          +'<div class="detail-seg-addr">'+(isDisp?toLabel:_addrNameHtml(toLabel))+'</div>'
         +'</div>'
       +'</div>';
       // Km inclus for disposal
@@ -8927,9 +8938,10 @@ window.openPaymentModal = function(offerId, driverId, amount){
       }
       // Distance row for A→B
       if(!isDisp){
-        html+='<div id="payment-dist-row" style="padding-left:30px;margin-top:6px;display:none;font-size:12px;color:var(--ink2);font-weight:500;">'
+        html+='<div id="payment-dist-row" class="rd-dist" style="display:none;font-size:12.5px;color:var(--ink3);">'
           +'<span id="payment-dist-text"></span></div>';
       }
+      html+='</div>';
       rideInfoEl.innerHTML=html;
       rideInfoEl.style.display = '';
       // Compute distance for A→B
@@ -8943,7 +8955,7 @@ window.openPaymentModal = function(offerId, driverId, amount){
           var e = res && res.rows && res.rows[0] && res.rows[0].elements && res.rows[0].elements[0];
           if(st === 'OK' && e && e.status === 'OK'){
             if(rowEl)rowEl.style.display='block';
-            if(textEl)textEl.textContent=e.distance.text+' \u00b7 '+e.duration.text;
+            if(textEl)textEl.textContent=e.distance.text+' \u00b7 environ '+e.duration.text;
           }
         });
       }
