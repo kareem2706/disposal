@@ -1159,6 +1159,11 @@ body{background:var(--bg);}
 #m-new-ride.nr-pick .nr-choose{display:flex;}
 #m-new-ride.nr-pick .modal-body,#m-new-ride.nr-pick .modal-ft{display:none!important;}
 @media(max-width:480px){.nr-st span{display:none;}.nr-st.on span{display:block;position:absolute;top:30px;white-space:nowrap;}.nr-steps{padding-bottom:30px;}}
+/* Fiche d'une course : espace sous la carte, bouton principal du pied de page aligné à droite */
+#m-ride-detail #detail-map-wrap{margin-bottom:16px!important;}
+#m-ride-detail .modal-ft{justify-content:flex-start;}
+#m-ride-detail .modal-ft > .btn:not(.m-close-mob):last-child{margin-left:auto!important;flex:0 0 auto!important;}
+#m-ride-detail .modal-ft > div:empty{margin:0!important;flex:0 0 0!important;}
 /* Fiche d'une course : en-tête, trajet éclairci, instructions */
 .rd-hd2{display:flex;flex-direction:column;gap:3px;min-width:0;line-height:1.2;}
 .rd-hd2-code{font-size:17px;font-weight:700;color:var(--ink);font-family:'DM Sans',sans-serif;letter-spacing:0;}
