@@ -1100,6 +1100,31 @@ body{background:var(--bg);}
   .sc-trend{top:8px;right:8px;font-size:10px;padding:2px 6px;}
   .sc-hd{display:none;}
 }
+/* Nouvelle demande : choix du type de course puis formulaire, avec les étapes en tête */
+.nr-steps{display:flex;align-items:flex-start;padding:14px 20px 12px;border-bottom:1px solid var(--sand3);background:#fff;flex-shrink:0;}
+.nr-st{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;min-width:0;text-align:center;}
+.nr-st:not(:last-child):after{content:'';position:absolute;top:12px;left:calc(50% + 15px);right:calc(-50% + 15px);height:2px;background:#E4E1D9;border-radius:2px;}
+.nr-st.done:not(:last-child):after{background:var(--green);}
+.nr-st i{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 11.5px 'DM Sans',sans-serif;font-style:normal;background:#EFEDE8;color:#8A968E;}
+.nr-st.done i{background:var(--green);color:#fff;}
+.nr-st.on i{background:var(--green);color:#fff;box-shadow:0 0 0 4px #DDEFE3;}
+.nr-st span{font-size:10.5px;line-height:1.25;color:#8A968E;padding:0 2px;}
+.nr-st.on span{color:var(--ink);font-weight:700;}.nr-st.done span{color:var(--green);}
+.nr-choose{display:none;padding:18px 20px 24px;flex-direction:column;gap:12px;overflow-y:auto;background:#FAFAF8;flex:1;}
+.nr-q{font-size:14px;color:var(--ink3);margin-bottom:2px;}
+.nr-opt{display:flex;align-items:center;gap:16px;width:100%;text-align:left;background:#fff;border:1.5px solid #ECEAE5;border-radius:18px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.04);cursor:pointer;font-family:'DM Sans',sans-serif;transition:border-color .15s,transform .15s;}
+.nr-opt:hover{border-color:#B5D8C2;transform:translateY(-1px);}
+.nr-ic{width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.nr-ic svg{width:38px;height:38px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
+.nr-opt.g .nr-ic{background:#EAF4EC;color:#2E7A4F;}.nr-opt.o .nr-ic{background:#FFF6E6;color:#D98A1C;}.nr-opt.b .nr-ic{background:#EAF1FB;color:#2F6DB5;}
+.nr-tx{min-width:0;flex:1;}.nr-tx b{display:block;font-size:16.5px;font-weight:600;color:var(--ink);}.nr-tx span{display:block;font-size:13px;color:var(--ink3);margin-top:3px;line-height:1.4;}
+.nr-chev{color:#9AA59E;font-size:24px;flex-shrink:0;}
+.nr-back{display:none;background:none;border:none;padding:0 0 10px;color:var(--green);font:600 13px 'DM Sans',sans-serif;cursor:pointer;}
+#m-new-ride.nr-flow #nr-type-grp{display:none;}
+#m-new-ride.nr-flow .nr-back{display:inline-block;}
+#m-new-ride.nr-pick .nr-choose{display:flex;}
+#m-new-ride.nr-pick .modal-body,#m-new-ride.nr-pick .modal-ft{display:none!important;}
+@media(max-width:480px){.nr-st span{display:none;}.nr-st.on span{display:block;position:absolute;top:30px;white-space:nowrap;}.nr-steps{padding-bottom:30px;}}
 /* Bouton « Fermer » des pieds de page masqué partout (la croix / flèche en haut ferme la fenêtre) */
 .modal-ft .m-close-mob{display:none!important;}
 .modal-ft:not(:has(> :not(.m-close-mob))){display:none!important;}
@@ -2591,8 +2616,16 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
   <div class="modal" style="max-height:92vh;">
     <div class="modal-hd"><span class="modal-title" id="ride-modal-title">Nouvelle demande</span><button class="close-btn" onclick="cancelRideModal()"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <input type="hidden" id="ride-edit-id" value="">
+    <div class="nr-steps" id="nr-steps"></div>
+    <div class="nr-choose" id="nr-choose">
+      <div class="nr-q">Quel type de course souhaitez-vous r&eacute;server&nbsp;?</div>
+      <button type="button" class="nr-opt g" onclick="_nrPick('ab')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="6" cy="24" r="3"/><circle cx="26" cy="8" r="3"/><path d="M9 23.5c4-.5 4.5-4.5 7-7.5s4.5-5.5 7-7"/></svg></span><span class="nr-tx"><b>Trajet simple</b><span>Transfert simple d&rsquo;un point A &agrave; un point B.</span></span><span class="nr-chev">&rsaquo;</span></button>
+      <button type="button" class="nr-opt o" onclick="_nrPick('disposal')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M16 10v6.5l4 2.5"/></svg></span><span class="nr-tx"><b>Mise &agrave; disposition</b><span>Un chauffeur &agrave; votre disposition pendant plusieurs heures.</span></span><span class="nr-chev">&rsaquo;</span></button>
+      <button type="button" class="nr-opt b" onclick="_nrPick('mixed')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="4.5" cy="26" r="2.6"/><circle cx="27.5" cy="6" r="2.6"/><path d="M7 24.6c2.2-.8 3.6-2.2 4.6-3.8M20.4 11.2c1-1.6 2.4-3 4.6-3.8"/><circle cx="16" cy="16" r="6"/><path d="M16 12.8v3.4l2.2 1.4"/></svg></span><span class="nr-tx"><b>Trajet mixte</b><span>Pour les demandes plus complexes&nbsp;: combinez plusieurs trajets, en transfert simple et en mise &agrave; disposition.</span></span><span class="nr-chev">&rsaquo;</span></button>
+    </div>
     <div class="modal-body">
-      <div class="input-group"><label>Type de course</label>
+      <button type="button" class="nr-back" id="nr-back" onclick="_nrShow('choose')">&lsaquo; Changer de type de trajet</button>
+      <div class="input-group" id="nr-type-grp"><label>Type de course</label>
         <div class="trip-types">
           <div class="trip-type active" data-val="ab" onclick="selTripType(this)">A &rarr; B</div>
           <div class="trip-type" data-val="disposal" onclick="selTripType(this)">Disposition</div>
@@ -9169,6 +9202,35 @@ function setLoading(btn, loading, text){
 
 function _tagModalClose(m){ if(!m||m.id==='m-confirm-delete') return; m.querySelectorAll('.modal-ft button').forEach(function(b){ if((b.textContent||'').trim()==='Fermer') b.classList.add('m-close-mob'); }); }
 window.openModal  = id => { var _m=document.getElementById(id); if(!_m) return; _tagModalClose(_m); if(_m.classList.contains('rd-panel')) _rdEnsureBack(_m); _m.classList.add('open'); if(_m.classList.contains('rd-panel')) _rdOpened(id); };
+// ── Nouvelle demande : étape 1 « type de trajet » puis étape 2 « création de la demande » ──
+var _NR_STEPS=['Type de trajet','Cr\u00e9ation de la demande','Attente des offres','S\u00e9lection d\u2019une offre','Paiement'];
+window._nrStepsHtml=function(cur){
+  return _NR_STEPS.map(function(t,i){ var n=i+1, c=n<cur?'done':n===cur?'on':'';
+    return '<div class="nr-st '+c+'"><i>'+(n<cur?'\u2713':n)+'</i><span>'+t+'</span></div>'; }).join('');
+};
+window._nrShow=function(step){
+  var m=document.getElementById('m-new-ride'); if(!m) return;
+  var edit=!!(document.getElementById('ride-edit-id')||{}).value;
+  m.classList.toggle('nr-flow', !edit);
+  m.classList.toggle('nr-pick', step==='choose' && !edit);
+  var st=document.getElementById('nr-steps'); if(st) st.innerHTML=_nrStepsHtml(step==='choose'&&!edit?1:2);
+  var b=m.querySelector('.modal-body'); if(b) b.scrollTop=0;
+};
+window._nrPick=function(val){
+  var el=document.querySelector('#nr-type-grp .trip-type[data-val="'+val+'"]');
+  if(el) selTripType(el);
+  _nrShow('form');
+  setTimeout(function(){ var f=document.getElementById(val==='disposal'?'disp-from':val==='ab'?'ride-from':''); if(f&&window.innerWidth>900) f.focus(); },120);
+};
+window._nrInit=function(){
+  var m=document.getElementById('m-new-ride'); if(!m) return;
+  var edit=!!(document.getElementById('ride-edit-id')||{}).value;
+  _nrShow(edit?'form':'choose');
+  // Flèche retour : formulaire → choix du type ; choix du type → fermeture
+  var back=m.querySelector('.modal-hd .rd-back');
+  if(back) back.onclick=function(){ if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
+};
+(function(){ var o=window.openModal; window.openModal=function(id){ var r=o.apply(this,arguments); if(id==='m-new-ride') _nrInit(); return r; }; })();
 // Formulaires affichés en version « plein écran » (panneau à droite sur ordinateur, page sur mobile)
 var _RD_FORMS=['m-new-ride','m-submit-offer','m-subcontract','m-personal-mission','m-vehicle','m-driver','m-fleet-doc','m-passenger','m-mission-assign','m-admin-client','m-view-offers','m-payment'];
 function _rdInitForms(){ _RD_FORMS.forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.add('rd-panel','rd-form'); }); }
