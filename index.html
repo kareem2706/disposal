@@ -1136,6 +1136,9 @@ body{background:var(--bg);}
 #m-new-ride.ev-add-only #ev-name-grp input{background:#F7F7F5;}
 /* Ligne « Événement » dans les listes client */
 .ride-card.ev-card{border:1.5px solid #CDBDF0;background:linear-gradient(90deg,#FBF9FE,#fff 45%);}
+.rd-evline{font-size:14px;font-weight:600;color:#5E3FA3;display:flex;align-items:center;gap:8px;margin-bottom:-2px;}
+.rd-evline span{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7A55C2;}
+.ev-day{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin:6px 2px -2px;}
 .ev-tag{font-size:10px;font-weight:700;text-transform:uppercase;background:#7A55C2;color:#fff;padding:2px 7px;border-radius:20px;letter-spacing:.02em;}
 .ev-bar{height:5px;border-radius:5px;background:#EEE9F8;overflow:hidden;margin-top:5px;width:110px;max-width:100%;}.ev-bar i{display:block;height:100%;background:#7A55C2;}
 .ev-sub{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #ECEAE5;border-radius:12px;padding:11px 12px;cursor:pointer;}
@@ -6148,14 +6151,15 @@ function _rideMetaChips(r){
   if(r.passengers) chips.push('<span style="'+soft+'">'+ico('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>')+r.passengers+' passager'+(r.passengers>1?'s':'')+'</span>');
   if(r.vehicle_type){ var vl={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'}[r.vehicle_type]||r.vehicle_type;
     chips.push('<span style="'+soft+'">'+ico('<path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>')+vl+'</span>'); }
-  if(r.event_name) chips.push('<span style="display:inline-flex;align-items:center;gap:6px;background:#F7F4FD;color:#5E3FA3;border:1px solid #E6DDF7;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:400;white-space:nowrap;">'+ico('<path d="M3 15l1.5-4.5h9L15 15v4H3zM17 13l1.5-4.5h9L29 13v4H17z" transform="scale(.75)"/>')+'\u00c9v\u00e9nement \u00b7 '+_rdEsc(r.event_name)+'</span>');
+  // Événement : simple ligne de texte au-dessus des pastilles (pas une pastille)
+  var _evLine=r.event_name?'<div class="rd-evline"><span>\u00c9v\u00e9nement</span>'+_rdEsc(r.event_name)+'</div>':'';
   var _fl=_rdTag(r.notes,'flight'), _tr=_rdTag(r.notes,'train');
   var tsoft='display:inline-flex;align-items:center;gap:6px;background:#FCFCFB;color:var(--ink);border:1px solid #F0EEE9;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:400;white-space:nowrap;';
   if(_fl) chips.push('<span style="'+tsoft+'">'+ico('<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>')+'Vol '+_rdEsc(_fl.toUpperCase())+'</span>');
   if(_tr) chips.push('<span style="'+tsoft+'">'+ico('<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8.5 14h.01M15.5 14h.01M9 17l-2 4M15 17l2 4"/>')+'Train '+_rdEsc(_tr.toUpperCase())+'</span>');
-  if(!chips.length) return '';
+  if(!chips.length) return _evLine;
   var first=r.ride_date?chips.shift():'';
-  return '<div class="rmc-wrap">'
+  return _evLine+'<div class="rmc-wrap">'
     +(first?'<div>'+first+'</div>':'')
     +(chips.length?'<div class="rmc-row">'+chips.join('')+'</div>':'')
     +'</div>';
@@ -9558,15 +9562,21 @@ window.openEventDetail=async function(id, silent){
       var c={}; (oc.data||[]).forEach(function(o){ c[o.ride_id]=(c[o.ride_id]||0)+1; }); rides.forEach(function(r){ r._offerCount=c[r.id]||0; });
     }
     if(window._evOpenId!==id) return;
-    var f=rides[0]||{}, dd=f.ride_date?new Date(f.ride_date+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,''):'';
+    var f=rides[0]||{}, l=rides[rides.length-1]||{}, _fd=function(x,o){ return x?new Date(x+'T00:00:00').toLocaleDateString('fr-BE',o).replace(/\./g,''):''; };
+    var dd=(f.ride_date&&l.ride_date&&f.ride_date!==l.ride_date)?_fd(f.ride_date,{day:'numeric',month:'short'})+' \u2013 '+_fd(l.ride_date,{day:'numeric',month:'short'}):_fd(f.ride_date,{weekday:'short',day:'numeric',month:'short'});
     dd=dd?dd.charAt(0).toUpperCase()+dd.slice(1):'';
-    if(title) title.innerHTML='<span class="rd-hd2"><b class="rd-hd2-code"><span class="ev-tag" style="vertical-align:2px;margin-right:6px;">Événement</span>'+_rdEsc(ev.name)+'</b><span class="rd-hd2-sub">'+_rdEsc([dd, rides.length+' véhicule'+(rides.length>1?'s':''), ev.contact_name?'contact : '+ev.contact_name:''].filter(Boolean).join(' · '))+'</span></span>';
+    if(title) title.innerHTML='<span class="rd-hd2"><span class="rd-evline" style="margin:0;"><span>Événement</span></span><b class="rd-hd2-code">'+_rdEsc(ev.name)+'</b><span class="rd-hd2-sub">'+_rdEsc([dd, rides.length+' véhicule'+(rides.length>1?'s':''), ev.contact_name?'contact : '+ev.contact_name:''].filter(Boolean).join(' · '))+'</span></span>';
     var nConf=rides.filter(function(r){ return ['confirmed','active','done','pending_payment'].indexOf(r.status)>=0; }).length;
     var nOff=rides.filter(function(r){ return r.status==='offers'; }).length, nWait=rides.filter(function(r){ return r.status==='waiting'; }).length;
     var sh=function(a){ return String(cleanAddr(a)||'').split(',')[0].trim(); };
     var cls=function(v){ return ({lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'})[v]||'Véhicule'; };
     var h='<div class="ev-kpis"><div><b>'+nConf+'</b><span>confirmé'+(nConf>1?'s':'')+'</span></div><div><b>'+nOff+'</b><span>avec offres</span></div><div><b>'+nWait+'</b><span>en attente</span></div></div>';
+    var _dl=function(x){ if(!x) return ''; var t=new Date(x+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long'}); return t.charAt(0).toUpperCase()+t.slice(1); };
+    var _days=rides.map(function(r){ return r.ride_date||''; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
+    var _lastDay=null;
     rides.forEach(function(r,i){
+      // Plusieurs dates : un sous-titre par jour
+      if(_days.length>1 && r.ride_date!==_lastDay){ _lastDay=r.ride_date; h+='<div class="ev-day">'+_rdEsc(_dl(r.ride_date))+'</div>'; }
       var tr=r.trip_type==='disposal'?sh(r.from_address)+' · '+(((r.notes||'').match(/Durée:([^\s|,]+)/)||[])[1]||'disposition'):sh(r.from_address)+' → '+sh(r.to_address);
       var pax=_rdTag(r.notes,'pax');
       h+='<div class="ev-sub" onclick="_rdPushUnder(\'m-event\');openRideDetail(this)" data-ride=\''+JSON.stringify(r).replace(/'/g,'&#39;')+'\'>'
