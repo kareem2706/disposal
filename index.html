@@ -6312,7 +6312,7 @@ function _openRideDetailImpl(el){
     var cacheKey='rt:'+points.join('>');
     var apply=function(poly, how, meters, secs){
       if(!poly || img.dataset.routeKey!==baseSrc) return false;
-      var routed=baseSrc+'&path='+encodeURIComponent('color:0x1B5E3Bff|weight:5|enc:'+poly);
+      var routed=baseSrc+'&path='+encodeURIComponent('color:0x2E7A4FCC|weight:3|enc:'+poly);
       if(routed.length>=16000) return false;
       img.src=routed; console.log('[map] itinéraire routier affiché ('+how+')');
       try{ sessionStorage.setItem(cacheKey, JSON.stringify({p:poly,m:meters||0,s:secs||0})); }catch(e){}
@@ -6405,13 +6405,13 @@ function _openRideDetailImpl(el){
       if(isMixed&&mixedSegs&&mixedSegs.length>0){
         var pts=[];
         mixedSegs.forEach(function(s){if(s.from&&s.from!=='—')pts.push(s.from);if(s.to&&s.to!=='—'&&s.to!==s.from)pts.push(s.to);});
-        if(pts.length>0){var mP=pts.map(function(p,i){var col=i===0?'0x1B5E3B':(i===pts.length-1?'0xC0392B':'0xE67E22');return 'markers=color:'+col+'%7Clabel:'+(i+1)+'%7C'+encodeURIComponent(p);});src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&'+mP.join('&')+'&'+_MAP_STYLE+'&key='+KEY;}
+        if(pts.length>0){var mP=pts.map(function(p,i){var col=i===0?'0x4E8F69':(i===pts.length-1?'0xD8705F':'0xE5A15A');return 'markers=size:small%7Ccolor:'+col+'%7C'+encodeURIComponent(p);});src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&'+mP.join('&')+'&'+_MAP_STYLE+'&key='+KEY;}
       } else if(r.trip_type!=='disposal'&&r.to_address){
         var f=encodeURIComponent(cleanAddr(r.from_address)),t2=encodeURIComponent(cleanAddr(r.to_address));
-        src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&markers=color:0x1B5E3B%7Clabel:A%7C'+f+'&markers=color:0xC0392B%7Clabel:B%7C'+t2+'&'+_MAP_STYLE+'&key='+KEY;
+        src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&markers=size:small%7Ccolor:0x4E8F69%7C'+f+'&markers=size:small%7Ccolor:0xD8705F%7C'+t2+'&'+_MAP_STYLE+'&key='+KEY;
       } else if(r.from_address){
         var f=encodeURIComponent(r.from_address);
-        src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&zoom=14&center='+f+'&markers=color:0x1B5E3B%7C'+f+'&'+_MAP_STYLE+'&key='+KEY;
+        src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&zoom=14&center='+f+'&markers=size:small%7Ccolor:0x4E8F69%7C'+f+'&'+_MAP_STYLE+'&key='+KEY;
       }
       if(!src){wrap.style.display='none';var sp2=document.getElementById('detail-map-spacer');if(sp2)sp2.style.height='0px';return;}
       var img=document.getElementById('detail-map-img');
