@@ -6084,6 +6084,7 @@ function _openRideDetailImpl(el){
   var r;
   try{ r=JSON.parse(el.dataset.ride.replace(/&#39;/g,"'")); }catch(e){return;}
   window._lastDetailRide=r;
+  try{ _nrStepsBar('m-ride-detail', _nrRideStep(r)); }catch(_e){}
   // Empreinte du véhicule / chauffeur attribués : la fiche se met à jour dès qu'ils changent
   if(!window._lastDetailAsg || window._lastDetailAsg.id!==r.id){
     window._lastDetailAsg={ id:r.id, sig:null };
@@ -9230,7 +9231,24 @@ window._nrInit=function(){
   var back=m.querySelector('.modal-hd .rd-back');
   if(back) back.onclick=function(){ if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
 };
-(function(){ var o=window.openModal; window.openModal=function(id){ var r=o.apply(this,arguments); if(id==='m-new-ride') _nrInit(); return r; }; })();
+// Même barre d'étapes sur la suite du parcours client : attente (3), offres (4), paiement (5)
+window._nrStepsBar=function(modalId, step){
+  var m=document.getElementById(modalId); if(!m) return;
+  var box=m.querySelector('.modal'), hd=m.querySelector('.modal-hd'); if(!box||!hd) return;
+  var bar=box.querySelector(':scope > .nr-steps.nr-bar');
+  if(!step){ if(bar) bar.remove(); return; }
+  if(!bar){ bar=document.createElement('div'); bar.className='nr-steps nr-bar'; hd.insertAdjacentElement('afterend', bar); }
+  bar.innerHTML=_nrStepsHtml(step);
+};
+window._nrRideStep=function(r){
+  if(!r || currentRole!=='client' || (currentUser&&currentUser.email===ADMIN_EMAIL) || r.is_subcontract) return null;
+  return r.status==='waiting'?3 : r.status==='offers'?4 : r.status==='pending_payment'?5 : null;
+};
+(function(){ var o=window.openModal; window.openModal=function(id){ var r=o.apply(this,arguments);
+  if(id==='m-new-ride') _nrInit();
+  else if(id==='m-view-offers') _nrStepsBar(id, currentRole==='client'?4:null);
+  else if(id==='m-payment') _nrStepsBar(id, currentRole==='client'?5:null);
+  return r; }; })();
 // Formulaires affichés en version « plein écran » (panneau à droite sur ordinateur, page sur mobile)
 var _RD_FORMS=['m-new-ride','m-submit-offer','m-subcontract','m-personal-mission','m-vehicle','m-driver','m-fleet-doc','m-passenger','m-mission-assign','m-admin-client','m-view-offers','m-payment'];
 function _rdInitForms(){ _RD_FORMS.forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.add('rd-panel','rd-form'); }); }
