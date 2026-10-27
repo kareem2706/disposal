@@ -1117,6 +1117,33 @@ body{background:var(--bg);}
 .nr-ic{width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .nr-ic svg{width:38px;height:38px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
 .nr-opt.g .nr-ic{background:#EAF4EC;color:#2E7A4F;}.nr-opt.o .nr-ic{background:#FFF6E6;color:#D98A1C;}.nr-opt.b .nr-ic{background:#EAF1FB;color:#2F6DB5;}
+.nr-opt.v .nr-ic{background:#F2EEFB;color:#7A55C2;}
+.ev-seg{display:flex;background:#F1F1EF;border-radius:10px;padding:3px;gap:2px;}
+.ev-seg button{flex:1;border:none;background:none;border-radius:8px;padding:8px 6px;font:500 12.5px 'DM Sans',sans-serif;color:var(--ink3);cursor:pointer;}
+.ev-seg button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.ev-lbl{font-size:12px;font-weight:600;color:var(--ink2);margin:14px 0 8px;}
+.ev-veh{background:#fff;border:1px solid #ECEAE5;border-radius:14px;padding:12px 14px;margin-bottom:10px;}
+.ev-vh{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px;margin-bottom:10px;}
+.ev-vh .n{width:22px;height:22px;border-radius:50%;background:#F2EEFB;color:#7A55C2;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ev-vh .tl{margin-left:auto;display:flex;gap:12px;}
+.ev-vh .tl button{background:none;border:none;padding:0;font:500 12px 'DM Sans',sans-serif;color:var(--ink3);cursor:pointer;}
+.ev-vh .tl button:hover{color:var(--green);}
+.ev-veh .form-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;column-gap:10px;}
+.ev-veh .form-grid .full{grid-column:1/-1!important;}
+#m-new-ride .ev-veh .form-grid > .input-group:not(.full){grid-column:auto!important;min-width:0;}
+.ev-add{width:100%;border:1.5px dashed #CDBDF0;color:#7A55C2;border-radius:12px;padding:10px;font:600 13px 'DM Sans',sans-serif;background:#FBF9FE;cursor:pointer;}
+.ev-note{font-size:12px;color:var(--ink3);background:#F4F1FB;border-radius:10px;padding:9px 11px;line-height:1.45;margin-top:12px;}
+#m-new-ride.ev-add-only #ev-name-grp input{background:#F7F7F5;}
+/* Ligne « Événement » dans les listes client */
+.ride-card.ev-card{border:1.5px solid #CDBDF0;background:linear-gradient(90deg,#FBF9FE,#fff 45%);}
+.ev-tag{font-size:10px;font-weight:700;text-transform:uppercase;background:#7A55C2;color:#fff;padding:2px 7px;border-radius:20px;letter-spacing:.02em;}
+.ev-bar{height:5px;border-radius:5px;background:#EEE9F8;overflow:hidden;margin-top:5px;width:110px;max-width:100%;}.ev-bar i{display:block;height:100%;background:#7A55C2;}
+.ev-sub{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #ECEAE5;border-radius:12px;padding:11px 12px;cursor:pointer;}
+.ev-sub:hover{border-color:#CDBDF0;}
+.ev-sub .n{width:24px;height:24px;border-radius:50%;background:#F2EEFB;color:#7A55C2;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ev-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.ev-kpis div{background:#FCFCFB;border:1px solid #F0EEE9;border-radius:12px;padding:10px;text-align:center;}
+.ev-kpis b{display:block;font-size:20px;}.ev-kpis span{font-size:11.5px;color:var(--ink3);}
 .nr-tx{min-width:0;flex:1;}.nr-tx b{display:block;font-size:16.5px;font-weight:600;color:var(--ink);}.nr-tx span{display:block;font-size:13px;color:var(--ink3);margin-top:3px;line-height:1.4;}
 .nr-chev{color:#9AA59E;font-size:24px;flex-shrink:0;}
 .nr-back{display:none;background:none;border:none;padding:0 0 10px;color:var(--green);font:600 13px 'DM Sans',sans-serif;cursor:pointer;}
@@ -2642,6 +2669,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <button type="button" class="nr-opt g" onclick="_nrPick('ab')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="6" cy="24" r="3"/><circle cx="26" cy="8" r="3"/><path d="M9 23.5c4-.5 4.5-4.5 7-7.5s4.5-5.5 7-7"/></svg></span><span class="nr-tx"><b>Trajet simple</b><span>Transfert simple d&rsquo;un point A &agrave; un point B.</span></span><span class="nr-chev">&rsaquo;</span></button>
       <button type="button" class="nr-opt o" onclick="_nrPick('disposal')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M16 10v6.5l4 2.5"/></svg></span><span class="nr-tx"><b>Mise &agrave; disposition</b><span>Un chauffeur &agrave; votre disposition pendant plusieurs heures.</span></span><span class="nr-chev">&rsaquo;</span></button>
       <button type="button" class="nr-opt b" onclick="_nrPick('mixed')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="4.5" cy="26" r="2.6"/><circle cx="27.5" cy="6" r="2.6"/><path d="M7 24.6c2.2-.8 3.6-2.2 4.6-3.8M20.4 11.2c1-1.6 2.4-3 4.6-3.8"/><circle cx="16" cy="16" r="6"/><path d="M16 12.8v3.4l2.2 1.4"/></svg></span><span class="nr-tx"><b>Trajet mixte</b><span>Pour les demandes plus complexes&nbsp;: combinez plusieurs trajets, en transfert simple et en mise &agrave; disposition.</span></span><span class="nr-chev">&rsaquo;</span></button>
+      <button type="button" class="nr-opt v" onclick="_nrPick('event')"><span class="nr-ic"><svg viewBox="0 0 32 32"><path d="M3 15l1.5-4.5h9L15 15v4H3zM17 13l1.5-4.5h9L29 13v4H17z"/><path d="M5 19v2M13 19v2M19 17v2M27 17v2"/></svg></span><span class="nr-tx"><b>&Eacute;v&eacute;nement</b><span>Pour les organisations d&rsquo;&eacute;v&eacute;nements qui n&eacute;cessitent plusieurs v&eacute;hicules.</span></span><span class="nr-chev">&rsaquo;</span></button>
     </div>
     <div class="modal-body">
       <button type="button" class="nr-back" id="nr-back" onclick="_nrShow('choose')">&lsaquo; Changer de type de trajet</button>
@@ -2686,6 +2714,20 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <button class="btn btn-secondary btn-sm" onclick="addMixedSegment()">+ Segment</button>
         </div>
         <div id="mixed-segments"></div>
+      </div>
+      <div id="panel-event" style="display:none;">
+        <div class="input-group" id="ev-name-grp"><label>Nom de l&rsquo;&eacute;v&eacute;nement <span style="color:var(--red)">*</span></label><input id="ev-name" maxlength="120" placeholder="Ex. S&eacute;minaire annuel &mdash; Ch&acirc;teau de la Hulpe"></div>
+        <div class="input-group" id="ev-mode-grp"><label>Passagers</label>
+          <div class="ev-seg"><button type="button" class="on" data-m="one" onclick="_evMode('one')">Un contact pour tous les trajets</button><button type="button" data-m="per" onclick="_evMode('per')">Un passager par v&eacute;hicule</button></div>
+        </div>
+        <div class="form-grid" id="ev-contact">
+          <div class="input-group"><label>Contact sur place</label><input id="ev-cname" maxlength="120" placeholder="Nom et pr&eacute;nom"></div>
+          <div class="input-group"><label>T&eacute;l&eacute;phone</label><input id="ev-cphone" maxlength="40" placeholder="0470 12 34 56" inputmode="tel"></div>
+        </div>
+        <div class="ev-lbl" id="ev-count">V&eacute;hicules</div>
+        <div id="ev-vehicles"></div>
+        <button type="button" class="ev-add" onclick="_evAdd()">+ Ajouter un v&eacute;hicule</button>
+        <div class="ev-note">Chaque v&eacute;hicule est envoy&eacute; aux chauffeurs comme une demande s&eacute;par&eacute;e, li&eacute;e &agrave; l&rsquo;&eacute;v&eacute;nement. Vous suivez tout depuis une seule demande.</div>
       </div>
       <div id="ride-err" class="auth-error"></div>
     </div>
@@ -2976,6 +3018,19 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div style="height:0px;flex-shrink:0;" id="detail-map-spacer"></div>
     <div id="detail-extra" style="display:none;margin:12px 20px 0;flex-shrink:0;"></div>
     <div class="modal-ft" style="margin-top:12px;" id="detail-ft"></div>
+  </div>
+</div>
+
+<!-- Event Detail (client) -->
+<div class="modal-overlay rd-panel" id="m-event">
+  <div class="modal" style="max-width:520px;max-height:88vh;">
+    <div class="modal-hd">
+      <button class="rd-back" type="button" aria-label="Retour" onclick="closeModal('m-event')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <span class="modal-title" id="ev-title"></span>
+      <button class="close-btn" onclick="closeModal('m-event')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+    </div>
+    <div class="modal-body" id="ev-body" style="padding:14px 20px;display:flex;flex-direction:column;gap:10px;"></div>
+    <div class="modal-ft" id="ev-ft"></div>
   </div>
 </div>
 
@@ -4599,10 +4654,12 @@ async function loadClientDashboard(){
   _renderDriverActiveRides(rides.filter(_inProgress), 'active-ride-wrap', true);
 
   // Non-terminated rides sorted by ride_date asc for dashboard (oldest first), max 3 (rides in progress shown above)
-  const recent = rides.filter(function(r){ return r.status !== 'done' && r.status !== 'cancelled' && !_inProgress(r); }).slice().sort(_byNewest).slice(0, 3);
+  // Événements : une seule ligne par événement (tous ses véhicules), affichée tant qu'un véhicule reste à venir
+  const _open = function(r){ return r.status !== 'done' && r.status !== 'cancelled' && !_inProgress(r); };
+  const recent = _groupEvents(rides.slice().sort(_byNewest)).filter(function(x){ return x._evt ? x.rides.some(_open) : _open(x); }).slice(0, 3);
 
   document.getElementById('recent-rides-list').innerHTML = recent.length
-    ? recent.map(r => renderRideItem(r)).join('')
+    ? recent.map(_renderListItem).join('')
     : '<div class="empty-state"><p class="empty-text">'+t('empty_rides')+'</p></div>';
 }
 
@@ -4639,7 +4696,7 @@ async function loadRides(filter){
   // Map offer counts
   if(typeof rides[0] !== 'undefined') rides.forEach(function(r){ r._offerCount = r._offerCount!==undefined?r._offerCount:(r.offers&&r.offers[0]?parseInt(r.offers[0].count)||0:0); });
   document.getElementById('all-rides-list').innerHTML = rides.length
-    ? rides.map(function(r){ return renderRideItem(r); }).join('')
+    ? _groupEvents(rides).map(_renderListItem).join('')
     : '<div class="empty-state"><p class="empty-text">'+t('empty_rides')+'</p></div>';
 }
 
@@ -6091,6 +6148,7 @@ function _rideMetaChips(r){
   if(r.passengers) chips.push('<span style="'+soft+'">'+ico('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>')+r.passengers+' passager'+(r.passengers>1?'s':'')+'</span>');
   if(r.vehicle_type){ var vl={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'}[r.vehicle_type]||r.vehicle_type;
     chips.push('<span style="'+soft+'">'+ico('<path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>')+vl+'</span>'); }
+  if(r.event_name) chips.push('<span style="display:inline-flex;align-items:center;gap:6px;background:#F7F4FD;color:#5E3FA3;border:1px solid #E6DDF7;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:400;white-space:nowrap;">'+ico('<path d="M3 15l1.5-4.5h9L15 15v4H3zM17 13l1.5-4.5h9L29 13v4H17z" transform="scale(.75)"/>')+'\u00c9v\u00e9nement \u00b7 '+_rdEsc(r.event_name)+'</span>');
   var _fl=_rdTag(r.notes,'flight'), _tr=_rdTag(r.notes,'train');
   var tsoft='display:inline-flex;align-items:center;gap:6px;background:#FCFCFB;color:var(--ink);border:1px solid #F0EEE9;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:400;white-space:nowrap;';
   if(_fl) chips.push('<span style="'+tsoft+'">'+ico('<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>')+'Vol '+_rdEsc(_fl.toUpperCase())+'</span>');
@@ -8039,6 +8097,7 @@ window.editRide = async function(rideId){
 
 
 window.submitRide = async function(){
+  var _mnr=document.getElementById('m-new-ride'); if(_mnr && _mnr.classList.contains('nr-event')) return submitEvent();
   var g = function(id){ var e=document.getElementById(id); return e?e.value.trim():''; };
   var editId = g('ride-edit-id');
   var tripType = (document.querySelector('.trip-types .trip-type.active')||{dataset:{}}).dataset.val || 'ab';
@@ -8342,6 +8401,7 @@ window.submitRide = async function(){
 
 window.cancelRideModal = function(){
   closeModal('m-new-ride');
+  try{ _evReset(); }catch(_e){}
   // Reset edit mode markers
   var editIdEl = document.getElementById('ride-edit-id');
   if(editIdEl) editIdEl.value = '';
@@ -9294,6 +9354,234 @@ function setLoading(btn, loading, text){
 
 function _tagModalClose(m){ if(!m||m.id==='m-confirm-delete') return; m.querySelectorAll('.modal-ft button').forEach(function(b){ if((b.textContent||'').trim()==='Fermer') b.classList.add('m-close-mob'); }); }
 window.openModal  = id => { var _m=document.getElementById(id); if(!_m) return; _tagModalClose(_m); if(_m.classList.contains('rd-panel')) _rdEnsureBack(_m); _m.classList.add('open'); if(_m.classList.contains('rd-panel')) _rdOpened(id); };
+// ══ ÉVÉNEMENTS : plusieurs véhicules envoyés comme demandes séparées, liées à une demande mère ══
+window._evTarget=null;   // ajout de véhicules à un événement existant { id, name, contact_name, contact_phone }
+function _evRows(){ return [].slice.call(document.querySelectorAll('#ev-vehicles .ev-veh')); }
+function _evClassOpts(){ var s=document.getElementById('ride-vehicle'); return s?s.innerHTML:'<option value="business">Business</option>'; }
+function _evGp(el){
+  if(!el||el._gp||!(window.google&&google.maps&&google.maps.places)) return;
+  el._gp=new google.maps.places.Autocomplete(el,{ language:'fr', fields:['formatted_address','name'], componentRestrictions:{ country:['be','fr','lu','nl','de','gb','ch'] } });
+  el._gp.addListener('place_changed',function(){ var pl=el._gp.getPlace(); if(!pl) return; var nm=pl.name||'', ad=pl.formatted_address||'';
+    el.value = nm&&ad&&ad.toLowerCase().indexOf(nm.toLowerCase())===-1 ? nm+', '+ad : (ad||nm); });
+}
+function _evVal(row,c){ var e=row.querySelector('.'+c); return e?String(e.value||'').trim():''; }
+function _evRenumber(){
+  var rows=_evRows(), n=rows.length;
+  rows.forEach(function(r,i){ r.querySelector('.n').textContent=i+1; r.querySelector('.ev-ttl').textContent='Véhicule '+(i+1); r.querySelector('.ev-del').style.display=n>1?'':'none'; });
+  var c=document.getElementById('ev-count'); if(c) c.textContent='Véhicules ('+n+')';
+  var b=document.getElementById('btn-submit-ride'); if(b && document.getElementById('m-new-ride').classList.contains('nr-event')) b.innerHTML='Publier '+n+' demande'+(n>1?'s':'')+' &rarr;';
+}
+window._evAdd=function(d){
+  d=d||{}; var box=document.getElementById('ev-vehicles'); if(!box) return;
+  var last=_evRows().slice(-1)[0];
+  if(!d.date && last) d.date=_evVal(last,'ev-date');
+  if(!d.time && last) d.time=_evVal(last,'ev-time');
+  var e=function(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); };
+  var min=(typeof todayStr==='function')?todayStr():'';
+  var div=document.createElement('div'); div.className='ev-veh';
+  div.innerHTML='<div class="ev-vh"><span class="n"></span><span class="ev-ttl"></span><span class="tl"><button type="button" onclick="_evDup(this)">Dupliquer</button><button type="button" class="ev-del" onclick="_evDel(this)">Supprimer</button></span></div>'
+    +'<div class="form-grid">'
+    +'<div class="input-group"><label>Type de trajet</label><select class="ev-type" onchange="_evType(this)"><option value="ab">Trajet simple (A → B)</option><option value="disposal">Mise à disposition</option></select></div>'
+    +'<div class="input-group"><label>Gamme</label><select class="ev-cls">'+_evClassOpts()+'</select></div>'
+    +'<div class="input-group full"><label class="ev-from-lbl">Départ <span style="color:var(--red)">*</span></label><input class="ev-from" autocomplete="off" placeholder="Adresse, gare, aéroport" value="'+e(d.from)+'"></div>'
+    +'<div class="input-group full ev-to-grp"><label>Arrivée <span style="color:var(--red)">*</span></label><input class="ev-to" autocomplete="off" placeholder="Destination" value="'+e(d.to)+'"></div>'
+    +'<div class="input-group ev-dur-grp" style="display:none;"><label>Durée (heures)</label><input class="ev-dur" type="number" min="1" max="24" value="'+e(d.dur||'3')+'"></div>'
+    +'<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input class="ev-date" type="date" min="'+min+'" value="'+e(d.date)+'"></div>'
+    +'<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input class="ev-time" type="time" value="'+e(d.time)+'"></div>'
+    +'<div class="input-group"><label>Passagers</label><select class="ev-pax">'+[1,2,3,4,5,6,7,8,9,10,12,14,16,20,30,50].map(function(k){ return '<option'+(String(k)===String(d.pax||1)?' selected':'')+'>'+k+'</option>'; }).join('')+'</select></div>'
+    +'<div class="input-group ev-pax-grp full" style="display:none;"><label>Passager de ce véhicule</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><input class="ev-pname" maxlength="120" placeholder="Nom et prénom" value="'+e(d.pname)+'"><input class="ev-pphone" maxlength="40" placeholder="Téléphone" inputmode="tel" value="'+e(d.pphone)+'"></div></div>'
+    +'</div>';
+  box.appendChild(div);
+  if(d.type){ div.querySelector('.ev-type').value=d.type; _evType(div.querySelector('.ev-type')); }
+  if(d.cls) div.querySelector('.ev-cls').value=d.cls; else div.querySelector('.ev-cls').value='business';
+  if(_evModeVal()==='per') div.querySelector('.ev-pax-grp').style.display='';
+  _evGp(div.querySelector('.ev-from')); _evGp(div.querySelector('.ev-to'));
+  _evRenumber();
+  return div;
+};
+window._evDup=function(btn){
+  var r=btn.closest('.ev-veh');
+  var d={ type:_evVal(r,'ev-type'), cls:_evVal(r,'ev-cls'), from:_evVal(r,'ev-from'), to:_evVal(r,'ev-to'), dur:_evVal(r,'ev-dur'), date:_evVal(r,'ev-date'), time:_evVal(r,'ev-time'), pax:_evVal(r,'ev-pax') };
+  var nw=_evAdd(d); if(nw && r.nextSibling!==nw) r.parentNode.insertBefore(nw, r.nextSibling); _evRenumber();
+};
+window._evDel=function(btn){ if(_evRows().length<2) return; btn.closest('.ev-veh').remove(); _evRenumber(); };
+window._evType=function(sel){
+  var r=sel.closest('.ev-veh'), disp=sel.value==='disposal';
+  r.querySelector('.ev-to-grp').style.display=disp?'none':'';
+  r.querySelector('.ev-dur-grp').style.display=disp?'':'none';
+  r.querySelector('.ev-from-lbl').innerHTML=(disp?'Lieu de prise en charge':'Départ')+' <span style="color:var(--red)">*</span>';
+};
+function _evModeVal(){ var b=document.querySelector('#ev-mode-grp .ev-seg .on'); return b?b.getAttribute('data-m'):'one'; }
+window._evMode=function(m){
+  document.querySelectorAll('#ev-mode-grp .ev-seg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-m')===m); });
+  var c=document.getElementById('ev-contact'); if(c) c.style.display=m==='one'?'':'none';
+  _evRows().forEach(function(r){ r.querySelector('.ev-pax-grp').style.display=m==='per'?'':'none'; });
+};
+// Affiche / masque le formulaire « Événement » dans la fenêtre Nouvelle demande
+window._evSetMode=function(on){
+  var m=document.getElementById('m-new-ride'); if(!m) return;
+  m.classList.toggle('nr-event', !!on);
+  var pe=document.getElementById('panel-event'); if(pe) pe.style.display=on?'block':'none';
+  var tl=document.getElementById('ride-modal-title');
+  var b=document.getElementById('btn-submit-ride');
+  if(on){
+    ['panel-ab','panel-disposal','panel-mixed'].forEach(function(id){ var p=document.getElementById(id); if(p) p.style.display='none'; });
+    if(tl) tl.textContent=window._evTarget?'Ajouter un véhicule':'Nouvel événement';
+    if(!_evRows().length){
+      var cn=document.getElementById('ev-cname'), cp=document.getElementById('ev-cphone');
+      if(cn&&!cn.value) cn.value=(window._evTarget&&window._evTarget.contact_name)||(window._newRidePaxName||((currentProfile&&((currentProfile.first_name||'')+' '+(currentProfile.last_name||'')).trim())||''));
+      if(cp&&!cp.value) cp.value=(window._evTarget&&window._evTarget.contact_phone)||(window._newRidePaxTel||(currentProfile&&currentProfile.phone)||'');
+      _evAdd({}); if(!window._evTarget){ _evAdd({}); }
+    }
+    _evRenumber();
+  } else {
+    if(tl && !(document.getElementById('ride-edit-id')||{}).value) tl.textContent=t('new_ride_title');
+    if(b) b.innerHTML=t('btn_publish')+' &rarr;';
+  }
+};
+window._evReset=function(){
+  window._evTarget=null;
+  var box=document.getElementById('ev-vehicles'); if(box) box.innerHTML='';
+  ['ev-name','ev-cname','ev-cphone'].forEach(function(id){ var e=document.getElementById(id); if(e){ e.value=''; e.readOnly=false; } });
+  var m=document.getElementById('m-new-ride'); if(m) m.classList.remove('ev-add-only');
+  _evMode('one'); _evSetMode(false);
+};
+// « + Ajouter un véhicule » depuis la fiche d'un événement
+window._evAddToEvent=function(ev){
+  closeModal('m-event');
+  setTimeout(function(){
+    cancelRideModal(); window._evTarget=ev;
+    openModal('m-new-ride');
+    var n=document.getElementById('ev-name'); if(n){ n.value=ev.name||''; n.readOnly=true; }
+    document.getElementById('m-new-ride').classList.add('ev-add-only');
+    _nrPick('event');
+  }, 450);
+};
+
+async function submitEvent(){
+  var err=document.getElementById('ride-err'), btn=document.getElementById('btn-submit-ride');
+  var fail=function(msg){ if(err){ err.textContent=msg; err.classList.add('show'); err.style.display=''; } };
+  if(err){ err.textContent=''; err.classList.remove('show'); }
+  var tg=window._evTarget, name=(document.getElementById('ev-name')||{}).value||''; name=name.trim();
+  if(!tg && !name) return fail('Indiquez le nom de l’événement.');
+  var mode=_evModeVal(), cname=((document.getElementById('ev-cname')||{}).value||'').trim(), cphone=((document.getElementById('ev-cphone')||{}).value||'').trim();
+  var rows=_evRows(), list=[];
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i], ty=_evVal(r,'ev-type'), v={ type:ty, cls:_evVal(r,'ev-cls'), from:_evVal(r,'ev-from'), to:_evVal(r,'ev-to'), dur:_evVal(r,'ev-dur'), date:_evVal(r,'ev-date'), time:_evVal(r,'ev-time'), pax:_evVal(r,'ev-pax'), pname:_evVal(r,'ev-pname'), pphone:_evVal(r,'ev-pphone') };
+    if(!v.from || (ty==='ab' && !v.to) || !v.date || !v.time) return fail('Véhicule '+(i+1)+' : indiquez '+(!v.from?(ty==='ab'?'le départ':'le lieu de prise en charge'):(ty==='ab'&&!v.to)?'l’arrivée':!v.date?'la date':'l’heure')+'.');
+    list.push(v);
+  }
+  if(!list.length) return fail('Ajoutez au moins un véhicule.');
+  if(localStorage.getItem(DEMO_MODE_KEY)==='1'){ closeModal('m-new-ride'); cancelRideModal(); showToast('Événement publié : '+list.length+' demandes'); await loadClientDashboard(); return; }
+  if(btn) setLoading(btn, true, 'Publication…');
+  var ids=[], created=[];
+  try{
+    for(var k=0;k<list.length;k++){
+      var v=list[k], notes=v.type==='disposal'?('Durée:'+(parseInt(v.dur,10)||2)+'h'):'';
+      var pn=mode==='per'?(v.pname||cname):cname, pp=mode==='per'?(v.pphone||cphone):cphone;
+      if(pn) notes+='|pax:'+pn.replace(/\|/g,' ');
+      if(pp) notes+='|tel:'+pp.replace(/\|/g,' ');
+      var rd={ client_id:currentUser.id, trip_type:v.type, from_address:v.from, to_address:v.type==='ab'?v.to:null, ride_date:v.date, ride_time:v.time,
+               passengers:parseInt(v.pax,10)||1, vehicle_type:v.cls||null, notes:notes||null, status:'waiting' };
+      var res=await sb.rpc('api_ride_create',{ p:rd });
+      if(res.error) throw new Error('Véhicule '+(k+1)+' : '+(res.error.message||'refusé'));
+      rd.id=res.data&&res.data.id; rd.booking_code=res.data&&res.data.booking_code; ids.push(rd.id); created.push(rd);
+    }
+    var lk=await sb.rpc('api_event_create',{ p:{ name:name, contact_name:mode==='one'?cname:'', contact_phone:mode==='one'?cphone:'', ride_ids:ids, event_id:tg?tg.id:null } });
+    if(lk.error) throw new Error('Demandes créées, mais non regroupées en événement : '+(lk.error.message||''));
+    created.forEach(function(rd){ try{ _notifyMarketplaceDrivers(rd); }catch(_e){} });
+    if(currentProfile&&currentProfile.email&&created[0]){
+      try{ window.sendMail('ride_created', currentProfile.email, Object.assign(window._mailRideData(created[0]), { clientName:(currentProfile.first_name||'') })); }catch(_e){}
+    }
+    var evId=lk.data&&lk.data.id;
+    closeModal('m-new-ride'); cancelRideModal();
+    showToast('✅ '+created.length+' demande'+(created.length>1?'s':'')+' envoyée'+(created.length>1?'s':'')+' aux chauffeurs');
+    await loadClientDashboard();
+    var rp=document.getElementById('page-rides'); if(rp&&rp.classList.contains('active')) await loadRides();
+    if(tg && evId) setTimeout(function(){ openEventDetail(evId); }, 500);
+  }catch(e){
+    console.error('submitEvent', e); fail(e.message||'Erreur');
+  }finally{ if(btn){ setLoading(btn,false,'Publier'); btn.disabled=false; _evRenumber(); } }
+}
+
+// Listes client : les véhicules d'un même événement sont regroupés en une seule ligne
+function _groupEvents(list){
+  var out=[], seen={};
+  (list||[]).forEach(function(r){
+    if(r && r.event_id){
+      if(seen[r.event_id]){ seen[r.event_id].rides.push(r); return; }
+      var g={ _evt:true, id:r.event_id, name:r.event_name||'Événement', rides:[r] }; seen[r.event_id]=g; out.push(g);
+    } else out.push(r);
+  });
+  return out;
+}
+function _evSummary(rides){
+  var cnt={}; rides.forEach(function(r){ var c=({lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'})[r.vehicle_type]||'Véhicule'; cnt[c]=(cnt[c]||0)+1; });
+  return rides.length+' véhicule'+(rides.length>1?'s':'')+' · '+Object.keys(cnt).map(function(k){ return cnt[k]+' '+k; }).join(' · ');
+}
+function renderEventItem(g){
+  var rides=g.rides.slice().sort(function(a,b){ return String(a.ride_date+a.ride_time).localeCompare(String(b.ride_date+b.ride_time)); });
+  var f=rides[0]||{}, d=f.ride_date?new Date(f.ride_date+'T00:00:00'):null;
+  var day=d?String(d.getDate()).padStart(2,'0'):'--', mon=d?d.toLocaleDateString('fr-FR',{month:'short'}).toUpperCase().replace('.',''):'';
+  var conf=rides.filter(function(r){ return ['confirmed','active','done','pending_payment'].indexOf(r.status)>=0; }).length;
+  var offers=rides.reduce(function(s,r){ return s+((r.status==='offers'||r.status==='waiting')?(r._offerCount||(r.offers&&r.offers[0]?parseInt(r.offers[0].count)||0:0)):0); },0);
+  var paid=rides.reduce(function(s,r){ return s+((['confirmed','active','done'].indexOf(r.status)>=0&&r.final_price)?parseFloat(r.final_price):0); },0);
+  var pct=Math.round(conf/Math.max(rides.length,1)*100);
+  return '<div class="ride-card ev-card" onclick="openEventDetail(\''+String(g.id).replace(/'/g,'')+'\')">'
+    +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+mon+'</div><div class="ride-card-date-day">'+day+'</div></div>'
+    +'<div style="display:flex;align-items:center;"><span class="ev-tag">Événement</span></div>'
+    +'<div style="min-width:0;"><div class="ride-card-col-label">Événement</div><div class="ride-card-col-val" style="font-weight:700;">'+_rdEsc(g.name)+'</div></div>'
+    +'<div style="min-width:0;"><div class="ride-card-col-label">Véhicules</div><div class="ride-card-col-val">'+_rdEsc(_evSummary(rides))+'</div></div>'
+    +'<div><div class="ride-card-col-label">Statut</div><div style="font-size:12px;color:var(--ink2);">'+conf+' / '+rides.length+' confirmé'+(conf>1?'s':'')+'</div><div class="ev-bar"><i style="width:'+pct+'%"></i></div>'+(offers?'<div style="font-size:11.5px;color:#2456A6;margin-top:3px;">'+offers+' offre'+(offers>1?'s':'')+' reçue'+(offers>1?'s':'')+'</div>':'')+'</div>'
+    +'<div style="text-align:right;"><div class="ride-card-col-label">Prix</div><div class="ride-card-col-val" style="font-weight:700;">'+(paid>0?paid.toFixed(2)+' €':'---')+'</div></div>'
+    +'<svg class="ride-card-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    +'</div>';
+}
+function _renderListItem(x){ return x&&x._evt?renderEventItem(x):renderRideItem(x); }
+
+// Fiche de l'événement (client) : compteurs + liste des véhicules
+window._evOpenId=null;
+window.openEventDetail=async function(id, silent){
+  window._evOpenId=id;
+  var body=document.getElementById('ev-body'), title=document.getElementById('ev-title'), ft=document.getElementById('ev-ft');
+  if(!silent){ if(body) body.innerHTML='<div class="rd-skel" style="height:180px;"></div>'; if(title) title.innerHTML=''; if(ft) ft.innerHTML=''; openModal('m-event'); }
+  if(!sb||localStorage.getItem(DEMO_MODE_KEY)==='1') return;
+  try{
+    var [rr, er]=await Promise.all([
+      sb.from('rides').select('*').eq('event_id',id).order('ride_date',{ascending:true}).order('ride_time',{ascending:true}),
+      sb.from('ride_events').select('*').eq('id',id).maybeSingle()
+    ]);
+    var rides=rr.data||[], ev=er.data||{ id:id, name:(rides[0]&&rides[0].event_name)||'Événement' };
+    await _mergeRidePrivate(rides);
+    if(rides.length){
+      var oc=await sb.from('offers').select('ride_id').eq('status','pending').in('ride_id', rides.map(function(r){ return r.id; }));
+      var c={}; (oc.data||[]).forEach(function(o){ c[o.ride_id]=(c[o.ride_id]||0)+1; }); rides.forEach(function(r){ r._offerCount=c[r.id]||0; });
+    }
+    if(window._evOpenId!==id) return;
+    var f=rides[0]||{}, dd=f.ride_date?new Date(f.ride_date+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,''):'';
+    dd=dd?dd.charAt(0).toUpperCase()+dd.slice(1):'';
+    if(title) title.innerHTML='<span class="rd-hd2"><b class="rd-hd2-code"><span class="ev-tag" style="vertical-align:2px;margin-right:6px;">Événement</span>'+_rdEsc(ev.name)+'</b><span class="rd-hd2-sub">'+_rdEsc([dd, rides.length+' véhicule'+(rides.length>1?'s':''), ev.contact_name?'contact : '+ev.contact_name:''].filter(Boolean).join(' · '))+'</span></span>';
+    var nConf=rides.filter(function(r){ return ['confirmed','active','done','pending_payment'].indexOf(r.status)>=0; }).length;
+    var nOff=rides.filter(function(r){ return r.status==='offers'; }).length, nWait=rides.filter(function(r){ return r.status==='waiting'; }).length;
+    var sh=function(a){ return String(cleanAddr(a)||'').split(',')[0].trim(); };
+    var cls=function(v){ return ({lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'})[v]||'Véhicule'; };
+    var h='<div class="ev-kpis"><div><b>'+nConf+'</b><span>confirmé'+(nConf>1?'s':'')+'</span></div><div><b>'+nOff+'</b><span>avec offres</span></div><div><b>'+nWait+'</b><span>en attente</span></div></div>';
+    rides.forEach(function(r,i){
+      var tr=r.trip_type==='disposal'?sh(r.from_address)+' · '+(((r.notes||'').match(/Durée:([^\s|,]+)/)||[])[1]||'disposition'):sh(r.from_address)+' → '+sh(r.to_address);
+      var pax=_rdTag(r.notes,'pax');
+      h+='<div class="ev-sub" onclick="_rdPushUnder(\'m-event\');openRideDetail(this)" data-ride=\''+JSON.stringify(r).replace(/'/g,'&#39;')+'\'>'
+        +'<span class="n">'+(i+1)+'</span><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+_rdEsc(cls(r.vehicle_type)+' · '+tr)+'</div>'
+        +'<div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+_rdEsc([String(r.ride_time||'').slice(0,5), (r.passengers||1)+' passager'+((r.passengers||1)>1?'s':''), pax, r.booking_code].filter(Boolean).join(' · '))+'</div></div>'
+        +getStatusPill(r.status, r._offerCount||0)
+        +'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="color:var(--ink4);flex-shrink:0;"><path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>';
+    });
+    if(!rides.length) h+='<div class="rd-muted">Aucun véhicule</div>';
+    if(body) body.innerHTML=h;
+    window._evCur=ev;
+    if(ft) ft.innerHTML='<button class="btn btn-secondary" style="margin-right:auto;" onclick="_evAddToEvent(window._evCur)">+ Ajouter un véhicule</button>';
+  }catch(e){ console.warn('openEventDetail', e); if(body&&!silent) body.innerHTML='<div class="rd-muted">Impossible de charger l’événement.</div>'; }
+};
+
 // ── Nouvelle demande : étape 1 « type de trajet » puis étape 2 « création de la demande » ──
 var _NR_STEPS=['Type','Demande','Offres','Choix','Paiement'];
 window._nrStepsHtml=function(cur){
@@ -9309,6 +9597,8 @@ window._nrShow=function(step){
   var b=m.querySelector('.modal-body'); if(b) b.scrollTop=0;
 };
 window._nrPick=function(val){
+  if(val==='event'){ _evSetMode(true); _nrShow('form'); return; }
+  _evSetMode(false);
   var el=document.querySelector('#nr-type-grp .trip-type[data-val="'+val+'"]');
   if(el) selTripType(el);
   _nrShow('form');
@@ -10014,6 +10304,8 @@ async function _liveRefresh(){
     // 1) Page affichée
     var pg=document.querySelector('.page.active');
     if(pg) await loadPageData(pg.id.replace(/^page-/,''));
+    // 1b) Fiche d'un événement ouverte (au premier plan)
+    if(_isOpen('m-event') && window._evOpenId && !_isOpen('m-ride-detail')) await openEventDetail(window._evOpenId, true);
     // 2) Liste des offres ouverte
     if(_isOpen('m-view-offers') && currentRideId && currentRole==='client'){ await openOffersModal(currentRideId); }
     // 3) Fiche de course ouverte (au premier plan)
