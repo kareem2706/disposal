@@ -94,6 +94,9 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 .phone-row input{flex:1;}
 .auth-error{background:#FDECEA;color:#C0392B;border:1px solid rgba(192,57,43,.2);border-radius:3px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:none;}
 .auth-error.show{display:block;}
+.modal .auth-error.show{margin-top:14px;}
+/* Champ obligatoire manquant : cadre rouge jusqu'à ce qu'il soit rempli */
+input.fld-err,select.fld-err,textarea.fld-err{border-color:#C0392B!important;box-shadow:0 0 0 3px rgba(192,57,43,.12)!important;}
 .auth-loading{display:inline-flex;align-items:center;gap:8px;}
 .spinner-sm{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
 @keyframes spin{to{transform:rotate(360deg);}}
@@ -8432,7 +8435,8 @@ window.cancelRideModal = function(){
   var sc=document.getElementById('mixed-segments');if(sc)sc.innerHTML='';
   _segN=0;
   // Reset error
-  var err=document.getElementById('ride-err');if(err)err.style.display='none';
+  var err=document.getElementById('ride-err');if(err){ err.classList.remove('show'); err.textContent=''; err.style.display=''; }
+  document.querySelectorAll('#m-new-ride .fld-err').forEach(function(x){ x.classList.remove('fld-err'); });
   // Reset passenger sections
   ['ride-pax-section','disp-pax-section'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.innerHTML='';
@@ -9640,6 +9644,35 @@ window._nrRideStep=function(r){
   else if(id==='m-view-offers') _nrStepsBar(id, currentRole==='client'?4:null);
   else if(id==='m-payment') _nrStepsBar(id, currentRole==='client'?5:null);
   return r; }; })();
+// ── Erreur dans un formulaire : les champs obligatoires (libellé avec *) restés vides sont encadrés en rouge ──
+function _markMissing(scope){
+  if(!scope) return;
+  var first=null;
+  scope.querySelectorAll('.input-group').forEach(function(g){
+    var lab=g.querySelector('label'); if(!lab || !/\*/.test(lab.textContent||'')) return;
+    if(g.offsetParent===null) return;                        // champ masqué
+    g.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]),select,textarea').forEach(function(el){
+      if(el.offsetParent===null||el.readOnly||el.disabled) return;
+      var empty=!String(el.value||'').trim();
+      el.classList.toggle('fld-err', empty);
+      if(empty && !first) first=el;
+    });
+  });
+  if(first){ try{ first.scrollIntoView({block:'center',behavior:'smooth'}); }catch(e){} }
+}
+document.addEventListener('input', function(e){ var t=e.target; if(t&&t.classList&&t.classList.contains('fld-err')&&String(t.value||'').trim()) t.classList.remove('fld-err'); }, true);
+document.addEventListener('change', function(e){ var t=e.target; if(t&&t.classList&&t.classList.contains('fld-err')&&String(t.value||'').trim()) t.classList.remove('fld-err'); }, true);
+(function(){
+  var ob=new MutationObserver(function(ms){ ms.forEach(function(m){
+    var el=m.target; if(!el.classList||!el.classList.contains('auth-error')) return;
+    var shown=el.classList.contains('show')&&String(el.textContent||'').trim();
+    var scope=el.closest('.modal')||el.closest('form')||el.closest('.auth-card')||el.parentElement;
+    if(shown) _markMissing(scope);
+    else if(scope) scope.querySelectorAll('.fld-err').forEach(function(x){ x.classList.remove('fld-err'); });
+  }); });
+  var go=function(){ ob.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class'],childList:false,characterData:false}); };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',go); else go();
+})();
 // Formulaires affichés en version « plein écran » (panneau à droite sur ordinateur, page sur mobile)
 var _RD_FORMS=['m-new-ride','m-submit-offer','m-subcontract','m-personal-mission','m-vehicle','m-driver','m-fleet-doc','m-passenger','m-mission-assign','m-admin-client','m-view-offers','m-payment'];
 function _rdInitForms(){ _RD_FORMS.forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.add('rd-panel','rd-form'); }); }
