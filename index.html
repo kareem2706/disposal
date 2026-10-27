@@ -6039,7 +6039,7 @@ function _triggerDistanceMatrix(r, result, idPrefix){
       if(s.type.toLowerCase().indexOf('disp')<0&&s.from&&s.to){
         (function(seg,idx){(new google.maps.DistanceMatrixService()).getDistanceMatrix({origins:[seg.from],destinations:[seg.to],travelMode:google.maps.TravelMode.DRIVING,language:'fr'},function(res,st){
           var ie=document.getElementById(idPrefix+'detail-route-info-'+idx),te=document.getElementById(idPrefix+'detail-route-info-text-'+idx);
-          if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){var el=res.rows[0].elements[0];if(ie&&te){te.textContent=el.distance.text+' - +/- '+el.duration.text;ie.style.display='block';}}
+          if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){var el=res.rows[0].elements[0];if(ie&&te){te.textContent=el.distance.text+' \u00b7 environ '+el.duration.text;ie.style.display='block';}}
         });})(s,i);
       }
     });
@@ -6266,7 +6266,7 @@ function _openRideDetailImpl(el){
         if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){
           var el=res.rows[0].elements[0];
           if(infoEl&&textEl){
-            textEl.textContent=el.distance.text+' - +/- '+el.duration.text;
+            textEl.textContent=el.distance.text+' \u00b7 environ '+el.duration.text;
             infoEl.style.display='block';
           }
         }
@@ -6289,7 +6289,7 @@ function _openRideDetailImpl(el){
             if(st==='OK'&&res.rows[0]&&res.rows[0].elements[0].status==='OK'){
               var el=res.rows[0].elements[0];
               if(infoEl&&textEl){
-                textEl.textContent=el.distance.text+' - +/- '+el.duration.text;
+                textEl.textContent=el.distance.text+' \u00b7 environ '+el.duration.text;
                 infoEl.style.display='block';
               }
             }
