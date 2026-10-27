@@ -9211,10 +9211,10 @@ window._nrStepsHtml=function(cur){
 };
 window._nrShow=function(step){
   var m=document.getElementById('m-new-ride'); if(!m) return;
-  var edit=!!(document.getElementById('ride-edit-id')||{}).value;
-  m.classList.toggle('nr-flow', !edit);
-  m.classList.toggle('nr-pick', step==='choose' && !edit);
-  var st=document.getElementById('nr-steps'); if(st) st.innerHTML=_nrStepsHtml(step==='choose'&&!edit?1:2);
+  // Création comme modification : choix du type (étape 1) puis formulaire (étape 2)
+  m.classList.add('nr-flow');
+  m.classList.toggle('nr-pick', step==='choose');
+  var st=document.getElementById('nr-steps'); if(st) st.innerHTML=_nrStepsHtml(step==='choose'?1:2);
   var b=m.querySelector('.modal-body'); if(b) b.scrollTop=0;
 };
 window._nrPick=function(val){
@@ -9226,7 +9226,7 @@ window._nrPick=function(val){
 window._nrInit=function(){
   var m=document.getElementById('m-new-ride'); if(!m) return;
   var edit=!!(document.getElementById('ride-edit-id')||{}).value;
-  _nrShow(edit?'form':'choose');
+  _nrShow(edit?'form':'choose');   // modification : on arrive sur le formulaire, « Changer de type » reste possible
   // Flèche retour : formulaire → choix du type ; choix du type → fermeture
   var back=m.querySelector('.modal-hd .rd-back');
   if(back) back.onclick=function(){ if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
