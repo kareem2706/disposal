@@ -1674,7 +1674,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <span data-i18n="dashboard">Tableau de bord</span>
         </button>
         
-        <button class="nav-item" data-page="rides" onclick="showPage('rides')">
+        <button class="nav-item" data-page="rides" onclick="_goRides('all')">
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M5 7h6M5 10h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           <span data-i18n="rides">Mes demandes</span> <span class="nav-badge" id="badge-rides" style="display:none;"></span>
         </button>
@@ -1807,7 +1807,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
         <div><h1>Tableau de bord</h1><p>Aperçu de vos activités</p></div>
       </div>
-      <div class="sc-hd"><span class="section-title">Mes demandes</span><button class="btn btn-ghost btn-sm" onclick="showPage('rides')">Voir tout →</button></div><div class="stats-row" id="client-stats"></div>
+      <div class="sc-hd"><span class="section-title">Mes demandes</span><button class="btn btn-ghost btn-sm" onclick="_goRides('all')">Voir tout →</button></div><div class="stats-row" id="client-stats"></div>
       <div id="active-ride-wrap" style="display:none;">
         <div class="tracking-card" id="tracking-card-content"></div>
       </div>
@@ -1816,7 +1816,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
           <span class="section-title">Demandes récentes</span>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="showPage('rides')">Voir tout →</button>
+        <button class="btn btn-ghost btn-sm" onclick="_goRides('all')">Voir tout →</button>
       </div>
       <div id="recent-rides-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
 
@@ -4534,10 +4534,10 @@ async function loadClientDashboard(){
   // bank_transfer/stripe cancelled but NOT yet refunded (remboursement en attente) → don't count as paid yet, money not confirmed lost
   var totalNet = total + paidCancelled; // refunded already excluded (those rides have payment_method='refunded', not in done/confirmed)
   document.getElementById('client-stats').innerHTML=
-    '<div class="stat-card sc sc-g">'+_mkI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17v2M18 17v2M3 13l2-6a2 2 0 012-1.5h10A2 2 0 0119 7l2 6v4H3z"/><circle cx="7.5" cy="13.5" r=".9"/><circle cx="16.5" cy="13.5" r=".9"/></svg>','none')+'<div class="stat-label">Confirmées / terminées</div><div class="stat-val">'+confirmed+'</div></div>'
-    +'<div class="stat-card sc sc-o">'+_mkI(_s2,'none')+'<div class="stat-label">En attente</div><div class="stat-val">'+pending+'</div></div>'
-    +'<div class="stat-card sc sc-b">'+_mkI(_s3,'none')+'<div class="stat-label">Offres reçues</div><div class="stat-val">'+withOffer+'</div></div>'
-    +'<div class="stat-card sc sc-r">'+_mkI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 6.5A6 6 0 007.5 9M17 17.5A6 6 0 017.5 15M5 10.5h8M5 13.5h8"/></svg>','none')+'<div class="stat-label">Total pay\u00e9</div><div class="stat-val stat-money">'+(totalNet>0?totalNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>';
+    '<div class="stat-card sc sc-g" onclick="_goRides(\'confirmed\')" style="cursor:pointer;" title="Voir mes courses confirmées">'+_mkI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17v2M18 17v2M3 13l2-6a2 2 0 012-1.5h10A2 2 0 0119 7l2 6v4H3z"/><circle cx="7.5" cy="13.5" r=".9"/><circle cx="16.5" cy="13.5" r=".9"/></svg>','none')+'<div class="stat-label">Confirmées / terminées</div><div class="stat-val">'+confirmed+'</div></div>'
+    +'<div class="stat-card sc sc-o" onclick="_goRides(\'waiting\')" style="cursor:pointer;" title="Voir mes demandes en attente">'+_mkI(_s2,'none')+'<div class="stat-label">En attente</div><div class="stat-val">'+pending+'</div></div>'
+    +'<div class="stat-card sc sc-b" onclick="_goRides(\'offers\')" style="cursor:pointer;" title="Voir mes demandes avec offres">'+_mkI(_s3,'none')+'<div class="stat-label">Offres reçues</div><div class="stat-val">'+withOffer+'</div></div>'
+    +'<div class="stat-card sc sc-r" onclick="showPage(\'invoices\')" style="cursor:pointer;" title="Voir mes factures">'+_mkI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 6.5A6 6 0 007.5 9M17 17.5A6 6 0 017.5 15M5 10.5h8M5 13.5h8"/></svg>','none')+'<div class="stat-label">Total pay\u00e9</div><div class="stat-val stat-money">'+(totalNet>0?totalNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>';
 
   // Rides in progress (driver on the way or pick-up done) — same block as the driver dashboard
   var _inProgress = function(r){ return r.status==='active' || (r.status==='confirmed' && r.on_way_at); };
@@ -4553,7 +4553,8 @@ async function loadClientDashboard(){
 
 // CLIENT RIDES
 async function loadRides(filter){
-  if(filter===undefined) filter='all';
+  // Sans filtre explicite (ouverture de la page, mise à jour en direct) : on garde le filtre sélectionné
+  if(filter===undefined){ var _act=document.querySelector('#rides-filters .btn-primary'); var _fm=_act&&(_act.getAttribute('onclick')||'').match(/filterRides\('(\w+)'/); filter=_fm?_fm[1]:'all'; }
   const uid = currentUser?.id;
   let rides = [];
 
@@ -5591,6 +5592,14 @@ window.saveProfile = async function(){
 
 
 // ── RIDE ACTIONS ──────────────────────────────────────
+// Carte du tableau de bord client → « Mes demandes » déjà filtrée
+window._goRides = function(filter){
+  document.querySelectorAll('#rides-filters .btn').forEach(function(b){
+    var on=(b.getAttribute('onclick')||'').indexOf("filterRides('"+filter+"'")===0;
+    b.className = on ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
+  });
+  showPage('rides');
+};
 window.filterRides = function(filter, btn){
   document.querySelectorAll('#rides-filters .btn').forEach(b => b.className = 'btn btn-secondary btn-sm');
   btn.className = 'btn btn-primary btn-sm';
