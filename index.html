@@ -9593,7 +9593,7 @@ window.openEventDetail=async function(id, silent){
 };
 
 // ── Nouvelle demande : étape 1 « type de trajet » puis étape 2 « création de la demande » ──
-var _NR_STEPS=['Type','Demande','Offres','Choix','Paiement'];
+var _NR_STEPS=['Type','Demande','Attente d\u2019offres','Choix','Paiement'];
 window._nrStepsHtml=function(cur){
   return _NR_STEPS.map(function(t,i){ var n=i+1, c=n<cur?'done':n===cur?'on':'';
     return '<div class="nr-st '+c+'"><i>'+(n<cur?'\u2713':n)+'</i><span>'+t+'</span></div>'; }).join('');
