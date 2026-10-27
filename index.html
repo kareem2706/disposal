@@ -1195,6 +1195,12 @@ body{background:var(--bg);}
 .rdv-rate{margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--green);color:#fff;border:none;border-radius:22px;padding:11px;font:700 14px 'DM Sans',sans-serif;cursor:pointer;}
 .rdv-rate i{font-style:normal;color:#F5C451;letter-spacing:2px;}
 .rdv-rated{margin-top:10px;text-align:center;background:#F1F7F3;color:var(--green);border-radius:22px;padding:10px;font-weight:600;font-size:13.5px;}
+.rdv-promo{position:relative;display:block;width:100%;height:190px;border:none;border-radius:18px;overflow:hidden;cursor:pointer;padding:0;text-align:left;background:#1d2b22 url(assets/story/05-depart.jpg?v=3) center 60%/cover no-repeat;font-family:'DM Sans',sans-serif;}
+.rdv-promo:before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.72) 100%);}
+.rdv-promo-t{position:absolute;left:20px;bottom:18px;right:96px;color:#fff;font-size:22px;font-weight:600;line-height:1.15;letter-spacing:-.01em;}
+.rdv-promo-t small{display:block;font-size:12.5px;font-weight:500;opacity:.85;margin-bottom:5px;letter-spacing:0;}
+.rdv-promo-go{position:absolute;right:18px;bottom:16px;width:56px;height:56px;border-radius:50%;background:#fff;color:#14492E;display:flex;align-items:center;justify-content:center;transition:transform .2s;}
+.rdv-promo:hover .rdv-promo-go{transform:translateX(3px);}
 .rdv-cta{display:flex;align-items:center;gap:14px;background:#F4FAF6;border:1.5px dashed #B5D8C2;border-radius:14px;padding:14px 16px;}
 .rdv-cta .vi{width:42px;height:42px;border-radius:11px;background:#fff;color:var(--green);border:1px solid #DDEFE3;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .rdv-go{margin-left:auto;flex-shrink:0;background:#fff;color:var(--green);border:1.5px solid var(--green);border-radius:20px;padding:8px 14px;font:700 13px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;}
@@ -6594,8 +6600,9 @@ function _openRideDetailImpl(el){
           +(trjD?'<p>'+_rdEsc(trjD)+'</p>':'')+'</div>'
         +routeKeep
         +'<div id="ph-done" class="rd-skel" style="height:190px;"></div>'
-        +'<div class="rdv-cta"><div class="vi">'+plusIc+'</div><div style="flex:1;min-width:0"><div class="rdv-t">Un autre déplacement prévu prochainement ?</div><div class="rdv-s">Réservez dès maintenant et recevez les offres de nos chauffeurs.</div></div>'
-          +'<button type="button" class="rdv-go" onclick="closeModal(\'m-ride-detail\');var b=document.querySelector(\'#nav-cta-client .sidebar-cta\');if(b)b.click();">Nouvelle demande →</button></div>';
+        +'<button type="button" class="rdv-promo" onclick="closeModal(\'m-ride-detail\');var b=document.querySelector(\'#nav-cta-client .sidebar-cta\');if(b)b.click();">'
+          +'<span class="rdv-promo-t"><small>Un autre d\u00e9placement pr\u00e9vu ?</small>R\u00e9servez votre prochain trajet</span>'
+          +'<span class="rdv-promo-go"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>';
       (async function(myGen){
         try{
           var fd = await _clientFleetData(r);
