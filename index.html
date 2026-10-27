@@ -1055,7 +1055,6 @@ body{background:var(--bg);}
 @media(max-width:1100px){.stats-row{grid-template-columns:repeat(2,1fr);}}
 .acct-badge{display:inline-flex;align-items:center;background:#DFF27E;color:#1F4A33;border-radius:100px;padding:5px 12px;font:700 11px 'DM Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;line-height:1.2;}
 .acct-badge:empty{display:none;}
-.mobile-topbar .acct-badge{margin-left:auto;margin-right:46px;padding:4px 10px;font-size:10.5px;}
 .mobile-topbar{display:none;align-items:center;gap:12px;padding:0 16px;height:52px;background:var(--white);border-bottom:1px solid var(--sand3);position:sticky;top:0;z-index:200;flex-shrink:0;}
 .mobile-topbar-title{font-size:15px;font-weight:600;color:var(--ink);}
 .mobile-topbar-icon{display:none;width:30px;height:30px;border-radius:8px;background:var(--green-bg);color:var(--green);align-items:center;justify-content:center;flex-shrink:0;margin-right:-4px;}
@@ -1605,7 +1604,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div class="user-av" id="nav-avatar">?</div>
         <div>
           <div class="user-name" id="nav-name">—</div>
-          <div class="user-role-badge" id="nav-role">—</div>
+          <div class="user-role-badge" id="nav-role" style="display:none">—</div>
         </div>
       </div>
     </div>
@@ -1735,7 +1734,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <button id="mob-btn" class="mob-btn" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Menu">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       </button>
-      <span id="page-title-icon" class="mobile-topbar-icon"></span><span id="page-title" class="mobile-topbar-title"></span><span class="acct-badge" id="mob-acct-badge"></span>
+      <span id="page-title-icon" class="mobile-topbar-icon"></span><span id="page-title" class="mobile-topbar-title"></span>
     </div>
     <div style="position:fixed;top:16px;right:20px;z-index:60;">
       <div id="notif-btn" class="icon-btn" onclick="toggleNotifPanel()" style="position:relative;background:var(--white);box-shadow:var(--sh);width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;">
@@ -4065,7 +4064,7 @@ function enterApp(){
   document.getElementById('nav-name').textContent = navDisplayName;
   var roleLabel = isAdmin ? (isAdminDriver ? 'Admin / Fleet' : 'Admin') : (role==='client' ? (currentProfile?.client_type==='pro' ? 'Client Pro' : 'Client') : t(role));
   document.getElementById('nav-role').textContent = roleLabel;
-  ['nav-acct-badge','mob-acct-badge'].forEach(function(id){ var b=document.getElementById(id); if(b) b.textContent=roleLabel; });
+  ['nav-acct-badge'].forEach(function(id){ var b=document.getElementById(id); if(b) b.textContent=roleLabel; });
   // Show Passagers menu only for pro clients
   var passBtnNav = document.getElementById('nav-passengers-btn');
   if(passBtnNav) passBtnNav.style.display = (!isAdmin && role==='client' && currentProfile?.client_type==='pro') ? 'flex' : 'none';
