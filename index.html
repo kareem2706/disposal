@@ -1184,6 +1184,11 @@ body{background:var(--bg);}
 .rdv-row>div:nth-child(2){min-width:0;flex:1;}
 .rdv-plate{display:inline-block;font-family:monospace;font-size:11.5px;font-weight:700;letter-spacing:.04em;border:1.5px solid #C0392B;color:#C0392B;border-radius:6px;padding:1px 7px;margin-left:6px;white-space:nowrap;vertical-align:1px;background:#fff;}
 .rdv-call{margin-left:auto;flex-shrink:0;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--green);background:#F1F7F3;text-decoration:none;}
+.rdv-box{border:1px solid #ECEAE5;border-radius:12px;padding:12px 14px;background:#fff;}
+.rdv-ln{display:flex;align-items:center;gap:12px;padding:8px 0;}.rdv-ln+.rdv-ln{border-top:1px solid #F0EEE9;}
+.rdv-ln .vi{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#E3F1E8;color:var(--green);}
+.rdv-ln>div:nth-child(2){min-width:0;flex:1;}
+.rdv-note{border-top:1px solid #F0EEE9;margin-top:4px;padding-top:10px;}
 .rdv-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .rdv-tiles div{background:#F1F1EF;border-radius:10px;padding:9px 10px;font-size:11.5px;color:var(--ink3);line-height:1.35;}
 .rdv-tiles b{display:block;color:var(--ink);font-size:12px;margin-bottom:2px;}
@@ -6502,14 +6507,17 @@ function _openRideDetailImpl(el){
           var _drvSub=_picked?'Vous \u00eates \u00e0 bord' : r.on_way_at?'En route vers le point de d\u00e9part' : 'Il vous attend au point de d\u00e9part \u00e0 l\u2019heure pr\u00e9vue';
           var _vName=_v?((_v.brand||'')+' '+(_v.model||'')).trim():'';
           var _vSub=[_v&&_v.color||'', ({lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'})[r.vehicle_type]||''].filter(Boolean).join(' \u00b7 ');
-          phFleet.outerHTML =
-            '<div class="rdv-row"><div class="vi">'+_uIc+'</div><div><div class="rdv-t">'+(_d&&_d.name?_rdEsc(_d.name)+' <span style="font-weight:400;color:var(--ink3);">\u00b7 votre chauffeur</span>':'Chauffeur bient\u00f4t confirm\u00e9')+'</div>'
-              +'<div class="rdv-s">'+(_d&&_d.name?_drvSub:'Votre transporteur attribue le chauffeur avant le d\u00e9part')+'</div></div>'
-              +(_d&&_d.phone?'<a class="rdv-call" href="tel:'+_rdEsc(String(_d.phone).replace(/[^\d+]/g,''))+'" title="'+_rdEsc(_d.phone)+'">'+_pIc+'</a>':'')+'</div>'
-            +'<div class="rdv-row"><div class="vi">'+_cIc+'</div><div><div class="rdv-t">'+(_vName?_rdEsc(_vName):'V\u00e9hicule \u00e0 confirmer')+(_v&&_v.plate?'<span class="rdv-plate">'+_rdEsc(_v.plate)+'</span>':'')+'</div>'
-              +(_vSub?'<div class="rdv-s">'+_rdEsc(_vSub)+'</div>':'')+'</div></div>'
-            +(offerNoteClient?'<div class="rd-card rd-blue"><div class="rd-cap">Note du chauffeur</div><div class="rd-note">'+_rdEsc(offerNoteClient.trim())+'</div></div>':'')
-            +(_picked?'':'<div class="rdv-tiles"><div><b>Avant la course</b>D\u00e9tails envoy\u00e9s par e-mail</div><div><b>Le jour J</b>Alerte \u00ab\u00a0chauffeur en route\u00a0\u00bb</div><div><b>Apr\u00e8s la course</b>Facture et avis</div></div>');
+          var _first=_d&&_d.first?_d.first:'';
+          var _ln=function(ic,main,sub,right){ return '<div class="rdv-ln"><div class="vi">'+ic+'</div><div><div class="rdv-t">'+main+'</div>'+(sub?'<div class="rdv-s">'+sub+'</div>':'')+'</div>'+(right||'')+'</div>'; };
+          phFleet.outerHTML = '<div class="rdv-box">'
+            +'<div class="rd-cap" style="margin-bottom:4px;">V\u00e9hicule et chauffeur</div>'
+            +_ln(_uIc,
+                _first?_rdEsc(_first)+' <span style="font-weight:400;color:var(--ink3);">\u00b7 votre chauffeur</span>':'Chauffeur bient\u00f4t attribu\u00e9',
+                (_d&&_d.fleet?_rdEsc(_d.fleet)+' \u00b7 ':'')+(_first?_drvSub:'Le pr\u00e9nom de votre chauffeur s\u2019affichera ici'),
+                _d&&_d.phone?'<a class="rdv-call" href="tel:'+_rdEsc(String(_d.phone).replace(/[^\d+]/g,''))+'" title="'+_rdEsc(_d.phone)+'">'+_pIc+'</a>':'')
+            +_ln(_cIc, (_vName?_rdEsc(_vName):'V\u00e9hicule \u00e0 confirmer')+(_v&&_v.plate?'<span class="rdv-plate">'+_rdEsc(_v.plate)+'</span>':''), _vSub?_rdEsc(_vSub):'')
+            +(offerNoteClient?'<div class="rdv-note"><div class="rd-cap">Note '+(_first?'de '+_rdEsc(_first):'du chauffeur')+'</div><div class="rd-note">'+_rdEsc(offerNoteClient.trim())+'</div></div>':'')
+            +'</div>';
         }
 
         // ② Passager + note au chauffeur
@@ -6869,7 +6877,7 @@ async function _clientFleetData(r){
     var company = (fp.company_name||'').trim() || ((fp.first_name||'')+' '+(fp.last_name||'')).trim();
     var first = ad ? (ad.first_name||'').trim() : '';
     var phone = (ad&&ad.phone) || fp.phone || '';
-    if(company||first||phone) out.drv = { name:[company,first].filter(Boolean).join(' \u2013 '), phone:phone, company:'Chauffeur' };
+    if(company||first||phone) out.drv = { name:[company,first].filter(Boolean).join(' \u2013 '), phone:phone, company:'Chauffeur', first:first, fleet:company };
   }
   if(r.final_price){ try{ out.price = await _ridePrice(r); }catch(e){} }
   return out;
