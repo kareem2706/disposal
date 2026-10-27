@@ -1105,6 +1105,7 @@ body{background:var(--bg);}
   .sc-hd{display:none;}
 }
 /* Nouvelle demande : choix du type de course puis formulaire, avec les étapes en tête */
+#m-new-ride.nr-editing .nr-opt-ev{display:none;}
 .nr-steps{display:flex;align-items:flex-start;padding:14px 20px 12px;border-bottom:1px solid var(--sand3);background:#fff;flex-shrink:0;}
 .nr-st{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;min-width:0;text-align:center;}
 .nr-st:not(:last-child):after{content:'';position:absolute;top:12px;left:calc(50% + 15px);right:calc(-50% + 15px);height:2px;background:#E4E1D9;border-radius:2px;}
@@ -2681,7 +2682,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <button type="button" class="nr-opt g" onclick="_nrPick('ab')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="6" cy="24" r="3"/><circle cx="26" cy="8" r="3"/><path d="M9 23.5c4-.5 4.5-4.5 7-7.5s4.5-5.5 7-7"/></svg></span><span class="nr-tx"><b>Trajet simple</b><span>Transfert simple d&rsquo;un point A &agrave; un point B.</span></span><span class="nr-chev">&rsaquo;</span></button>
       <button type="button" class="nr-opt o" onclick="_nrPick('disposal')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M16 10v6.5l4 2.5"/></svg></span><span class="nr-tx"><b>Mise &agrave; disposition</b><span>Un chauffeur &agrave; votre disposition pendant plusieurs heures.</span></span><span class="nr-chev">&rsaquo;</span></button>
       <button type="button" class="nr-opt b" onclick="_nrPick('mixed')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="4.5" cy="26" r="2.6"/><circle cx="27.5" cy="6" r="2.6"/><path d="M7 24.6c2.2-.8 3.6-2.2 4.6-3.8M20.4 11.2c1-1.6 2.4-3 4.6-3.8"/><circle cx="16" cy="16" r="6"/><path d="M16 12.8v3.4l2.2 1.4"/></svg></span><span class="nr-tx"><b>Trajet mixte</b><span>Pour les demandes plus complexes&nbsp;: combinez plusieurs trajets, en transfert simple et en mise &agrave; disposition.</span></span><span class="nr-chev">&rsaquo;</span></button>
-      <button type="button" class="nr-opt v" onclick="_nrPick('event')"><span class="nr-ic"><svg viewBox="0 0 32 32"><path d="M3 15l1.5-4.5h9L15 15v4H3zM17 13l1.5-4.5h9L29 13v4H17z"/><path d="M5 19v2M13 19v2M19 17v2M27 17v2"/></svg></span><span class="nr-tx"><b>&Eacute;v&eacute;nement</b><span>Pour les organisations d&rsquo;&eacute;v&eacute;nements qui n&eacute;cessitent plusieurs v&eacute;hicules.</span></span><span class="nr-chev">&rsaquo;</span></button>
+      <button type="button" class="nr-opt v nr-opt-ev" onclick="_nrPick('event')"><span class="nr-ic"><svg viewBox="0 0 32 32"><path d="M3 15l1.5-4.5h9L15 15v4H3zM17 13l1.5-4.5h9L29 13v4H17z"/><path d="M5 19v2M13 19v2M19 17v2M27 17v2"/></svg></span><span class="nr-tx"><b>&Eacute;v&eacute;nement</b><span>Pour les organisations d&rsquo;&eacute;v&eacute;nements qui n&eacute;cessitent plusieurs v&eacute;hicules.</span></span><span class="nr-chev">&rsaquo;</span></button>
     </div>
     <div class="modal-body">
       <button type="button" class="nr-back" id="nr-back" onclick="_nrShow('choose')">&lsaquo; Changer de type de trajet</button>
@@ -8006,6 +8007,8 @@ window.editRide = async function(rideId){
     r = getDemoRides().find(function(x){return x.id===rideId;});
   }
   if(!r){ showToast('Demande introuvable'); if(_rdStack.length) _rdBack(null); return; }
+  // Modification d'une course : jamais le formulaire Événement (il pouvait rester ouvert d'une saisie précédente)
+  try{ _evReset(); }catch(_e){}
 
   // Set edit mode
   var editIdEl = document.getElementById('ride-edit-id');
@@ -9627,7 +9630,8 @@ window._nrPick=function(val){
 window._nrInit=function(){
   var m=document.getElementById('m-new-ride'); if(!m) return;
   var edit=!!(document.getElementById('ride-edit-id')||{}).value;
-  _nrShow(edit?'form':'choose');   // modification : on arrive sur le formulaire, « Changer de type » reste possible
+  _nrShow(edit?'form':'choose');
+  m.classList.toggle('nr-editing', edit);   // en modification, pas d'option « Événement »   // modification : on arrive sur le formulaire, « Changer de type » reste possible
   // Flèche retour : formulaire → choix du type ; choix du type → fermeture
   var back=m.querySelector('.modal-hd .rd-back');
   if(back) back.onclick=function(){ if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
