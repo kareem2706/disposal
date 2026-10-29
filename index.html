@@ -9683,7 +9683,7 @@ window.openEventDetail=async function(id, silent){
     if(!rides.length) h+='<div class="rd-muted">Aucun véhicule</div>';
     if(body) body.innerHTML=h;
     window._evCur=ev;
-    if(ft) ft.innerHTML='<button class="btn btn-secondary" style="margin-right:auto;" onclick="_evAddToEvent(window._evCur)">+ Ajouter un trajet</button>';
+    if(ft) ft.innerHTML='<button class="btn btn-green" style="margin-left:auto;" onclick="_evAddToEvent(window._evCur)">+ Ajouter un trajet</button>';
   }catch(e){ console.warn('openEventDetail', e); if(body&&!silent) body.innerHTML='<div class="rd-muted">Impossible de charger l’événement.</div>'; }
 };
 
