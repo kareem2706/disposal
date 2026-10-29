@@ -1175,6 +1175,34 @@ body{background:var(--bg);}
 .evr-kv span b{color:var(--ink);font-weight:600;}
 @media(max-width:600px){ .evr-th{flex-wrap:wrap;} .evr-th .dt{margin-left:30px;width:100%;font-size:12.5px;} .evr-th .ty{white-space:nowrap;} }
 .evr-tot{background:#F3F8F4;color:#1B5E3B;border-radius:12px;padding:11px 14px;font-size:13.5px;font-weight:600;margin-top:4px;}
+.ev-menu{position:relative;}
+.ev-dots{width:40px;height:40px;border-radius:50%;border:1px solid #E4E1D9;background:#fff;color:var(--ink2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+.ev-dots:hover{background:#F7F6F3;}
+.ev-pop{display:none;position:absolute;bottom:48px;left:0;background:#fff;border:1px solid #ECEAE5;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.14);padding:6px;min-width:220px;z-index:20;}
+.ev-pop.open{display:block;}
+.ev-pop button{display:flex;align-items:center;gap:9px;width:100%;border:none;background:none;padding:10px 12px;border-radius:8px;font:600 13.5px 'DM Sans',sans-serif;color:#C8453A;cursor:pointer;text-align:left;}
+.ev-pop button:hover{background:#FDF1F0;}
+.evx-ov{position:fixed;inset:0;z-index:2147483646;background:rgba(14,14,12,.5);display:flex;align-items:center;justify-content:center;padding:18px;font-family:'DM Sans',sans-serif;}
+.evx-box{background:#fff;border-radius:18px;max-width:460px;width:100%;max-height:90vh;overflow:auto;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.3);}
+.evx-ic{width:46px;height:46px;border-radius:50%;background:#FDEFEE;color:#C8453A;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.evx-t{font-size:18px;font-weight:700;color:var(--ink);}
+.evx-s{font-size:14px;color:var(--ink2);line-height:1.5;margin-top:6px;}
+.evx-warn{background:#FFF6E8;border:1px solid #F6DDB4;border-radius:14px;padding:14px;margin-top:16px;}
+.evx-wt{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:#9A5B00;}
+.evx-wx{font-size:13px;color:#7A4A05;line-height:1.5;margin-top:6px;}
+.evx-list{margin-top:10px;background:#fff;border-radius:10px;border:1px solid #F3E6CF;}
+.evx-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #F7EEDD;font-size:13px;color:var(--ink);}
+.evx-row:last-child{border-bottom:none;}
+.evx-row > div:first-child{flex:1;min-width:0;}
+.evx-row span{display:block;font-size:11.5px;color:var(--ink3);margin-top:1px;}
+.evx-amt{text-align:right;font-weight:700;white-space:nowrap;}
+.evx-amt i{display:block;font-style:normal;font-size:11px;font-weight:600;margin-top:2px;}
+.evx-amt i.ok{color:#2E7A4F;}.evx-amt i.ko{color:#C8453A;}
+.evx-tot{font-size:13px;color:#7A4A05;margin-top:10px;text-align:right;}
+.evx-ft{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+.evx-go{background:#C8453A;color:#fff;border:none;}
+.evx-go:hover{background:#B33A2E;}
+@media(max-width:600px){ .evx-ft{flex-direction:column-reverse;} .evx-ft .btn{width:100%;} }
 .ev-add{width:100%;border:1.5px dashed #CDBDF0;color:#7A55C2;border-radius:12px;padding:10px;font:600 13px 'DM Sans',sans-serif;background:#FBF9FE;cursor:pointer;}
 .ev-note{font-size:12px;color:var(--ink3);background:#F4F1FB;border-radius:10px;padding:9px 11px;line-height:1.45;margin-top:12px;}
 #m-new-ride.ev-add-only #ev-name-grp input{background:#F7F7F5;}
@@ -9621,6 +9649,62 @@ window._evEditBack=function(){
   var err=document.getElementById('ride-err'); if(err){ err.textContent=''; err.classList.remove('show'); }
   _evRenumber();
 };
+// ── Annulation d'un événement : annule tous les trajets encore annulables ──
+function _evCxOk(r){ return !!r && ['waiting','offers','confirmed','pending_payment'].indexOf(r.status)>=0 && !r.on_way_at; }
+window._evMenu=function(e){
+  e.stopPropagation(); var pop=document.getElementById('ev-pop'); if(!pop) return;
+  var open=!pop.classList.contains('open'); pop.classList.toggle('open', open);
+  if(open) setTimeout(function(){ document.addEventListener('click', function f(){ pop.classList.remove('open'); document.removeEventListener('click', f); }); },0);
+};
+window._evCancelAsk=async function(){
+  var pop=document.getElementById('ev-pop'); if(pop) pop.classList.remove('open');
+  var ev=window._evCur||{}, rides=(window._evRides||[]).filter(_evCxOk), skip=(window._evRides||[]).filter(function(r){ return r.status!=='cancelled' && !_evCxOk(r); });
+  if(!rides.length){ showToast('Aucun trajet à annuler'); return; }
+  try{ await _loadRefundRules(); }catch(_e){}
+  var paid=rides.filter(function(r){ return r.status==='confirmed' && parseFloat(r.final_price)>0; });
+  var esc=_rdEsc, fd=function(r){ return (r.ride_date?formatDate(r.ride_date):'')+(r.ride_time?' · '+String(r.ride_time).slice(0,5):''); };
+  var cls=function(v){ return ({lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'})[v]||'Véhicule'; };
+  var delays=paid.map(function(r){ return _refundDelayHours(r); }).filter(function(v,i,a){ return a.indexOf(v)===i; });
+  var h='<div class="evx-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg></div>'
+    +'<div class="evx-t">Annuler l’événement ?</div>'
+    +'<div class="evx-s">Les <b>'+rides.length+' trajet'+(rides.length>1?'s':'')+'</b> de « '+esc(ev.name||'Événement')+' » seront annulés et les chauffeurs concernés prévenus.'+(skip.length?' '+skip.length+' trajet'+(skip.length>1?'s':'')+' déjà terminé'+(skip.length>1?'s':'')+' ou en cours ne '+(skip.length>1?'sont':'est')+' pas concerné'+(skip.length>1?'s':'')+'.':'')+'</div>';
+  if(paid.length){
+    var nr=0, tot=0;
+    h+='<div class="evx-warn"><div class="evx-wt"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.01"/></svg>'+(paid.length>1?paid.length+' demandes ont déjà été confirmées et payées':'1 demande a déjà été confirmée et payée')+'</div>'
+      +'<div class="evx-wx">Conformément aux conditions d’utilisation, une demande confirmée et payée n’est <b>plus remboursable</b> lorsqu’elle est annulée à moins de <b>'+delays.join(' / ')+' h</b> du départ.</div><div class="evx-list">';
+    paid.forEach(function(r){
+      var ok=_minsUntilRide(r)>=_refundDelayHours(r)*60 && r.payment_method!=='non_refundable', amt=parseFloat(r.final_price)||0;
+      if(!ok){ nr++; tot+=amt; }
+      h+='<div class="evx-row"><div><b>'+esc(cls(r.vehicle_type))+'</b> · '+esc(fd(r))+'<span>'+esc(r.booking_code||'')+'</span></div><div class="evx-amt">'+amt.toFixed(2).replace('.',',')+' €<i class="'+(ok?'ok':'ko')+'">'+(ok?'Remboursable':'Non remboursable')+'</i></div></div>';
+    });
+    h+='</div>'+(nr?'<div class="evx-tot">Montant non remboursé : <b>'+tot.toFixed(2).replace('.',',')+' €</b></div>':'')+'</div>';
+  }
+  h+='<div class="evx-ft"><button type="button" class="btn btn-secondary" id="evx-no">Garder l’événement</button><button type="button" class="btn evx-go" id="evx-yes">Annuler l’événement</button></div>';
+  var ov=document.createElement('div'); ov.id='evx-pop'; ov.className='evx-ov'; ov.innerHTML='<div class="evx-box">'+h+'</div>';
+  document.body.appendChild(ov);
+  var close=function(){ ov.remove(); };
+  ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+  ov.querySelector('#evx-no').onclick=close;
+  ov.querySelector('#evx-yes').onclick=async function(){ var b=this; b.disabled=true; b.textContent='Annulation…'; await _evCancelDo(rides); close(); };
+};
+async function _evCancelDo(rides){
+  var ev=window._evCur||{};
+  if(!sb || localStorage.getItem(DEMO_MODE_KEY)==='1'){ showToast('Événement annulé ('+rides.length+' trajets)'); return; }
+  var ok=0, ko=0, offs={};
+  try{ var o=await sb.from('offers').select('ride_id,driver_id').in('ride_id', rides.map(function(r){ return r.id; })); (o.data||[]).forEach(function(x){ (offs[x.ride_id]=offs[x.ride_id]||[]).push(x.driver_id); }); }catch(_e){}
+  for(var i=0;i<rides.length;i++){
+    var r=rides[i];
+    try{
+      var res=await sb.rpc('api_ride_cancel',{ p_ride:r.id });
+      if(res.error){ ko++; console.warn('[event cancel]', r.booking_code, res.error.message); continue; }
+      ok++;
+      try{ _notifyRideCancelled(r.id, !(res.data && res.data.refundable===false), offs[r.id]||[]); }catch(_e){}
+    }catch(e){ ko++; }
+  }
+  showToast(ko?('⚠️ '+ok+' trajet'+(ok>1?'s':'')+' annulé'+(ok>1?'s':'')+', '+ko+' impossible'+(ko>1?'s':'')+' à annuler'):('✅ Événement annulé ('+ok+' trajet'+(ok>1?'s':'')+')'));
+  try{ await openEventDetail(ev.id, true); }catch(_e){}
+  try{ await loadClientDashboard(); var rp=document.getElementById('page-rides'); if(rp&&rp.classList.contains('active')) await loadRides(); }catch(_e){}
+}
 async function submitEvent(){
   var err=document.getElementById('ride-err'), btn=document.getElementById('btn-submit-ride');
   var fail=function(msg){ if(err){ err.textContent=msg; err.classList.add('show'); err.style.display=''; } };
@@ -9769,8 +9853,10 @@ window.openEventDetail=async function(id, silent){
     });
     if(!rides.length) h+='<div class="rd-muted">Aucun véhicule</div>';
     if(body) body.innerHTML=h;
-    window._evCur=ev;
-    if(ft) ft.innerHTML='<button class="btn btn-green" style="margin-left:auto;" onclick="_evAddToEvent(window._evCur)">+ Ajouter un trajet</button>';
+    window._evCur=ev; window._evRides=rides;
+    var _canCx=rides.some(function(r){ return _evCxOk(r); });
+    if(ft) ft.innerHTML=(_canCx?'<div class="ev-menu"><button type="button" class="ev-dots" aria-label="Actions" onclick="_evMenu(event)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button><div class="ev-pop" id="ev-pop"><button type="button" onclick="_evCancelAsk()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Annuler l’événement</button></div></div>':'')
+      +'<button class="btn btn-green" style="margin-left:auto;" onclick="_evAddToEvent(window._evCur)">+ Ajouter un trajet</button>';
   }catch(e){ console.warn('openEventDetail', e); if(body&&!silent) body.innerHTML='<div class="rd-muted">Impossible de charger l’événement.</div>'; }
 };
 
