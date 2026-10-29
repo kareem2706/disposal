@@ -1155,7 +1155,8 @@ body{background:var(--bg);}
 @media(max-width:600px){ .ev-sg{grid-template-columns:1fr;} }
 #ev-recap,#ev-edit-btn{display:none;}
 #m-new-ride.ev-recap-on #ev-recap{display:block;}
-#m-new-ride.ev-recap-on #ev-edit-btn{display:inline-flex;}
+#m-new-ride.nr-event .modal-ft > button:first-child{display:none;}
+#m-new-ride.nr-event .modal-ft{justify-content:flex-end;}
 #m-new-ride.ev-recap-on #panel-event{display:none!important;}
 .evr-hd{background:#F7F5FC;border-radius:14px;padding:14px 16px;margin-bottom:14px;}
 .evr-hd .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7A55C2;}
@@ -1172,7 +1173,7 @@ body{background:var(--bg);}
 .evr-kv{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
 .evr-kv span{background:#FCFCFB;border:1px solid #F0EEE9;border-radius:20px;padding:4px 10px;font-size:12.5px;color:var(--ink2);}
 .evr-kv span b{color:var(--ink);font-weight:600;}
-@media(max-width:600px){ .evr-th{flex-wrap:wrap;} .evr-th .dt{margin-left:30px;width:100%;font-size:12.5px;} .evr-th .ty{white-space:nowrap;} #m-new-ride.ev-recap-on .modal-ft > button:first-child{display:none;} }
+@media(max-width:600px){ .evr-th{flex-wrap:wrap;} .evr-th .dt{margin-left:30px;width:100%;font-size:12.5px;} .evr-th .ty{white-space:nowrap;} }
 .evr-tot{background:#F3F8F4;color:#1B5E3B;border-radius:12px;padding:11px 14px;font-size:13.5px;font-weight:600;margin-top:4px;}
 .ev-add{width:100%;border:1.5px dashed #CDBDF0;color:#7A55C2;border-radius:12px;padding:10px;font:600 13px 'DM Sans',sans-serif;background:#FBF9FE;cursor:pointer;}
 .ev-note{font-size:12px;color:var(--ink3);background:#F4F1FB;border-radius:10px;padding:9px 11px;line-height:1.45;margin-top:12px;}
@@ -9419,7 +9420,8 @@ function _evGp(el){
   if(!el||el._gp||!(window.google&&google.maps&&google.maps.places)) return;
   el._gp=new google.maps.places.Autocomplete(el,{ language:'fr', fields:['formatted_address','name'], componentRestrictions:{ country:['be','fr','lu','nl','de','gb','ch'] } });
   el._gp.addListener('place_changed',function(){ var pl=el._gp.getPlace(); if(!pl) return; var nm=pl.name||'', ad=pl.formatted_address||'';
-    el.value = nm&&ad&&ad.toLowerCase().indexOf(nm.toLowerCase())===-1 ? nm+', '+ad : (ad||nm); });
+    el.value = nm&&ad&&ad.toLowerCase().indexOf(nm.toLowerCase())===-1 ? nm+', '+ad : (ad||nm);
+    var row=el.closest&&el.closest('.ev-veh'); if(row) _evTr(row); });
 }
 function _evVal(row,c){ var e=row.querySelector('.'+c); return e?String(e.value||'').trim():''; }
 // Gammes pour les événements : capacité (places) utilisée par les suggestions
@@ -9439,16 +9441,17 @@ function _evSuggest(N){
   var nv=function(c){ return _evTotal(c); };
   push(mix, nv(mix)+' véhicule'+(nv(mix)>1?'s':'')+' · '+seats(mix)+' places');
   var nb=Math.ceil(N/3); if(nb<=12) push({business:nb}, nb+' véhicule'+(nb>1?'s':'')+' · '+nb*3+' places');
+  var nl=Math.ceil(N/3); if(nl<=12) push({luxe:nl}, nl+' véhicule'+(nl>1?'s':'')+' · '+nl*3+' places');
   var nvn=Math.ceil(N/7); push({van:nvn}, nvn+' véhicule'+(nvn>1?'s':'')+' · '+nvn*7+' places');
   if(N>=8){ var bs=Math.ceil(N/50); push({bus:bs}, bs>1?bs+' véhicules · autocars':'minibus / autocar'); }
-  return out.slice(0,4);
+  return out.slice(0,6);
 }
 function _evRenumber(){
   var rows=_evRows(), n=rows.length, tot=0;
   rows.forEach(function(r,i){ r.querySelector('.n').textContent=i+1; r.querySelector('.ev-ttl').textContent='Trajet '+(i+1); r.querySelector('.ev-del').style.display=n>1?'':'none'; tot+=_evTotal(_evCounts(r)); });
   var c=document.getElementById('ev-count'); if(c) c.textContent='Trajets ('+n+')';
   var m=document.getElementById('m-new-ride'), b=document.getElementById('btn-submit-ride');
-  if(b && m.classList.contains('nr-event')) b.innerHTML=(m.classList.contains('ev-recap-on')?(window.innerWidth<=600?'Confirmer ('+tot+') &rarr;':'Confirmer et publier '+tot+' demande'+(tot>1?'s':'')+' &rarr;'):'Publier '+tot+' demande'+(tot>1?'s':'')+' &rarr;');
+  if(b && m.classList.contains('nr-event')) b.innerHTML='Publier '+tot+' demande'+(tot>1?'s':'')+' &rarr;';
 }
 // Dessine le bloc « Véhicules pour ce trajet » selon le mode (choix manuel / nombre de personnes)
 function _evDrawVeh(r){
@@ -9495,6 +9498,8 @@ window._evAdd=function(d){
     +'<div class="input-group full"><label>Type de trajet</label><select class="ev-type" onchange="_evType(this)"><option value="ab">Trajet simple (A → B)</option><option value="disposal">Mise à disposition</option></select></div>'
     +'<div class="input-group full"><label class="ev-from-lbl">Départ <span style="color:var(--red)">*</span></label><input class="ev-from" autocomplete="off" placeholder="Adresse, gare, aéroport" value="'+e(d.from)+'"></div>'
     +'<div class="input-group full ev-to-grp"><label>Arrivée <span style="color:var(--red)">*</span></label><input class="ev-to" autocomplete="off" placeholder="Destination" value="'+e(d.to)+'"></div>'
+    +'<div class="input-group full ev-flight-grp" style="display:none;"><label class="ev-flight-lbl">Numéro de vol</label><input class="ev-flight tr-input" placeholder="Ex. SN 3123" autocomplete="off" maxlength="10" value="'+e(d.flight)+'"></div>'
+    +'<div class="input-group full ev-train-grp" style="display:none;"><label class="ev-train-lbl">Numéro de train</label><input class="ev-train tr-input" placeholder="Ex. IC 1832" autocomplete="off" maxlength="10" value="'+e(d.train)+'"></div>'
     +'<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input class="ev-date" type="date" min="'+min+'" value="'+e(d.date)+'"></div>'
     +'<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input class="ev-time" type="time" value="'+e(d.time)+'"></div>'
     +'<div class="input-group ev-dur-grp" style="display:none;"><label>Durée (heures)</label><input class="ev-dur" type="number" min="1" max="24" value="'+e(d.dur||'3')+'"></div>'
@@ -9507,12 +9512,24 @@ window._evAdd=function(d){
   if(d.type){ div.querySelector('.ev-type').value=d.type; _evType(div.querySelector('.ev-type')); }
   if(_evModeVal()==='per') div.querySelector('.ev-pax-grp').style.display='';
   _evGp(div.querySelector('.ev-from')); _evGp(div.querySelector('.ev-to'));
+  ['ev-from','ev-to'].forEach(function(c){ var i=div.querySelector('.'+c); ['input','change','blur'].forEach(function(ev){ i.addEventListener(ev, function(){ _evTr(div); }); }); });
+  _evTr(div);
   _evDrawVeh(div);
   return div;
 };
+// Aéroport → numéro de vol ; gare → numéro de train (même règle que la demande simple)
+window._evTr=function(r){
+  if(!r||!window._trKindOf) return;
+  var disp=_evVal(r,'ev-type')==='disposal', f=_trKindOf(_evVal(r,'ev-from')), t=disp?{}:_trKindOf(_evVal(r,'ev-to'));
+  var pl=f.plane||t.plane, tr=f.train||t.train;
+  r.querySelector('.ev-flight-grp').style.display=pl?'':'none';
+  r.querySelector('.ev-train-grp').style.display=tr?'':'none';
+  r.querySelector('.ev-flight-lbl').textContent=f.plane?'Numéro du vol d’arrivée':'Numéro du vol de départ';
+  r.querySelector('.ev-train-lbl').textContent=f.train?'Numéro du train d’arrivée':'Numéro du train de départ';
+};
 window._evDup=function(btn){
   var r=btn.closest('.ev-veh');
-  var d={ type:_evVal(r,'ev-type'), from:_evVal(r,'ev-from'), to:_evVal(r,'ev-to'), dur:_evVal(r,'ev-dur'), date:_evVal(r,'ev-date'), time:_evVal(r,'ev-time'), vm:r.getAttribute('data-vm'), n:r.getAttribute('data-n'), cnt:_evCounts(r) };
+  var d={ type:_evVal(r,'ev-type'), from:_evVal(r,'ev-from'), to:_evVal(r,'ev-to'), flight:_evVal(r,'ev-flight'), train:_evVal(r,'ev-train'), dur:_evVal(r,'ev-dur'), date:_evVal(r,'ev-date'), time:_evVal(r,'ev-time'), vm:r.getAttribute('data-vm'), n:r.getAttribute('data-n'), cnt:_evCounts(r) };
   var nw=_evAdd(d); if(nw && r.nextSibling!==nw) r.parentNode.insertBefore(nw, r.nextSibling); _evRenumber();
 };
 window._evDel=function(btn){ if(_evRows().length<2) return; btn.closest('.ev-veh').remove(); _evRenumber(); };
@@ -9521,6 +9538,7 @@ window._evType=function(sel){
   r.querySelector('.ev-to-grp').style.display=disp?'none':'';
   r.querySelector('.ev-dur-grp').style.display=disp?'':'none';
   r.querySelector('.ev-from-lbl').innerHTML=(disp?'Lieu de prise en charge':'Départ')+' <span style="color:var(--red)">*</span>';
+  if(r.querySelector('.ev-flight-grp')) _evTr(r);
 };
 function _evModeVal(){ var b=document.querySelector('#ev-mode-grp .ev-seg .on'); return b?b.getAttribute('data-m'):'one'; }
 window._evMode=function(m){
@@ -9585,10 +9603,12 @@ window._evShowRecap=function(d){
       +'<div class="evr-kv"><span><b>'+esc(_evCntLabel(tr.c))+'</b> · '+nv+' véhicule'+(nv>1?'s':'')+'</span>'
       +'<span>'+(tr.n?'<b>'+tr.n+'</b> personne'+(tr.n>1?'s':''):(st.bus?'capacité selon le bus':'jusqu’à <b>'+st.seats+'</b> personnes'))+'</span>'
       +(disp?'<span>Durée <b>'+(parseInt(t.dur,10)||2)+' h</b></span>':'')
+      +(t.flight?'<span>Vol <b>'+esc(t.flight)+'</b></span>':'')
+      +(t.train?'<span>Train <b>'+esc(t.train)+'</b></span>':'')
       +(d.mode==='per'&&(t.pname||t.pphone)?'<span>Contact <b>'+esc([t.pname,t.pphone].filter(Boolean).join(' · '))+'</b></span>':'')
       +'</div></div>';
   });
-  h+='<div class="evr-tot">'+d.total+' demande'+(d.total>1?'s':'')+' seront envoyée'+(d.total>1?'s':'')+' aux chauffeurs, regroupée'+(d.total>1?'s':'')+' dans cet événement.</div>';
+  h+='<div class="evr-tot">'+(d.total>1?d.total+' demandes seront envoyées aux chauffeurs, regroupées dans cet événement.':'1 demande sera envoyée aux chauffeurs, rattachée à cet événement.')+'</div>';
   box.innerHTML=h;
   m.classList.add('ev-recap-on');
   var tl=document.getElementById('ride-modal-title'); if(tl) tl.textContent='Récapitulatif';
@@ -9612,6 +9632,11 @@ async function submitEvent(){
   var rows=_evRows(), list=[], trips=[];
   for(var i=0;i<rows.length;i++){
     var r=rows[i], ty=_evVal(r,'ev-type'), t={ type:ty, from:_evVal(r,'ev-from'), to:_evVal(r,'ev-to'), dur:_evVal(r,'ev-dur'), date:_evVal(r,'ev-date'), time:_evVal(r,'ev-time'), pname:_evVal(r,'ev-pname'), pphone:_evVal(r,'ev-pphone') };
+    var _vis=function(c){ var g=r.querySelector('.'+c); return g && g.style.display!=='none'; };
+    t.flight=_vis('ev-flight-grp')?_evVal(r,'ev-flight').toUpperCase().replace(/\s+/g,' '):'';
+    t.train=_vis('ev-train-grp')?_evVal(r,'ev-train').toUpperCase().replace(/\s+/g,' '):'';
+    if(t.flight && !/^[A-Z0-9]{2,3} ?\d{1,4}[A-Z]?$/.test(t.flight)) return fail('Trajet '+(i+1)+' : numéro de vol invalide (ex. SN 3123).');
+    if(t.train && !/^[A-Z]{0,4} ?\d{1,5}$/.test(t.train)) return fail('Trajet '+(i+1)+' : numéro de train invalide (ex. IC 1832).');
     if(!t.from || (ty==='ab' && !t.to) || !t.date || !t.time) return fail('Trajet '+(i+1)+' : indiquez '+(!t.from?(ty==='ab'?'le départ':'le lieu de prise en charge'):(ty==='ab'&&!t.to)?'l’arrivée':!t.date?'la date':'l’heure')+'.');
     var vm=r.getAttribute('data-vm'), N=parseInt(r.getAttribute('data-n'),10)||0, c=_evCounts(r);
     if(vm==='pax' && !N) return fail('Trajet '+(i+1)+' : indiquez le nombre de personnes.');
@@ -9641,6 +9666,8 @@ async function submitEvent(){
       var pn=mode==='per'?(v.pname||cname):cname, pp=mode==='per'?(v.pphone||cphone):cphone;
       if(pn) notes+='|pax:'+pn.replace(/\|/g,' ');
       if(pp) notes+='|tel:'+pp.replace(/\|/g,' ');
+      if(v.flight) notes+='|flight:'+v.flight;
+      if(v.train) notes+='|train:'+v.train;
       var rd={ client_id:currentUser.id, trip_type:v.type, from_address:v.from, to_address:v.type==='ab'?v.to:null, ride_date:v.date, ride_time:v.time,
                passengers:parseInt(v.pax,10)||1, vehicle_type:v.cls||null, notes:notes||null, status:'waiting' };
       var res=await sb.rpc('api_ride_create',{ p:rd });
@@ -9774,7 +9801,8 @@ window._nrInit=function(){
   var m=document.getElementById('m-new-ride'); if(!m) return;
   var edit=!!(document.getElementById('ride-edit-id')||{}).value;
   _nrShow(edit?'form':'choose');
-  m.classList.toggle('nr-editing', edit);   // en modification, pas d'option « Événement »   // modification : on arrive sur le formulaire, « Changer de type » reste possible
+  m.classList.toggle('nr-editing', edit);
+  if(!edit && !window._evTarget){ try{ _evReset(); }catch(_e){} }   // nouvelle demande : formulaire Événement toujours vierge   // en modification, pas d'option « Événement »   // modification : on arrive sur le formulaire, « Changer de type » reste possible
   // Flèche retour : formulaire → choix du type ; choix du type → fermeture
   var back=m.querySelector('.modal-hd .rd-back');
   if(back) back.onclick=function(){ if(m.classList.contains('ev-recap-on')) _evEditBack(); else if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
