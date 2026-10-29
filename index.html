@@ -1219,6 +1219,9 @@ body{background:var(--bg);}
 .ev-sub.mx-sub .n{background:#EAF1FB;color:#2F5FA8;margin-top:1px;}
 .mx-note{font-size:12.5px;color:var(--ink3);margin-top:8px;padding-top:8px;border-top:1px solid #F0EEE9;line-height:1.45;}
 .mx-note span{color:var(--ink2);font-weight:600;}
+#m-new-ride.nr-editing #mix-drv-grp{display:none;}
+.mix-drv-hint{font-size:12px;color:var(--ink3);margin-top:6px;line-height:1.4;}
+.ev-tag.mx{background:#2F5FA8;}
 .ev-add{width:100%;border:1.5px dashed #CDBDF0;color:#7A55C2;border-radius:12px;padding:10px;font:600 13px 'DM Sans',sans-serif;background:#FBF9FE;cursor:pointer;}
 .ev-note{font-size:12px;color:var(--ink3);background:#F4F1FB;border-radius:10px;padding:9px 11px;line-height:1.45;margin-top:12px;}
 #m-new-ride.ev-add-only #ev-name-grp input{background:#F7F7F5;}
@@ -2809,6 +2812,10 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         </div>
       </div>
       <div id="panel-mixed" style="display:none;">
+        <div class="input-group" id="mix-drv-grp"><label>Chauffeur</label>
+          <div class="ev-seg"><button type="button" class="on" data-d="same" onclick="_mixDrv('same')">Si possible, le m&ecirc;me chauffeur pour tous les trajets</button><button type="button" data-d="any" onclick="_mixDrv('any')">Peu importe</button></div>
+          <div class="mix-drv-hint" id="mix-drv-hint"></div>
+        </div>
         <div class="input-group" id="mix-pm-grp"><label>Passagers</label>
           <div class="ev-seg"><button type="button" class="on" data-m="one" onclick="_mixPM('one')">Un contact pour tous les trajets</button><button type="button" data-m="per" onclick="_mixPM('per')">Un contact par trajet</button></div>
         </div>
@@ -6255,7 +6262,7 @@ function _rideMetaChips(r){
   if(r.vehicle_type){ var vl={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'}[r.vehicle_type]||r.vehicle_type;
     chips.push('<span style="'+soft+'">'+ico('<path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>')+vl+'</span>'); }
   // Événement : simple ligne de texte au-dessus des pastilles (pas une pastille)
-  var _evLine=r.event_name?'<div class="rd-evline">'+_rdEsc(r.event_name)+'</div>':'';
+  var _evLine=r.event_name?(r.event_kind==='mixed'?'<div class="rd-evline" style="color:#2F5FA8;">Trajet mixte · '+_rdEsc(r.event_name)+'</div>':'<div class="rd-evline">'+_rdEsc(r.event_name)+'</div>'):'';
   var _fl=_rdTag(r.notes,'flight'), _tr=_rdTag(r.notes,'train');
   var tsoft='display:inline-flex;align-items:center;gap:6px;background:#FCFCFB;color:var(--ink);border:1px solid #F0EEE9;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:400;white-space:nowrap;';
   if(_fl) chips.push('<span style="'+tsoft+'">'+ico('<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>')+'Vol '+_rdEsc(_fl.toUpperCase())+'</span>');
@@ -8357,6 +8364,10 @@ window.submitRide = async function(){
       dur:tripType==='disposal'?(g('disp-duration')||'2'):'', instr:tripType==='ab'?g('ride-notes'):tripType==='disposal'?g('disp-notes'):'', tr:_tr });
     return;
   }
+  // Trajet mixte « peu importe le chauffeur » : une demande par trajet, regroupées
+  if(!editId && tripType==='mixed' && _mixDrvVal()==='any'){
+    return _mixSplitSubmit(parseMixedNotes(notes), (window._newRidePaxName||''), (window._newRidePaxTel||''), btn, err);
+  }
 
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
     closeModal('m-new-ride');
@@ -8625,6 +8636,7 @@ window.cancelRideModal = function(){
   var sc=document.getElementById('mixed-segments');if(sc)sc.innerHTML='';
   ['mix-cname','mix-cphone'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
   if(window._mixPM) _mixPM('one');
+  if(window._mixDrv) _mixDrv('same');
   _segN=0;
   // Reset error
   var err=document.getElementById('ride-err');if(err){ err.classList.remove('show'); err.textContent=''; err.style.display=''; }
@@ -9789,7 +9801,7 @@ window._nrShowRecap=function(d){
       +(t.instr?'<div style="font-size:12.5px;color:var(--ink3);margin-top:12px;padding-top:12px;border-top:1px solid #F0EEE9;line-height:1.45;"><span style="color:var(--ink2);font-weight:600;">Instructions : </span>'+esc(t.instr)+'</div>':'')
       +'</div>';
   });
-  h+='<div class="evr-tot">'+'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.01"/></svg><span>'+'Votre demande sera envoyée aux chauffeurs, qui vous feront leurs offres.</span></div>';
+  h+='<div class="evr-tot">'+'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.01"/></svg><span>'+((d.type==='mixed'&&_mixDrvVal()==='any')?trips.length+' demandes séparées seront envoyées aux chauffeurs (une par trajet) : chaque trajet peut être pris par un chauffeur différent.':'Votre demande sera envoyée aux chauffeurs, qui vous feront leurs offres.')+'</span></div>';
   box.innerHTML=h;
   m.classList.add('nr-recap-on');
   var tl=document.getElementById('ride-modal-title'); if(tl) tl.textContent='Récapitulatif';
@@ -9824,7 +9836,7 @@ window._evCancelAsk=async function(){
   var cls=function(v){ return ({lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'})[v]||'Véhicule'; };
   var delays=paid.map(function(r){ return _refundDelayHours(r); }).filter(function(v,i,a){ return a.indexOf(v)===i; });
   var h='<div class="evx-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg></div>'
-    +'<div class="evx-t">Annuler l’événement ?</div>'
+    +'<div class="evx-t">'+(ev.kind==='mixed'?'Annuler le trajet mixte ?':'Annuler l’événement ?')+'</div>'
     +'<div class="evx-s">Les <b>'+rides.length+' trajet'+(rides.length>1?'s':'')+'</b> de « '+esc(ev.name||'Événement')+' » seront annulés et les chauffeurs concernés prévenus.'+(skip.length?' '+skip.length+' trajet'+(skip.length>1?'s':'')+' déjà terminé'+(skip.length>1?'s':'')+' ou en cours ne '+(skip.length>1?'sont':'est')+' pas concerné'+(skip.length>1?'s':'')+'.':'')+'</div>';
   if(paid.length){
     var nr=0, tot=0;
@@ -9837,7 +9849,8 @@ window._evCancelAsk=async function(){
     });
     h+='</div>'+(nr?'<div class="evx-tot">Montant non remboursé : <b>'+tot.toFixed(2).replace('.',',')+' €</b></div>':'')+'</div>';
   }
-  h+='<div class="evx-ft"><button type="button" class="btn btn-secondary" id="evx-no">Garder l’événement</button><button type="button" class="btn evx-go" id="evx-yes">Annuler l’événement</button></div>';
+  var _w=ev.kind==='mixed'?'le trajet mixte':'l’événement';
+  h+='<div class="evx-ft"><button type="button" class="btn btn-secondary" id="evx-no">Garder '+_w+'</button><button type="button" class="btn evx-go" id="evx-yes">Annuler '+_w+'</button></div>';
   var ov=document.createElement('div'); ov.id='evx-pop'; ov.className='evx-ov'; ov.innerHTML='<div class="evx-box">'+h+'</div>';
   document.body.appendChild(ov);
   var close=function(){ ov.remove(); };
@@ -9862,6 +9875,43 @@ async function _evCancelDo(rides){
   showToast(ko?('⚠️ '+ok+' trajet'+(ok>1?'s':'')+' annulé'+(ok>1?'s':'')+', '+ko+' impossible'+(ko>1?'s':'')+' à annuler'):('✅ Événement annulé ('+ok+' trajet'+(ok>1?'s':'')+')'));
   try{ await openEventDetail(ev.id, true); }catch(_e){}
   try{ await loadClientDashboard(); var rp=document.getElementById('page-rides'); if(rp&&rp.classList.contains('active')) await loadRides(); }catch(_e){}
+}
+async function _mixSplitSubmit(segs, gName, gTel, btn, err){
+  var fail=function(msg){ if(err){ err.textContent=msg; err.classList.add('show'); err.style.display=''; } };
+  if(!segs.length) return fail(t('err_required'));
+  var one=_mixPMVal()==='one';
+  if(one){ gName=((document.getElementById('mix-cname')||{}).value||'').trim(); gTel=((document.getElementById('mix-cphone')||{}).value||'').trim(); }
+  var sh=function(a){ return String(cleanAddr(a)||'').split(',')[0].trim(); };
+  var first=segs[0], last=segs[segs.length-1];
+  var name=sh(first.from)+' → '+sh(last.to||last.from);
+  if(localStorage.getItem(DEMO_MODE_KEY)==='1'){ closeModal('m-new-ride'); cancelRideModal(); showToast('✅ '+segs.length+' demandes envoyées aux chauffeurs'); await loadClientDashboard(); return; }
+  if(btn) setLoading(btn, true, 'Publication…');
+  var ids=[], created=[];
+  try{
+    for(var k=0;k<segs.length;k++){
+      var s=segs[k], disp=s.type.toLowerCase().indexOf('disp')>=0, notes='';
+      if(disp) notes='Durée:'+(parseInt(s.dur,10)||2)+'h';
+      if(s.note) notes=(s.note.replace(/\|/g,' ')+(notes?' '+notes:''));
+      var pn=s.paxName||gName, pt=s.paxTel||gTel;
+      if(pn) notes+='|pax:'+pn.replace(/\|/g,' ');
+      if(pt) notes+='|tel:'+pt.replace(/\|/g,' ');
+      ['flight','train','flight2','train2'].forEach(function(x){ if(s[x]) notes+='|'+x+':'+s[x]; });
+      var rd={ client_id:currentUser.id, trip_type:disp?'disposal':'ab', from_address:s.from, to_address:disp?null:s.to, ride_date:s.date||todayStr(), ride_time:s.time||'08:00',
+               passengers:parseInt(s.pax,10)||1, vehicle_type:s.veh||null, notes:notes||null, status:'waiting' };
+      var res=await sb.rpc('api_ride_create',{ p:rd });
+      if(res.error) throw new Error('Trajet '+(k+1)+' : '+(res.error.message||'refusé'));
+      rd.id=res.data&&res.data.id; rd.booking_code=res.data&&res.data.booking_code; ids.push(rd.id); created.push(rd);
+    }
+    var lk=await sb.rpc('api_event_create',{ p:{ name:name, kind:'mixed', contact_name:one?gName:'', contact_phone:one?gTel:'', ride_ids:ids } });
+    if(lk.error) throw new Error('Demandes créées, mais non regroupées : '+(lk.error.message||''));
+    created.forEach(function(rd){ try{ _notifyMarketplaceDrivers(rd); }catch(_e){} });
+    if(currentProfile&&currentProfile.email&&created[0]){ try{ window.sendMail('ride_created', currentProfile.email, Object.assign(window._mailRideData(created[0]), { clientName:(currentProfile.first_name||'') })); }catch(_e){} }
+    closeModal('m-new-ride'); cancelRideModal();
+    showToast('✅ '+created.length+' demandes envoyées aux chauffeurs');
+    await loadClientDashboard();
+    var rp=document.getElementById('page-rides'); if(rp&&rp.classList.contains('active')) await loadRides();
+  }catch(e){ console.error('mixSplit', e); fail(e.message||'Erreur'); }
+  finally{ if(btn){ setLoading(btn,false,'Publier'); btn.disabled=false; btn.innerHTML=t('btn_publish')+' &rarr;'; } }
 }
 async function submitEvent(){
   var err=document.getElementById('ride-err'), btn=document.getElementById('btn-submit-ride');
@@ -9942,7 +9992,7 @@ function _groupEvents(list){
   (list||[]).forEach(function(r){
     if(r && r.event_id){
       if(seen[r.event_id]){ seen[r.event_id].rides.push(r); return; }
-      var g={ _evt:true, id:r.event_id, name:r.event_name||'Événement', rides:[r] }; seen[r.event_id]=g; out.push(g);
+      var g={ _evt:true, id:r.event_id, name:r.event_name||'Événement', kind:r.event_kind||'event', rides:[r] }; seen[r.event_id]=g; out.push(g);
     } else out.push(r);
   });
   return out;
@@ -9961,8 +10011,8 @@ function renderEventItem(g){
   var pct=Math.round(conf/Math.max(rides.length,1)*100);
   return '<div class="ride-card ev-card" onclick="openEventDetail(\''+String(g.id).replace(/'/g,'')+'\')">'
     +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+mon+'</div><div class="ride-card-date-day">'+day+'</div></div>'
-    +'<div style="display:flex;align-items:center;"><span class="ev-tag">Événement</span></div>'
-    +'<div style="min-width:0;"><div class="ride-card-col-label">Événement</div><div class="ride-card-col-val" style="font-weight:700;">'+_rdEsc(g.name)+'</div></div>'
+    +'<div style="display:flex;align-items:center;">'+(g.kind==='mixed'?'<span class="ev-tag mx">Trajet mixte</span>':'<span class="ev-tag">Événement</span>')+'</div>'
+    +'<div style="min-width:0;"><div class="ride-card-col-label">'+(g.kind==='mixed'?'Trajets':'Événement')+'</div><div class="ride-card-col-val" style="font-weight:700;">'+_rdEsc(g.name)+'</div></div>'
     +'<div style="min-width:0;"><div class="ride-card-col-label">Véhicules</div><div class="ride-card-col-val">'+_rdEsc(_evSummary(rides))+'</div></div>'
     +'<div><div class="ride-card-col-label">Statut</div><div style="font-size:12px;color:var(--ink2);">'+conf+' / '+rides.length+' confirmé'+(conf>1?'s':'')+'</div><div class="ev-bar"><i style="width:'+pct+'%"></i></div>'+(offers?'<div style="font-size:11.5px;color:#2456A6;margin-top:3px;">'+offers+' offre'+(offers>1?'s':'')+' reçue'+(offers>1?'s':'')+'</div>':'')+'</div>'
     +'<div style="text-align:right;"><div class="ride-card-col-label">Prix</div><div class="ride-card-col-val" style="font-weight:700;">'+(paid>0?paid.toFixed(2)+' €':'---')+'</div></div>'
@@ -9993,7 +10043,8 @@ window.openEventDetail=async function(id, silent){
     var f=rides[0]||{}, l=rides[rides.length-1]||{}, _fd=function(x,o){ return x?new Date(x+'T00:00:00').toLocaleDateString('fr-BE',o).replace(/\./g,''):''; };
     var dd=(f.ride_date&&l.ride_date&&f.ride_date!==l.ride_date)?_fd(f.ride_date,{day:'numeric',month:'short'})+' \u2013 '+_fd(l.ride_date,{day:'numeric',month:'short'}):_fd(f.ride_date,{weekday:'short',day:'numeric',month:'short'});
     dd=dd?dd.charAt(0).toUpperCase()+dd.slice(1):'';
-    if(title) title.innerHTML='<span class="rd-hd2"><span class="rd-evline" style="margin:0;"><span>Événement</span></span><b class="rd-hd2-code">'+_rdEsc(ev.name)+'</b><span class="rd-hd2-sub">'+_rdEsc([dd, rides.length+' véhicule'+(rides.length>1?'s':''), ev.contact_name?'contact : '+ev.contact_name:''].filter(Boolean).join(' · '))+'</span></span>';
+    var _mx=ev.kind==='mixed'||(rides[0]&&rides[0].event_kind==='mixed'); ev.kind=_mx?'mixed':'event';
+    if(title) title.innerHTML='<span class="rd-hd2">'+(_mx?'<span class="rd-mxk">Trajet mixte</span>':'<span class="rd-evline" style="margin:0;"><span>Événement</span></span>')+'<b class="rd-hd2-code">'+_rdEsc(ev.name)+'</b><span class="rd-hd2-sub">'+_rdEsc([dd, rides.length+' véhicule'+(rides.length>1?'s':''), ev.contact_name?'contact : '+ev.contact_name:''].filter(Boolean).join(' · '))+'</span></span>';
     var nConf=rides.filter(function(r){ return ['confirmed','active','done','pending_payment'].indexOf(r.status)>=0; }).length;
     var nOff=rides.filter(function(r){ return r.status==='offers'; }).length, nWait=rides.filter(function(r){ return r.status==='waiting'; }).length;
     var sh=function(a){ return String(cleanAddr(a)||'').split(',')[0].trim(); };
@@ -10017,8 +10068,8 @@ window.openEventDetail=async function(id, silent){
     if(body) body.innerHTML=h;
     window._evCur=ev; window._evRides=rides;
     var _canCx=rides.some(function(r){ return _evCxOk(r); });
-    if(ft) ft.innerHTML=(_canCx?'<div class="ev-menu"><button type="button" class="ev-dots" aria-label="Actions" onclick="_evMenu(event)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button><div class="ev-pop" id="ev-pop"><button type="button" onclick="_evCancelAsk()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Annuler l’événement</button></div></div>':'')
-      +'<button class="btn btn-green" style="margin-left:auto;" onclick="_evAddToEvent(window._evCur)">+ Ajouter un trajet</button>';
+    if(ft) ft.innerHTML=(_canCx?'<div class="ev-menu"><button type="button" class="ev-dots" aria-label="Actions" onclick="_evMenu(event)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button><div class="ev-pop" id="ev-pop"><button type="button" onclick="_evCancelAsk()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>'+(_mx?'Annuler le trajet mixte':'Annuler l’événement')+'</button></div></div>':'')
+      +(_mx?'':'<button class="btn btn-green" style="margin-left:auto;" onclick="_evAddToEvent(window._evCur)">+ Ajouter un trajet</button>');
   }catch(e){ console.warn('openEventDetail', e); if(body&&!silent) body.innerHTML='<div class="rd-muted">Impossible de charger l’événement.</div>'; }
 };
 
@@ -11683,6 +11734,13 @@ window._segTr=function(n){
   _trPairApply(document.getElementById('strp-'+n), _trPairPlan(g('sf-'+n), hasTo?g('st-'+n):null), function(k){ return document.getElementById(_SEG_TRK[k]+'-grp-'+n); }, function(k){ return document.getElementById(_SEG_TRK[k]+'-lbl-'+n); });
 };
 ['input','change','focusout'].forEach(function(evn){ document.addEventListener(evn, function(e){ var m=e.target&&e.target.id&&e.target.id.match(/^s[ft]-(\d+)$/); if(m) setTimeout(function(){ _segTr(m[1]); },0); }, true); });
+// Trajet mixte : même chauffeur (une seule demande) ou peu importe (une demande par trajet)
+function _mixDrvVal(){ var b=document.querySelector('#mix-drv-grp .ev-seg .on'); return b?b.getAttribute('data-d'):'same'; }
+window._mixDrv=function(v){
+  document.querySelectorAll('#mix-drv-grp .ev-seg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-d')===v); });
+  var h=document.getElementById('mix-drv-hint');
+  if(h) h.textContent=v==='any'?'Une demande par trajet : chaque trajet peut être pris par un chauffeur différent. Vous suivez tout depuis une seule fiche.':'Une seule demande : le chauffeur retenu effectue tous les trajets.';
+};
 // Trajet mixte : un passager pour tous les trajets, ou un passager par trajet
 function _mixPMVal(){ var b=document.querySelector('#mix-pm-grp .ev-seg .on'); return b?b.getAttribute('data-m'):'one'; }
 window._mixPM=function(m){
