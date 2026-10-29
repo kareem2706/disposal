@@ -2800,7 +2800,11 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         </div>
       </div>
       <div id="panel-mixed" style="display:none;">
-        <div class="ev-lbl" id="mix-count" style="margin-top:0;">Trajets</div>
+        <div class="input-group" id="mix-pm-grp"><label>Passagers</label>
+          <div class="ev-seg"><button type="button" class="on" data-m="one" onclick="_mixPM('one')">Un passager pour tous les trajets</button><button type="button" data-m="per" onclick="_mixPM('per')">Un passager par trajet</button></div>
+        </div>
+        <div id="mix-pax-section" style="margin-bottom:12px;"></div>
+        <div class="ev-lbl" id="mix-count">Trajets</div>
         <div id="mixed-segments"></div>
         <button type="button" class="ev-add" onclick="addMixedSegment()">+ Ajouter un trajet</button>
       </div>
@@ -6133,7 +6137,7 @@ function _buildRideDetailBody(r, opts){
     var isD=s.type.toLowerCase().indexOf('disp')>=0;
     var label=t('lbl_segment')+' '+(idx+1)+' \u2014 '+(isD?t('title_disp'):t('title_ab'));
     var mp=[];var dt=(s.date?formatDate(s.date):'')+( s.time?' '+s.time:'');
-    if(dt.trim())mp.push(dt.trim());if(s.pax)mp.push(s.pax+' pax');if(s.veh)mp.push(s.veh);if(s.flight)mp.push('Vol '+s.flight);if(s.train)mp.push('Train '+s.train);if(s.flight2)mp.push('Vol '+s.flight2);if(s.train2)mp.push('Train '+s.train2);
+    if(dt.trim())mp.push(dt.trim());if(s.pax)mp.push(s.pax+' pax');if(s.veh)mp.push(s.veh);if(s.flight)mp.push('Vol '+s.flight);if(s.train)mp.push('Train '+s.train);if(s.flight2)mp.push('Vol '+s.flight2);if(s.train2)mp.push('Train '+s.train2);if(s.paxName)mp.push(s.paxName+(s.paxTel?' ('+s.paxTel+')':''));
     var metaHtml=mp.length?'<div style="font-size:12px;color:var(--ink3);margin-bottom:8px;">'+mp.join(' \u00b7 ')+'</div>':'';
     var noteHtml=s.note?'<div style="font-size:12px;color:var(--ink3);margin-top:6px;font-style:italic;"><span style="font-style:normal;">Note du client : </span>'+s.note+'</div>':'';
     var rows='';
@@ -6326,6 +6330,7 @@ function _openRideDetailImpl(el){
     if(s.train)  metaParts.push('Train '+s.train);
     if(s.flight2) metaParts.push('Vol '+s.flight2);
     if(s.train2)  metaParts.push('Train '+s.train2);
+    if(s.paxName) metaParts.push(s.paxName+(s.paxTel?' ('+s.paxTel+')':''));
     var metaHtml=metaParts.length?'<div style="font-size:12px;color:var(--ink3);margin-bottom:8px;">'+metaParts.join(' &middot; ')+'</div>':'';
     var timeHtml='';
     var noteHtml=s.note?'<div style="font-size:12px;color:var(--ink3);margin-top:6px;font-style:italic;"><span style="font-style:normal;">Note du client : </span>'+s.note+'</div>':'';
@@ -8148,6 +8153,7 @@ window.editRide = async function(rideId){
 
     // Parse and recreate each segment
     var segs = parseMixedNotes(r.notes||'');
+    _mixPM(segs.some(function(x){ return x.paxName||x.paxTel; })?'per':'one');
     if(!segs.length){
       // No parseable segments — just add one empty segment
       addMixedSegment();
@@ -8180,7 +8186,7 @@ window.editRide = async function(rideId){
           var pEl=document.getElementById('spax-'+sn); if(pEl&&seg_s.pax) pEl.value=seg_s.pax;
           var vEl=document.getElementById('sveh-'+sn); if(vEl&&seg_s.veh) vEl.value=seg_s.veh;
           var nEl=document.getElementById('snotes-'+sn); if(nEl&&seg_s.note) nEl.value=seg_s.note;
-          svn('sfl-'+sn, seg_s.flight); svn('str-'+sn, seg_s.train); svn('sfl2-'+sn, seg_s.flight2); svn('str2-'+sn, seg_s.train2); if(window._segTr) _segTr(sn);
+          svn('sfl-'+sn, seg_s.flight); svn('str-'+sn, seg_s.train); svn('sfl2-'+sn, seg_s.flight2); svn('str2-'+sn, seg_s.train2); svn('spn-'+sn, seg_s.paxName); svn('spt-'+sn, seg_s.paxTel); if(window._segTr) _segTr(sn);
           // Re-attach Google Places
           if(window.attachGPToSeg) attachGPToSeg(sn);
         }, 80, n, s, isD);
@@ -8216,6 +8222,7 @@ window.submitRide = async function(){
     notes = (g('disp-notes')||'') + (dur ? ' Dur\u00e9e:'+dur+'h' : '');
     if(!from||!date||!time){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
   } else if(tripType==='mixed'){
+    window._mixPax0=null;
     var segs=[], _segErr='', _mixTr={}; var segEls=document.querySelectorAll('#mixed-segments .mixed-segment');
     segEls.forEach(function(seg, _si){
       var n=seg.id.replace('seg-','');
@@ -8248,6 +8255,11 @@ window.submitRide = async function(){
         if(!okv && !_segErr) _segErr='Trajet '+(_si+1)+' : '+(x[2]==='flight'?'numéro de vol invalide (ex. SN 3123)':'numéro de train invalide (ex. IC 1832)');
         segStr+='|'+x[1]+':'+v; if(!_mixTr[x[2]]) _mixTr[x[2]]=v;
       });
+      if(_mixPMVal()==='per'){
+        var spn=String(g('spn-'+n)||'').replace(/\|/g,' ').trim(), spt=String(g('spt-'+n)||'').replace(/\|/g,' ').trim();
+        if(spn) segStr+='|pn:'+spn; if(spt) segStr+='|pt:'+spt;
+        if(_si===0){ window._mixPax0={ name:spn, tel:spt }; }
+      }
       segs.push(segStr);
     });
     // Extract clean from address using the parser (handles @HH:MM correctly)
@@ -8290,6 +8302,8 @@ window.submitRide = async function(){
     if(currentProfile?.role==='client' || currentRole==='client'){
       var paxName = (window._newRidePaxName||'').trim();
       var paxTel  = (window._newRidePaxTel||'').trim();
+      // Trajet mixte, un passager par trajet : la course reprend celui du 1er trajet
+      if(tripType==='mixed' && window._mixPax0 && (window._mixPax0.name||window._mixPax0.tel)){ paxName=window._mixPax0.name; paxTel=window._mixPax0.tel; }
       if(paxName) notes = (notes||'') + '|pax:'+paxName;
       if(paxTel)  notes = (notes||'') + '|tel:'+paxTel;
     }
@@ -8568,12 +8582,13 @@ window.cancelRideModal = function(){
   window._editTr=null; if(window._trRefresh) window._trRefresh();
   // Clear mixed segments
   var sc=document.getElementById('mixed-segments');if(sc)sc.innerHTML='';
+  if(window._mixPM) _mixPM('one');
   _segN=0;
   // Reset error
   var err=document.getElementById('ride-err');if(err){ err.classList.remove('show'); err.textContent=''; err.style.display=''; }
   document.querySelectorAll('#m-new-ride .fld-err').forEach(function(x){ x.classList.remove('fld-err'); });
   // Reset passenger sections
-  ['ride-pax-section','disp-pax-section'].forEach(function(id){
+  ['ride-pax-section','disp-pax-section','mix-pax-section'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.innerHTML='';
   });
   // Init pax selector for clients (after DOM resets)
@@ -8607,7 +8622,7 @@ async function _initPaxSelector(){
     window._newRidePaxTel  = window._editRidePax.tel;
   }
 
-  ['ride-pax-section','disp-pax-section'].forEach(function(sid){
+  ['ride-pax-section','disp-pax-section','mix-pax-section'].forEach(function(sid){
     _renderNewRidePaxCard(sid);
   });
 }
@@ -8694,6 +8709,8 @@ function _openNewRidePaxEdit(sid){
       // Refresh both cards
       _renderNewRidePaxCard('ride-pax-section');
       _renderNewRidePaxCard('disp-pax-section');
+      _renderNewRidePaxCard('mix-pax-section');
+      if(window._mixFillPax) _mixFillPax();
     });
   }, 10);
 }
@@ -9707,21 +9724,23 @@ window._nrShowRecap=function(d){
   var trips=[];
   if(d.type==='mixed'){
     parseMixedNotes(d.notes||'').forEach(function(sg){ var disp=sg.type.toLowerCase().indexOf('disp')>=0;
-      trips.push({ disp:disp, date:sg.date, time:sg.time, from:sg.from, to:sg.to, dur:sg.dur?String(sg.dur).replace(/h$/,''):'', pax:sg.pax, veh:sg.veh, fl:[sg.flight,sg.flight2].filter(Boolean), trn:[sg.train,sg.train2].filter(Boolean), instr:sg.note }); });
+      trips.push({ disp:disp, date:sg.date, time:sg.time, from:sg.from, to:sg.to, dur:sg.dur?String(sg.dur).replace(/h$/,''):'', pax:sg.pax, veh:sg.veh, fl:[sg.flight,sg.flight2].filter(Boolean), trn:[sg.train,sg.train2].filter(Boolean), instr:sg.note, pname:sg.paxName, ptel:sg.paxTel }); });
   } else {
     var tr=d.tr||{};
     trips.push({ disp:d.type==='disposal', date:d.date, time:d.time, from:d.from, to:d.to, dur:d.dur, pax:d.pax, veh:d.veh, fl:[tr.flight,tr.flight2].filter(Boolean), trn:[tr.train,tr.train2].filter(Boolean), instr:d.instr });
   }
   var pn=(window._newRidePaxName||'').trim(), pt=(window._newRidePaxTel||'').trim();
+  if(trips.some(function(t){ return t.pname||t.ptel; })){ pn=''; pt=''; }
   var ttl={ab:'Transfert simple',disposal:'Mise à disposition',mixed:'Trajet mixte'}[d.type]||'Demande';
   var h='<div class="evr-hd" style="background:#F3F8F4;"><div class="k" style="color:#2E7A4F;">Récapitulatif de la demande</div>'+(d.type==='mixed'?'<div class="t">'+esc(ttl)+'</div>':'')
-    +'<div class="s">'+esc([trips.length>1?trips.length+' trajets':'', pn?'passager : '+pn+(pt?' · '+pt:''):''].filter(Boolean).join(' · ')||'Vérifiez les informations avant de publier.')+'</div></div>';
+    +'<div class="s">'+esc([trips.length>1?trips.length+' trajets':'', pn?'passager : '+pn+(pt?' · '+pt:''):(d.type==='mixed'&&trips.some(function(t){ return t.pname; })?'un passager par trajet':'')].filter(Boolean).join(' · ')||'Vérifiez les informations avant de publier.')+'</div></div>';
   trips.forEach(function(t,i){
     h+='<div class="evr-trip"><div class="evr-th">'+(trips.length>1?'<span class="n">'+(i+1)+'</span>Trajet '+(i+1)+' <span class="ty">· '+(t.disp?'Mise à disposition':'Transfert simple')+'</span>':'<span>'+(t.disp?'Mise à disposition':'Transfert simple')+'</span>')+'<span class="dt">'+esc(fd(t.date))+(t.time?' · '+esc(t.time):'')+'</span></div>'
       +'<div class="evr-rt"><div><i style="background:#4E8F69"></i><span>'+esc(t.from||'—')+'</span></div>'+(!t.disp&&t.to?'<div><i style="background:#D8705F"></i><span>'+esc(t.to)+'</span></div>':'')+'</div>'
       +'<div class="evr-kv">'+chip('',cls(t.veh))+(t.pax?'<span><b>'+esc(t.pax)+'</b> passager'+(String(t.pax)==='1'?'':'s')+'</span>':'')
       +(t.disp&&t.dur?'<span>Durée <b>'+esc(t.dur)+' h</b></span>':'')
-      +t.fl.map(function(x){ return chip('Vol',x); }).join('')+t.trn.map(function(x){ return chip('Train',x); }).join('')+'</div>'
+      +t.fl.map(function(x){ return chip('Vol',x); }).join('')+t.trn.map(function(x){ return chip('Train',x); }).join('')
+      +(t.pname||t.ptel?'<span>Passager <b>'+esc([t.pname,t.ptel].filter(Boolean).join(' · '))+'</b></span>':'')+'</div>'
       +(t.instr?'<div style="font-size:12.5px;color:var(--ink3);margin-top:12px;padding-top:12px;border-top:1px solid #F0EEE9;line-height:1.45;"><span style="color:var(--ink2);font-weight:600;">Instructions : </span>'+esc(t.instr)+'</div>':'')
       +'</div>';
   });
@@ -11563,7 +11582,8 @@ window.addMixedSegment=function(){
     '<div class="ev-vh"><span class="n">'+n+'</span><span class="mix-ttl">Trajet '+n+'</span><span class="tl"><button type="button" onclick="_mixDup('+n+')">Dupliquer</button><button type="button" class="mix-del" onclick="removeSegSafe('+n+')">Supprimer</button></span></div>'+
     '<div class="seg-type-btns" style="display:none;"><button class="seg-type-btn active" onclick="setSegType(this,'+n+',\'ab\')">A &rarr; B</button><button class="seg-type-btn" onclick="setSegType(this,'+n+',\'disposal\')">Disposition</button></div>'+
     '<div class="input-group" style="margin-bottom:12px;"><label>Type de trajet</label><select class="mix-type" onchange="var b=this.closest(\'.mixed-segment\').querySelectorAll(\'.seg-type-btn\');b[this.value===\'disposal\'?1:0].click();"><option value="ab">Transfert simple</option><option value="disposal">Mise à disposition</option></select></div>'+
-    '<div class="form-grid" id="seg-fields-'+n+'">'+abFields+'</div>';
+    '<div class="form-grid" id="seg-fields-'+n+'">'+abFields+'</div>'+
+    '<div class="input-group mix-pp" style="margin-top:12px;'+(_mixPMVal()==='per'?'':'display:none;')+'"><label>Passager pour ce trajet</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><input id="spn-'+n+'" maxlength="120" placeholder="Nom et prénom" value="'+String(window._newRidePaxName||'').replace(/"/g,'&quot;')+'"><input id="spt-'+n+'" maxlength="40" placeholder="Téléphone" inputmode="tel" value="'+String(window._newRidePaxTel||'').replace(/"/g,'&quot;')+'"></div></div>';
 
   cont.appendChild(d);
   _mixRenumber();
@@ -11615,6 +11635,20 @@ window._segTr=function(n){
   _trPairApply(document.getElementById('strp-'+n), _trPairPlan(g('sf-'+n), hasTo?g('st-'+n):null), function(k){ return document.getElementById(_SEG_TRK[k]+'-grp-'+n); }, function(k){ return document.getElementById(_SEG_TRK[k]+'-lbl-'+n); });
 };
 ['input','change','focusout'].forEach(function(evn){ document.addEventListener(evn, function(e){ var m=e.target&&e.target.id&&e.target.id.match(/^s[ft]-(\d+)$/); if(m) setTimeout(function(){ _segTr(m[1]); },0); }, true); });
+// Trajet mixte : un passager pour tous les trajets, ou un passager par trajet
+function _mixPMVal(){ var b=document.querySelector('#mix-pm-grp .ev-seg .on'); return b?b.getAttribute('data-m'):'one'; }
+window._mixPM=function(m){
+  document.querySelectorAll('#mix-pm-grp .ev-seg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-m')===m); });
+  var c=document.getElementById('mix-pax-section'); if(c) c.style.display=m==='one'?'':'none';
+  document.querySelectorAll('#mixed-segments .mix-pp').forEach(function(x){ x.style.display=m==='per'?'':'none'; });
+  if(m==='per') _mixFillPax();
+};
+// Champs vides d'un trajet : pré-remplis avec le passager principal
+window._mixFillPax=function(){
+  document.querySelectorAll('#mixed-segments .mixed-segment').forEach(function(sg){ var n=sg.id.replace('seg-','');
+    var a=document.getElementById('spn-'+n), b=document.getElementById('spt-'+n);
+    if(a&&!a.value) a.value=window._newRidePaxName||''; if(b&&!b.value) b.value=window._newRidePaxTel||''; });
+};
 // Trajet mixte : numérotation « Trajet 1, 2… » et duplication (même présentation que les événements)
 window._mixRenumber=function(){
   var segs=[].slice.call(document.querySelectorAll('#mixed-segments .mixed-segment')), k=segs.length;
@@ -11625,13 +11659,13 @@ window._mixDup=function(n){
   var src=document.getElementById('seg-'+n); if(!src) return;
   var gv=function(id){ var e=document.getElementById(id); return e?e.value:''; };
   var isD=(src.querySelector('.mix-type')||{}).value==='disposal';
-  var v={ fl:gv('sfl-'+n), tr:gv('str-'+n), fl2:gv('sfl2-'+n), tr2:gv('str2-'+n), f:gv('sf-'+n), t:gv('st-'+n), d:gv('sd8-'+n), h:gv('sh-'+n), dur:gv('sdur-'+n), pax:gv('spax-'+n), veh:gv('sveh-'+n), notes:gv('snotes-'+n) };
+  var v={ pn:gv('spn-'+n), pt:gv('spt-'+n), fl:gv('sfl-'+n), tr:gv('str-'+n), fl2:gv('sfl2-'+n), tr2:gv('str2-'+n), f:gv('sf-'+n), t:gv('st-'+n), d:gv('sd8-'+n), h:gv('sh-'+n), dur:gv('sdur-'+n), pax:gv('spax-'+n), veh:gv('sveh-'+n), notes:gv('snotes-'+n) };
   addMixedSegment(); var m=_segN, nw=document.getElementById('seg-'+m);
   if(nw && src.nextSibling!==nw) src.parentNode.insertBefore(nw, src.nextSibling);
   if(isD){ var b=nw.querySelectorAll('.seg-type-btn'); setSegType(b[1], m, 'disposal'); }
   setTimeout(function(){
     var sv=function(id,x){ var e=document.getElementById(id); if(e&&x!=='') e.value=x; };
-    sv('sf-'+m,v.f); if(!isD) sv('st-'+m,v.t); sv('sd8-'+m,v.d); sv('sh-'+m,v.h); if(isD) sv('sdur-'+m,v.dur); sv('spax-'+m,v.pax); sv('sveh-'+m,v.veh); sv('snotes-'+m,v.notes); sv('sfl-'+m,v.fl); sv('str-'+m,v.tr); sv('sfl2-'+m,v.fl2); sv('str2-'+m,v.tr2); _segTr(m);
+    sv('sf-'+m,v.f); if(!isD) sv('st-'+m,v.t); sv('sd8-'+m,v.d); sv('sh-'+m,v.h); if(isD) sv('sdur-'+m,v.dur); sv('spax-'+m,v.pax); sv('sveh-'+m,v.veh); sv('snotes-'+m,v.notes); sv('sfl-'+m,v.fl); sv('str-'+m,v.tr); sv('sfl2-'+m,v.fl2); sv('str2-'+m,v.tr2); sv('spn-'+m,v.pn); sv('spt-'+m,v.pt); _segTr(m);
     _mixRenumber();
   }, 90);
 };
@@ -12586,6 +12620,9 @@ function parseMixedNotes(notes){
     var fl='',trn='';
     var flm=s.match(/\|fl:([^|]*)/); if(flm){fl=flm[1].trim();s=s.replace(flm[0],'');}
     var trm=s.match(/\|tr:([^|]*)/); if(trm){trn=trm[1].trim();s=s.replace(trm[0],'');}
+    var pn='',pt='';
+    var pnm=s.match(/\|pn:([^|]*)/); if(pnm){pn=pnm[1].trim();s=s.replace(pnm[0],'');}
+    var ptm=s.match(/\|pt:([^|]*)/); if(ptm){pt=ptm[1].trim();s=s.replace(ptm[0],'');}
     var fl2='',trn2='';
     var flm2=s.match(/\|fl2:([^|]*)/); if(flm2){fl2=flm2[1].trim();s=s.replace(flm2[0],'');}
     var trm2=s.match(/\|tr2:([^|]*)/); if(trm2){trn2=trm2[1].trim();s=s.replace(trm2[0],'');}
@@ -12612,7 +12649,7 @@ function parseMixedNotes(notes){
     var dur='',durm=rest.match(/\(([^)]+)\)/);
     if(durm){dur=durm[1];rest=rest.replace(durm[0],'').trim();}
     var pts=rest.split('>');
-    return{type:type,time:time,from:(pts[0]||'').trim(),to:(pts[1]||'').trim(),dur:dur,date:date,pax:pax,veh:veh,note:segNote,flight:fl,train:trn,flight2:fl2,train2:trn2};
+    return{type:type,time:time,from:(pts[0]||'').trim(),to:(pts[1]||'').trim(),dur:dur,date:date,pax:pax,veh:veh,note:segNote,flight:fl,train:trn,flight2:fl2,train2:trn2,paxName:pn,paxTel:pt};
   }).filter(Boolean);
 }
 
