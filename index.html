@@ -1206,6 +1206,10 @@ body{background:var(--bg);}
 #mixed-segments .mixed-segment{background:#fff;border:1px solid #ECEAE5;border-radius:14px;padding:12px 14px;margin-bottom:10px;}
 #mixed-segments .ev-vh .n{background:#EAF1FB;color:#2F5FA8;}
 #panel-mixed .ev-add{border-color:#BFD3EE;color:#2F5FA8;background:#F7FAFE;}
+.tr-pair{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;}
+.tr-pair.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+.tr-pair > .input-group{margin:0!important;min-width:0;}
+.tr-pair.two .tr-hint{display:none;}
 .ev-add{width:100%;border:1.5px dashed #CDBDF0;color:#7A55C2;border-radius:12px;padding:10px;font:600 13px 'DM Sans',sans-serif;background:#FBF9FE;cursor:pointer;}
 .ev-note{font-size:12px;color:var(--ink3);background:#F4F1FB;border-radius:10px;padding:9px 11px;line-height:1.45;margin-top:12px;}
 #m-new-ride.ev-add-only #ev-name-grp input{background:#F7F7F5;}
@@ -2767,8 +2771,12 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div class="form-grid">
           <div class="input-group full"><label>D&eacute;part <span style="color:var(--red)">*</span></label><input id="ride-from" placeholder="Gare du Midi, Bruxelles" autocomplete="off"></div>
           <div class="input-group full"><label>Arriv&eacute;e <span style="color:var(--red)">*</span></label><input id="ride-to" placeholder="A&eacute;roport BRU" autocomplete="off"></div>
-          <div class="input-group full tr-grp" id="ride-flight-grp" style="display:none;"><label id="ride-flight-lbl">Num&eacute;ro de vol</label><input id="ride-flight" class="tr-input" placeholder="Ex. SN 3123" autocomplete="off" maxlength="10"><div class="tr-hint" id="ride-flight-hint"></div></div>
-          <div class="input-group full tr-grp" id="ride-train-grp" style="display:none;"><label id="ride-train-lbl">Num&eacute;ro de train</label><input id="ride-train" class="tr-input" placeholder="Ex. IC 1832" autocomplete="off" maxlength="10"><div class="tr-hint" id="ride-train-hint"></div></div>
+          <div class="input-group full tr-pair" id="ride-tr-pair" style="display:none;">
+            <div class="input-group tr-grp" id="ride-flight-grp" style="display:none;"><label id="ride-flight-lbl">Num&eacute;ro de vol</label><input id="ride-flight" class="tr-input" placeholder="Ex. SN 3123" autocomplete="off" maxlength="10"><div class="tr-hint" id="ride-flight-hint"></div></div>
+            <div class="input-group tr-grp" id="ride-train-grp" style="display:none;"><label id="ride-train-lbl">Num&eacute;ro de train</label><input id="ride-train" class="tr-input" placeholder="Ex. IC 1832" autocomplete="off" maxlength="10"><div class="tr-hint" id="ride-train-hint"></div></div>
+            <div class="input-group tr-grp" id="ride-flight2-grp" style="display:none;"><label id="ride-flight2-lbl">Num&eacute;ro du vol de d&eacute;part</label><input id="ride-flight2" class="tr-input" placeholder="Ex. KL 1724" autocomplete="off" maxlength="10"><div class="tr-hint" id="ride-flight2-hint"></div></div>
+            <div class="input-group tr-grp" id="ride-train2-grp" style="display:none;"><label id="ride-train2-lbl">Num&eacute;ro du train de d&eacute;part</label><input id="ride-train2" class="tr-input" placeholder="Ex. IC 2016" autocomplete="off" maxlength="10"><div class="tr-hint" id="ride-train2-hint"></div></div>
+          </div>
           <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="ride-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="ride-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="ride-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
@@ -6126,7 +6134,7 @@ function _buildRideDetailBody(r, opts){
     var isD=s.type.toLowerCase().indexOf('disp')>=0;
     var label=t('lbl_segment')+' '+(idx+1)+' \u2014 '+(isD?t('title_disp'):t('title_ab'));
     var mp=[];var dt=(s.date?formatDate(s.date):'')+( s.time?' '+s.time:'');
-    if(dt.trim())mp.push(dt.trim());if(s.pax)mp.push(s.pax+' pax');if(s.veh)mp.push(s.veh);if(s.flight)mp.push('Vol '+s.flight);if(s.train)mp.push('Train '+s.train);
+    if(dt.trim())mp.push(dt.trim());if(s.pax)mp.push(s.pax+' pax');if(s.veh)mp.push(s.veh);if(s.flight)mp.push('Vol '+s.flight);if(s.train)mp.push('Train '+s.train);if(s.flight2)mp.push('Vol '+s.flight2);if(s.train2)mp.push('Train '+s.train2);
     var metaHtml=mp.length?'<div style="font-size:12px;color:var(--ink3);margin-bottom:8px;">'+mp.join(' \u00b7 ')+'</div>':'';
     var noteHtml=s.note?'<div style="font-size:12px;color:var(--ink3);margin-top:6px;font-style:italic;"><span style="font-style:normal;">Note du client : </span>'+s.note+'</div>':'';
     var rows='';
@@ -6160,7 +6168,7 @@ function _buildRideDetailBody(r, opts){
     body+='<div style="background:#F7F7F7;border-radius:12px;padding:12px 16px;">'+segRow('green',t('lbl_depart'),from,true)+segRow('red',t('lbl_arrivee'),to,false)+'<div id="'+idPrefix+'detail-route-info" style="padding:4px 0 4px 30px;display:none;"><div style="font-size:11.5px;color:var(--ink2);font-weight:500;" id="'+idPrefix+'detail-route-info-text"></div></div>'+'</div>';
   }
   var rawNotes=r.notes||'';
-  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight|train):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
+  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Dur\u00e9e:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight2?|train2?):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
   if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">'+t('lbl_comment')+'</div><div style="padding:12px;background:var(--sand2);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;"><span style="font-style:normal;">Note du client\u00a0: </span>'+_rdEsc(cleanNotes)+'</div></div>';}
   var noteDrvMatch = rawNotes.match(/\|note_drv:([^|]+)/);
   if(noteDrvMatch){body+='<div style="margin-top:12px;"><div style="font-size:11px;font-weight:600;color:var(--ink);margin-bottom:5px;">Note du client</div><div style="padding:12px;background:var(--blue-bg);border-radius:var(--r);font-size:12.5px;color:var(--ink2);font-style:italic;">'+noteDrvMatch[1].trim()+'</div></div>';}
@@ -6317,6 +6325,8 @@ function _openRideDetailImpl(el){
     if(s.veh)  metaParts.push(s.veh);
     if(s.flight) metaParts.push('Vol '+s.flight);
     if(s.train)  metaParts.push('Train '+s.train);
+    if(s.flight2) metaParts.push('Vol '+s.flight2);
+    if(s.train2)  metaParts.push('Train '+s.train2);
     var metaHtml=metaParts.length?'<div style="font-size:12px;color:var(--ink3);margin-bottom:8px;">'+metaParts.join(' &middot; ')+'</div>':'';
     var timeHtml='';
     var noteHtml=s.note?'<div style="font-size:12px;color:var(--ink3);margin-top:6px;font-style:italic;"><span style="font-style:normal;">Note du client : </span>'+s.note+'</div>':'';
@@ -6363,7 +6373,7 @@ function _openRideDetailImpl(el){
   }
 
   var rawNotes=r.notes||'';
-  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight|train):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
+  var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight2?|train2?):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
   if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){
     body+='<div class="rd-instr"><div class="rd-cap" style="margin-bottom:4px;">'+(r.status==='personal'?'Note':'Instructions du client')+'</div>'
       +'<div style="font-size:14px;color:var(--ink);line-height:1.45;">'+_rdEsc(cleanNotes)+'</div></div>';
@@ -7338,7 +7348,7 @@ async function _docRideDocument(rideId, mode){
   var paxN=(nR.match(/\|pax:([^|]+)/)||[])[1]||'', paxT=(nR.match(/\|tel:([^|]+)/)||[])[1]||'';
   var noteD=(nR.match(/\|note_drv:([^|]+)/)||[])[1]||'';
   var dur=(nR.match(/Durée:(\d+)/)||[])[1]||'';
-  var cln=nR.replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight|train):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').trim();
+  var cln=nR.replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight2?|train2?):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').trim();
   var code=r.booking_code||r.id.slice(0,8);
   var left, right, kind, boxTitle, boxBody;
 
@@ -7651,7 +7661,7 @@ async function _promoteNotesToDriver(rideId){
     if(notes.includes('|note_drv:')) return;
     // Extract clean base note (strip pax/tel/duration/mixte tags)
     var clean = notes
-      .replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight|train):[^|]*/g,'')
+      .replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight2?|train2?):[^|]*/g,'')
       .replace(/^Mixte:.*$/m,'').replace(/Dur\u00e9e:[^\s|]+/g,'').trim();
     if(!clean) return;
     // (fait par le serveur à la confirmation : déclencheur c_rides_confirm_notes)
@@ -8095,8 +8105,8 @@ window.editRide = async function(rideId){
   var _nRaw = r.notes||'';
   window._editRidePax = { name:((_nRaw.match(/\|pax:([^|]*)/)||[])[1]||'').trim(), tel:((_nRaw.match(/\|tel:([^|]*)/)||[])[1]||'').trim() };
   window._editHiddenTags = (_nRaw.match(/\|(note_drv|offer_note|pemail|pref):[^|]*/g)||[]).join('');
-  window._editTr = { flight:((_nRaw.match(/\|flight:([^|]*)/)||[])[1]||'').trim(), train:((_nRaw.match(/\|train:([^|]*)/)||[])[1]||'').trim() };
-  r = Object.assign({}, r, { notes: _nRaw.replace(/\|(pax|tel|note_drv|offer_note|pemail|pref|flight|train):[^|]*/g,'').trim() });
+  window._editTr = { flight:((_nRaw.match(/\|flight:([^|]*)/)||[])[1]||'').trim(), train:((_nRaw.match(/\|train:([^|]*)/)||[])[1]||'').trim(), flight2:((_nRaw.match(/\|flight2:([^|]*)/)||[])[1]||'').trim(), train2:((_nRaw.match(/\|train2:([^|]*)/)||[])[1]||'').trim() };
+  r = Object.assign({}, r, { notes: _nRaw.replace(/\|(pax|tel|note_drv|offer_note|pemail|pref|flight2?|train2?):[^|]*/g,'').trim() });
 
   // Activate correct trip type tab
   document.querySelectorAll('.trip-type').forEach(function(b){
@@ -8118,7 +8128,7 @@ window.editRide = async function(rideId){
     sv('ride-notes', r.notes||'');
     var paxEl=document.getElementById('ride-pax'); if(paxEl) paxEl.value=r.passengers||1;
     var vehEl=document.getElementById('ride-vehicle'); if(vehEl) vehEl.value=r.vehicle_type||'lowcost';
-    sv('ride-flight', window._editTr.flight); sv('ride-train', window._editTr.train); setTimeout(window._trRefresh,0);
+    sv('ride-flight', window._editTr.flight); sv('ride-train', window._editTr.train); sv('ride-flight2', window._editTr.flight2); sv('ride-train2', window._editTr.train2); setTimeout(window._trRefresh,0);
 
   } else if(tripType === 'disposal'){
     sv('disp-from', r.from_address);
@@ -8171,7 +8181,7 @@ window.editRide = async function(rideId){
           var pEl=document.getElementById('spax-'+sn); if(pEl&&seg_s.pax) pEl.value=seg_s.pax;
           var vEl=document.getElementById('sveh-'+sn); if(vEl&&seg_s.veh) vEl.value=seg_s.veh;
           var nEl=document.getElementById('snotes-'+sn); if(nEl&&seg_s.note) nEl.value=seg_s.note;
-          svn('sfl-'+sn, seg_s.flight); svn('str-'+sn, seg_s.train); if(window._segTr) _segTr(sn);
+          svn('sfl-'+sn, seg_s.flight); svn('str-'+sn, seg_s.train); svn('sfl2-'+sn, seg_s.flight2); svn('str2-'+sn, seg_s.train2); if(window._segTr) _segTr(sn);
           // Re-attach Google Places
           if(window.attachGPToSeg) attachGPToSeg(sn);
         }, 80, n, s, isD);
@@ -8232,12 +8242,13 @@ window.submitRide = async function(){
       if(snotes.trim()) segStr+='|n:'+snotes.trim().replace(/\|/g,' ');
       // Numéros de vol / train (champs visibles uniquement)
       var _vis=function(id){ var e=document.getElementById(id); return e && e.style.display!=='none'; };
-      var sfl=_vis('sfl-grp-'+n)?String(g('sfl-'+n)||'').toUpperCase().replace(/\s+/g,' ').trim():'';
-      var strn=_vis('str-grp-'+n)?String(g('str-'+n)||'').toUpperCase().replace(/\s+/g,' ').trim():'';
-      if(sfl && !/^[A-Z0-9]{2,3} ?\d{1,4}[A-Z]?$/.test(sfl) && !_segErr) _segErr='Trajet '+(_si+1)+' : numéro de vol invalide (ex. SN 3123)';
-      if(strn && !/^[A-Z]{0,4} ?\d{1,5}$/.test(strn) && !_segErr) _segErr='Trajet '+(_si+1)+' : numéro de train invalide (ex. IC 1832)';
-      if(sfl){ segStr+='|fl:'+sfl; if(!_mixTr.flight) _mixTr.flight=sfl; }
-      if(strn){ segStr+='|tr:'+strn; if(!_mixTr.train) _mixTr.train=strn; }
+      [['sfl','fl','flight'],['str','tr','train'],['sfl2','fl2','flight'],['str2','tr2','train']].forEach(function(x){
+        var v=_vis(x[0]+'-grp-'+n)?String(g(x[0]+'-'+n)||'').toUpperCase().replace(/\s+/g,' ').trim():'';
+        if(!v) return;
+        var okv=x[2]==='flight'?/^[A-Z0-9]{2,3} ?\d{1,4}[A-Z]?$/.test(v):/^[A-Z]{0,4} ?\d{1,5}$/.test(v);
+        if(!okv && !_segErr) _segErr='Trajet '+(_si+1)+' : '+(x[2]==='flight'?'numéro de vol invalide (ex. SN 3123)':'numéro de train invalide (ex. IC 1832)');
+        segStr+='|'+x[1]+':'+v; if(!_mixTr[x[2]]) _mixTr[x[2]]=v;
+      });
       segs.push(segStr);
     });
     // Extract clean from address using the parser (handles @HH:MM correctly)
@@ -8271,6 +8282,8 @@ window.submitRide = async function(){
   if(_tr.error){ if(err){ err.textContent=_tr.error; err.classList.add('show'); err.style.display=''; } return; }
   if(_tr.flight) notes = (notes||'') + '|flight:'+_tr.flight;
   if(_tr.train)  notes = (notes||'') + '|train:'+_tr.train;
+  if(_tr.flight2) notes = (notes||'') + '|flight2:'+_tr.flight2;
+  if(_tr.train2)  notes = (notes||'') + '|train2:'+_tr.train2;
 
   // DEMO MODE
   // Inject passenger info
@@ -8388,10 +8401,29 @@ window.submitRide = async function(){
       if(h) h.textContent=pickup?'Le chauffeur suivra l’heure d’arrivée et le quai en temps réel.':'Le chauffeur verra l’heure de départ et le quai en temps réel.';
     }
   }
+  // Prise en charge (départ) et dépose (arrivée) peuvent être toutes deux un aéroport / une gare :
+  // deux champs côte à côte. Clés : flight / train (1er champ du genre), flight2 / train2 (2e du même genre).
+  window._trPairPlan=function(fromAddr, toAddr){
+    var kd=function(a){ var k=_trKindOf(a); return k.plane?'flight':k.train?'train':null; };
+    var pk=kd(fromAddr), dk=toAddr==null?null:kd(toAddr), out=[];
+    if(pk) out.push({ key:pk, kind:pk, pickup:true });
+    if(dk) out.push({ key:dk===pk?dk+'2':dk, kind:dk, pickup:false });
+    return out;
+  };
+  window._trPairLabel=function(kind,pickup){ return kind==='flight'?(pickup?'Numéro du vol d’arrivée':'Numéro du vol de départ'):(pickup?'Numéro du train d’arrivée':'Numéro du train de départ'); };
+  // wrap : conteneur ; grp(key) → groupe du champ ; lbl(key) → libellé
+  window._trPairApply=function(wrap, plan, grp, lbl){
+    if(!wrap) return;
+    ['flight','train','flight2','train2'].forEach(function(k){ var g=grp(k); if(g){ g.style.display='none'; g.style.order=''; } });
+    plan.forEach(function(x,i){ var g=grp(x.key); if(!g) return; g.style.display=''; g.style.order=i; var l=lbl(x.key); if(l) l.textContent=_trPairLabel(x.kind,x.pickup); });
+    wrap.style.display=plan.length?'':'none';
+    wrap.classList.toggle('two', plan.length>1);
+  };
   window._trRefresh=function(){
-    var f=_trKindOf(val('ride-from')), t=_trKindOf(val('ride-to')), d=_trKindOf(val('disp-from'));
-    setField('ride','flight', f.plane||t.plane, f.plane);
-    setField('ride','train',  f.train||t.train, f.train);
+    var d=_trKindOf(val('disp-from'));
+    var plan=_trPairPlan(val('ride-from'), val('ride-to'));
+    _trPairApply(document.getElementById('ride-tr-pair'), plan, function(k){ return document.getElementById('ride-'+k+'-grp'); }, function(k){ return document.getElementById('ride-'+k+'-lbl'); });
+    plan.forEach(function(x){ var h=document.getElementById('ride-'+x.key+'-hint'); if(h) h.textContent=x.kind==='flight'?(x.pickup?'Le chauffeur suivra l’heure d’atterrissage en temps réel.':'Le chauffeur verra l’heure de décollage et le terminal en temps réel.'):(x.pickup?'Le chauffeur suivra l’heure d’arrivée et le quai en temps réel.':'Le chauffeur verra l’heure de départ et le quai en temps réel.'); });
     setField('disp','flight', d.plane, true);
     setField('disp','train',  d.train, true);
   };
@@ -8410,6 +8442,10 @@ window.submitRide = async function(){
     var tr=vis(pfx+'-train-grp')?val(pfx+'-train').toUpperCase().replace(/\s+/g,' ').trim():'';
     if(fl){ if(!/^[A-Z0-9]{2,3} ?\d{1,4}[A-Z]?$/.test(fl)) return {error:'Numéro de vol invalide (ex. SN 3123)'}; out.flight=fl; }
     if(tr){ if(!/^[A-Z]{0,4} ?\d{1,5}$/.test(tr)) return {error:'Numéro de train invalide (ex. IC 1832)'}; out.train=tr; }
+    var fl2=vis(pfx+'-flight2-grp')?val(pfx+'-flight2').toUpperCase().replace(/\s+/g,' ').trim():'';
+    var tr2=vis(pfx+'-train2-grp')?val(pfx+'-train2').toUpperCase().replace(/\s+/g,' ').trim():'';
+    if(fl2){ if(!/^[A-Z0-9]{2,3} ?\d{1,4}[A-Z]?$/.test(fl2)) return {error:'Numéro du vol de départ invalide (ex. SN 3123)'}; out.flight2=fl2; }
+    if(tr2){ if(!/^[A-Z]{0,4} ?\d{1,5}$/.test(tr2)) return {error:'Numéro du train de départ invalide (ex. IC 1832)'}; out.train2=tr2; }
     return out;
   };
 
@@ -8444,15 +8480,15 @@ window.submitRide = async function(){
     return !!(r.driver_id&&r.driver_id===uid&&['confirmed','pending_payment','active','done'].indexOf(r.status)>=0);
   }
   window._trBlockHtml=function(r){
-    var fl=tag(r.notes,'flight'), tr=tag(r.notes,'train');
-    if((!fl&&!tr)||!canSee(r)) return '';
+    var fl=tag(r.notes,'flight'), tr=tag(r.notes,'train'), fl2=tag(r.notes,'flight2'), tr2=tag(r.notes,'train2');
+    if((!fl&&!tr&&!fl2&&!tr2)||!canSee(r)) return '';
     css();
     var live=LIVE.indexOf(r.status)>=0;
-    var card=function(kind,num){
-      return '<div class="tr-card" id="tr-'+kind+'"><div class="tr-hd"><span class="tr-ic">'+ICON[kind]+'</span><div style="min-width:0"><div class="tr-ttl">'+(kind==='flight'?'Vol ':'Train ')+esc(num)+'</div>'
+    var card=function(kind,num,slot){
+      return '<div class="tr-card" id="tr-'+(slot||kind)+'"><div class="tr-hd"><span class="tr-ic">'+ICON[kind]+'</span><div style="min-width:0"><div class="tr-ttl">'+(kind==='flight'?'Vol ':'Train ')+esc(num)+'</div>'
         +'<div class="tr-sub">'+(live?'Chargement du statut…':'Renseigné par le client')+'</div></div></div></div>';
     };
-    return '<div id="tr-wrap">'+(fl?card('flight',fl):'')+(tr?card('train',tr):'')+'</div>';
+    return '<div id="tr-wrap">'+(fl?card('flight',fl):'')+(tr?card('train',tr):'')+(fl2?card('flight',fl2,'flight2'):'')+(tr2?card('train',tr2,'train2'):'')+'</div>';
   };
   function point(p, label, focus, kind){
     p=p||{};
@@ -8468,7 +8504,7 @@ window.submitRide = async function(){
       +time+(meta.length?'<div class="tr-meta">'+meta.join(' · ')+'</div>':'')+'</div>';
   }
   function render(it){
-    var el=document.getElementById('tr-'+it.kind); if(!el) return;
+    var el=document.getElementById('tr-'+(it.slot||it.kind)); if(!el) return;
     var head='<div class="tr-hd"><span class="tr-ic">'+ICON[it.kind]+'</span><div style="min-width:0"><div class="tr-ttl">'+esc((it.kind==='flight'?'Vol ':'Train ')+(it.ok&&it.label?it.label:it.number))+'</div>'
       +'<div class="tr-sub">'+esc(it.ok?[it.airline,(it.focus==='arr'?(it.kind==='flight'?'Atterrissage suivi':'Arrivée suivie'):(it.kind==='flight'?'Décollage suivi':'Départ suivi'))].filter(Boolean).join(' · '):(it.message||'Statut indisponible'))+'</div></div>'
       +(it.ok?'<span class="tr-pill tr-'+esc(it.state||'unknown')+'">'+esc(it.statusText||'')+'</span>':'')+'</div>';
@@ -8489,7 +8525,7 @@ window.submitRide = async function(){
         ((res.data&&res.data.items)||[]).forEach(render);
       }catch(e){
         console.warn('[transport-status]', e);
-        ['flight','train'].forEach(function(k){ var el=document.querySelector('#tr-'+k+' .tr-sub'); if(el&&/Chargement/.test(el.textContent)) el.textContent='Statut momentanément indisponible'; });
+        ['flight','train','flight2','train2'].forEach(function(k){ var el=document.querySelector('#tr-'+k+' .tr-sub'); if(el&&/Chargement/.test(el.textContent)) el.textContent='Statut momentanément indisponible'; });
       }
     };
     load();
@@ -8518,7 +8554,7 @@ window.cancelRideModal = function(){
   });
   // Clear all form fields
   ['ride-from','ride-to','ride-date','ride-time','ride-notes',
-   'disp-from','disp-date','disp-time','disp-notes','ride-flight','ride-train','disp-flight','disp-train'].forEach(function(id){
+   'disp-from','disp-date','disp-time','disp-notes','ride-flight','ride-train','ride-flight2','ride-train2','disp-flight','disp-train'].forEach(function(id){
     var e=document.getElementById(id);if(e)e.value='';
   });
   var dd=document.getElementById('disp-duration');if(dd)dd.value='2';
@@ -9540,8 +9576,9 @@ window._evAdd=function(d){
     +'<div class="input-group full"><label>Type de trajet</label><select class="ev-type" onchange="_evType(this)"><option value="ab">Transfert simple</option><option value="disposal">Mise à disposition</option></select></div>'
     +'<div class="input-group full"><label class="ev-from-lbl">Départ <span style="color:var(--red)">*</span></label><input class="ev-from" autocomplete="off" placeholder="Adresse, gare, aéroport" value="'+e(d.from)+'"></div>'
     +'<div class="input-group full ev-to-grp"><label>Arrivée <span style="color:var(--red)">*</span></label><input class="ev-to" autocomplete="off" placeholder="Destination" value="'+e(d.to)+'"></div>'
-    +'<div class="input-group full ev-flight-grp" style="display:none;"><label class="ev-flight-lbl">Numéro de vol</label><input class="ev-flight tr-input" placeholder="Ex. SN 3123" autocomplete="off" maxlength="10" value="'+e(d.flight)+'"></div>'
-    +'<div class="input-group full ev-train-grp" style="display:none;"><label class="ev-train-lbl">Numéro de train</label><input class="ev-train tr-input" placeholder="Ex. IC 1832" autocomplete="off" maxlength="10" value="'+e(d.train)+'"></div>'
+    +'<div class="input-group full tr-pair ev-trp" style="display:none;">'
+    +['flight','train','flight2','train2'].map(function(k){ return '<div class="input-group ev-'+k+'-grp" style="display:none;"><label class="ev-'+k+'-lbl"></label><input class="ev-'+k+' tr-input" placeholder="'+(k.indexOf('flight')===0?'Ex. SN 3123':'Ex. IC 1832')+'" autocomplete="off" maxlength="10" value="'+e(d[k])+'"></div>'; }).join('')
+    +'</div>'
     +'<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input class="ev-date" type="date" min="'+min+'" value="'+e(d.date)+'"></div>'
     +'<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input class="ev-time" type="time" value="'+e(d.time)+'"></div>'
     +'<div class="input-group ev-dur-grp" style="display:none;"><label>Durée (heures)</label><input class="ev-dur" type="number" min="1" max="24" value="'+e(d.dur||'3')+'"></div>'
@@ -9562,16 +9599,12 @@ window._evAdd=function(d){
 // Aéroport → numéro de vol ; gare → numéro de train (même règle que la demande simple)
 window._evTr=function(r){
   if(!r||!window._trKindOf) return;
-  var disp=_evVal(r,'ev-type')==='disposal', f=_trKindOf(_evVal(r,'ev-from')), t=disp?{}:_trKindOf(_evVal(r,'ev-to'));
-  var pl=f.plane||t.plane, tr=f.train||t.train;
-  r.querySelector('.ev-flight-grp').style.display=pl?'':'none';
-  r.querySelector('.ev-train-grp').style.display=tr?'':'none';
-  r.querySelector('.ev-flight-lbl').textContent=f.plane?'Numéro du vol d’arrivée':'Numéro du vol de départ';
-  r.querySelector('.ev-train-lbl').textContent=f.train?'Numéro du train d’arrivée':'Numéro du train de départ';
+  var disp=_evVal(r,'ev-type')==='disposal';
+  _trPairApply(r.querySelector('.ev-trp'), _trPairPlan(_evVal(r,'ev-from'), disp?null:_evVal(r,'ev-to')), function(k){ return r.querySelector('.ev-'+k+'-grp'); }, function(k){ return r.querySelector('.ev-'+k+'-lbl'); });
 };
 window._evDup=function(btn){
   var r=btn.closest('.ev-veh');
-  var d={ type:_evVal(r,'ev-type'), from:_evVal(r,'ev-from'), to:_evVal(r,'ev-to'), flight:_evVal(r,'ev-flight'), train:_evVal(r,'ev-train'), dur:_evVal(r,'ev-dur'), date:_evVal(r,'ev-date'), time:_evVal(r,'ev-time'), vm:r.getAttribute('data-vm'), n:r.getAttribute('data-n'), cnt:_evCounts(r) };
+  var d={ type:_evVal(r,'ev-type'), from:_evVal(r,'ev-from'), to:_evVal(r,'ev-to'), flight:_evVal(r,'ev-flight'), train:_evVal(r,'ev-train'), flight2:_evVal(r,'ev-flight2'), train2:_evVal(r,'ev-train2'), dur:_evVal(r,'ev-dur'), date:_evVal(r,'ev-date'), time:_evVal(r,'ev-time'), vm:r.getAttribute('data-vm'), n:r.getAttribute('data-n'), cnt:_evCounts(r) };
   var nw=_evAdd(d); if(nw && r.nextSibling!==nw) r.parentNode.insertBefore(nw, r.nextSibling); _evRenumber();
 };
 window._evDel=function(btn){ if(_evRows().length<2) return; btn.closest('.ev-veh').remove(); _evRenumber(); };
@@ -9580,7 +9613,7 @@ window._evType=function(sel){
   r.querySelector('.ev-to-grp').style.display=disp?'none':'';
   r.querySelector('.ev-dur-grp').style.display=disp?'':'none';
   r.querySelector('.ev-from-lbl').innerHTML=(disp?'Lieu de prise en charge':'Départ')+' <span style="color:var(--red)">*</span>';
-  if(r.querySelector('.ev-flight-grp')) _evTr(r);
+  if(r.querySelector('.ev-trp')) _evTr(r);
 };
 function _evModeVal(){ var b=document.querySelector('#ev-mode-grp .ev-seg .on'); return b?b.getAttribute('data-m'):'one'; }
 window._evMode=function(m){
@@ -9646,6 +9679,8 @@ window._evShowRecap=function(d){
       +(disp?'<span>Durée <b>'+(parseInt(t.dur,10)||2)+' h</b></span>':'')
       +(t.flight?'<span>Vol <b>'+esc(t.flight)+'</b></span>':'')
       +(t.train?'<span>Train <b>'+esc(t.train)+'</b></span>':'')
+      +(t.flight2?'<span>Vol <b>'+esc(t.flight2)+'</b></span>':'')
+      +(t.train2?'<span>Train <b>'+esc(t.train2)+'</b></span>':'')
       +(d.mode==='per'&&(t.pname||t.pphone)?'<span>Contact <b>'+esc([t.pname,t.pphone].filter(Boolean).join(' · '))+'</b></span>':'')
       +'</div></div>';
   });
@@ -9730,10 +9765,12 @@ async function submitEvent(){
   for(var i=0;i<rows.length;i++){
     var r=rows[i], ty=_evVal(r,'ev-type'), t={ type:ty, from:_evVal(r,'ev-from'), to:_evVal(r,'ev-to'), dur:_evVal(r,'ev-dur'), date:_evVal(r,'ev-date'), time:_evVal(r,'ev-time'), pname:_evVal(r,'ev-pname'), pphone:_evVal(r,'ev-pphone') };
     var _vis=function(c){ var g=r.querySelector('.'+c); return g && g.style.display!=='none'; };
-    t.flight=_vis('ev-flight-grp')?_evVal(r,'ev-flight').toUpperCase().replace(/\s+/g,' '):'';
-    t.train=_vis('ev-train-grp')?_evVal(r,'ev-train').toUpperCase().replace(/\s+/g,' '):'';
-    if(t.flight && !/^[A-Z0-9]{2,3} ?\d{1,4}[A-Z]?$/.test(t.flight)) return fail('Trajet '+(i+1)+' : numéro de vol invalide (ex. SN 3123).');
-    if(t.train && !/^[A-Z]{0,4} ?\d{1,5}$/.test(t.train)) return fail('Trajet '+(i+1)+' : numéro de train invalide (ex. IC 1832).');
+    var _bad='';
+    ['flight','train','flight2','train2'].forEach(function(k){
+      t[k]=_vis('ev-'+k+'-grp')?_evVal(r,'ev-'+k).toUpperCase().replace(/\s+/g,' '):'';
+      if(t[k] && !_bad && !(k.indexOf('flight')===0?/^[A-Z0-9]{2,3} ?\d{1,4}[A-Z]?$/:/^[A-Z]{0,4} ?\d{1,5}$/).test(t[k])) _bad=k.indexOf('flight')===0?'numéro de vol invalide (ex. SN 3123)':'numéro de train invalide (ex. IC 1832)';
+    });
+    if(_bad) return fail('Trajet '+(i+1)+' : '+_bad+'.');
     if(!t.from || (ty==='ab' && !t.to) || !t.date || !t.time) return fail('Trajet '+(i+1)+' : indiquez '+(!t.from?(ty==='ab'?'le départ':'le lieu de prise en charge'):(ty==='ab'&&!t.to)?'l’arrivée':!t.date?'la date':'l’heure')+'.');
     var vm=r.getAttribute('data-vm'), N=parseInt(r.getAttribute('data-n'),10)||0, c=_evCounts(r);
     if(vm==='pax' && !N) return fail('Trajet '+(i+1)+' : indiquez le nombre de personnes.');
@@ -9765,6 +9802,8 @@ async function submitEvent(){
       if(pp) notes+='|tel:'+pp.replace(/\|/g,' ');
       if(v.flight) notes+='|flight:'+v.flight;
       if(v.train) notes+='|train:'+v.train;
+      if(v.flight2) notes+='|flight2:'+v.flight2;
+      if(v.train2) notes+='|train2:'+v.train2;
       var rd={ client_id:currentUser.id, trip_type:v.type, from_address:v.from, to_address:v.type==='ab'?v.to:null, ride_date:v.date, ride_time:v.time,
                passengers:parseInt(v.pax,10)||1, vehicle_type:v.cls||null, notes:notes||null, status:'waiting' };
       var res=await sb.rpc('api_ride_create',{ p:rd });
@@ -11456,8 +11495,7 @@ window.addMixedSegment=function(){
   var abFields=
     '<div class="input-group full"><label>D&eacute;part <span style="color:var(--red)">*</span></label><input id="sf-'+n+'" placeholder="Gare du Midi, Bruxelles" autocomplete="off"></div>'+
     '<div id="st-wrap-'+n+'" class="input-group full"><label>Arriv&eacute;e <span style="color:var(--red)">*</span></label><input id="st-'+n+'" placeholder="A&eacute;roport BRU" autocomplete="off"></div>'+
-    '<div class="input-group full tr-grp" id="sfl-grp-'+n+'" style="display:none;"><label id="sfl-lbl-'+n+'">Num&eacute;ro de vol</label><input id="sfl-'+n+'" class="tr-input" placeholder="Ex. SN 3123" autocomplete="off" maxlength="10"></div>'+
-    '<div class="input-group full tr-grp" id="str-grp-'+n+'" style="display:none;"><label id="str-lbl-'+n+'">Num&eacute;ro de train</label><input id="str-'+n+'" class="tr-input" placeholder="Ex. IC 1832" autocomplete="off" maxlength="10"></div>'+
+    _segTrHtml(n)+
     '<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="sd8-'+n+'"></div>'+
     '<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="sh-'+n+'" value="08:00"></div>'+
     '<div class="input-group"><label>Passagers</label><select id="spax-'+n+'">'+paxOpts+'</select></div>'+
@@ -11467,8 +11505,7 @@ window.addMixedSegment=function(){
   // Disposition fields (same as panel-disposal)
   var dispFields=
     '<div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="sf-'+n+'" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>'+
-    '<div class="input-group full tr-grp" id="sfl-grp-'+n+'" style="display:none;"><label id="sfl-lbl-'+n+'">Num&eacute;ro de vol</label><input id="sfl-'+n+'" class="tr-input" placeholder="Ex. SN 3123" autocomplete="off" maxlength="10"></div>'+
-    '<div class="input-group full tr-grp" id="str-grp-'+n+'" style="display:none;"><label id="str-lbl-'+n+'">Num&eacute;ro de train</label><input id="str-'+n+'" class="tr-input" placeholder="Ex. IC 1832" autocomplete="off" maxlength="10"></div>'+
+    _segTrHtml(n)+
     '<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="sd8-'+n+'"></div>'+
     '<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="sh-'+n+'" value="08:00"></div>'+
     '<div class="input-group"><label>Dur&eacute;e (heures)</label><input type="number" id="sdur-'+n+'" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>'+
@@ -11519,13 +11556,17 @@ window.removeSegSafe=function(n){
   _mixRenumber();
 };
 // Trajet mixte : numéro de vol / train par trajet (aéroport ou gare au départ / à l'arrivée)
+// ids : sfl / str (1er vol / train), sfl2 / str2 (2e du même genre)
+var _SEG_TRK={ flight:'sfl', train:'str', flight2:'sfl2', train2:'str2' };
+function _segTrHtml(n){
+  return '<div class="input-group full tr-pair" id="strp-'+n+'" style="display:none;">'+Object.keys(_SEG_TRK).map(function(k){ var id=_SEG_TRK[k];
+    return '<div class="input-group" id="'+id+'-grp-'+n+'" style="display:none;"><label id="'+id+'-lbl-'+n+'"></label><input id="'+id+'-'+n+'" class="tr-input" placeholder="'+(k.indexOf('flight')===0?'Ex. SN 3123':'Ex. IC 1832')+'" autocomplete="off" maxlength="10"></div>'; }).join('')+'</div>';
+}
 window._segTr=function(n){
   if(!window._trKindOf) return;
   var g=function(id){ var e=document.getElementById(id); return e?e.value:''; };
-  var hasTo=!!document.getElementById('st-'+n), f=_trKindOf(g('sf-'+n)), t=hasTo?_trKindOf(g('st-'+n)):{};
-  var set=function(k,show,pickup){ var gr=document.getElementById(k+'-grp-'+n), l=document.getElementById(k+'-lbl-'+n); if(gr) gr.style.display=show?'':'none';
-    if(l) l.textContent=k==='sfl'?(pickup?'Numéro du vol d’arrivée':'Numéro du vol de départ'):(pickup?'Numéro du train d’arrivée':'Numéro du train de départ'); };
-  set('sfl', f.plane||t.plane, f.plane); set('str', f.train||t.train, f.train);
+  var hasTo=!!document.getElementById('st-'+n);
+  _trPairApply(document.getElementById('strp-'+n), _trPairPlan(g('sf-'+n), hasTo?g('st-'+n):null), function(k){ return document.getElementById(_SEG_TRK[k]+'-grp-'+n); }, function(k){ return document.getElementById(_SEG_TRK[k]+'-lbl-'+n); });
 };
 ['input','change','focusout'].forEach(function(evn){ document.addEventListener(evn, function(e){ var m=e.target&&e.target.id&&e.target.id.match(/^s[ft]-(\d+)$/); if(m) setTimeout(function(){ _segTr(m[1]); },0); }, true); });
 // Trajet mixte : numérotation « Trajet 1, 2… » et duplication (même présentation que les événements)
@@ -11538,13 +11579,13 @@ window._mixDup=function(n){
   var src=document.getElementById('seg-'+n); if(!src) return;
   var gv=function(id){ var e=document.getElementById(id); return e?e.value:''; };
   var isD=(src.querySelector('.mix-type')||{}).value==='disposal';
-  var v={ fl:gv('sfl-'+n), tr:gv('str-'+n), f:gv('sf-'+n), t:gv('st-'+n), d:gv('sd8-'+n), h:gv('sh-'+n), dur:gv('sdur-'+n), pax:gv('spax-'+n), veh:gv('sveh-'+n), notes:gv('snotes-'+n) };
+  var v={ fl:gv('sfl-'+n), tr:gv('str-'+n), fl2:gv('sfl2-'+n), tr2:gv('str2-'+n), f:gv('sf-'+n), t:gv('st-'+n), d:gv('sd8-'+n), h:gv('sh-'+n), dur:gv('sdur-'+n), pax:gv('spax-'+n), veh:gv('sveh-'+n), notes:gv('snotes-'+n) };
   addMixedSegment(); var m=_segN, nw=document.getElementById('seg-'+m);
   if(nw && src.nextSibling!==nw) src.parentNode.insertBefore(nw, src.nextSibling);
   if(isD){ var b=nw.querySelectorAll('.seg-type-btn'); setSegType(b[1], m, 'disposal'); }
   setTimeout(function(){
     var sv=function(id,x){ var e=document.getElementById(id); if(e&&x!=='') e.value=x; };
-    sv('sf-'+m,v.f); if(!isD) sv('st-'+m,v.t); sv('sd8-'+m,v.d); sv('sh-'+m,v.h); if(isD) sv('sdur-'+m,v.dur); sv('spax-'+m,v.pax); sv('sveh-'+m,v.veh); sv('snotes-'+m,v.notes); sv('sfl-'+m,v.fl); sv('str-'+m,v.tr); _segTr(m);
+    sv('sf-'+m,v.f); if(!isD) sv('st-'+m,v.t); sv('sd8-'+m,v.d); sv('sh-'+m,v.h); if(isD) sv('sdur-'+m,v.dur); sv('spax-'+m,v.pax); sv('sveh-'+m,v.veh); sv('snotes-'+m,v.notes); sv('sfl-'+m,v.fl); sv('str-'+m,v.tr); sv('sfl2-'+m,v.fl2); sv('str2-'+m,v.tr2); _segTr(m);
     _mixRenumber();
   }, 90);
 };
@@ -12499,6 +12540,9 @@ function parseMixedNotes(notes){
     var fl='',trn='';
     var flm=s.match(/\|fl:([^|]*)/); if(flm){fl=flm[1].trim();s=s.replace(flm[0],'');}
     var trm=s.match(/\|tr:([^|]*)/); if(trm){trn=trm[1].trim();s=s.replace(trm[0],'');}
+    var fl2='',trn2='';
+    var flm2=s.match(/\|fl2:([^|]*)/); if(flm2){fl2=flm2[1].trim();s=s.replace(flm2[0],'');}
+    var trm2=s.match(/\|tr2:([^|]*)/); if(trm2){trn2=trm2[1].trim();s=s.replace(trm2[0],'');}
     var nm=s.match(/\|n:([^|]*)/);  var segNote=''; if(nm){segNote=nm[1].trim();s=s.replace(nm[0],'');}
     var pm=s.match(/\|p:([^|]+)/); if(pm){pax=pm[1].trim();s=s.replace(pm[0],'');}
     var vm=s.match(/\|v:([^|]+)/); if(vm){veh=vm[1].trim();s=s.replace(vm[0],'');}
@@ -12522,7 +12566,7 @@ function parseMixedNotes(notes){
     var dur='',durm=rest.match(/\(([^)]+)\)/);
     if(durm){dur=durm[1];rest=rest.replace(durm[0],'').trim();}
     var pts=rest.split('>');
-    return{type:type,time:time,from:(pts[0]||'').trim(),to:(pts[1]||'').trim(),dur:dur,date:date,pax:pax,veh:veh,note:segNote,flight:fl,train:trn};
+    return{type:type,time:time,from:(pts[0]||'').trim(),to:(pts[1]||'').trim(),dur:dur,date:date,pax:pax,veh:veh,note:segNote,flight:fl,train:trn,flight2:fl2,train2:trn2};
   }).filter(Boolean);
 }
 

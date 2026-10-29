@@ -27,7 +27,7 @@ type Point = {
   terminal?: string; gate?: string; platform?: string; platformChanged?: boolean; belt?: string; cancelled?: boolean;
 };
 type Item = {
-  kind: "flight" | "train"; number: string; ok: boolean; reason?: string; message?: string;
+  kind: "flight" | "train"; slot?: string; number: string; ok: boolean; reason?: string; message?: string;
   label?: string; airline?: string; state?: "ok" | "delayed" | "cancelled" | "done" | "live" | "unknown"; statusText?: string;
   focus?: "dep" | "arr"; dep?: Point; arr?: Point; updatedAt?: string;
 };
@@ -196,23 +196,28 @@ Deno.serve(async (req) => {
     const date = String(ride.ride_date || todayBxl()).slice(0, 10);
     const diff = daysFromToday(date);
     const items: Item[] = [];
-    const wanted: Array<["flight" | "train", string, RegExp]> = [
-      ["flight", tag(ride.notes, "flight").toUpperCase().replace(/[^A-Z0-9]/g, ""), AIRPORT],
-      ["train", tag(ride.notes, "train").toUpperCase().replace(/[^A-Z0-9]/g, ""), STATION],
+    // flight / train : 1er numéro ; flight2 / train2 : 2e du même genre (départ ET arrivée à un aéroport / une gare) → toujours la dépose
+    const num = (k: string) => tag(ride.notes, k).toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const wanted: Array<["flight" | "train", string, RegExp, string]> = [
+      ["flight", num("flight"), AIRPORT, "flight"],
+      ["train", num("train"), STATION, "train"],
+      ["flight", num("flight2"), AIRPORT, "flight2"],
+      ["train", num("train2"), STATION, "train2"],
     ];
-    for (const [kind, number, re] of wanted) {
+    for (const [kind, number, re, slot] of wanted) {
       if (!number) continue;
       // Prise en charge à l'aéroport / la gare → on suit l'arrivée ; dépose → le départ
-      const focus: "dep" | "arr" = re.test(norm(from)) || !re.test(norm(to)) ? "arr" : "dep";
+      const focus: "dep" | "arr" = slot.endsWith("2") ? "dep" : (re.test(norm(from)) || !re.test(norm(to)) ? "arr" : "dep");
       const hint = focus === "arr" ? from : to;
-      if (diff > 1) { items.push({ kind, number, ok: false, focus, reason: "too_early", message: "Statut en temps réel disponible la veille du trajet" }); continue; }
-      if (diff < -1) { items.push({ kind, number, ok: false, focus, reason: "past", message: "Trajet passé" }); continue; }
+      if (diff > 1) { items.push({ kind, slot, number, ok: false, focus, reason: "too_early", message: "Statut en temps réel disponible la veille du trajet" }); continue; }
+      if (diff < -1) { items.push({ kind, slot, number, ok: false, focus, reason: "past", message: "Trajet passé" }); continue; }
       try {
-        items.push(kind === "flight"
+        const it = kind === "flight"
           ? await cached(`f:${number}:${date}:${focus}:${norm(hint)}`, 120_000, () => flightStatus(number, date, hint, focus))
-          : await cached(`t:${number}:${date}:${focus}:${norm(hint)}`, 60_000, () => trainStatus(number, date, hint, focus)));
+          : await cached(`t:${number}:${date}:${focus}:${norm(hint)}`, 60_000, () => trainStatus(number, date, hint, focus));
+        items.push({ ...it, slot });
       } catch (e) {
-        items.push({ kind, number, ok: false, focus, reason: "provider", message: "Statut momentanément indisponible" });
+        items.push({ kind, slot, number, ok: false, focus, reason: "provider", message: "Statut momentanément indisponible" });
         console.error(kind, number, e);
       }
     }
