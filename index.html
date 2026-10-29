@@ -8239,6 +8239,11 @@ window.submitRide = async function(){
       var snotes=(document.getElementById('snotes-'+n)||{}).value||'';
       var ab=seg.querySelector('.seg-type-btn.active');
       var isD=ab&&ab.textContent.toLowerCase().indexOf('disp')>=0;
+      // Champs obligatoires de chaque trajet
+      if(!_segErr){
+        var _miss=!sf?(isD?'le lieu de prise en charge':'le départ'):(!isD&&!st)?'l’arrivée':!sdate?'la date':!stime?'l’heure':'';
+        if(_miss) _segErr='Trajet '+(_si+1)+' : indiquez '+_miss+'.';
+      }
       // Format: TYPE@HH:MM:from>to(dur)|d:DATE|p:PAX|v:VEH|n:NOTE
       var segStr=(isD?'Disposition':'A>B');
       if(stime) segStr+='@'+stime;
@@ -8884,8 +8889,10 @@ window.submitSubcontract = async function(){
       var st = g('sub-st-'+n)||'';
       var ab = seg.querySelector('.seg-type-btn.active');
       var isD = ab && ab.textContent.toLowerCase().indexOf('disp') >= 0;
+      if(!sf || (!isD && !st)) segs._miss=true;
       segs.push((isD?'Disposition':'A>B')+':'+sf+(st&&!isD?'>'+st:''));
     });
+    if(segs._miss){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
     from  = segs.length ? segs[0].replace(/^[^:]+:/,'').split('>')[0].trim() : 'Mixte';
     to    = '';
     date  = todayStr();
