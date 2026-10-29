@@ -2788,11 +2788,11 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <div id="panel-disposal" style="display:none;">
         <div class="form-grid">
           <div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="disp-from" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>
+          <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
           <div class="input-group full tr-grp" id="disp-flight-grp" style="display:none;"><label id="disp-flight-lbl">Num&eacute;ro de vol</label><input id="disp-flight" class="tr-input" placeholder="Ex. SN 3123" autocomplete="off" maxlength="10"><div class="tr-hint" id="disp-flight-hint"></div></div>
           <div class="input-group full tr-grp" id="disp-train-grp" style="display:none;"><label id="disp-train-lbl">Num&eacute;ro de train</label><input id="disp-train" class="tr-input" placeholder="Ex. IC 1832" autocomplete="off" maxlength="10"><div class="tr-hint" id="disp-train-hint"></div></div>
           <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="disp-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="disp-time" type="time"></div>
-          <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
           <div class="input-group"><label>Passagers</label><select id="disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
           <div class="input-group"><label class="veh-lbl">V&eacute;hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select id="disp-vehicle"><option value="lowcost">Economy</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option></select></div>
           <div class="input-group full"><label>Instructions</label><textarea id="disp-notes" rows="2" placeholder="It&eacute;n&eacute;raire, arr&ecirc;ts pr&eacute;vus&hellip;"></textarea></div>
