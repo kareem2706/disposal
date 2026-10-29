@@ -9495,7 +9495,7 @@ window._evAdd=function(d){
   div.setAttribute('data-vm', d.vm||'manual'); div.setAttribute('data-n', d.n||''); div.setAttribute('data-cnt', JSON.stringify(d.cnt||{business:1}));
   div.innerHTML='<div class="ev-vh"><span class="n"></span><span class="ev-ttl"></span><span class="tl"><button type="button" onclick="_evDup(this)">Dupliquer</button><button type="button" class="ev-del" onclick="_evDel(this)">Supprimer</button></span></div>'
     +'<div class="form-grid">'
-    +'<div class="input-group full"><label>Type de trajet</label><select class="ev-type" onchange="_evType(this)"><option value="ab">Trajet simple (A → B)</option><option value="disposal">Mise à disposition</option></select></div>'
+    +'<div class="input-group full"><label>Type de trajet</label><select class="ev-type" onchange="_evType(this)"><option value="ab">Transfert simple</option><option value="disposal">Mise à disposition</option></select></div>'
     +'<div class="input-group full"><label class="ev-from-lbl">Départ <span style="color:var(--red)">*</span></label><input class="ev-from" autocomplete="off" placeholder="Adresse, gare, aéroport" value="'+e(d.from)+'"></div>'
     +'<div class="input-group full ev-to-grp"><label>Arrivée <span style="color:var(--red)">*</span></label><input class="ev-to" autocomplete="off" placeholder="Destination" value="'+e(d.to)+'"></div>'
     +'<div class="input-group full ev-flight-grp" style="display:none;"><label class="ev-flight-lbl">Numéro de vol</label><input class="ev-flight tr-input" placeholder="Ex. SN 3123" autocomplete="off" maxlength="10" value="'+e(d.flight)+'"></div>'
@@ -9596,7 +9596,7 @@ window._evShowRecap=function(d){
     +'<div class="s">'+esc([d.trips.length+' trajet'+(d.trips.length>1?'s':''), d.total+' véhicule'+(d.total>1?'s':''), d.mode==='one'&&d.cname?'contact : '+d.cname+(d.cphone?' · '+d.cphone:''):(d.mode==='per'?'un contact par trajet':'')].filter(Boolean).join(' · '))+'</div></div>';
   d.trips.forEach(function(tr){
     var t=tr.t, disp=t.type==='disposal', nv=_evTotal(tr.c), st=_evSeats(tr.c);
-    h+='<div class="evr-trip"><div class="evr-th"><span class="n">'+tr.i+'</span>Trajet '+tr.i+' <span class="ty">· '+(disp?'Mise à disposition':'Trajet simple (A → B)')+'</span><span class="dt">'+esc(fd(t.date))+' · '+esc(t.time)+'</span></div>'
+    h+='<div class="evr-trip"><div class="evr-th"><span class="n">'+tr.i+'</span>Trajet '+tr.i+' <span class="ty">· '+(disp?'Mise à disposition':'Transfert simple')+'</span><span class="dt">'+esc(fd(t.date))+' · '+esc(t.time)+'</span></div>'
       +'<div class="evr-rt">'+(disp
         ?'<div><i style="background:#4E8F69"></i><span>'+esc(t.from)+'</span></div>'
         :'<div><i style="background:#4E8F69"></i><span>'+esc(t.from)+'</span></div><div><i style="background:#D8705F"></i><span>'+esc(t.to)+'</span></div>')+'</div>'
