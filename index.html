@@ -9600,7 +9600,7 @@ window._evShowRecap=function(d){
       +'<div class="evr-rt">'+(disp
         ?'<div><i style="background:#4E8F69"></i><span>'+esc(t.from)+'</span></div>'
         :'<div><i style="background:#4E8F69"></i><span>'+esc(t.from)+'</span></div><div><i style="background:#D8705F"></i><span>'+esc(t.to)+'</span></div>')+'</div>'
-      +'<div class="evr-kv"><span><b>'+esc(_evCntLabel(tr.c))+'</b> · '+nv+' véhicule'+(nv>1?'s':'')+'</span>'
+      +'<div class="evr-kv"><span><b>'+esc(_evCntLabel(tr.c))+'</b></span>'
       +'<span>'+(tr.n?'<b>'+tr.n+'</b> personne'+(tr.n>1?'s':''):(st.bus?'capacité selon le bus':'jusqu’à <b>'+st.seats+'</b> personnes'))+'</span>'
       +(disp?'<span>Durée <b>'+(parseInt(t.dur,10)||2)+' h</b></span>':'')
       +(t.flight?'<span>Vol <b>'+esc(t.flight)+'</b></span>':'')
