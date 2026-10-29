@@ -1136,6 +1136,23 @@ body{background:var(--bg);}
 .ev-veh .form-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;column-gap:10px;}
 .ev-veh .form-grid .full{grid-column:1/-1!important;}
 #m-new-ride .ev-veh .form-grid > .input-group:not(.full){grid-column:auto!important;min-width:0;}
+.ev-sub-t{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin:14px 0 8px;}
+.ev-vm{margin-bottom:6px;}
+.ev-cnt{display:flex;align-items:center;padding:7px 0;border-bottom:1px solid #F3F1EC;font-size:14px;color:var(--ink);}
+.ev-cnt:last-child{border-bottom:none;}
+.ev-cnt.z .ev-cn{color:var(--ink4,#B0AFAA);}
+.ev-cnt small{color:var(--ink3);font-size:12px;margin-left:8px;}
+.ev-st{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.ev-st b{min-width:18px;text-align:center;font-size:14px;}
+.ev-st button{width:30px;height:30px;border-radius:50%;border:1px solid #E4E1D9;background:#fff;color:var(--green);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+.ev-st button:hover{border-color:var(--green);}
+.ev-sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.ev-sg button{text-align:left;border:1px solid #E4E1D9;border-radius:10px;padding:9px 11px;background:#fff;font:600 13.5px 'DM Sans',sans-serif;color:var(--ink);cursor:pointer;}
+.ev-sg button small{display:block;font-weight:400;color:var(--ink3);font-size:12px;margin-top:2px;}
+.ev-sg button.on{border:1.5px solid var(--green);background:#F3F8F4;}
+.ev-sum{background:#F6F8F6;border-radius:9px;padding:8px 11px;font-size:12.5px;color:#2E5E43;margin-top:8px;line-height:1.4;}
+.ev-sum.warn{background:#FFF6E8;color:#9A5B00;}
+@media(max-width:600px){ .ev-sg{grid-template-columns:1fr;} }
 .ev-add{width:100%;border:1.5px dashed #CDBDF0;color:#7A55C2;border-radius:12px;padding:10px;font:600 13px 'DM Sans',sans-serif;background:#FBF9FE;cursor:pointer;}
 .ev-note{font-size:12px;color:var(--ink3);background:#F4F1FB;border-radius:10px;padding:9px 11px;line-height:1.45;margin-top:12px;}
 #m-new-ride.ev-add-only #ev-name-grp input{background:#F7F7F5;}
@@ -2731,16 +2748,16 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <div id="panel-event" style="display:none;">
         <div class="input-group" id="ev-name-grp"><label>Nom de l&rsquo;&eacute;v&eacute;nement <span style="color:var(--red)">*</span></label><input id="ev-name" maxlength="120" placeholder="Ex. S&eacute;minaire annuel &mdash; Ch&acirc;teau de la Hulpe"></div>
         <div class="input-group" id="ev-mode-grp"><label>Passagers</label>
-          <div class="ev-seg"><button type="button" class="on" data-m="one" onclick="_evMode('one')">Un contact pour tous les trajets</button><button type="button" data-m="per" onclick="_evMode('per')">Un contact par v&eacute;hicule</button></div>
+          <div class="ev-seg"><button type="button" class="on" data-m="one" onclick="_evMode('one')">Un contact pour tous les trajets</button><button type="button" data-m="per" onclick="_evMode('per')">Un contact par trajet</button></div>
         </div>
         <div class="form-grid" id="ev-contact">
           <div class="input-group"><label>Contact sur place</label><input id="ev-cname" maxlength="120" placeholder="Nom et pr&eacute;nom"></div>
           <div class="input-group"><label>T&eacute;l&eacute;phone</label><input id="ev-cphone" maxlength="40" placeholder="0470 12 34 56" inputmode="tel"></div>
         </div>
-        <div class="ev-lbl" id="ev-count">V&eacute;hicules</div>
+        <div class="ev-lbl" id="ev-count">Trajets</div>
         <div id="ev-vehicles"></div>
-        <button type="button" class="ev-add" onclick="_evAdd()">+ Ajouter un v&eacute;hicule</button>
-        <div class="ev-note">Chaque v&eacute;hicule est envoy&eacute; aux chauffeurs comme une demande s&eacute;par&eacute;e, li&eacute;e &agrave; l&rsquo;&eacute;v&eacute;nement. Vous suivez tout depuis une seule demande.</div>
+        <button type="button" class="ev-add" onclick="_evAdd()">+ Ajouter un trajet</button>
+        <div class="ev-note">Chaque v&eacute;hicule de chaque trajet est envoy&eacute; aux chauffeurs comme une demande s&eacute;par&eacute;e, li&eacute;e &agrave; l&rsquo;&eacute;v&eacute;nement. Vous suivez tout depuis une seule demande.</div>
       </div>
       <div id="ride-err" class="auth-error"></div>
     </div>
@@ -9382,43 +9399,96 @@ function _evGp(el){
     el.value = nm&&ad&&ad.toLowerCase().indexOf(nm.toLowerCase())===-1 ? nm+', '+ad : (ad||nm); });
 }
 function _evVal(row,c){ var e=row.querySelector('.'+c); return e?String(e.value||'').trim():''; }
-function _evRenumber(){
-  var rows=_evRows(), n=rows.length;
-  rows.forEach(function(r,i){ r.querySelector('.n').textContent=i+1; r.querySelector('.ev-ttl').textContent='Véhicule '+(i+1); r.querySelector('.ev-del').style.display=n>1?'':'none'; });
-  var c=document.getElementById('ev-count'); if(c) c.textContent='Véhicules ('+n+')';
-  var b=document.getElementById('btn-submit-ride'); if(b && document.getElementById('m-new-ride').classList.contains('nr-event')) b.innerHTML='Publier '+n+' demande'+(n>1?'s':'')+' &rarr;';
+// Gammes pour les événements : capacité (places) utilisée par les suggestions
+var _EV_CLS=[ {k:'lowcost',n:'Economy',cap:3,info:'3 à 7 places'}, {k:'business',n:'Business',cap:3,info:'3 places'}, {k:'luxe',n:'Luxe',cap:3,info:'3 places'}, {k:'van',n:'Van',cap:7,info:'7 places'}, {k:'bus',n:'Bus',cap:50,info:'minibus, autocar'} ];
+function _evClsName(k){ var c=_EV_CLS.filter(function(x){ return x.k===k; })[0]; return c?c.n:k; }
+function _evCounts(r){ try{ return JSON.parse(r.getAttribute('data-cnt')||'{}')||{}; }catch(e){ return {}; } }
+function _evTotal(c){ return Object.keys(c).reduce(function(t,k){ return t+(parseInt(c[k],10)||0); },0); }
+function _evCntLabel(c){ return _EV_CLS.slice().sort(function(a,b){ return b.cap-a.cap; }).filter(function(x){ return c[x.k]>0; }).map(function(x){ return c[x.k]+' '+x.n; }).join(' + '); }
+function _evSeats(c){ var t=0, bus=false; _EV_CLS.forEach(function(x){ var n=c[x.k]||0; if(x.k==='bus'){ if(n) bus=true; } else t+=n*x.cap; }); return {seats:t, bus:bus}; }
+// Solutions proposées pour N personnes (jamais d'Economy, pas de Luxe d'office)
+function _evSuggest(N){
+  N=parseInt(N,10)||0; if(N<1) return [];
+  var out=[], seen={}, push=function(c,sub){ var k=JSON.stringify(c); if(seen[k]) return; seen[k]=1; out.push({c:c,sub:sub}); };
+  var vans=Math.floor(N/7), rest=N%7, mix={};
+  if(rest>=1 && rest<=3){ if(vans) mix.van=vans; mix.business=1; } else { mix.van=vans+(rest?1:0); }
+  var seats=function(c){ return (c.van||0)*7+(c.business||0)*3; };
+  var nv=function(c){ return _evTotal(c); };
+  push(mix, nv(mix)+' véhicule'+(nv(mix)>1?'s':'')+' · '+seats(mix)+' places');
+  var nb=Math.ceil(N/3); if(nb<=12) push({business:nb}, nb+' véhicule'+(nb>1?'s':'')+' · '+nb*3+' places');
+  var nvn=Math.ceil(N/7); push({van:nvn}, nvn+' véhicule'+(nvn>1?'s':'')+' · '+nvn*7+' places');
+  if(N>=8){ var bs=Math.ceil(N/50); push({bus:bs}, bs>1?bs+' véhicules · autocars':'minibus / autocar'); }
+  return out.slice(0,4);
 }
+function _evRenumber(){
+  var rows=_evRows(), n=rows.length, tot=0;
+  rows.forEach(function(r,i){ r.querySelector('.n').textContent=i+1; r.querySelector('.ev-ttl').textContent='Trajet '+(i+1); r.querySelector('.ev-del').style.display=n>1?'':'none'; tot+=_evTotal(_evCounts(r)); });
+  var c=document.getElementById('ev-count'); if(c) c.textContent='Trajets ('+n+')';
+  var b=document.getElementById('btn-submit-ride'); if(b && document.getElementById('m-new-ride').classList.contains('nr-event')) b.innerHTML='Publier '+tot+' demande'+(tot>1?'s':'')+' &rarr;';
+}
+// Dessine le bloc « Véhicules pour ce trajet » selon le mode (choix manuel / nombre de personnes)
+function _evDrawVeh(r){
+  var mode=r.getAttribute('data-vm')||'manual', c=_evCounts(r), box=r.querySelector('.ev-vbody'), h='';
+  r.querySelectorAll('.ev-vm button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-v')===mode); });
+  if(mode==='manual'){
+    h+=_EV_CLS.map(function(x){ var v=c[x.k]||0;
+      return '<div class="ev-cnt'+(v?'':' z')+'"><span class="ev-cn">'+x.n+'</span><small>'+x.info+'</small><span class="ev-st"><button type="button" aria-label="Retirer" onclick="_evInc(this,\''+x.k+'\',-1)">−</button><b>'+v+'</b><button type="button" aria-label="Ajouter" onclick="_evInc(this,\''+x.k+'\',1)">+</button></span></div>'; }).join('');
+    var t=_evTotal(c), st=_evSeats(c);
+    h+=t?'<div class="ev-sum">'+t+' véhicule'+(t>1?'s':'')+(st.bus?'':' · jusqu’à '+st.seats+' personnes')+'</div>':'<div class="ev-sum warn">Choisissez au moins un véhicule.</div>';
+  } else {
+    var N=r.getAttribute('data-n')||'';
+    h+='<div class="form-grid" style="margin-top:4px;"><div class="input-group"><label>Nombre de personnes <span style="color:var(--red)">*</span></label><input class="ev-n" type="number" min="1" max="500" inputmode="numeric" placeholder="Ex. 15" value="'+N+'" oninput="_evSetN(this)"></div></div>';
+    var sg=_evSuggest(N), key=JSON.stringify(c);
+    if(sg.length){
+      h+='<label style="display:block;font-size:12px;color:var(--ink3);margin-top:4px;">Solutions proposées</label><div class="ev-sg">'
+        +sg.map(function(o,i){ return '<button type="button" class="'+(JSON.stringify(o.c)===key?'on':'')+'" onclick="_evPickSg(this,'+i+')">'+_evCntLabel(o.c)+'<small>'+o.sub+'</small></button>'; }).join('')+'</div>';
+      var t=_evTotal(c);
+      if(t) h+='<div class="ev-sum">✓ '+t+' véhicule'+(t>1?'s':'')+' : '+_evCntLabel(c)+' — vous pouvez ajuster dans « Je choisis les véhicules »</div>';
+    }
+  }
+  box.innerHTML=h;
+  _evRenumber();
+}
+window._evVM=function(btn,m){ var r=btn.closest('.ev-veh'); r.setAttribute('data-vm',m); _evDrawVeh(r); if(m==='pax'){ var i=r.querySelector('.ev-n'); if(i&&!i.value) i.focus(); } };
+window._evInc=function(btn,k,d){ var r=btn.closest('.ev-veh'), c=_evCounts(r); c[k]=Math.max(0,Math.min(50,(c[k]||0)+d)); if(!c[k]) delete c[k]; r.setAttribute('data-cnt',JSON.stringify(c)); _evDrawVeh(r); };
+window._evSetN=function(inp){
+  var r=inp.closest('.ev-veh'); r.setAttribute('data-n', inp.value);
+  var sg=_evSuggest(inp.value); r.setAttribute('data-cnt', JSON.stringify(sg[0]?sg[0].c:{}));
+  clearTimeout(r._t); r._t=setTimeout(function(){ var pos=inp.selectionStart; _evDrawVeh(r); var n=r.querySelector('.ev-n'); if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} } }, 350);
+  _evRenumber();
+};
+window._evPickSg=function(btn,i){ var r=btn.closest('.ev-veh'), sg=_evSuggest(r.getAttribute('data-n')); if(sg[i]){ r.setAttribute('data-cnt',JSON.stringify(sg[i].c)); _evDrawVeh(r); } };
 window._evAdd=function(d){
   d=d||{}; var box=document.getElementById('ev-vehicles'); if(!box) return;
   var last=_evRows().slice(-1)[0];
   if(!d.date && last) d.date=_evVal(last,'ev-date');
-  if(!d.time && last) d.time=_evVal(last,'ev-time');
   var e=function(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); };
   var min=(typeof todayStr==='function')?todayStr():'';
   var div=document.createElement('div'); div.className='ev-veh';
+  div.setAttribute('data-vm', d.vm||'manual'); div.setAttribute('data-n', d.n||''); div.setAttribute('data-cnt', JSON.stringify(d.cnt||{business:1}));
   div.innerHTML='<div class="ev-vh"><span class="n"></span><span class="ev-ttl"></span><span class="tl"><button type="button" onclick="_evDup(this)">Dupliquer</button><button type="button" class="ev-del" onclick="_evDel(this)">Supprimer</button></span></div>'
     +'<div class="form-grid">'
-    +'<div class="input-group"><label>Type de trajet</label><select class="ev-type" onchange="_evType(this)"><option value="ab">Trajet simple (A → B)</option><option value="disposal">Mise à disposition</option></select></div>'
-    +'<div class="input-group"><label class="veh-lbl">Gamme <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label><select class="ev-cls">'+_evClassOpts()+'</select></div>'
+    +'<div class="input-group full"><label>Type de trajet</label><select class="ev-type" onchange="_evType(this)"><option value="ab">Trajet simple (A → B)</option><option value="disposal">Mise à disposition</option></select></div>'
     +'<div class="input-group full"><label class="ev-from-lbl">Départ <span style="color:var(--red)">*</span></label><input class="ev-from" autocomplete="off" placeholder="Adresse, gare, aéroport" value="'+e(d.from)+'"></div>'
     +'<div class="input-group full ev-to-grp"><label>Arrivée <span style="color:var(--red)">*</span></label><input class="ev-to" autocomplete="off" placeholder="Destination" value="'+e(d.to)+'"></div>'
     +'<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input class="ev-date" type="date" min="'+min+'" value="'+e(d.date)+'"></div>'
     +'<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input class="ev-time" type="time" value="'+e(d.time)+'"></div>'
     +'<div class="input-group ev-dur-grp" style="display:none;"><label>Durée (heures)</label><input class="ev-dur" type="number" min="1" max="24" value="'+e(d.dur||'3')+'"></div>'
-    +'<div class="input-group"><label>Passagers</label><select class="ev-pax">'+[1,2,3,4,5,6,7,8,9,10,12,14,16,20,30,50].map(function(k){ return '<option'+(String(k)===String(d.pax||1)?' selected':'')+'>'+k+'</option>'; }).join('')+'</select></div>'
-    +'<div class="input-group ev-pax-grp full" style="display:none;"><label>Contact pour ce véhicule</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><input class="ev-pname" maxlength="120" placeholder="Nom et prénom" value="'+e(d.pname)+'"><input class="ev-pphone" maxlength="40" placeholder="Téléphone" inputmode="tel" value="'+e(d.pphone)+'"></div></div>'
-    +'</div>';
+    +'<div class="input-group ev-pax-grp full" style="display:none;"><label>Contact pour ce trajet</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><input class="ev-pname" maxlength="120" placeholder="Nom et prénom" value="'+e(d.pname)+'"><input class="ev-pphone" maxlength="40" placeholder="Téléphone" inputmode="tel" value="'+e(d.pphone)+'"></div></div>'
+    +'</div>'
+    +'<div class="ev-sub-t veh-lbl">Véhicules pour ce trajet <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></div>'
+    +'<div class="ev-seg ev-vm"><button type="button" data-v="manual" onclick="_evVM(this,\'manual\')">Je choisis les véhicules</button><button type="button" data-v="pax" onclick="_evVM(this,\'pax\')">J’indique le nombre de personnes</button></div>'
+    +'<div class="ev-vbody"></div>';
   box.appendChild(div);
   if(d.type){ div.querySelector('.ev-type').value=d.type; _evType(div.querySelector('.ev-type')); }
-  if(d.cls) div.querySelector('.ev-cls').value=d.cls; else div.querySelector('.ev-cls').value='business';
   if(_evModeVal()==='per') div.querySelector('.ev-pax-grp').style.display='';
   _evGp(div.querySelector('.ev-from')); _evGp(div.querySelector('.ev-to'));
-  _evRenumber();
+  _evDrawVeh(div);
   return div;
 };
 window._evDup=function(btn){
   var r=btn.closest('.ev-veh');
-  var d={ type:_evVal(r,'ev-type'), cls:_evVal(r,'ev-cls'), from:_evVal(r,'ev-from'), to:_evVal(r,'ev-to'), dur:_evVal(r,'ev-dur'), date:_evVal(r,'ev-date'), time:_evVal(r,'ev-time'), pax:_evVal(r,'ev-pax') };
+  var d={ type:_evVal(r,'ev-type'), from:_evVal(r,'ev-from'), to:_evVal(r,'ev-to'), dur:_evVal(r,'ev-dur'), date:_evVal(r,'ev-date'), time:_evVal(r,'ev-time'), vm:r.getAttribute('data-vm'), n:r.getAttribute('data-n'), cnt:_evCounts(r) };
   var nw=_evAdd(d); if(nw && r.nextSibling!==nw) r.parentNode.insertBefore(nw, r.nextSibling); _evRenumber();
 };
 window._evDel=function(btn){ if(_evRows().length<2) return; btn.closest('.ev-veh').remove(); _evRenumber(); };
@@ -9443,12 +9513,12 @@ window._evSetMode=function(on){
   var b=document.getElementById('btn-submit-ride');
   if(on){
     ['panel-ab','panel-disposal','panel-mixed'].forEach(function(id){ var p=document.getElementById(id); if(p) p.style.display='none'; });
-    if(tl) tl.textContent=window._evTarget?'Ajouter un véhicule':'Nouvel événement';
+    if(tl) tl.textContent=window._evTarget?'Ajouter un trajet':'Nouvel événement';
     if(!_evRows().length){
       var cn=document.getElementById('ev-cname'), cp=document.getElementById('ev-cphone');
       if(cn&&!cn.value) cn.value=(window._evTarget&&window._evTarget.contact_name)||(window._newRidePaxName||((currentProfile&&((currentProfile.first_name||'')+' '+(currentProfile.last_name||'')).trim())||''));
       if(cp&&!cp.value) cp.value=(window._evTarget&&window._evTarget.contact_phone)||(window._newRidePaxTel||(currentProfile&&currentProfile.phone)||'');
-      _evAdd({}); if(!window._evTarget){ _evAdd({}); }
+      _evAdd({});
     }
     _evRenumber();
   } else {
@@ -9484,11 +9554,23 @@ async function submitEvent(){
   var mode=_evModeVal(), cname=((document.getElementById('ev-cname')||{}).value||'').trim(), cphone=((document.getElementById('ev-cphone')||{}).value||'').trim();
   var rows=_evRows(), list=[];
   for(var i=0;i<rows.length;i++){
-    var r=rows[i], ty=_evVal(r,'ev-type'), v={ type:ty, cls:_evVal(r,'ev-cls'), from:_evVal(r,'ev-from'), to:_evVal(r,'ev-to'), dur:_evVal(r,'ev-dur'), date:_evVal(r,'ev-date'), time:_evVal(r,'ev-time'), pax:_evVal(r,'ev-pax'), pname:_evVal(r,'ev-pname'), pphone:_evVal(r,'ev-pphone') };
-    if(!v.from || (ty==='ab' && !v.to) || !v.date || !v.time) return fail('Véhicule '+(i+1)+' : indiquez '+(!v.from?(ty==='ab'?'le départ':'le lieu de prise en charge'):(ty==='ab'&&!v.to)?'l’arrivée':!v.date?'la date':'l’heure')+'.');
-    list.push(v);
+    var r=rows[i], ty=_evVal(r,'ev-type'), t={ type:ty, from:_evVal(r,'ev-from'), to:_evVal(r,'ev-to'), dur:_evVal(r,'ev-dur'), date:_evVal(r,'ev-date'), time:_evVal(r,'ev-time'), pname:_evVal(r,'ev-pname'), pphone:_evVal(r,'ev-pphone') };
+    if(!t.from || (ty==='ab' && !t.to) || !t.date || !t.time) return fail('Trajet '+(i+1)+' : indiquez '+(!t.from?(ty==='ab'?'le départ':'le lieu de prise en charge'):(ty==='ab'&&!t.to)?'l’arrivée':!t.date?'la date':'l’heure')+'.');
+    var vm=r.getAttribute('data-vm'), N=parseInt(r.getAttribute('data-n'),10)||0, c=_evCounts(r);
+    if(vm==='pax' && !N) return fail('Trajet '+(i+1)+' : indiquez le nombre de personnes.');
+    if(!_evTotal(c)) return fail('Trajet '+(i+1)+' : choisissez au moins un véhicule.');
+    // Un véhicule = une demande ; les personnes sont réparties du plus grand au plus petit véhicule
+    var veh=[]; _EV_CLS.slice().sort(function(a,b){ return b.cap-a.cap; }).forEach(function(x){ for(var q=0;q<(c[x.k]||0);q++) veh.push(x); });
+    var left=N;
+    veh.forEach(function(x,q){
+      var pax;
+      if(N){ var others=veh.length-q-1; pax=Math.max(1, Math.min(x.k==='bus'?left-others:x.cap, left-others)); left-=pax; }
+      else pax=x.k==='bus'?8:x.cap;
+      list.push(Object.assign({}, t, { cls:x.k, pax:pax, trip:i+1 }));
+    });
   }
   if(!list.length) return fail('Ajoutez au moins un véhicule.');
+  window._evLastList=list;
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){ closeModal('m-new-ride'); cancelRideModal(); showToast('Événement publié : '+list.length+' demandes'); await loadClientDashboard(); return; }
   if(btn) setLoading(btn, true, 'Publication…');
   var ids=[], created=[];
@@ -9501,7 +9583,7 @@ async function submitEvent(){
       var rd={ client_id:currentUser.id, trip_type:v.type, from_address:v.from, to_address:v.type==='ab'?v.to:null, ride_date:v.date, ride_time:v.time,
                passengers:parseInt(v.pax,10)||1, vehicle_type:v.cls||null, notes:notes||null, status:'waiting' };
       var res=await sb.rpc('api_ride_create',{ p:rd });
-      if(res.error) throw new Error('Véhicule '+(k+1)+' : '+(res.error.message||'refusé'));
+      if(res.error) throw new Error('Trajet '+v.trip+' ('+_evClsName(v.cls)+') : '+(res.error.message||'refusé'));
       rd.id=res.data&&res.data.id; rd.booking_code=res.data&&res.data.booking_code; ids.push(rd.id); created.push(rd);
     }
     var lk=await sb.rpc('api_event_create',{ p:{ name:name, contact_name:mode==='one'?cname:'', contact_phone:mode==='one'?cphone:'', ride_ids:ids, event_id:tg?tg.id:null } });
@@ -9601,7 +9683,7 @@ window.openEventDetail=async function(id, silent){
     if(!rides.length) h+='<div class="rd-muted">Aucun véhicule</div>';
     if(body) body.innerHTML=h;
     window._evCur=ev;
-    if(ft) ft.innerHTML='<button class="btn btn-secondary" style="margin-right:auto;" onclick="_evAddToEvent(window._evCur)">+ Ajouter un véhicule</button>';
+    if(ft) ft.innerHTML='<button class="btn btn-secondary" style="margin-right:auto;" onclick="_evAddToEvent(window._evCur)">+ Ajouter un trajet</button>';
   }catch(e){ console.warn('openEventDetail', e); if(body&&!silent) body.innerHTML='<div class="rd-muted">Impossible de charger l’événement.</div>'; }
 };
 
