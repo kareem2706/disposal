@@ -9714,7 +9714,7 @@ window._nrShowRecap=function(d){
   }
   var pn=(window._newRidePaxName||'').trim(), pt=(window._newRidePaxTel||'').trim();
   var ttl={ab:'Transfert simple',disposal:'Mise à disposition',mixed:'Trajet mixte'}[d.type]||'Demande';
-  var h='<div class="evr-hd" style="background:#F3F8F4;"><div class="k" style="color:#2E7A4F;">Récapitulatif de la demande</div><div class="t">'+esc(ttl)+'</div>'
+  var h='<div class="evr-hd" style="background:#F3F8F4;"><div class="k" style="color:#2E7A4F;">Récapitulatif de la demande</div>'+(d.type==='mixed'?'<div class="t">'+esc(ttl)+'</div>':'')
     +'<div class="s">'+esc([trips.length>1?trips.length+' trajets':'', pn?'passager : '+pn+(pt?' · '+pt:''):''].filter(Boolean).join(' · ')||'Vérifiez les informations avant de publier.')+'</div></div>';
   trips.forEach(function(t,i){
     h+='<div class="evr-trip"><div class="evr-th">'+(trips.length>1?'<span class="n">'+(i+1)+'</span>Trajet '+(i+1)+' <span class="ty">· '+(t.disp?'Mise à disposition':'Transfert simple')+'</span>':'<span>'+(t.disp?'Mise à disposition':'Transfert simple')+'</span>')+'<span class="dt">'+esc(fd(t.date))+(t.time?' · '+esc(t.time):'')+'</span></div>'
