@@ -2788,9 +2788,9 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <div id="panel-disposal" style="display:none;">
         <div class="form-grid">
           <div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="disp-from" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>
-          <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
           <div class="input-group full tr-grp" id="disp-flight-grp" style="display:none;"><label id="disp-flight-lbl">Num&eacute;ro de vol</label><input id="disp-flight" class="tr-input" placeholder="Ex. SN 3123" autocomplete="off" maxlength="10"><div class="tr-hint" id="disp-flight-hint"></div></div>
           <div class="input-group full tr-grp" id="disp-train-grp" style="display:none;"><label id="disp-train-lbl">Num&eacute;ro de train</label><input id="disp-train" class="tr-input" placeholder="Ex. IC 1832" autocomplete="off" maxlength="10"><div class="tr-hint" id="disp-train-hint"></div></div>
+          <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
           <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="disp-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="disp-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
@@ -9575,11 +9575,11 @@ window._evAdd=function(d){
     +'<div class="form-grid">'
     +'<div class="input-group full"><label>Type de trajet</label><select class="ev-type" onchange="_evType(this)"><option value="ab">Transfert simple</option><option value="disposal">Mise à disposition</option></select></div>'
     +'<div class="input-group full"><label class="ev-from-lbl">Départ <span style="color:var(--red)">*</span></label><input class="ev-from" autocomplete="off" placeholder="Adresse, gare, aéroport" value="'+e(d.from)+'"></div>'
-    +'<div class="input-group full ev-dur-grp" style="display:none;"><label>Durée (heures)</label><input class="ev-dur" type="number" min="1" max="24" value="'+e(d.dur||'3')+'"></div>'
     +'<div class="input-group full ev-to-grp"><label>Arrivée <span style="color:var(--red)">*</span></label><input class="ev-to" autocomplete="off" placeholder="Destination" value="'+e(d.to)+'"></div>'
     +'<div class="input-group full tr-pair ev-trp" style="display:none;">'
     +['flight','train','flight2','train2'].map(function(k){ return '<div class="input-group ev-'+k+'-grp" style="display:none;"><label class="ev-'+k+'-lbl"></label><input class="ev-'+k+' tr-input" placeholder="'+(k.indexOf('flight')===0?'Ex. SN 3123':'Ex. IC 1832')+'" autocomplete="off" maxlength="10" value="'+e(d[k])+'"></div>'; }).join('')
     +'</div>'
+    +'<div class="input-group full ev-dur-grp" style="display:none;"><label>Durée (heures)</label><input class="ev-dur" type="number" min="1" max="24" value="'+e(d.dur||'3')+'"></div>'
     +'<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input class="ev-date" type="date" min="'+min+'" value="'+e(d.date)+'"></div>'
     +'<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input class="ev-time" type="time" value="'+e(d.time)+'"></div>'
     +'<div class="input-group ev-pax-grp full" style="display:none;"><label>Contact pour ce trajet</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><input class="ev-pname" maxlength="120" placeholder="Nom et prénom" value="'+e(d.pname)+'"><input class="ev-pphone" maxlength="40" placeholder="Téléphone" inputmode="tel" value="'+e(d.pphone)+'"></div></div>'
@@ -11505,8 +11505,8 @@ window.addMixedSegment=function(){
   // Disposition fields (same as panel-disposal)
   var dispFields=
     '<div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="sf-'+n+'" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>'+
-    '<div class="input-group full"><label>Dur&eacute;e (heures)</label><input type="number" id="sdur-'+n+'" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>'+
     _segTrHtml(n)+
+    '<div class="input-group full"><label>Dur&eacute;e (heures)</label><input type="number" id="sdur-'+n+'" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>'+
     '<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="sd8-'+n+'"></div>'+
     '<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="sh-'+n+'" value="08:00"></div>'+
     '<div class="input-group"><label>Passagers</label><select id="spax-'+n+'">'+paxOpts+'</select></div>'+
