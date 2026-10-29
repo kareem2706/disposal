@@ -10023,7 +10023,10 @@ window._nrInit=function(){
   window._evAddPending=false;   // nouvelle demande : formulaire Événement toujours vierge   // en modification, pas d'option « Événement »   // modification : on arrive sur le formulaire, « Changer de type » reste possible
   // Flèche retour : formulaire → choix du type ; choix du type → fermeture
   var back=m.querySelector('.modal-hd .rd-back');
-  if(back) back.onclick=function(){ if(m.classList.contains('nr-recap-on')) _nrRecapBack(); else if(m.classList.contains('ev-recap-on')) _evEditBack(); else if(window._evTarget && m.classList.contains('nr-event')) _rdBack('m-new-ride'); else if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
+  if(back) back.onclick=function(){
+    // Modification : retour à la fiche de la demande (pas au choix du type)
+    if(m.classList.contains('nr-editing')){ var _ei=document.getElementById('ride-edit-id'); if(_ei) _ei.value=''; window._editHiddenTags=''; window._editRidePax=null; m.classList.remove('nr-editing'); _rdBack('m-new-ride'); return; }
+    if(m.classList.contains('nr-recap-on')) _nrRecapBack(); else if(m.classList.contains('ev-recap-on')) _evEditBack(); else if(window._evTarget && m.classList.contains('nr-event')) _rdBack('m-new-ride'); else if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
 };
 // Même barre d'étapes sur la suite du parcours client : attente (3), offres (4), paiement (5)
 window._nrStepsBar=function(modalId, step){
