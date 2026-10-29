@@ -1156,8 +1156,7 @@ body{background:var(--bg);}
 #ev-recap,#ev-edit-btn{display:none;}
 #m-new-ride.ev-recap-on #ev-recap,#m-new-ride.nr-recap-on #ev-recap{display:block;}
 #m-new-ride.nr-recap-on #panel-ab,#m-new-ride.nr-recap-on #panel-disposal,#m-new-ride.nr-recap-on #panel-mixed{display:none!important;}
-#m-new-ride.nr-event .modal-ft > button:first-child{display:none;}
-#m-new-ride.nr-event .modal-ft{justify-content:flex-end;}
+#m-new-ride .modal-ft{justify-content:flex-end;}
 #m-new-ride.ev-recap-on #panel-event{display:none!important;}
 .evr-hd{background:#F7F5FC;border-radius:14px;padding:14px 16px;margin-bottom:14px;}
 .evr-hd .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7A55C2;}
@@ -2823,7 +2822,6 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <div id="ride-err" class="auth-error"></div>
     </div>
     <div class="modal-ft">
-      <button class="btn btn-secondary" onclick="closeModal('m-new-ride')">Annuler</button>
       <button class="btn btn-secondary" id="ev-edit-btn" type="button" onclick="_evEditBack()">&larr; Modifier</button>
       <button class="btn btn-green" id="btn-submit-ride" onclick="submitRide()">Publier &rarr;</button>
     </div>
