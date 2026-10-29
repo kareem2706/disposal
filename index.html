@@ -2801,9 +2801,12 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       </div>
       <div id="panel-mixed" style="display:none;">
         <div class="input-group" id="mix-pm-grp"><label>Passagers</label>
-          <div class="ev-seg"><button type="button" class="on" data-m="one" onclick="_mixPM('one')">Un passager pour tous les trajets</button><button type="button" data-m="per" onclick="_mixPM('per')">Un passager par trajet</button></div>
+          <div class="ev-seg"><button type="button" class="on" data-m="one" onclick="_mixPM('one')">Un contact pour tous les trajets</button><button type="button" data-m="per" onclick="_mixPM('per')">Un contact par trajet</button></div>
         </div>
-        <div id="mix-pax-section" style="margin-bottom:12px;"></div>
+        <div class="form-grid" id="mix-pax-section">
+          <div class="input-group"><label>Contact sur place</label><input id="mix-cname" maxlength="120" placeholder="Nom et pr&eacute;nom"></div>
+          <div class="input-group"><label>T&eacute;l&eacute;phone</label><input id="mix-cphone" maxlength="40" placeholder="0470 12 34 56" inputmode="tel"></div>
+        </div>
         <div class="ev-lbl" id="mix-count">Trajets</div>
         <div id="mixed-segments"></div>
         <button type="button" class="ev-add" onclick="addMixedSegment()">+ Ajouter un trajet</button>
@@ -8303,7 +8306,8 @@ window.submitRide = async function(){
       var paxName = (window._newRidePaxName||'').trim();
       var paxTel  = (window._newRidePaxTel||'').trim();
       // Trajet mixte, un passager par trajet : la course reprend celui du 1er trajet
-      if(tripType==='mixed' && window._mixPax0 && (window._mixPax0.name||window._mixPax0.tel)){ paxName=window._mixPax0.name; paxTel=window._mixPax0.tel; }
+      if(tripType==='mixed' && _mixPMVal()==='one'){ paxName=g('mix-cname'); paxTel=g('mix-cphone'); }
+      else if(tripType==='mixed' && window._mixPax0 && (window._mixPax0.name||window._mixPax0.tel)){ paxName=window._mixPax0.name; paxTel=window._mixPax0.tel; }
       if(paxName) notes = (notes||'') + '|pax:'+paxName;
       if(paxTel)  notes = (notes||'') + '|tel:'+paxTel;
     }
@@ -8582,13 +8586,14 @@ window.cancelRideModal = function(){
   window._editTr=null; if(window._trRefresh) window._trRefresh();
   // Clear mixed segments
   var sc=document.getElementById('mixed-segments');if(sc)sc.innerHTML='';
+  ['mix-cname','mix-cphone'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
   if(window._mixPM) _mixPM('one');
   _segN=0;
   // Reset error
   var err=document.getElementById('ride-err');if(err){ err.classList.remove('show'); err.textContent=''; err.style.display=''; }
   document.querySelectorAll('#m-new-ride .fld-err').forEach(function(x){ x.classList.remove('fld-err'); });
   // Reset passenger sections
-  ['ride-pax-section','disp-pax-section','mix-pax-section'].forEach(function(id){
+  ['ride-pax-section','disp-pax-section'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.innerHTML='';
   });
   // Init pax selector for clients (after DOM resets)
@@ -8622,9 +8627,10 @@ async function _initPaxSelector(){
     window._newRidePaxTel  = window._editRidePax.tel;
   }
 
-  ['ride-pax-section','disp-pax-section','mix-pax-section'].forEach(function(sid){
+  ['ride-pax-section','disp-pax-section'].forEach(function(sid){
     _renderNewRidePaxCard(sid);
   });
+  if(window._mixFillPax) _mixFillPax();
 }
 
 function _renderNewRidePaxCard(sid){
@@ -8709,7 +8715,6 @@ function _openNewRidePaxEdit(sid){
       // Refresh both cards
       _renderNewRidePaxCard('ride-pax-section');
       _renderNewRidePaxCard('disp-pax-section');
-      _renderNewRidePaxCard('mix-pax-section');
       if(window._mixFillPax) _mixFillPax();
     });
   }, 10);
@@ -9730,17 +9735,18 @@ window._nrShowRecap=function(d){
     trips.push({ disp:d.type==='disposal', date:d.date, time:d.time, from:d.from, to:d.to, dur:d.dur, pax:d.pax, veh:d.veh, fl:[tr.flight,tr.flight2].filter(Boolean), trn:[tr.train,tr.train2].filter(Boolean), instr:d.instr });
   }
   var pn=(window._newRidePaxName||'').trim(), pt=(window._newRidePaxTel||'').trim();
+  if(d.type==='mixed' && _mixPMVal()==='one'){ pn=(document.getElementById('mix-cname')||{}).value||''; pt=(document.getElementById('mix-cphone')||{}).value||''; }
   if(trips.some(function(t){ return t.pname||t.ptel; })){ pn=''; pt=''; }
   var ttl={ab:'Transfert simple',disposal:'Mise à disposition',mixed:'Trajet mixte'}[d.type]||'Demande';
   var h='<div class="evr-hd" style="background:#F3F8F4;"><div class="k" style="color:#2E7A4F;">Récapitulatif de la demande</div>'+(d.type==='mixed'?'<div class="t">'+esc(ttl)+'</div>':'')
-    +'<div class="s">'+esc([trips.length>1?trips.length+' trajets':'', pn?'passager : '+pn+(pt?' · '+pt:''):(d.type==='mixed'&&trips.some(function(t){ return t.pname; })?'un passager par trajet':'')].filter(Boolean).join(' · ')||'Vérifiez les informations avant de publier.')+'</div></div>';
+    +'<div class="s">'+esc([trips.length>1?trips.length+' trajets':'', pn?(d.type==='mixed'?'contact : ':'passager : ')+pn+(pt?' · '+pt:''):(d.type==='mixed'&&trips.some(function(t){ return t.pname; })?'un contact par trajet':'')].filter(Boolean).join(' · ')||'Vérifiez les informations avant de publier.')+'</div></div>';
   trips.forEach(function(t,i){
     h+='<div class="evr-trip"><div class="evr-th">'+(trips.length>1?'<span class="n">'+(i+1)+'</span>Trajet '+(i+1)+' <span class="ty">· '+(t.disp?'Mise à disposition':'Transfert simple')+'</span>':'<span>'+(t.disp?'Mise à disposition':'Transfert simple')+'</span>')+'<span class="dt">'+esc(fd(t.date))+(t.time?' · '+esc(t.time):'')+'</span></div>'
       +'<div class="evr-rt"><div><i style="background:#4E8F69"></i><span>'+esc(t.from||'—')+'</span></div>'+(!t.disp&&t.to?'<div><i style="background:#D8705F"></i><span>'+esc(t.to)+'</span></div>':'')+'</div>'
       +'<div class="evr-kv">'+chip('',cls(t.veh))+(t.pax?'<span><b>'+esc(t.pax)+'</b> passager'+(String(t.pax)==='1'?'':'s')+'</span>':'')
       +(t.disp&&t.dur?'<span>Durée <b>'+esc(t.dur)+' h</b></span>':'')
       +t.fl.map(function(x){ return chip('Vol',x); }).join('')+t.trn.map(function(x){ return chip('Train',x); }).join('')
-      +(t.pname||t.ptel?'<span>Passager <b>'+esc([t.pname,t.ptel].filter(Boolean).join(' · '))+'</b></span>':'')+'</div>'
+      +(t.pname||t.ptel?'<span>Contact <b>'+esc([t.pname,t.ptel].filter(Boolean).join(' · '))+'</b></span>':'')+'</div>'
       +(t.instr?'<div style="font-size:12.5px;color:var(--ink3);margin-top:12px;padding-top:12px;border-top:1px solid #F0EEE9;line-height:1.45;"><span style="color:var(--ink2);font-weight:600;">Instructions : </span>'+esc(t.instr)+'</div>':'')
       +'</div>';
   });
@@ -11583,7 +11589,7 @@ window.addMixedSegment=function(){
     '<div class="seg-type-btns" style="display:none;"><button class="seg-type-btn active" onclick="setSegType(this,'+n+',\'ab\')">A &rarr; B</button><button class="seg-type-btn" onclick="setSegType(this,'+n+',\'disposal\')">Disposition</button></div>'+
     '<div class="input-group" style="margin-bottom:12px;"><label>Type de trajet</label><select class="mix-type" onchange="var b=this.closest(\'.mixed-segment\').querySelectorAll(\'.seg-type-btn\');b[this.value===\'disposal\'?1:0].click();"><option value="ab">Transfert simple</option><option value="disposal">Mise à disposition</option></select></div>'+
     '<div class="form-grid" id="seg-fields-'+n+'">'+abFields+'</div>'+
-    '<div class="input-group mix-pp" style="margin-top:12px;'+(_mixPMVal()==='per'?'':'display:none;')+'"><label>Passager pour ce trajet</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><input id="spn-'+n+'" maxlength="120" placeholder="Nom et prénom" value="'+String(window._newRidePaxName||'').replace(/"/g,'&quot;')+'"><input id="spt-'+n+'" maxlength="40" placeholder="Téléphone" inputmode="tel" value="'+String(window._newRidePaxTel||'').replace(/"/g,'&quot;')+'"></div></div>';
+    '<div class="input-group mix-pp" style="margin-top:12px;'+(_mixPMVal()==='per'?'':'display:none;')+'"><label>Contact pour ce trajet</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"><input id="spn-'+n+'" maxlength="120" placeholder="Nom et prénom" value="'+String(window._newRidePaxName||'').replace(/"/g,'&quot;')+'"><input id="spt-'+n+'" maxlength="40" placeholder="Téléphone" inputmode="tel" value="'+String(window._newRidePaxTel||'').replace(/"/g,'&quot;')+'"></div></div>';
 
   cont.appendChild(d);
   _mixRenumber();
@@ -11641,10 +11647,12 @@ window._mixPM=function(m){
   document.querySelectorAll('#mix-pm-grp .ev-seg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-m')===m); });
   var c=document.getElementById('mix-pax-section'); if(c) c.style.display=m==='one'?'':'none';
   document.querySelectorAll('#mixed-segments .mix-pp').forEach(function(x){ x.style.display=m==='per'?'':'none'; });
-  if(m==='per') _mixFillPax();
+  _mixFillPax();
 };
 // Champs vides d'un trajet : pré-remplis avec le passager principal
 window._mixFillPax=function(){
+  var cn=document.getElementById('mix-cname'), cp=document.getElementById('mix-cphone');
+  if(cn&&!cn.value) cn.value=window._newRidePaxName||''; if(cp&&!cp.value) cp.value=window._newRidePaxTel||'';
   document.querySelectorAll('#mixed-segments .mixed-segment').forEach(function(sg){ var n=sg.id.replace('seg-','');
     var a=document.getElementById('spn-'+n), b=document.getElementById('spt-'+n);
     if(a&&!a.value) a.value=window._newRidePaxName||''; if(b&&!b.value) b.value=window._newRidePaxTel||''; });
