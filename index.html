@@ -9855,7 +9855,7 @@ window.openEventDetail=async function(id, silent){
     if(body) body.innerHTML=h;
     window._evCur=ev; window._evRides=rides;
     var _canCx=rides.some(function(r){ return _evCxOk(r); });
-    if(ft) ft.innerHTML=(_canCx?'<div class="ev-menu"><button type="button" class="ev-dots" aria-label="Actions" onclick="_evMenu(event)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button><div class="ev-pop" id="ev-pop"><button type="button" onclick="_evCancelAsk()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Annuler l’événement</button></div></div>':'')
+    if(ft) ft.innerHTML=(_canCx?'<div class="ev-menu"><button type="button" class="ev-dots" aria-label="Actions" onclick="_evMenu(event)"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button><div class="ev-pop" id="ev-pop"><button type="button" onclick="_evCancelAsk()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>Annuler l’événement</button></div></div>':'')
       +'<button class="btn btn-green" style="margin-left:auto;" onclick="_evAddToEvent(window._evCur)">+ Ajouter un trajet</button>';
   }catch(e){ console.warn('openEventDetail', e); if(body&&!silent) body.innerHTML='<div class="rd-muted">Impossible de charger l’événement.</div>'; }
 };
