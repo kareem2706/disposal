@@ -1154,7 +1154,8 @@ body{background:var(--bg);}
 .ev-sum.warn{background:#FFF6E8;color:#9A5B00;}
 @media(max-width:600px){ .ev-sg{grid-template-columns:1fr;} }
 #ev-recap,#ev-edit-btn{display:none;}
-#m-new-ride.ev-recap-on #ev-recap{display:block;}
+#m-new-ride.ev-recap-on #ev-recap,#m-new-ride.nr-recap-on #ev-recap{display:block;}
+#m-new-ride.nr-recap-on #panel-ab,#m-new-ride.nr-recap-on #panel-disposal,#m-new-ride.nr-recap-on #panel-mixed{display:none!important;}
 #m-new-ride.nr-event .modal-ft > button:first-child{display:none;}
 #m-new-ride.nr-event .modal-ft{justify-content:flex-end;}
 #m-new-ride.ev-recap-on #panel-event{display:none!important;}
@@ -8297,6 +8298,13 @@ window.submitRide = async function(){
     if(editId && window._editHiddenTags) notes = (notes||'') + window._editHiddenTags;
   }catch(_e){ console.warn('pax inject skipped', _e); }
 
+  // Récapitulatif avant publication (nouvelle demande uniquement)
+  if(!editId && _mnr && !_mnr.classList.contains('nr-recap-on')){
+    _nrShowRecap({ type:tripType, from:from, to:to, date:date, time:time, pax:pax, veh:veh, notes:notes,
+      dur:tripType==='disposal'?(g('disp-duration')||'2'):'', instr:tripType==='ab'?g('ride-notes'):tripType==='disposal'?g('disp-notes'):'', tr:_tr });
+    return;
+  }
+
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
     closeModal('m-new-ride');
     cancelRideModal();
@@ -8536,6 +8544,7 @@ window.submitRide = async function(){
 
 window.cancelRideModal = function(){
   closeModal('m-new-ride');
+  try{ document.getElementById('m-new-ride').classList.remove('nr-recap-on'); }catch(_e){}
   try{ _evReset(); }catch(_e){}
   // Reset edit mode markers
   var editIdEl = document.getElementById('ride-edit-id');
@@ -9691,6 +9700,44 @@ window._evShowRecap=function(d){
   var b=m.querySelector('.modal-body'); if(b) b.scrollTop=0;
   _evRenumber();
 };
+// Récapitulatif d'une demande simple / mise à disposition / trajet mixte
+window._nrShowRecap=function(d){
+  var m=document.getElementById('m-new-ride'), box=document.getElementById('ev-recap'); if(!m||!box) return;
+  var esc=_rdEsc, fd=function(x){ if(!x) return ''; var t=new Date(x+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short',year:'numeric'}).replace(/\./g,''); return t.charAt(0).toUpperCase()+t.slice(1); };
+  var cls=function(v){ return ({lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'})[v]||v||''; };
+  var chip=function(k,v){ return v?'<span>'+(k?k+' ':'')+'<b>'+esc(v)+'</b></span>':''; };
+  var trips=[];
+  if(d.type==='mixed'){
+    parseMixedNotes(d.notes||'').forEach(function(sg){ var disp=sg.type.toLowerCase().indexOf('disp')>=0;
+      trips.push({ disp:disp, date:sg.date, time:sg.time, from:sg.from, to:sg.to, dur:sg.dur?String(sg.dur).replace(/h$/,''):'', pax:sg.pax, veh:sg.veh, fl:[sg.flight,sg.flight2].filter(Boolean), trn:[sg.train,sg.train2].filter(Boolean), instr:sg.note }); });
+  } else {
+    var tr=d.tr||{};
+    trips.push({ disp:d.type==='disposal', date:d.date, time:d.time, from:d.from, to:d.to, dur:d.dur, pax:d.pax, veh:d.veh, fl:[tr.flight,tr.flight2].filter(Boolean), trn:[tr.train,tr.train2].filter(Boolean), instr:d.instr });
+  }
+  var pn=(window._newRidePaxName||'').trim(), pt=(window._newRidePaxTel||'').trim();
+  var ttl={ab:'Transfert simple',disposal:'Mise à disposition',mixed:'Trajet mixte'}[d.type]||'Demande';
+  var h='<div class="evr-hd" style="background:#F3F8F4;"><div class="k" style="color:#2E7A4F;">Récapitulatif de la demande</div><div class="t">'+esc(ttl)+'</div>'
+    +'<div class="s">'+esc([trips.length>1?trips.length+' trajets':'', pn?'passager : '+pn+(pt?' · '+pt:''):''].filter(Boolean).join(' · ')||'Vérifiez les informations avant de publier.')+'</div></div>';
+  trips.forEach(function(t,i){
+    h+='<div class="evr-trip"><div class="evr-th">'+(trips.length>1?'<span class="n">'+(i+1)+'</span>Trajet '+(i+1)+' <span class="ty">· '+(t.disp?'Mise à disposition':'Transfert simple')+'</span>':'<span>'+(t.disp?'Mise à disposition':'Transfert simple')+'</span>')+'<span class="dt">'+esc(fd(t.date))+(t.time?' · '+esc(t.time):'')+'</span></div>'
+      +'<div class="evr-rt"><div><i style="background:#4E8F69"></i><span>'+esc(t.from||'—')+'</span></div>'+(!t.disp&&t.to?'<div><i style="background:#D8705F"></i><span>'+esc(t.to)+'</span></div>':'')+'</div>'
+      +'<div class="evr-kv">'+chip('',cls(t.veh))+(t.pax?'<span><b>'+esc(t.pax)+'</b> passager'+(String(t.pax)==='1'?'':'s')+'</span>':'')
+      +(t.disp&&t.dur?'<span>Durée <b>'+esc(t.dur)+' h</b></span>':'')
+      +t.fl.map(function(x){ return chip('Vol',x); }).join('')+t.trn.map(function(x){ return chip('Train',x); }).join('')+'</div>'
+      +(t.instr?'<div style="font-size:12.5px;color:var(--ink3);margin-top:10px;line-height:1.45;"><span style="color:var(--ink2);font-weight:600;">Instructions : </span>'+esc(t.instr)+'</div>':'')
+      +'</div>';
+  });
+  h+='<div class="evr-tot">Votre demande sera envoyée aux chauffeurs, qui vous feront leurs offres.</div>';
+  box.innerHTML=h;
+  m.classList.add('nr-recap-on');
+  var tl=document.getElementById('ride-modal-title'); if(tl) tl.textContent='Récapitulatif';
+  var b=m.querySelector('.modal-body'); if(b) b.scrollTop=0;
+};
+window._nrRecapBack=function(){
+  var m=document.getElementById('m-new-ride'); if(!m) return;
+  m.classList.remove('nr-recap-on');
+  var tl=document.getElementById('ride-modal-title'); if(tl) tl.textContent=t('new_ride_title');
+};
 window._evEditBack=function(){
   var m=document.getElementById('m-new-ride'); if(!m) return;
   m.classList.remove('ev-recap-on');
@@ -9941,11 +9988,12 @@ window._nrInit=function(){
   var edit=!!(document.getElementById('ride-edit-id')||{}).value;
   _nrShow(edit?'form':'choose');
   m.classList.toggle('nr-editing', edit);
+  m.classList.remove('nr-recap-on');
   if(!edit && !window._evAddPending){ try{ _evReset(); }catch(_e){} }
   window._evAddPending=false;   // nouvelle demande : formulaire Événement toujours vierge   // en modification, pas d'option « Événement »   // modification : on arrive sur le formulaire, « Changer de type » reste possible
   // Flèche retour : formulaire → choix du type ; choix du type → fermeture
   var back=m.querySelector('.modal-hd .rd-back');
-  if(back) back.onclick=function(){ if(m.classList.contains('ev-recap-on')) _evEditBack(); else if(window._evTarget && m.classList.contains('nr-event')) _rdBack('m-new-ride'); else if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
+  if(back) back.onclick=function(){ if(m.classList.contains('nr-recap-on')) _nrRecapBack(); else if(m.classList.contains('ev-recap-on')) _evEditBack(); else if(window._evTarget && m.classList.contains('nr-event')) _rdBack('m-new-ride'); else if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
 };
 // Même barre d'étapes sur la suite du parcours client : attente (3), offres (4), paiement (5)
 window._nrStepsBar=function(modalId, step){
