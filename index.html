@@ -9578,14 +9578,13 @@ window._evReset=function(){
 };
 // « + Ajouter un véhicule » depuis la fiche d'un événement
 window._evAddToEvent=function(ev){
-  closeModal('m-event');
-  setTimeout(function(){
-    cancelRideModal(); window._evTarget=ev;
-    openModal('m-new-ride');
-    var n=document.getElementById('ev-name'); if(n){ n.value=ev.name||''; n.readOnly=true; }
-    document.getElementById('m-new-ride').classList.add('ev-add-only');
-    _nrPick('event');
-  }, 450);
+  // La fiche de l'événement reste en dessous : la flèche retour y ramène
+  cancelRideModal(); _evReset(); window._evTarget=ev; window._evAddPending=true;
+  _rdPushUnder('m-event');
+  openModal('m-new-ride');
+  var n=document.getElementById('ev-name'); if(n){ n.value=ev.name||''; n.readOnly=true; }
+  document.getElementById('m-new-ride').classList.add('ev-add-only');
+  _nrPick('event');
 };
 
 // Récapitulatif de l'événement : liste des trajets avant confirmation
@@ -9802,10 +9801,11 @@ window._nrInit=function(){
   var edit=!!(document.getElementById('ride-edit-id')||{}).value;
   _nrShow(edit?'form':'choose');
   m.classList.toggle('nr-editing', edit);
-  if(!edit && !window._evTarget){ try{ _evReset(); }catch(_e){} }   // nouvelle demande : formulaire Événement toujours vierge   // en modification, pas d'option « Événement »   // modification : on arrive sur le formulaire, « Changer de type » reste possible
+  if(!edit && !window._evAddPending){ try{ _evReset(); }catch(_e){} }
+  window._evAddPending=false;   // nouvelle demande : formulaire Événement toujours vierge   // en modification, pas d'option « Événement »   // modification : on arrive sur le formulaire, « Changer de type » reste possible
   // Flèche retour : formulaire → choix du type ; choix du type → fermeture
   var back=m.querySelector('.modal-hd .rd-back');
-  if(back) back.onclick=function(){ if(m.classList.contains('ev-recap-on')) _evEditBack(); else if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
+  if(back) back.onclick=function(){ if(m.classList.contains('ev-recap-on')) _evEditBack(); else if(window._evTarget && m.classList.contains('nr-event')) _rdBack('m-new-ride'); else if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
 };
 // Même barre d'étapes sur la suite du parcours client : attente (3), offres (4), paiement (5)
 window._nrStepsBar=function(modalId, step){
