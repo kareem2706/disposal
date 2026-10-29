@@ -1153,6 +1153,27 @@ body{background:var(--bg);}
 .ev-sum{background:#F6F8F6;border-radius:9px;padding:8px 11px;font-size:12.5px;color:#2E5E43;margin-top:8px;line-height:1.4;}
 .ev-sum.warn{background:#FFF6E8;color:#9A5B00;}
 @media(max-width:600px){ .ev-sg{grid-template-columns:1fr;} }
+#ev-recap,#ev-edit-btn{display:none;}
+#m-new-ride.ev-recap-on #ev-recap{display:block;}
+#m-new-ride.ev-recap-on #ev-edit-btn{display:inline-flex;}
+#m-new-ride.ev-recap-on #panel-event{display:none!important;}
+.evr-hd{background:#F7F5FC;border-radius:14px;padding:14px 16px;margin-bottom:14px;}
+.evr-hd .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7A55C2;}
+.evr-hd .t{font-size:18px;font-weight:700;color:var(--ink);margin-top:2px;}
+.evr-hd .s{font-size:13px;color:var(--ink3);margin-top:3px;}
+.evr-trip{border:1px solid #ECEAE5;border-radius:14px;padding:14px 16px;margin-bottom:10px;background:#fff;}
+.evr-th{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;}
+.evr-th .n{width:22px;height:22px;border-radius:50%;background:#F2EEFB;color:#7A55C2;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.evr-th .ty{font-weight:500;color:var(--ink3);font-size:12.5px;}
+.evr-th .dt{margin-left:auto;font-weight:600;font-size:13px;color:var(--ink);white-space:nowrap;}
+.evr-rt{margin:10px 0 0;font-size:13.5px;color:var(--ink);line-height:1.5;}
+.evr-rt div{display:flex;gap:8px;align-items:flex-start;}
+.evr-rt i{width:8px;height:8px;border-radius:50%;margin-top:6px;flex-shrink:0;}
+.evr-kv{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.evr-kv span{background:#FCFCFB;border:1px solid #F0EEE9;border-radius:20px;padding:4px 10px;font-size:12.5px;color:var(--ink2);}
+.evr-kv span b{color:var(--ink);font-weight:600;}
+@media(max-width:600px){ .evr-th{flex-wrap:wrap;} .evr-th .dt{margin-left:30px;width:100%;font-size:12.5px;} .evr-th .ty{white-space:nowrap;} #m-new-ride.ev-recap-on .modal-ft > button:first-child{display:none;} }
+.evr-tot{background:#F3F8F4;color:#1B5E3B;border-radius:12px;padding:11px 14px;font-size:13.5px;font-weight:600;margin-top:4px;}
 .ev-add{width:100%;border:1.5px dashed #CDBDF0;color:#7A55C2;border-radius:12px;padding:10px;font:600 13px 'DM Sans',sans-serif;background:#FBF9FE;cursor:pointer;}
 .ev-note{font-size:12px;color:var(--ink3);background:#F4F1FB;border-radius:10px;padding:9px 11px;line-height:1.45;margin-top:12px;}
 #m-new-ride.ev-add-only #ev-name-grp input{background:#F7F7F5;}
@@ -2759,10 +2780,12 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <button type="button" class="ev-add" onclick="_evAdd()">+ Ajouter un trajet</button>
         <div class="ev-note">Chaque v&eacute;hicule de chaque trajet est envoy&eacute; aux chauffeurs comme une demande s&eacute;par&eacute;e, li&eacute;e &agrave; l&rsquo;&eacute;v&eacute;nement. Vous suivez tout depuis une seule demande.</div>
       </div>
+      <div id="ev-recap"></div>
       <div id="ride-err" class="auth-error"></div>
     </div>
     <div class="modal-ft">
       <button class="btn btn-secondary" onclick="closeModal('m-new-ride')">Annuler</button>
+      <button class="btn btn-secondary" id="ev-edit-btn" type="button" onclick="_evEditBack()">&larr; Modifier</button>
       <button class="btn btn-green" id="btn-submit-ride" onclick="submitRide()">Publier &rarr;</button>
     </div>
   </div>
@@ -9424,7 +9447,8 @@ function _evRenumber(){
   var rows=_evRows(), n=rows.length, tot=0;
   rows.forEach(function(r,i){ r.querySelector('.n').textContent=i+1; r.querySelector('.ev-ttl').textContent='Trajet '+(i+1); r.querySelector('.ev-del').style.display=n>1?'':'none'; tot+=_evTotal(_evCounts(r)); });
   var c=document.getElementById('ev-count'); if(c) c.textContent='Trajets ('+n+')';
-  var b=document.getElementById('btn-submit-ride'); if(b && document.getElementById('m-new-ride').classList.contains('nr-event')) b.innerHTML='Publier '+tot+' demande'+(tot>1?'s':'')+' &rarr;';
+  var m=document.getElementById('m-new-ride'), b=document.getElementById('btn-submit-ride');
+  if(b && m.classList.contains('nr-event')) b.innerHTML=(m.classList.contains('ev-recap-on')?(window.innerWidth<=600?'Confirmer ('+tot+') &rarr;':'Confirmer et publier '+tot+' demande'+(tot>1?'s':'')+' &rarr;'):'Publier '+tot+' demande'+(tot>1?'s':'')+' &rarr;');
 }
 // Dessine le bloc « Véhicules pour ce trajet » selon le mode (choix manuel / nombre de personnes)
 function _evDrawVeh(r){
@@ -9508,6 +9532,7 @@ window._evMode=function(m){
 window._evSetMode=function(on){
   var m=document.getElementById('m-new-ride'); if(!m) return;
   m.classList.toggle('nr-event', !!on);
+  m.classList.remove('ev-recap-on');
   var pe=document.getElementById('panel-event'); if(pe) pe.style.display=on?'block':'none';
   var tl=document.getElementById('ride-modal-title');
   var b=document.getElementById('btn-submit-ride');
@@ -9545,6 +9570,38 @@ window._evAddToEvent=function(ev){
   }, 450);
 };
 
+// Récapitulatif de l'événement : liste des trajets avant confirmation
+window._evShowRecap=function(d){
+  var m=document.getElementById('m-new-ride'), box=document.getElementById('ev-recap'); if(!m||!box) return;
+  var esc=_rdEsc, fd=function(x){ if(!x) return ''; var t=new Date(x+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short',year:'numeric'}).replace(/\./g,''); return t.charAt(0).toUpperCase()+t.slice(1); };
+  var h='<div class="evr-hd"><div class="k">Récapitulatif de l’événement</div><div class="t">'+esc(d.name)+'</div>'
+    +'<div class="s">'+esc([d.trips.length+' trajet'+(d.trips.length>1?'s':''), d.total+' véhicule'+(d.total>1?'s':''), d.mode==='one'&&d.cname?'contact : '+d.cname+(d.cphone?' · '+d.cphone:''):(d.mode==='per'?'un contact par trajet':'')].filter(Boolean).join(' · '))+'</div></div>';
+  d.trips.forEach(function(tr){
+    var t=tr.t, disp=t.type==='disposal', nv=_evTotal(tr.c), st=_evSeats(tr.c);
+    h+='<div class="evr-trip"><div class="evr-th"><span class="n">'+tr.i+'</span>Trajet '+tr.i+' <span class="ty">· '+(disp?'Mise à disposition':'Trajet simple (A → B)')+'</span><span class="dt">'+esc(fd(t.date))+' · '+esc(t.time)+'</span></div>'
+      +'<div class="evr-rt">'+(disp
+        ?'<div><i style="background:#4E8F69"></i><span>'+esc(t.from)+'</span></div>'
+        :'<div><i style="background:#4E8F69"></i><span>'+esc(t.from)+'</span></div><div><i style="background:#D8705F"></i><span>'+esc(t.to)+'</span></div>')+'</div>'
+      +'<div class="evr-kv"><span><b>'+esc(_evCntLabel(tr.c))+'</b> · '+nv+' véhicule'+(nv>1?'s':'')+'</span>'
+      +'<span>'+(tr.n?'<b>'+tr.n+'</b> personne'+(tr.n>1?'s':''):(st.bus?'capacité selon le bus':'jusqu’à <b>'+st.seats+'</b> personnes'))+'</span>'
+      +(disp?'<span>Durée <b>'+(parseInt(t.dur,10)||2)+' h</b></span>':'')
+      +(d.mode==='per'&&(t.pname||t.pphone)?'<span>Contact <b>'+esc([t.pname,t.pphone].filter(Boolean).join(' · '))+'</b></span>':'')
+      +'</div></div>';
+  });
+  h+='<div class="evr-tot">'+d.total+' demande'+(d.total>1?'s':'')+' seront envoyée'+(d.total>1?'s':'')+' aux chauffeurs, regroupée'+(d.total>1?'s':'')+' dans cet événement.</div>';
+  box.innerHTML=h;
+  m.classList.add('ev-recap-on');
+  var tl=document.getElementById('ride-modal-title'); if(tl) tl.textContent='Récapitulatif';
+  var b=m.querySelector('.modal-body'); if(b) b.scrollTop=0;
+  _evRenumber();
+};
+window._evEditBack=function(){
+  var m=document.getElementById('m-new-ride'); if(!m) return;
+  m.classList.remove('ev-recap-on');
+  var tl=document.getElementById('ride-modal-title'); if(tl) tl.textContent=window._evTarget?'Ajouter un trajet':'Nouvel événement';
+  var err=document.getElementById('ride-err'); if(err){ err.textContent=''; err.classList.remove('show'); }
+  _evRenumber();
+};
 async function submitEvent(){
   var err=document.getElementById('ride-err'), btn=document.getElementById('btn-submit-ride');
   var fail=function(msg){ if(err){ err.textContent=msg; err.classList.add('show'); err.style.display=''; } };
@@ -9552,7 +9609,7 @@ async function submitEvent(){
   var tg=window._evTarget, name=(document.getElementById('ev-name')||{}).value||''; name=name.trim();
   if(!tg && !name) return fail('Indiquez le nom de l’événement.');
   var mode=_evModeVal(), cname=((document.getElementById('ev-cname')||{}).value||'').trim(), cphone=((document.getElementById('ev-cphone')||{}).value||'').trim();
-  var rows=_evRows(), list=[];
+  var rows=_evRows(), list=[], trips=[];
   for(var i=0;i<rows.length;i++){
     var r=rows[i], ty=_evVal(r,'ev-type'), t={ type:ty, from:_evVal(r,'ev-from'), to:_evVal(r,'ev-to'), dur:_evVal(r,'ev-dur'), date:_evVal(r,'ev-date'), time:_evVal(r,'ev-time'), pname:_evVal(r,'ev-pname'), pphone:_evVal(r,'ev-pphone') };
     if(!t.from || (ty==='ab' && !t.to) || !t.date || !t.time) return fail('Trajet '+(i+1)+' : indiquez '+(!t.from?(ty==='ab'?'le départ':'le lieu de prise en charge'):(ty==='ab'&&!t.to)?'l’arrivée':!t.date?'la date':'l’heure')+'.');
@@ -9561,6 +9618,7 @@ async function submitEvent(){
     if(!_evTotal(c)) return fail('Trajet '+(i+1)+' : choisissez au moins un véhicule.');
     // Un véhicule = une demande ; les personnes sont réparties du plus grand au plus petit véhicule
     var veh=[]; _EV_CLS.slice().sort(function(a,b){ return b.cap-a.cap; }).forEach(function(x){ for(var q=0;q<(c[x.k]||0);q++) veh.push(x); });
+    trips.push({ t:t, n:N, c:c, i:i+1 });
     var left=N;
     veh.forEach(function(x,q){
       var pax;
@@ -9571,6 +9629,9 @@ async function submitEvent(){
   }
   if(!list.length) return fail('Ajoutez au moins un véhicule.');
   window._evLastList=list;
+  // Étape récapitulatif avant la création des demandes
+  var _m=document.getElementById('m-new-ride');
+  if(!_m.classList.contains('ev-recap-on')){ _evShowRecap({ name:name||(tg&&tg.name)||'', mode:mode, cname:cname, cphone:cphone, trips:trips, total:list.length }); return; }
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){ closeModal('m-new-ride'); cancelRideModal(); showToast('Événement publié : '+list.length+' demandes'); await loadClientDashboard(); return; }
   if(btn) setLoading(btn, true, 'Publication…');
   var ids=[], created=[];
@@ -9716,7 +9777,7 @@ window._nrInit=function(){
   m.classList.toggle('nr-editing', edit);   // en modification, pas d'option « Événement »   // modification : on arrive sur le formulaire, « Changer de type » reste possible
   // Flèche retour : formulaire → choix du type ; choix du type → fermeture
   var back=m.querySelector('.modal-hd .rd-back');
-  if(back) back.onclick=function(){ if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
+  if(back) back.onclick=function(){ if(m.classList.contains('ev-recap-on')) _evEditBack(); else if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
 };
 // Même barre d'étapes sur la suite du parcours client : attente (3), offres (4), paiement (5)
 window._nrStepsBar=function(modalId, step){
