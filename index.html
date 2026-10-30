@@ -5867,7 +5867,7 @@ async function openOffersModal(rideId){
 
     // Query offers by ride_id only - no status filter, no join
     const { data, error } = await sb.from('offers')
-      .select('id, ride_id, driver_id, price, message, status, created_at, vehicle_id, included_km')
+      .select('*')   // inclut outdated_at / outdated_reason (offre faite avant une modification de la demande)
       .eq('ride_id', rideId)
       .neq('status', 'rejected');
     if(error){ console.error('offers error:', error.message, error.code); window._offersLoadErr = (window._offersLoadErr?window._offersLoadErr+' · ':'')+'Offres : '+(error.message||error.code); }
