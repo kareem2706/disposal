@@ -196,6 +196,7 @@ input.fld-err,select.fld-err,textarea.fld-err{border-color:#C0392B!important;box
 .nav-item.active{background:var(--sand2);color:var(--ink);font-weight:500;}
 .nav-ico{width:16px;height:16px;flex-shrink:0;opacity:.65;}
 .nav-item.active .nav-ico,.nav-item:hover .nav-ico{opacity:1;}
+#badge-rides{background:var(--green);}
 .nav-badge{margin-left:auto;background:var(--ink);color:white;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:20px;}
 #badge-marketplace{background:var(--green);}
 .sidebar-footer{padding:12px 10px;border-top:1px solid var(--sand3);}
@@ -4762,6 +4763,9 @@ async function loadClientDashboard(){
     +'<div class="stat-card sc sc-b" onclick="_goRides(\'offers\')" style="cursor:pointer;" title="Voir mes demandes avec offres">'+_mkI(_s3,'none')+'<div class="stat-label">Offres reçues</div><div class="stat-val">'+withOffer+'</div></div>'
     +'<div class="stat-card sc sc-r" onclick="showPage(\'invoices\')" style="cursor:pointer;" title="Voir mes factures">'+_mkI('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 6.5A6 6 0 007.5 9M17 17.5A6 6 0 017.5 15M5 10.5h8M5 13.5h8"/></svg>','none')+'<div class="stat-label">Total pay\u00e9</div><div class="stat-val stat-money">'+(totalNet>0?totalNet.toFixed(2).replace('.',',')+' \u20ac':'0 \u20ac')+'</div></div>';
 
+  // Pastille « Mes demandes » : courses confirmées pas encore terminées (diminue à chaque course terminée)
+  try{ var _bc=rides.filter(function(r){ return r.status==='confirmed'||r.status==='active'; }).length, _bE=document.getElementById('badge-rides');
+    if(_bE){ _bE.textContent=_bc>99?'99+':String(_bc); _bE.style.display=_bc?'':'none'; } }catch(_e){}
   // Rides in progress (driver on the way or pick-up done) — same block as the driver dashboard
   var _inProgress = function(r){ return r.status==='active' || (r.status==='confirmed' && r.on_way_at); };
   _renderDriverActiveRides(rides.filter(_inProgress), 'active-ride-wrap', true);
