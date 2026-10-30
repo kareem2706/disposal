@@ -9126,11 +9126,14 @@ function renderOfferCard(o){
   var clsHtml=vehClass?'<span class="ofc-cls" style="background:'+(classColors[vehClass]||'var(--ink3)')+';">'+(classLabels[vehClass]||vehClass.toUpperCase())+'</span>':'';
   var tags=(v&&v.amenities&&v.amenities.length?v.amenities.map(function(a){ return '<span class="ofc-tag">'+(amenIcons[a]||'')+' '+(amenLabels[a]||a)+'</span>'; }).join(''):'')+kmTags;
   var _lbl=function(l,val){ return '<div><span style="color:var(--ink4);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">'+l+'</span><div style="font-weight:500;color:var(--ink);">'+val+'</div></div>'; };
-  var details=v?('<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px 16px;">'
+  // Détails du véhicule : équipements / km sur la 1re ligne, puis gamme · marque · modèle · année · couleur sur une ligne
+  var details=v?((tags?'<div class="ofc-tags" style="margin:0 0 10px;">'+tags+'</div>':'')
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px 14px;">'
+      +(vehClass?_lbl('Gamme',classLabels[vehClass]||vehClass):'')
       +_lbl('Marque',v.brand||'—')+_lbl('Modèle',v.model||'—')
       +(v.year?_lbl('Année',v.year):'')+(v.color?_lbl('Couleur',v.color):'')
-      +(vehClass?_lbl('Gamme',classLabels[vehClass]||vehClass):'')
     +'</div>'):'';
+  if(details) tags='';
 
   return '<div class="offer-card ofc'+(isBest?' best':'')+'">'
     +(isBest?'<span class="ofc-best">Meilleur prix</span>':'')
