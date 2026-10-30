@@ -386,7 +386,7 @@ input.fld-err,select.fld-err,textarea.fld-err{border-color:#C0392B!important;box
 .ofc-price b{display:block;font-size:19px;font-weight:700;color:var(--ink);line-height:1.15;}
 .ofc-price small{font-size:10.5px;color:var(--ink3);font-weight:500;}
 .ofc-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px;}
-.ofc-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:var(--sand2);border-radius:999px;font-size:11px;color:var(--ink2);font-weight:500;}
+.ofc-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:#E8F3EC;border-radius:999px;font-size:11px;color:#1F6B43;font-weight:500;}
 .ofc-msg{margin-top:10px;padding:9px 12px;background:var(--sand);border-radius:10px;font-size:12.5px;color:var(--ink2);display:flex;gap:8px;align-items:flex-start;}
 .ofc-msg svg{flex-shrink:0;margin-top:2px;}
 .ofc-ft{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--sand2);}
@@ -9115,7 +9115,7 @@ function renderOfferCard(o){
       Object.keys(o.included_km).forEach(function(k){ _kmLines.push(o.included_km[k]+' km inclus'); });
     }
     if(_kmLines.length){
-      kmTags=_kmLines.map(function(l){ return '<span class="ofc-tag" style="color:var(--ink);font-weight:600;">'+_kmIcon+' '+l+'</span>'; }).join('');
+      kmTags=_kmLines.map(function(l){ return '<span class="ofc-tag" style="font-weight:600;">'+_kmIcon+' '+l+'</span>'; }).join('');
     }
   }
 
