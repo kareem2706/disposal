@@ -6822,14 +6822,7 @@ function _openRideDetailImpl(el){
           +'<button class="rdv-dl" type="button" onclick="generateRideVoucher(\''+String(r.id).replace(/'/g,'')+'\')">'+_dlIc+'<span>T\u00e9l\u00e9charger</span></button></div>');
       // Date, passagers et trajet sont dans le bandeau : on retire les pastilles et la carte du trajet (sauf course mixte)
       var _chipsEl=bodyElMain.querySelector('.rmc-wrap'); if(_chipsEl) _chipsEl.remove();
-      // Course simple : même présentation qu'un trajet de trajet mixte (jour, puis ligne n° · pastille · heure · gamme · trajet)
-      if(!isMixed){
-        var _rtEl=bodyElMain.querySelector('.rd-route');
-        var _one=[{ type:isDisp?'Disposition':'A>B', from:r.from_address||'', to:r.to_address||'', date:r.ride_date||'', time:String(r.ride_time||'').slice(0,5),
-          veh:r.vehicle_type||'', pax:r.passengers?String(r.passengers):'', dur:_durM?_durM[1]:'', flight:_rdTag(r.notes,'flight'), flight2:_rdTag(r.notes,'flight2'), train:_rdTag(r.notes,'train'), train2:_rdTag(r.notes,'train2') }];
-        var _lst=document.createElement('div'); _lst.innerHTML=_mixListHtml(r,_one);
-        if(_rtEl) _rtEl.replaceWith(_lst.firstChild); else { var _vchEl=bodyElMain.querySelector('.rdv-vch'); if(_vchEl) _vchEl.insertAdjacentElement('afterend', _lst.firstChild); }
-      }
+      if(!isMixed){ var _rtEl=bodyElMain.querySelector('.rd-route'); if(_rtEl) _rtEl.remove(); }
       // Événement / trajet mixte découpé : le nom passe dans l'en-tête (comme la fiche d'un trajet mixte)
       var _evEl=bodyElMain.querySelector('.rd-evline');
       if(_evEl && r.event_name){
