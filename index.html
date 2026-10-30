@@ -6822,7 +6822,21 @@ function _openRideDetailImpl(el){
           +'<button class="rdv-dl" type="button" onclick="generateRideVoucher(\''+String(r.id).replace(/'/g,'')+'\')">'+_dlIc+'<span>T\u00e9l\u00e9charger</span></button></div>');
       // Date, passagers et trajet sont dans le bandeau : on retire les pastilles et la carte du trajet (sauf course mixte)
       var _chipsEl=bodyElMain.querySelector('.rmc-wrap'); if(_chipsEl) _chipsEl.remove();
-      if(!isMixed){ var _rtEl=bodyElMain.querySelector('.rd-route'); if(_rtEl) _rtEl.remove(); }
+      // Course simple : même présentation qu'un trajet de trajet mixte (jour, puis ligne n° · pastille · heure · gamme · trajet)
+      if(!isMixed){
+        var _rtEl=bodyElMain.querySelector('.rd-route');
+        var _one=[{ type:isDisp?'Disposition':'A>B', from:r.from_address||'', to:r.to_address||'', date:r.ride_date||'', time:String(r.ride_time||'').slice(0,5),
+          veh:r.vehicle_type||'', pax:r.passengers?String(r.passengers):'', dur:_durM?_durM[1]:'', flight:_rdTag(r.notes,'flight'), flight2:_rdTag(r.notes,'flight2'), train:_rdTag(r.notes,'train'), train2:_rdTag(r.notes,'train2') }];
+        var _lst=document.createElement('div'); _lst.innerHTML=_mixListHtml(r,_one);
+        if(_rtEl) _rtEl.replaceWith(_lst.firstChild); else { var _vchEl=bodyElMain.querySelector('.rdv-vch'); if(_vchEl) _vchEl.insertAdjacentElement('afterend', _lst.firstChild); }
+      }
+      // Événement / trajet mixte découpé : le nom passe dans l'en-tête (comme la fiche d'un trajet mixte)
+      var _evEl=bodyElMain.querySelector('.rd-evline');
+      if(_evEl && r.event_name){
+        var _tEl=document.getElementById('detail-title'), _hd=_tEl&&_tEl.querySelector('.rd-hd2');
+        if(_hd) _hd.insertAdjacentHTML('afterbegin', r.event_kind==='mixed'?'<span class="rd-mxk">Trajet mixte \u00b7 '+_rdEsc(r.event_name)+'</span>':'<span class="rd-mxk" style="color:#7A55C2;">Événement \u00b7 '+_rdEsc(r.event_name)+'</span>');
+        _evEl.remove();
+      }
     }
     (async function(myGen){
       try {
@@ -7317,8 +7331,8 @@ function _mxFillKm(){
   }, 50);
 }
 // Trajet mixte : liste des trajets (même présentation que la fiche), réutilisée dans les offres et le paiement
-function _mixListHtml(r){
-  var segs=parseMixedNotes(r.notes||''); if(!segs.length) return '';
+function _mixListHtml(r, segsIn){
+  var segs=segsIn||parseMixedNotes(r.notes||''); if(!segs.length) return '';
   var sh=function(a){ return String(cleanAddr(a)||'').split(',')[0].trim(); };
   var clsN=function(v){ return ({lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'})[v]||v||''; };
   var dl=function(x){ if(!x) return ''; var t2=new Date(x+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long'}); return t2.charAt(0).toUpperCase()+t2.slice(1); };
