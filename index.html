@@ -1232,7 +1232,7 @@ body{background:var(--bg);}
 .rd-evline span{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7A55C2;}
 .ev-day{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin:6px 2px -2px;}
 .ev-tag{font-size:10px;font-weight:700;text-transform:uppercase;background:#7A55C2;color:#fff;padding:2px 7px;border-radius:20px;letter-spacing:.02em;}
-.ev-bar{height:5px;border-radius:5px;background:#EEE9F8;overflow:hidden;margin-top:5px;width:110px;max-width:100%;}.ev-bar i{display:block;height:100%;background:#7A55C2;}
+.ev-bar{height:5px;border-radius:5px;background:#EEE9F8;overflow:hidden;margin-top:5px;width:110px;max-width:100%;}.ev-bar{display:flex;}.ev-bar i{display:block;height:100%;background:#7A55C2;}.ev-bar i.cx{background:#D9534A;}
 .ev-sub{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #ECEAE5;border-radius:12px;padding:11px 12px;cursor:pointer;}
 .ev-sub:hover{border-color:#CDBDF0;}
 .ev-sub .n{width:24px;height:24px;border-radius:50%;background:#F2EEFB;color:#7A55C2;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -10015,12 +10015,13 @@ function renderEventItem(g){
   var offers=rides.reduce(function(s,r){ return s+((r.status==='offers'||r.status==='waiting')?(r._offerCount||(r.offers&&r.offers[0]?parseInt(r.offers[0].count)||0:0)):0); },0);
   var paid=rides.reduce(function(s,r){ return s+((['confirmed','active','done'].indexOf(r.status)>=0&&r.final_price)?parseFloat(r.final_price):0); },0);
   var pct=Math.round(conf/Math.max(rides.length,1)*100);
+  var cx=rides.filter(function(r){ return r.status==='cancelled'; }).length, pctx=Math.round(cx/Math.max(rides.length,1)*100);
   return '<div class="ride-card ev-card" onclick="openEventDetail(\''+String(g.id).replace(/'/g,'')+'\')">'
     +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+mon+'</div><div class="ride-card-date-day">'+day+'</div></div>'
     +'<div style="display:flex;align-items:center;">'+(g.kind==='mixed'?'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:var(--blue-bg);color:var(--blue);padding:2px 7px;border-radius:20px;">Mixte</span>':'<span class="ev-tag">Événement</span>')+'</div>'
     +'<div style="min-width:0;"><div class="ride-card-col-label">'+(g.kind==='mixed'?'Trajets':'Événement')+'</div><div class="ride-card-col-val" style="font-weight:700;">'+_rdEsc(g.name)+'</div></div>'
     +'<div style="min-width:0;"><div class="ride-card-col-label">Véhicules</div><div class="ride-card-col-val">'+_rdEsc(_evSummary(rides))+'</div></div>'
-    +'<div><div class="ride-card-col-label">Statut</div><div style="font-size:12px;color:var(--ink2);">'+conf+' / '+rides.length+' confirmé'+(conf>1?'s':'')+'</div><div class="ev-bar"><i style="width:'+pct+'%"></i></div>'+(offers?'<div style="font-size:11.5px;color:#2456A6;margin-top:3px;">'+offers+' offre'+(offers>1?'s':'')+' reçue'+(offers>1?'s':'')+'</div>':'')+'</div>'
+    +'<div><div class="ride-card-col-label">Statut</div><div style="font-size:12px;color:var(--ink2);">'+conf+' / '+rides.length+' confirmé'+(conf>1?'s':'')+'</div><div class="ev-bar"><i style="width:'+pct+'%"></i>'+(cx?'<i class="cx" style="width:'+pctx+'%"></i>':'')+'</div>'+(cx?'<div style="font-size:11.5px;color:#C8453A;margin-top:3px;">'+cx+' annulé'+(cx>1?'s':'')+'</div>':'')+(offers?'<div style="font-size:11.5px;color:#2456A6;margin-top:3px;">'+offers+' offre'+(offers>1?'s':'')+' reçue'+(offers>1?'s':'')+'</div>':'')+'</div>'
     +'<div style="text-align:right;"><div class="ride-card-col-label">Prix</div><div class="ride-card-col-val" style="font-weight:700;">'+(paid>0?paid.toFixed(2)+' €':'---')+'</div></div>'
     +'<svg class="ride-card-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
     +'</div>';
