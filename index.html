@@ -9175,6 +9175,7 @@ function renderOfferCard(o){
       +'<div class="ofc-price"><b>'+priceDisplay+'</b><small>TVAC</small></div>'
     +'</div>'
     +(tags?'<div class="ofc-tags">'+tags+'</div>':'')
+    +(o.outdated_at?'<div class="ofc-msg" style="background:#FDF0EE;color:#A23A2E;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.01"/></svg><span>Offre faite avant votre modification de la demande ('+_rdEsc(String(o.outdated_reason||'').toLowerCase())+'). Le chauffeur a été prévenu et peut la mettre à jour.</span></div>':'')
     +(o.message?'<div class="ofc-msg"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink3)" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>'+_rdEsc(o.message)+'</span></div>':'')
     +(details?'<div id="od-detail-'+safeId+'" class="ofc-detail">'+details+'</div>':'')
     +'<div class="ofc-ft">'
