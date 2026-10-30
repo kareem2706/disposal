@@ -1212,6 +1212,8 @@ body{background:var(--bg);}
 .tr-pair > .input-group{margin:0!important;min-width:0;}
 .tr-pair.two .tr-hint{display:none;}
 .rd-mxk{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2F5FA8;margin-bottom:2px;}
+.mx-tp{display:inline-flex;align-items:center;gap:5px;vertical-align:1px;margin-right:8px;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:#EAF4EC;color:#2E7A4F;}
+.mx-tp.d{background:#FFF6E6;color:#9A5B00;}
 .mx-list{display:flex;flex-direction:column;gap:8px;}
 .mx-list .ev-day{margin:8px 2px 0;}
 .mx-list .ev-day:first-child{margin-top:0;}
@@ -6266,10 +6268,6 @@ function _rideMetaChips(r){
   }
   var soft='display:inline-flex;align-items:center;gap:6px;background:#FCFCFB;color:var(--ink);border:1px solid #F0EEE9;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:400;white-space:nowrap;';
   if(r.passengers) chips.push('<span style="'+soft+'">'+ico('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>')+r.passengers+' passager'+(r.passengers>1?'s':'')+'</span>');
-  // Type de trajet juste avant la gamme : transfert simple (vert) / mise à disposition (orange, avec la durée)
-  if(r.trip_type==='disposal'){ var _du=((r.notes||'').match(/Durée:([^\s|,]+)/)||[])[1]||'';
-    chips.push('<span style="'+soft+'background:#FFF6E6;border-color:#F6E2BE;color:#9A5B00;">'+ico('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')+'Mise à disposition'+(_du?' · '+_rdEsc(_du.replace(/h$/,' h')):'')+'</span>'); }
-  else if(r.trip_type==='ab' || !r.trip_type) chips.push('<span style="'+soft+'background:#EAF4EC;border-color:#D3E8D9;color:#2E7A4F;">'+ico('<circle cx="6" cy="18" r="2.6"/><circle cx="18" cy="6" r="2.6"/><path d="M8 16l8-8"/>')+'Transfert simple</span>');
   if(r.vehicle_type){ var vl={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'}[r.vehicle_type]||r.vehicle_type;
     chips.push('<span style="'+soft+'">'+ico('<path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>')+vl+'</span>'); }
   // Événement : simple ligne de texte au-dessus des pastilles (pas une pastille)
@@ -6403,10 +6401,10 @@ function _openRideDetailImpl(el){
     mixedSegs.forEach(function(s,i){
       var sd=s.date||r.ride_date||'', isD=s.type.toLowerCase().indexOf('disp')>=0;
       if(_days.length>1 && sd!==_last){ _last=sd; mixedBody+='<div class="ev-day">'+_rdEsc(_dl(sd))+'</div>'; }
-      var ttl=[_clsN(s.veh), isD?_sh(s.from)+(s.dur?' \u00b7 '+String(s.dur).replace(/h$/,'')+' h':''):_sh(s.from)+' \u2192 '+_sh(s.to)].filter(Boolean).join(' \u00b7 ');
+      var ttl=[_clsN(s.veh), isD?_sh(s.from):_sh(s.from)+' \u2192 '+_sh(s.to)].filter(Boolean).join(' \u00b7 ');
       var sub=[s.time, s.pax?(s.pax+' passager'+(String(s.pax)==='1'?'':'s')):'', s.flight?'Vol '+s.flight:'', s.flight2?'Vol '+s.flight2:'', s.train?'Train '+s.train:'', s.train2?'Train '+s.train2:'', s.paxName?s.paxName+(s.paxTel?' ('+s.paxTel+')':''):''].filter(Boolean).join(' \u00b7 ');
       mixedBody+='<div class="ev-sub mx-sub"><span class="n">'+(i+1)+'</span><div style="flex:1;min-width:0;">'
-        +'<div style="font-weight:600;font-size:14px;">'+_rdEsc(ttl)+'</div>'
+        +'<div style="font-weight:600;font-size:14px;">'+_mxTypePill(isD,s.dur)+_rdEsc(ttl)+'</div>'
         +'<div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+_rdEsc(sub)+'</div>'
         +(isD?'':'<div id="detail-route-info-'+i+'" style="display:none;font-size:12px;color:var(--ink3);margin-top:2px;"><span id="detail-route-info-text-'+i+'"></span></div>')
         +(s.note?'<div class="mx-note"><span>Instructions : </span>'+_rdEsc(s.note)+'</div>':'')
@@ -7286,6 +7284,13 @@ function _rdInfoBlocks(o){
   return h;
 }
 // Zone « Départ / Arrivée » (même rendu que la fiche et le paiement) + distance calculée par Google
+// Pastille du type d'un trajet de trajet mixte (avant la gamme)
+function _mxTypePill(isD, dur){
+  var ic=function(d){ return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>'; };
+  return isD
+    ? '<span class="mx-tp d">'+ic('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')+'Mise à disposition'+(dur?' · '+_rdEsc(String(dur).replace(/h$/,'')+' h'):'')+'</span>'
+    : '<span class="mx-tp">'+ic('<circle cx="6" cy="18" r="2.6"/><circle cx="18" cy="6" r="2.6"/><path d="M8 16l8-8"/>')+'Transfert simple</span>';
+}
 // Trajet mixte : liste des trajets (même présentation que la fiche), réutilisée dans les offres et le paiement
 function _mixListHtml(r){
   var segs=parseMixedNotes(r.notes||''); if(!segs.length) return '';
@@ -7297,9 +7302,9 @@ function _mixListHtml(r){
   segs.forEach(function(sg,i){
     var sd=sg.date||r.ride_date||'', isD=sg.type.toLowerCase().indexOf('disp')>=0;
     if(days.length>1 && sd!==last){ last=sd; h+='<div class="ev-day">'+_rdEsc(dl(sd))+'</div>'; }
-    var ttl=[clsN(sg.veh), isD?sh(sg.from)+(sg.dur?' \u00b7 '+String(sg.dur).replace(/h$/,'')+' h':''):sh(sg.from)+' \u2192 '+sh(sg.to)].filter(Boolean).join(' \u00b7 ');
+    var ttl=[clsN(sg.veh), isD?sh(sg.from):sh(sg.from)+' \u2192 '+sh(sg.to)].filter(Boolean).join(' \u00b7 ');
     var sub=[days.length>1?'':'', sg.time, sg.pax?(sg.pax+' passager'+(String(sg.pax)==='1'?'':'s')):'', sg.flight?'Vol '+sg.flight:'', sg.flight2?'Vol '+sg.flight2:'', sg.train?'Train '+sg.train:'', sg.train2?'Train '+sg.train2:''].filter(Boolean).join(' \u00b7 ');
-    h+='<div class="ev-sub mx-sub"><span class="n">'+(i+1)+'</span><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:14px;">'+_rdEsc(ttl)+'</div>'
+    h+='<div class="ev-sub mx-sub"><span class="n">'+(i+1)+'</span><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:14px;">'+_mxTypePill(isD,sg.dur)+_rdEsc(ttl)+'</div>'
       +'<div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+_rdEsc(sub)+'</div></div></div>';
   });
   if(days.length===1 && days[0]) h='<div class="ev-day">'+_rdEsc(dl(days[0]))+'</div>'+h;
