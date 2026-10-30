@@ -393,6 +393,8 @@ input.fld-err,select.fld-err,textarea.fld-err{border-color:#C0392B!important;box
 .ofc-ft{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--sand2);}
 .ofc-more{background:none;border:none;font:500 12.5px 'DM Sans',sans-serif;color:var(--ink3);cursor:pointer;display:flex;align-items:center;gap:4px;padding:6px 0;}
 .ofc-pick{margin-left:auto;padding:10px 24px!important;font-size:14px!important;font-weight:600!important;border-radius:999px!important;justify-content:center;}
+.ofc-specs{display:flex;flex-wrap:wrap;gap:8px 28px;}
+.ofc-specs > div{white-space:nowrap;}
 .ofc-detail{display:none;margin-top:10px;padding:10px 12px;background:#FAFAF8;border:1px solid #F1F0EC;border-radius:10px;font-size:12px;color:var(--ink2);}
 #m-view-offers.rd-panel .modal-ft{display:none;}
 /* Navigation entre écrans plein écran : l'écran précédent reste ouvert mais masqué */
@@ -9161,7 +9163,7 @@ function renderOfferCard(o){
   var _lbl=function(l,val){ return '<div><span style="color:var(--ink4);font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">'+l+'</span><div style="font-weight:500;color:var(--ink);">'+val+'</div></div>'; };
   // Détails du véhicule : équipements / km sur la 1re ligne, puis gamme · marque · modèle · année · couleur sur une ligne
   var details=v?((tags?'<div class="ofc-tags" style="margin:0 0 10px;">'+tags+'</div>':'')
-    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px 14px;">'
+    +'<div class="ofc-specs">'
       +(vehClass?_lbl('Gamme',classLabels[vehClass]||vehClass):'')
       +_lbl('Marque',v.brand||'—')+_lbl('Modèle',v.model||'—')
       +(v.year?_lbl('Année',v.year):'')+(v.color?_lbl('Couleur',v.color):'')
