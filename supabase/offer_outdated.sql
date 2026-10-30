@@ -5,6 +5,7 @@
 --    (trajet ajouté / supprimé, date, heure, adresses, gamme…)
 --  • api_ride_update marque les offres en attente et prévient les fleets (cloche)
 --  • api_offer_submit : une offre mise à jour redevient valable
+--  • une offre périmée ne peut pas être acceptée (trigger) ; create-checkout la refuse aussi
 -- ════════════════════════════════════════════════════════════════
 
 alter table public.offers add column if not exists outdated_at timestamptz;
@@ -93,5 +94,18 @@ begin
 end $$;
 revoke all on function public.api_offer_submit(uuid, numeric, text, uuid, jsonb) from public, anon;
 grant execute on function public.api_offer_submit(uuid, numeric, text, uuid, jsonb) to authenticated;
+
+-- Une offre périmée ne peut pas être confirmée (paiement par carte ou virement)
+create or replace function public.trg_offers_no_stale_accept()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if new.status = 'accepted' and old.status is distinct from 'accepted' and old.outdated_at is not null then
+    raise exception 'Cette offre n''est plus à jour : la demande a été modifiée après l''offre' using errcode = '42501';
+  end if;
+  return new;
+end $$;
+drop trigger if exists b_offers_no_stale_accept on public.offers;
+create trigger b_offers_no_stale_accept before update on public.offers
+  for each row execute function public.trg_offers_no_stale_accept();
 
 notify pgrst, 'reload schema';

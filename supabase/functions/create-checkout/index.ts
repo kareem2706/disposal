@@ -53,9 +53,13 @@ Deno.serve(async (req: Request) => {
 
     // 3) L'offre est bien pour cette course et toujours valable
     const { data: offer } = await admin.from("offers")
-      .select("id, ride_id, price, status").eq("id", offerId).maybeSingle();
+      .select("id, ride_id, price, status, outdated_at").eq("id", offerId).maybeSingle();
     if (!offer || offer.ride_id !== rideId || offer.status !== "pending") {
       return json({ error: "Cette offre n'est plus disponible" }, 409);
+    }
+    // Offre faite avant une modification de la demande, pas encore mise à jour par le chauffeur
+    if (offer.outdated_at) {
+      return json({ error: "Cette offre n'est plus à jour : vous avez modifié la demande après l'offre. Le chauffeur a été prévenu ; vous pourrez la choisir dès qu'il l'aura mise à jour." }, 409);
     }
 
     // 4) Montant calculé côté serveur (HTVA + TVA), en centimes
