@@ -8614,6 +8614,7 @@ window.submitRide = async function(){
     return !!(r.driver_id&&r.driver_id===uid&&['confirmed','pending_payment','active','done'].indexOf(r.status)>=0);
   }
   window._trBlockHtml=function(r){
+    if(r.trip_type==='mixed') return '';   // trajet mixte : vols / trains affichés dans chaque trajet
     var fl=tag(r.notes,'flight'), tr=tag(r.notes,'train'), fl2=tag(r.notes,'flight2'), tr2=tag(r.notes,'train2');
     if((!fl&&!tr&&!fl2&&!tr2)||!canSee(r)) return '';
     css();
