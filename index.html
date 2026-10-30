@@ -1212,7 +1212,7 @@ body{background:var(--bg);}
 .tr-pair > .input-group{margin:0!important;min-width:0;}
 .tr-pair.two .tr-hint{display:none;}
 .rd-mxk{display:block;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2F5FA8;margin-bottom:2px;}
-.mx-tp{display:inline-flex;align-items:center;gap:5px;vertical-align:1px;margin-right:8px;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600;background:#EAF4EC;color:#2E7A4F;}
+.mx-tp{display:inline-flex;align-items:center;justify-content:center;vertical-align:-4px;margin-right:8px;width:22px;height:22px;border-radius:7px;font-size:11.5px;font-weight:600;background:#EAF4EC;color:#2E7A4F;}
 .mx-tp.d{background:#FFF6E6;color:#9A5B00;}
 .mx-list{display:flex;flex-direction:column;gap:8px;}
 .mx-list .ev-day{margin:8px 2px 0;}
@@ -6401,7 +6401,7 @@ function _openRideDetailImpl(el){
     mixedSegs.forEach(function(s,i){
       var sd=s.date||r.ride_date||'', isD=s.type.toLowerCase().indexOf('disp')>=0;
       if(_days.length>1 && sd!==_last){ _last=sd; mixedBody+='<div class="ev-day">'+_rdEsc(_dl(sd))+'</div>'; }
-      var ttl=[_clsN(s.veh), isD?_sh(s.from):_sh(s.from)+' \u2192 '+_sh(s.to)].filter(Boolean).join(' \u00b7 ');
+      var ttl=[_clsN(s.veh), isD?_sh(s.from)+(s.dur?' \u00b7 '+String(s.dur).replace(/h$/,'')+' h':''):_sh(s.from)+' \u2192 '+_sh(s.to)].filter(Boolean).join(' \u00b7 ');
       var sub=[s.time, s.pax?(s.pax+' passager'+(String(s.pax)==='1'?'':'s')):'', s.flight?'Vol '+s.flight:'', s.flight2?'Vol '+s.flight2:'', s.train?'Train '+s.train:'', s.train2?'Train '+s.train2:'', s.paxName?s.paxName+(s.paxTel?' ('+s.paxTel+')':''):''].filter(Boolean).join(' \u00b7 ');
       mixedBody+='<div class="ev-sub mx-sub"><span class="n">'+(i+1)+'</span><div style="flex:1;min-width:0;">'
         +'<div style="font-weight:600;font-size:14px;">'+_mxTypePill(isD,s.dur)+_rdEsc(ttl)+'</div>'
@@ -7288,8 +7288,8 @@ function _rdInfoBlocks(o){
 function _mxTypePill(isD, dur){
   var ic=function(d){ return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>'; };
   return isD
-    ? '<span class="mx-tp d">'+ic('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')+'Mise à disposition'+(dur?' · '+_rdEsc(String(dur).replace(/h$/,'')+' h'):'')+'</span>'
-    : '<span class="mx-tp">'+ic('<circle cx="6" cy="18" r="2.6"/><circle cx="18" cy="6" r="2.6"/><path d="M8 16l8-8"/>')+'Transfert simple</span>';
+    ? '<span class="mx-tp d" title="Mise à disposition">'+ic('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')+'</span>'
+    : '<span class="mx-tp" title="Transfert simple">'+ic('<circle cx="6" cy="18" r="2.6"/><circle cx="18" cy="6" r="2.6"/><path d="M8 16l8-8"/>')+'</span>';
 }
 // Trajet mixte : liste des trajets (même présentation que la fiche), réutilisée dans les offres et le paiement
 function _mixListHtml(r){
@@ -7302,7 +7302,7 @@ function _mixListHtml(r){
   segs.forEach(function(sg,i){
     var sd=sg.date||r.ride_date||'', isD=sg.type.toLowerCase().indexOf('disp')>=0;
     if(days.length>1 && sd!==last){ last=sd; h+='<div class="ev-day">'+_rdEsc(dl(sd))+'</div>'; }
-    var ttl=[clsN(sg.veh), isD?sh(sg.from):sh(sg.from)+' \u2192 '+sh(sg.to)].filter(Boolean).join(' \u00b7 ');
+    var ttl=[clsN(sg.veh), isD?sh(sg.from)+(sg.dur?' \u00b7 '+String(sg.dur).replace(/h$/,'')+' h':''):sh(sg.from)+' \u2192 '+sh(sg.to)].filter(Boolean).join(' \u00b7 ');
     var sub=[days.length>1?'':'', sg.time, sg.pax?(sg.pax+' passager'+(String(sg.pax)==='1'?'':'s')):'', sg.flight?'Vol '+sg.flight:'', sg.flight2?'Vol '+sg.flight2:'', sg.train?'Train '+sg.train:'', sg.train2?'Train '+sg.train2:''].filter(Boolean).join(' \u00b7 ');
     h+='<div class="ev-sub mx-sub"><span class="n">'+(i+1)+'</span><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:14px;">'+_mxTypePill(isD,sg.dur)+_rdEsc(ttl)+'</div>'
       +'<div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+_rdEsc(sub)+'</div></div></div>';
