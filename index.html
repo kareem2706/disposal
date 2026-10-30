@@ -311,6 +311,8 @@ input.fld-err,select.fld-err,textarea.fld-err{border-color:#C0392B!important;box
 .ride-sep{color:var(--ink4);font-size:11px;}
 .ride-meta{font-size:11.5px;color:var(--ink3);display:flex;gap:10px;flex-wrap:wrap;}
 /* Date + passagers + classe : une ligne sur ordinateur, deux lignes sur mobile */
+.rmc-wrap.v2,.modal-overlay.rd-panel .rmc-wrap.v2{flex-direction:column!important;align-items:flex-start!important;flex-wrap:nowrap!important;gap:6px!important;}
+.rmc-wrap.v2 .rmc-row{display:flex!important;flex-wrap:wrap!important;gap:6px;align-items:center;}
 .rmc-wrap{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:6px;}
 .rmc-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;}
 @media(max-width:600px){.rmc-wrap{flex-direction:column;align-items:flex-start;}}
@@ -6281,13 +6283,15 @@ function _rideMetaChips(r){
   var _evLine=r.event_name?(r.event_kind==='mixed'?'<div class="rd-evline" style="color:#2F5FA8;">Trajet mixte · '+_rdEsc(r.event_name)+'</div>':'<div class="rd-evline">'+_rdEsc(r.event_name)+'</div>'):'';
   var _fl=_rdTag(r.notes,'flight'), _tr=_rdTag(r.notes,'train');
   var tsoft='display:inline-flex;align-items:center;gap:6px;background:#FCFCFB;color:var(--ink);border:1px solid #F0EEE9;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:400;white-space:nowrap;';
+  var _nMain=chips.length;   // date + passagers + gamme ; vol / train sur la 2e ligne
   if(_fl) chips.push('<span style="'+tsoft+'">'+ico('<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>')+'Vol '+_rdEsc(_fl.toUpperCase())+'</span>');
   if(_tr) chips.push('<span style="'+tsoft+'">'+ico('<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8.5 14h.01M15.5 14h.01M9 17l-2 4M15 17l2 4"/>')+'Train '+_rdEsc(_tr.toUpperCase())+'</span>');
   if(!chips.length) return _evLine;
   var first=r.ride_date?chips.shift():'';
-  return _evLine+'<div class="rmc-wrap">'
-    +(first?'<div>'+first+'</div>':'')
-    +(chips.length?'<div class="rmc-row">'+chips.join('')+'</div>':'')
+  var _main=chips.slice(0,_nMain-(first?1:0)), _trans=chips.slice(_nMain-(first?1:0));
+  return _evLine+'<div class="rmc-wrap v2">'
+    +'<div class="rmc-row">'+(first||'')+_main.join('')+'</div>'
+    +(_trans.length?'<div class="rmc-row">'+_trans.join('')+'</div>':'')
     +'</div>';
 }
 function _openRideDetailImpl(el){
