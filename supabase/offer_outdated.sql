@@ -3,7 +3,8 @@
 -- À exécuter APRÈS server_actions.sql et vehicle_class_filter.sql.
 --  • offers.outdated_at / outdated_reason : la demande a changé après l'offre
 --    (trajet ajouté / supprimé, date, heure, adresses, gamme…)
---  • api_ride_update marque les offres en attente et prévient les fleets (cloche)
+--  • api_ride_update marque les offres en attente (trajet ajouté / supprimé, départ, arrivée, date, heure, gamme)
+--    et prévient les fleets (cloche) ; autres changements (passagers…) : simple notification
 --  • api_offer_submit : une offre mise à jour redevient valable
 --  • une offre périmée ne peut pas être acceptée (trigger) ; create-checkout la refuse aussi
 -- ════════════════════════════════════════════════════════════════
@@ -13,7 +14,7 @@ alter table public.offers add column if not exists outdated_reason text;
 
 create or replace function public.api_ride_update(p_ride uuid, p jsonb)
 returns jsonb language plpgsql security definer set search_path = public as $$
-declare uid uuid := _api_uid(); r rides%rowtype; n rides%rowtype; d jsonb; v_offer text; v_res jsonb; v_old int; v_new int; v_reason text; v_drv uuid;
+declare uid uuid := _api_uid(); r rides%rowtype; n rides%rowtype; d jsonb; v_offer text; v_res jsonb; v_old int; v_new int; v_reason text; v_drv uuid; v_sig_o text; v_sig_n text;
 begin
   select * into r from rides where id = p_ride for update;
   if not found or r.client_id is distinct from uid then raise exception 'Demande introuvable' using errcode = '42501'; end if;
@@ -34,30 +35,45 @@ begin
   if not (coalesce(r.is_subcontract, false) and r.status in ('waiting','offers')) then d := d - 'final_price'; end if;
   v_res := _api_update('public.rides', p_ride::text, d);
 
-  -- Demande modifiée alors que des offres sont en attente : elles ne sont plus à jour
+  -- Demande modifiée alors que des offres sont en attente.
+  --  • offre périmée (blocage + nouvelle offre) : trajet ajouté / supprimé, ou départ, arrivée, date, heure, gamme modifiés
+  --  • simple notification : autre changement (passagers, durée, instructions, vol / train…)
   select * into n from rides where id = p_ride;
-  if r.status in ('waiting','offers') and exists (select 1 from offers where ride_id = p_ride and status = 'pending')
-     and (row(n.trip_type, n.from_address, n.to_address, n.ride_date, n.ride_time, n.passengers, n.vehicle_type,
-              regexp_replace(coalesce(n.notes,''), '\|[a-z_]{3,}:[^|]*', '', 'g'))
-          is distinct from
-          row(r.trip_type, r.from_address, r.to_address, r.ride_date, r.ride_time, r.passengers, r.vehicle_type,
-              regexp_replace(coalesce(r.notes,''), '\|[a-z_]{3,}:[^|]*', '', 'g'))) then
+  if r.status in ('waiting','offers') and exists (select 1 from offers where ride_id = p_ride and status = 'pending') then
+    -- trajets d'une course mixte réduits à : type, heure, départ > arrivée, date, gamme
+    v_sig_o := case when r.trip_type = 'mixed' then regexp_replace(regexp_replace(regexp_replace(coalesce(r.notes,''), '\|[a-z_]{3,}:[^|]*', '', 'g'),
+                 '\|(p|n|fl|tr|fl2|tr2|pn|pt):[^|]*', '', 'g'), '\([^)]*\)', '', 'g') else '' end;
+    v_sig_n := case when n.trip_type = 'mixed' then regexp_replace(regexp_replace(regexp_replace(coalesce(n.notes,''), '\|[a-z_]{3,}:[^|]*', '', 'g'),
+                 '\|(p|n|fl|tr|fl2|tr2|pn|pt):[^|]*', '', 'g'), '\([^)]*\)', '', 'g') else '' end;
     v_old := case when r.trip_type = 'mixed' then (select count(*) from regexp_matches(coalesce(r.notes,''), '(A>B|Disposition)[@:]', 'g')) else 1 end;
     v_new := case when n.trip_type = 'mixed' then (select count(*) from regexp_matches(coalesce(n.notes,''), '(A>B|Disposition)[@:]', 'g')) else 1 end;
-    v_reason := case
-      when v_new = v_old + 1 then 'Un trajet a été ajouté'
-      when v_new > v_old then (v_new - v_old) || ' trajets ont été ajoutés'
-      when v_new = v_old - 1 then 'Un trajet a été supprimé'
-      when v_new < v_old then (v_old - v_new) || ' trajets ont été supprimés'
-      else 'La demande a été modifiée (date, heure, adresses, gamme ou trajets)' end;
-    perform _api_trusted(true);
-    update offers set outdated_at = now(), outdated_reason = v_reason where ride_id = p_ride and status = 'pending';
-    perform _api_trusted(false);
-    for v_drv in select distinct driver_id from offers where ride_id = p_ride and status = 'pending' loop
-      perform _api_notify(v_drv, 'ride_updated', 'Demande modifiée — offre à mettre à jour',
-        'La demande ' || coalesce(n.booking_code, left(n.id::text, 8)) || ' a été modifiée par le client : ' || lower(left(v_reason,1)) || substr(v_reason,2) ||
-        '. Votre offre n’est plus à jour : vérifiez la demande et mettez votre offre à jour.', p_ride);
-    end loop;
+    if row(n.trip_type, n.from_address, n.to_address, n.ride_date, n.ride_time, n.vehicle_type, v_sig_n)
+       is distinct from row(r.trip_type, r.from_address, r.to_address, r.ride_date, r.ride_time, r.vehicle_type, v_sig_o) then
+      v_reason := case
+        when v_new = v_old + 1 then 'Un trajet a été ajouté'
+        when v_new > v_old then (v_new - v_old) || ' trajets ont été ajoutés'
+        when v_new = v_old - 1 then 'Un trajet a été supprimé'
+        when v_new < v_old then (v_old - v_new) || ' trajets ont été supprimés'
+        else 'Départ, arrivée, date, heure ou gamme modifiés' end;
+      perform _api_trusted(true);
+      update offers set outdated_at = now(), outdated_reason = v_reason where ride_id = p_ride and status = 'pending';
+      perform _api_trusted(false);
+      for v_drv in select distinct driver_id from offers where ride_id = p_ride and status = 'pending' loop
+        perform _api_notify(v_drv, 'ride_updated', 'Demande modifiée — offre à mettre à jour',
+          'La demande ' || coalesce(n.booking_code, left(n.id::text, 8)) || ' a été modifiée par le client : ' || lower(left(v_reason,1)) || substr(v_reason,2) ||
+          '. Votre offre n’est plus à jour : vérifiez la demande et mettez votre offre à jour.', p_ride);
+      end loop;
+    elsif row(n.passengers, regexp_replace(coalesce(n.notes,''), '\|(pax|tel|pemail|pref|note_drv|offer_note):[^|]*', '', 'g'))
+          is distinct from row(r.passengers, regexp_replace(coalesce(r.notes,''), '\|(pax|tel|pemail|pref|note_drv|offer_note):[^|]*', '', 'g')) then
+      v_reason := case when n.passengers is distinct from r.passengers
+                       then 'nombre de passagers : ' || coalesce(r.passengers::text,'—') || ' → ' || coalesce(n.passengers::text,'—')
+                       else 'informations de la demande mises à jour (passagers, durée, instructions, vol / train…)' end;
+      for v_drv in select distinct driver_id from offers where ride_id = p_ride and status = 'pending' loop
+        perform _api_notify(v_drv, 'ride_updated', 'Demande mise à jour',
+          'La demande ' || coalesce(n.booking_code, left(n.id::text, 8)) || ' a été mise à jour par le client (' || v_reason ||
+          '). Votre offre reste valable, aucune action n’est nécessaire.', p_ride);
+      end loop;
+    end if;
   end if;
   return v_res;
 end $$;
