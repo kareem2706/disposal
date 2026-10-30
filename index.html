@@ -7,7 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <!-- Supabase JS SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script>if(!window.supabase) document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"><\/script>');</script>
 <script src="https://cdn.jsdelivr.net/npm/@capacitor/core@7.6.9/dist/capacitor.js"></script>
 <!-- Stripe.js -->
 <script src="https://js.stripe.com/v3/"></script>
@@ -3532,6 +3533,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   }, 5000);
   try {
     console.log('[init] starting...');
+    // Bibliothèque Supabase indisponible sur le CDN principal : seconde source
+    if(!window.supabase){ await new Promise(function(res){ var sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js'; sc.onload=res; sc.onerror=res; document.head.appendChild(sc); }); }
     initSupabase(SB_URL,SB_KEY);
     console.log('[init] supabase ready, checking session...');
     await checkSession();
