@@ -196,7 +196,7 @@ input.fld-err,select.fld-err,textarea.fld-err{border-color:#C0392B!important;box
 .nav-item.active{background:var(--sand2);color:var(--ink);font-weight:500;}
 .nav-ico{width:16px;height:16px;flex-shrink:0;opacity:.65;}
 .nav-item.active .nav-ico,.nav-item:hover .nav-ico{opacity:1;}
-#badge-rides{background:var(--green);}
+#badge-rides{background:#D93B30;color:#fff;}
 .nav-badge{margin-left:auto;background:var(--ink);color:white;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:20px;}
 #badge-marketplace{background:var(--green);}
 .sidebar-footer{padding:12px 10px;border-top:1px solid var(--sand3);}
@@ -2004,7 +2004,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <button class="btn btn-secondary btn-sm" onclick="filterRides('waiting',this)">En attente</button>
         <button class="btn btn-secondary btn-sm" onclick="filterRides('offers',this)">Offres</button>
         <button class="btn btn-secondary btn-sm" style="display:none;" onclick="filterRides('pending_payment',this)">Paiement en cours</button>
-        <button class="btn btn-secondary btn-sm" onclick="filterRides('confirmed',this)">Confirmées</button>
+        <button class="btn btn-secondary btn-sm" onclick="filterRides('confirmed',this)">Confirmées<span id="rf-conf-n"></span></button>
         <button class="btn btn-secondary btn-sm" onclick="filterRides('done',this)">Terminées</button>
       </div>
       <div id="all-rides-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
@@ -4765,7 +4765,8 @@ async function loadClientDashboard(){
 
   // Pastille « Mes demandes » : courses confirmées pas encore terminées (diminue à chaque course terminée)
   try{ var _bc=rides.filter(function(r){ return r.status==='confirmed'||r.status==='active'; }).length, _bE=document.getElementById('badge-rides');
-    if(_bE){ _bE.textContent=_bc>99?'99+':String(_bc); _bE.style.display=_bc?'':'none'; } }catch(_e){}
+    if(_bE){ _bE.textContent=_bc>99?'99+':String(_bc); _bE.style.display=_bc?'':'none'; }
+    var _fN=document.getElementById('rf-conf-n'); if(_fN) _fN.textContent=_bc?' ('+_bc+')':''; }catch(_e){}
   // Rides in progress (driver on the way or pick-up done) — same block as the driver dashboard
   var _inProgress = function(r){ return r.status==='active' || (r.status==='confirmed' && r.on_way_at); };
   _renderDriverActiveRides(rides.filter(_inProgress), 'active-ride-wrap', true);
