@@ -10179,6 +10179,15 @@ function _rdOpened(id){
   try{ if(_rdHist) history.replaceState({rd:id},'',url); else { history.pushState({rd:id},'',url); _rdHist=true; } }catch(e){}
 }
 function _rdHideAll(){ document.querySelectorAll('.modal-overlay.rd-panel.open').forEach(function(m){ m.classList.remove('open','rd-under'); }); _rdStack=[]; document.body.classList.remove('rd-open','rd-nav'); }
+// Une demande est ouverte et on clique sur une autre demande de la liste : on ferme l'écran ouvert
+// (et ceux empilés dessous) puis la nouvelle s'ouvre normalement.
+document.addEventListener('click', function(e){
+  var t=e.target; if(!t||!t.closest) return;
+  var el=t.closest('[data-ride], .ride-card, [onclick*="Detail("]');
+  if(!el || el.closest('.modal-overlay')) return;
+  if(!document.querySelector('.modal-overlay.rd-panel.open')) return;
+  _rdHideAll();
+}, true);
 // Pile des écrans précédents (ex. fiche → offres → paiement) : « retour » revient d'un cran
 var _rdStack=[], _rdSkipPop=0;
 window._rdPushUnder=function(prevId){
