@@ -4768,7 +4768,8 @@ async function loadClientDashboard(){
 
   // Non-terminated rides sorted by ride_date asc for dashboard (oldest first), max 3 (rides in progress shown above)
   // Événements : une seule ligne par événement (tous ses véhicules), affichée tant qu'un véhicule reste à venir
-  const _open = function(r){ return r.status !== 'done' && r.status !== 'cancelled' && !_inProgress(r); };
+  // Seules les demandes encore en cours (en attente d'offres, offres reçues, paiement à faire) ; les confirmées sont dans la carte « Confirmées »
+  const _open = function(r){ return ['waiting','offers','pending_payment'].indexOf(r.status)>=0 && !_inProgress(r); };
   const recent = _groupEvents(rides.slice().sort(_byNewest)).filter(function(x){ return x._evt ? x.rides.some(_open) : _open(x); }).slice(0, 3);
 
   document.getElementById('recent-rides-list').innerHTML = recent.length
