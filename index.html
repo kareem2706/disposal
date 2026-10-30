@@ -6266,6 +6266,10 @@ function _rideMetaChips(r){
   }
   var soft='display:inline-flex;align-items:center;gap:6px;background:#FCFCFB;color:var(--ink);border:1px solid #F0EEE9;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:400;white-space:nowrap;';
   if(r.passengers) chips.push('<span style="'+soft+'">'+ico('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>')+r.passengers+' passager'+(r.passengers>1?'s':'')+'</span>');
+  // Type de trajet juste avant la gamme : transfert simple (vert) / mise à disposition (orange, avec la durée)
+  if(r.trip_type==='disposal'){ var _du=((r.notes||'').match(/Durée:([^\s|,]+)/)||[])[1]||'';
+    chips.push('<span style="'+soft+'background:#FFF6E6;border-color:#F6E2BE;color:#9A5B00;">'+ico('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')+'Mise à disposition'+(_du?' · '+_rdEsc(_du.replace(/h$/,' h')):'')+'</span>'); }
+  else if(r.trip_type==='ab' || !r.trip_type) chips.push('<span style="'+soft+'background:#EAF4EC;border-color:#D3E8D9;color:#2E7A4F;">'+ico('<circle cx="6" cy="18" r="2.6"/><circle cx="18" cy="6" r="2.6"/><path d="M8 16l8-8"/>')+'Transfert simple</span>');
   if(r.vehicle_type){ var vl={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'}[r.vehicle_type]||r.vehicle_type;
     chips.push('<span style="'+soft+'">'+ico('<path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>')+vl+'</span>'); }
   // Événement : simple ligne de texte au-dessus des pastilles (pas une pastille)
