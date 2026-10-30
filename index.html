@@ -3534,7 +3534,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     console.log('[init] starting...');
     // Bibliothèque Supabase indisponible sur le CDN principal : seconde source
-    if(!window.supabase){ await new Promise(function(res){ var sc=document.createElement('script'); sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.min.js'; sc.onload=res; sc.onerror=res; document.head.appendChild(sc); }); }
+    if(!window.supabase){ await new Promise(function(res){ var sc=document.createElement('script'); sc.src='https://unpkg.com/@supabase/supabase-js@2.118.0/dist/umd/supabase.js'; sc.onload=res; sc.onerror=res; document.head.appendChild(sc); }); }
     initSupabase(SB_URL,SB_KEY);
     console.log('[init] supabase ready, checking session...');
     await checkSession();
