@@ -6253,6 +6253,7 @@ window.openRideDetail=function(el){
 
 // Ride key info (date/time, passengers, vehicle) shown as prominent chips at the top of a ride detail
 function _rideMetaChips(r){
+  if(r.trip_type==='mixed' && parseMixedNotes(r.notes||'').length) return '';
   var chips=[];
   var ico=function(d){ return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>'; };
   if(r.ride_date){
@@ -7281,7 +7282,27 @@ function _rdInfoBlocks(o){
   return h;
 }
 // Zone « Départ / Arrivée » (même rendu que la fiche et le paiement) + distance calculée par Google
+// Trajet mixte : liste des trajets (même présentation que la fiche), réutilisée dans les offres et le paiement
+function _mixListHtml(r){
+  var segs=parseMixedNotes(r.notes||''); if(!segs.length) return '';
+  var sh=function(a){ return String(cleanAddr(a)||'').split(',')[0].trim(); };
+  var clsN=function(v){ return ({lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus'})[v]||v||''; };
+  var dl=function(x){ if(!x) return ''; var t2=new Date(x+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long'}); return t2.charAt(0).toUpperCase()+t2.slice(1); };
+  var days=segs.map(function(x){ return x.date||r.ride_date||''; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
+  var last=null, h='';
+  segs.forEach(function(sg,i){
+    var sd=sg.date||r.ride_date||'', isD=sg.type.toLowerCase().indexOf('disp')>=0;
+    if(days.length>1 && sd!==last){ last=sd; h+='<div class="ev-day">'+_rdEsc(dl(sd))+'</div>'; }
+    var ttl=[clsN(sg.veh), isD?sh(sg.from)+(sg.dur?' \u00b7 '+String(sg.dur).replace(/h$/,'')+' h':''):sh(sg.from)+' \u2192 '+sh(sg.to)].filter(Boolean).join(' \u00b7 ');
+    var sub=[days.length>1?'':'', sg.time, sg.pax?(sg.pax+' passager'+(String(sg.pax)==='1'?'':'s')):'', sg.flight?'Vol '+sg.flight:'', sg.flight2?'Vol '+sg.flight2:'', sg.train?'Train '+sg.train:'', sg.train2?'Train '+sg.train2:''].filter(Boolean).join(' \u00b7 ');
+    h+='<div class="ev-sub mx-sub"><span class="n">'+(i+1)+'</span><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:14px;">'+_rdEsc(ttl)+'</div>'
+      +'<div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+_rdEsc(sub)+'</div></div></div>';
+  });
+  if(days.length===1 && days[0]) h='<div class="ev-day">'+_rdEsc(dl(days[0]))+'</div>'+h;
+  return '<div class="mx-list">'+h+'</div>';
+}
 function _routeBlockHtml(r, pfx){
+  if(r.trip_type==='mixed'){ var _ml=_mixListHtml(r); if(_ml) return _ml; }
   var isDisp=r.trip_type==='disposal', isMixed=r.trip_type==='mixed';
   var dur=((r.notes||'').match(/Durée:([^\s|,]+)/)||[])[1]||'';
   var gIc='<svg width="14" height="18" viewBox="0 0 24 30" fill="#1B5E3B"><path d="M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>';
@@ -9268,6 +9289,7 @@ window.openPaymentModal = function(offerId, driverId, amount){
           +'<span id="payment-dist-text"></span></div>';
       }
       html+='</div>';
+      if(r.trip_type==='mixed' && parseMixedNotes(r.notes||'').length) html=_mixListHtml(r);
       rideInfoEl.innerHTML=html;
       rideInfoEl.style.display = '';
       // Compute distance for A→B
