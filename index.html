@@ -6905,6 +6905,15 @@ function _openRideDetailImpl(el){
   }
 
   // ── Course terminée (client) : récapitulatif sous la carte — véhicule / chauffeur, prix payé HTVA et TVAC ──
+  // Course annulée (client) : pas de sous-titre ; nom de l'événement / trajet mixte dans l'en-tête
+  if(isClient && r.status==='cancelled'){
+    try{
+      var _hdC=document.querySelector('#detail-title .rd-hd2'), _subC=_hdC&&_hdC.querySelector('.rd-hd2-sub');
+      if(_subC && !(isMixed&&mixedSegs.length)) _subC.remove();
+      var _evC=document.querySelector('#detail-body .rd-evline');
+      if(_evC){ if(_hdC && r.event_name) _hdC.insertAdjacentHTML('afterbegin', r.event_kind==='mixed'?'<span class="rd-mxk">Trajet mixte \u00b7 '+_rdEsc(r.event_name)+'</span>':'<span class="rd-mxk" style="color:#7A55C2;">Événement \u00b7 '+_rdEsc(r.event_name)+'</span>'); _evC.remove(); }
+    }catch(_e){}
+  }
   var _extra = document.getElementById('detail-extra');
   if(_extra){ _extra.innerHTML=''; _extra.style.display='none'; }
   if(isClient && r.status==='done' && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
