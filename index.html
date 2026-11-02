@@ -1129,6 +1129,37 @@ body{background:var(--bg);}
 .nr-ic svg{width:38px;height:38px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;}
 .nr-opt.g .nr-ic{background:#EAF4EC;color:#2E7A4F;}.nr-opt.o .nr-ic{background:#FFF6E6;color:#D98A1C;}.nr-opt.b .nr-ic{background:#EAF1FB;color:#2F6DB5;}
 .nr-opt.v .nr-ic{background:#F2EEFB;color:#7A55C2;}
+/* Demande par IA */
+#m-new-ride.nr-editing #nr-opt-ai{display:none!important;}
+.ai-adm{display:flex;align-items:center;gap:16px;}
+.ai-sw{display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;font-size:13px;font-weight:600;color:var(--ink2);}
+.ai-sw input{display:none;}
+.ai-sw i{width:42px;height:24px;border-radius:24px;background:#D9D6CF;position:relative;transition:background .15s;}
+.ai-sw i::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .15s;}
+.ai-sw input:checked + i{background:var(--green);}
+.ai-sw input:checked + i::after{left:21px;}
+.ai-sw span{min-width:24px;}
+.nr-opt.ai{border-color:#CDBDF0;background:#FAF7FF;}.nr-opt.ai:hover{border-color:#A98BE0;}
+.nr-opt.ai .nr-ic{background:#7A55C2;color:#fff;}.nr-opt.ai .nr-ic svg{fill:currentColor;stroke:none;}
+.ai-tag{font-style:normal;font-size:10px;font-weight:700;background:#7A55C2;color:#fff;border-radius:20px;padding:2px 7px;margin-left:6px;vertical-align:2px;letter-spacing:.04em;}
+.nr-ai{display:none;flex-direction:column;gap:12px;padding:18px 22px 20px;overflow-y:auto;}
+#m-new-ride.nr-ai-on .nr-ai{display:flex;}
+#m-new-ride.nr-ai-on .modal-body,#m-new-ride.nr-ai-on .modal-ft{display:none!important;}
+#ai-text{width:100%;min-height:180px;border:1.5px solid #CDBDF0;border-radius:14px;padding:14px;font:15px/1.5 'DM Sans',sans-serif;color:var(--ink);background:#FDFCFF;resize:vertical;box-sizing:border-box;}
+#ai-text:focus{outline:none;border-color:#7A55C2;box-shadow:0 0 0 3px rgba(122,85,194,.12);}
+.ai-hint{font-size:13px;color:var(--ink3);line-height:1.5;}
+.ai-ex{display:flex;flex-wrap:wrap;gap:8px;}
+.ai-ex button{border:none;background:#F2EEFB;color:#6A47B3;border-radius:20px;padding:6px 12px;font:500 12.5px 'DM Sans',sans-serif;cursor:pointer;}
+.ai-status{font-size:13.5px;color:#6A47B3;display:flex;align-items:center;gap:8px;min-height:20px;}
+.ai-status.err{color:#C0392B;}
+.ai-spin{width:16px;height:16px;border:2px solid #D9CCF2;border-top-color:#7A55C2;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;}
+/* spin : défini plus haut */
+.ai-ft{display:flex;justify-content:flex-end;margin-top:4px;}
+.ai-go{background:#7A55C2!important;color:#fff!important;border:none;}.ai-go:disabled{opacity:.6;}
+.ai-banner{background:#F4F1FB;border-radius:12px;padding:11px 13px;font-size:13px;line-height:1.45;color:var(--ink2);margin-bottom:14px;}
+.ai-banner b{color:#5E3FA3;}.ai-banner em{font-style:normal;color:#C0392B;font-weight:600;}
+.ai-miss{font-size:11.5px;color:#C0392B;margin-top:4px;line-height:1.3;}
+
 .ev-seg{display:flex;background:#F1F1EF;border-radius:10px;padding:3px;gap:2px;}
 .ev-seg button{flex:1;border:none;background:none;border-radius:8px;padding:8px 6px;font:500 12.5px 'DM Sans',sans-serif;color:var(--ink3);cursor:pointer;}
 .ev-seg button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08);}
@@ -2778,13 +2809,22 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div class="nr-steps" id="nr-steps"></div>
     <div class="nr-choose" id="nr-choose">
       <div class="nr-q">Quel type de course souhaitez-vous r&eacute;server&nbsp;?</div>
+      <button type="button" class="nr-opt ai" id="nr-opt-ai" style="display:none;" onclick="_nrPick('ai')"><span class="nr-ic"><svg viewBox="0 0 32 32"><path d="M16 4l2.6 8.4L27 15l-8.4 2.6L16 26l-2.6-8.4L5 15l8.4-2.6z"/></svg></span><span class="nr-tx"><b>D&eacute;crivez votre itin&eacute;raire <i class="ai-tag">IA</i></b><span>&Eacute;crivez votre besoin avec vos mots, nous pr&eacute;parons la demande pour vous.</span></span><span class="nr-chev">&rsaquo;</span></button>
       <button type="button" class="nr-opt g" onclick="_nrPick('ab')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="6" cy="24" r="3"/><circle cx="26" cy="8" r="3"/><path d="M9 23.5c4-.5 4.5-4.5 7-7.5s4.5-5.5 7-7"/></svg></span><span class="nr-tx"><b>Trajet simple</b><span>Transfert simple d&rsquo;un point A &agrave; un point B.</span></span><span class="nr-chev">&rsaquo;</span></button>
       <button type="button" class="nr-opt o" onclick="_nrPick('disposal')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M16 10v6.5l4 2.5"/></svg></span><span class="nr-tx"><b>Mise &agrave; disposition</b><span>Un chauffeur &agrave; votre disposition pendant plusieurs heures.</span></span><span class="nr-chev">&rsaquo;</span></button>
       <button type="button" class="nr-opt b" onclick="_nrPick('mixed')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="4.5" cy="26" r="2.6"/><circle cx="27.5" cy="6" r="2.6"/><path d="M7 24.6c2.2-.8 3.6-2.2 4.6-3.8M20.4 11.2c1-1.6 2.4-3 4.6-3.8"/><circle cx="16" cy="16" r="6"/><path d="M16 12.8v3.4l2.2 1.4"/></svg></span><span class="nr-tx"><b>Trajet mixte</b><span>Combinez plusieurs trajets entre transferts simples et mises &agrave; disposition.</span></span><span class="nr-chev">&rsaquo;</span></button>
       <button type="button" class="nr-opt v nr-opt-ev" onclick="_nrPick('event')"><span class="nr-ic"><svg viewBox="0 0 32 32"><path d="M3 15l1.5-4.5h9L15 15v4H3zM17 13l1.5-4.5h9L29 13v4H17z"/><path d="M5 19v2M13 19v2M19 17v2M27 17v2"/></svg></span><span class="nr-tx"><b>&Eacute;v&eacute;nement</b><span>Pour les organisations d&rsquo;&eacute;v&eacute;nements qui n&eacute;cessitent plusieurs v&eacute;hicules.</span></span><span class="nr-chev">&rsaquo;</span></button>
     </div>
+    <div class="nr-ai" id="nr-ai">
+      <textarea id="ai-text" rows="8" maxlength="2500" placeholder="Ex. J&rsquo;arrive demain &agrave; 10h &agrave; la gare du Midi avec un coll&egrave;gue, il faut nous d&eacute;poser &agrave; l&rsquo;h&ocirc;tel Amigo. L&rsquo;apr&egrave;s-midi, un chauffeur pendant 4 heures. Samedi, retour &agrave; l&rsquo;a&eacute;roport de Zaventem, vol SN 3123 &agrave; 11h30."></textarea>
+      <div class="ai-hint">Indiquez les lieux, les dates et heures, le nombre de personnes, et vos num&eacute;ros de vol ou de train si vous les avez. Vous v&eacute;rifierez tout avant l&rsquo;envoi.</div>
+      <div class="ai-ex"><button type="button" onclick="_aiEx(0)">+ exemple transfert</button><button type="button" onclick="_aiEx(1)">+ exemple mise &agrave; disposition</button><button type="button" onclick="_aiEx(2)">+ exemple &eacute;v&eacute;nement</button></div>
+      <div class="ai-status" id="ai-status"></div>
+      <div class="ai-ft"><button type="button" class="btn ai-go" id="ai-go" onclick="_aiPrepare()">&#10022; Pr&eacute;parer ma demande</button></div>
+    </div>
     <div class="modal-body">
       <button type="button" class="nr-back" id="nr-back" onclick="_nrShow('choose')">&lsaquo; Changer de type de trajet</button>
+      <div class="ai-banner" id="ai-banner" style="display:none;"></div>
       <div class="input-group" id="nr-type-grp"><label>Type de course</label>
         <div class="trip-types">
           <div class="trip-type active" data-val="ab" onclick="selTripType(this)">A &rarr; B</div>
@@ -10178,10 +10218,15 @@ window._nrShow=function(step){
   // Création comme modification : choix du type (étape 1) puis formulaire (étape 2)
   m.classList.add('nr-flow');
   m.classList.toggle('nr-pick', step==='choose');
+  m.classList.toggle('nr-ai-on', step==='ai');
+  if(step==='choose' && window._aiClear) _aiClear();
+  if(step==='ai') setTimeout(function(){ var t=document.getElementById('ai-text'); if(t&&window.innerWidth>900) t.focus(); },120);
   var st=document.getElementById('nr-steps'); if(st) st.innerHTML=_nrStepsHtml(step==='choose'?1:2);
   var b=m.querySelector('.modal-body'); if(b) b.scrollTop=0;
 };
 window._nrPick=function(val){
+  if(val==='ai'){ _nrShow('ai'); return; }
+  if(!window._aiApplying && window._aiClear) _aiClear();
   if(val==='event'){ _evSetMode(true); _nrShow('form'); return; }
   _evSetMode(false);
   var el=document.querySelector('#nr-type-grp .trip-type[data-val="'+val+'"]');
@@ -10195,6 +10240,7 @@ window._nrInit=function(){
   var edit=!!(document.getElementById('ride-edit-id')||{}).value;
   _nrShow(edit?'form':'choose');
   m.classList.toggle('nr-editing', edit);
+  if(window._aiFlag) _aiFlag();
   m.classList.remove('nr-recap-on');
   if(!edit && !window._evAddPending){ try{ _evReset(); }catch(_e){} }
   window._evAddPending=false;   // nouvelle demande : formulaire Événement toujours vierge   // en modification, pas d'option « Événement »   // modification : on arrive sur le formulaire, « Changer de type » reste possible
@@ -10203,8 +10249,179 @@ window._nrInit=function(){
   if(back) back.onclick=function(){
     // Modification : retour à la fiche de la demande (pas au choix du type)
     if(m.classList.contains('nr-editing')){ var _ei=document.getElementById('ride-edit-id'); if(_ei) _ei.value=''; window._editHiddenTags=''; window._editRidePax=null; m.classList.remove('nr-editing'); _rdBack('m-new-ride'); return; }
-    if(m.classList.contains('nr-recap-on')) _nrRecapBack(); else if(m.classList.contains('ev-recap-on')) _evEditBack(); else if(window._evTarget && m.classList.contains('nr-event')) _rdBack('m-new-ride'); else if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
+    if(m.classList.contains('nr-recap-on')) _nrRecapBack(); else if(m.classList.contains('ev-recap-on')) _evEditBack(); else if(window._evTarget && m.classList.contains('nr-event')) _rdBack('m-new-ride'); else if(window._aiFrom && !m.classList.contains('nr-ai-on') && !m.classList.contains('nr-pick')){ window._aiFrom=false; _nrShow('ai'); } else if(m.classList.contains('nr-flow') && !m.classList.contains('nr-pick')) _nrShow('choose'); else _rdBack('m-new-ride'); };
 };
+// ══ DEMANDE PAR IA : « Décrivez votre itinéraire » ══
+// Visible uniquement si l'admin a activé billing_settings.ai_requests_enabled (contrôlé aussi côté serveur).
+// Le texte est analysé par la fonction Edge ai-itinerary ; le résultat pré-remplit le formulaire habituel,
+// champs à compléter en rouge. Le client vérifie puis publie comme d'habitude.
+window._aiEnabled=false;
+window._aiFlag=function(){
+  var b=document.getElementById('nr-opt-ai'); if(b) b.style.display=window._aiEnabled?'':'none';
+  if(!sb || currentRole!=='client') { if(b) b.style.display='none'; return; }
+  sb.from('billing_settings').select('ai_requests_enabled').eq('id',1).maybeSingle().then(function(r){
+    window._aiEnabled=!!(r&&r.data&&r.data.ai_requests_enabled===true);
+    var e=document.getElementById('m-new-ride'), o=document.getElementById('nr-opt-ai');
+    if(o) o.style.display=(window._aiEnabled && !(e&&e.classList.contains('nr-editing')))?'':'none';
+  }).catch(function(){});
+};
+var _AI_EX=[
+  'Demain à 9h, transfert de la gare du Midi vers Brussels Airport pour 2 personnes avec 3 valises. Business.',
+  'Vendredi prochain de 14h à 18h, un chauffeur à disposition au départ de l’hôtel Amigo à Bruxelles pour des rendez-vous en ville. 1 personne.',
+  'Séminaire le 12 décembre au Château de la Hulpe : 18 personnes à prendre à Brussels Airport à 8h30 (vol SN 2902), retour à l’aéroport à 17h.'
+];
+window._aiEx=function(i){ var t=document.getElementById('ai-text'); if(t){ t.value=_AI_EX[i]||''; t.focus(); } };
+function _aiEsc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _aiStatus(msg, kind){
+  var s=document.getElementById('ai-status'); if(!s) return;
+  s.className='ai-status'+(kind==='err'?' err':'');
+  s.innerHTML=kind==='load'?'<span class="ai-spin"></span>'+msg:msg;
+}
+window._aiClear=function(){
+  window._aiFrom=false;
+  var b=document.getElementById('ai-banner'); if(b){ b.style.display='none'; b.innerHTML=''; }
+  document.querySelectorAll('#m-new-ride .ai-miss').forEach(function(x){ x.remove(); });
+};
+window._aiPrepare=async function(){
+  var t=document.getElementById('ai-text'), go=document.getElementById('ai-go');
+  var text=String(t&&t.value||'').trim();
+  if(text.length<10){ _aiStatus('Décrivez votre trajet en quelques mots (lieux, date, heure).','err'); return; }
+  if(!sb){ _aiStatus('Connexion indisponible.','err'); return; }
+  if(go) go.disabled=true;
+  _aiStatus('Analyse de votre texte…','load');
+  try{
+    var res=await sb.functions.invoke('ai-itinerary',{ body:{ text:text } });
+    var data=res.data, err=res.error;
+    if(err){
+      var msg='';
+      try{ if(err.context && err.context.json){ var j=await err.context.json(); msg=j&&j.error; } }catch(_e){}
+      throw new Error(msg||'Le service IA est momentanément indisponible.');
+    }
+    if(!data || !data.draft) throw new Error((data&&data.error)||'Aucun trajet reconnu.');
+    _aiStatus('');
+    _aiApply(data.draft);
+  }catch(e){
+    _aiStatus(_aiEsc(e.message||String(e)),'err');
+  }finally{ if(go) go.disabled=false; }
+};
+
+// ── Pré-remplissage ──
+function _aiSet(el, v){ if(!el||v==null||v==='') return; el.value=v; try{ el.dispatchEvent(new Event('input',{bubbles:true})); el.dispatchEvent(new Event('change',{bubbles:true})); }catch(e){} }
+function _aiPaxVal(n){ n=parseInt(n,10)||0; return n<1?'':(n>7?'8+':String(n)); }
+// Marque un champ à compléter (rouge + petite explication sous le champ)
+function _aiMiss(el, hint){
+  if(!el) return;
+  el.classList.add('fld-err');
+  var g=el.closest('.input-group')||el.parentNode;
+  if(g && !g.querySelector('.ai-miss')){
+    var d=document.createElement('div'); d.className='ai-miss'; d._el=el; d.textContent='À compléter'+(hint?' — '+hint:'');
+    g.appendChild(d);
+    var off=function(){ if(String(el.value||'').trim()){ d.remove(); el.removeEventListener('input',off); el.removeEventListener('change',off); } };
+    el.addEventListener('input',off); el.addEventListener('change',off);
+  }
+}
+// Remplit un trajet. f = { from, to, date, time, dur, pax, veh, notes, tr(key) → champ vol/train, plan() → plan vol/train }
+function _aiFillTrip(tr, f){
+  var miss={}; (tr.missing||[]).forEach(function(k){ miss[k]=1; });
+  _aiSet(f.from, tr.from);
+  if(f.to) _aiSet(f.to, tr.to);
+  if(f.date){ f.date.value=tr.date||''; }
+  if(f.time){ f.time.value=tr.time||''; }
+  if(f.dur && tr.duration_hours) f.dur.value=tr.duration_hours;
+  if(f.pax && _aiPaxVal(tr.pax)) f.pax.value=_aiPaxVal(tr.pax);
+  if(f.veh && tr.vehicle) f.veh.value=tr.vehicle;
+  // Vol / train : rangé dans le bon champ (arrivée au départ / départ à l'arrivée) selon les lieux
+  var extra=[];
+  if(f.plan){
+    var plan=f.plan()||[], used={pickup:false, dropoff:false};
+    plan.forEach(function(x){
+      var v=x.pickup?tr.pickup_number:tr.dropoff_number, inp=f.tr&&f.tr(x.key);
+      if(v && inp){ inp.value=v; used[x.pickup?'pickup':'dropoff']=true; }
+    });
+    if(tr.pickup_number && !used.pickup) extra.push('Vol / train à l’arrivée : '+tr.pickup_number);
+    if(tr.dropoff_number && !used.dropoff) extra.push('Vol / train au départ : '+tr.dropoff_number);
+  }
+  var notes=[tr.notes].concat(extra).filter(Boolean).join('\n');
+  if(f.notes && notes) f.notes.value=notes;
+  // Champs à compléter
+  if(miss.from || !tr.from) _aiMiss(f.from);
+  if(f.to && (miss.to || !tr.to)) _aiMiss(f.to);
+  if(f.date && (miss.date || !tr.date)) _aiMiss(f.date, tr.date?'à confirmer':'non précisée');
+  if(f.time && (miss.time || !tr.time)) _aiMiss(f.time, tr.time_hint?'« '+tr.time_hint+' »':'non précisée');
+  if(f.dur && miss.duration) _aiMiss(f.dur, 'non précisée');
+  if(f.pax && miss.pax) _aiMiss(f.pax, 'nombre non précisé');
+}
+window._aiApply=function(dr){
+  var trips=(dr&&dr.trips)||[]; if(!trips.length) return;
+  var kind=dr.kind;
+  if(kind!=='event') kind=trips.length>1?'mixed':(trips[0].type==='disposal'?'disposal':'ab');
+  // Formulaire vierge, puis type choisi
+  var keepText=(document.getElementById('ai-text')||{}).value||'';
+  var _cm=window.closeModal; window.closeModal=function(){};   // on remet le formulaire à zéro sans fermer la fenêtre
+  try{ cancelRideModal(); }catch(e){} finally{ window.closeModal=_cm; }
+  _nrInit();
+  var tx=document.getElementById('ai-text'); if(tx) tx.value=keepText;
+  window._aiApplying=true;
+  try{ _nrPick(kind); } finally { window._aiApplying=false; }
+  var g=function(id){ return document.getElementById(id); };
+  if(kind==='ab'){
+    var tr=trips[0];
+    _aiSet(g('ride-from'), tr.from); _aiSet(g('ride-to'), tr.to);
+    if(window._trRefresh) _trRefresh();
+    _aiFillTrip(tr, { from:g('ride-from'), to:g('ride-to'), date:g('ride-date'), time:g('ride-time'), pax:g('ride-pax'), veh:g('ride-vehicle'), notes:g('ride-notes'),
+      plan:function(){ return _trPairPlan(g('ride-from').value, g('ride-to').value); }, tr:function(k){ return g('ride-'+k); } });
+  } else if(kind==='disposal'){
+    var tr=trips[0];
+    _aiSet(g('disp-from'), tr.from);
+    if(window._trRefresh) _trRefresh();
+    _aiFillTrip(tr, { from:g('disp-from'), date:g('disp-date'), time:g('disp-time'), dur:g('disp-duration'), pax:g('disp-pax'), veh:g('disp-vehicle'), notes:g('disp-notes'),
+      plan:function(){ return _trPairPlan(g('disp-from').value, null); }, tr:function(k){ return k==='flight'||k==='train'?g('disp-'+k):null; } });
+  } else if(kind==='mixed'){
+    var cont=g('mixed-segments');
+    while(cont.querySelectorAll('.mixed-segment').length<trips.length) addMixedSegment();
+    var segs=[].slice.call(cont.querySelectorAll('.mixed-segment'));
+    trips.forEach(function(tr,i){
+      var sg=segs[i], n=sg.id.replace('seg-','');
+      if(tr.type==='disposal'){ var ms=sg.querySelector('.mix-type'); if(ms){ ms.value='disposal'; var bt=sg.querySelectorAll('.seg-type-btn'); if(bt[1]) setSegType(bt[1], +n, 'disposal'); } }
+      _aiSet(g('sf-'+n), tr.from); if(g('st-'+n)) _aiSet(g('st-'+n), tr.to);
+      _segTr(n);
+      _aiFillTrip(tr, { from:g('sf-'+n), to:g('st-'+n), date:g('sd8-'+n), time:g('sh-'+n), dur:g('sdur-'+n), pax:g('spax-'+n), veh:g('sveh-'+n), notes:g('snotes-'+n),
+        plan:function(){ return _trPairPlan(g('sf-'+n).value, g('st-'+n)?g('st-'+n).value:null); }, tr:function(k){ return g(_SEG_TRK[k]+'-'+n); } });
+    });
+    if(dr.contact_name) g('mix-cname').value=dr.contact_name;
+    if(dr.contact_phone) g('mix-cphone').value=dr.contact_phone;
+  } else if(kind==='event'){
+    var box=g('ev-vehicles'); if(box) box.innerHTML='';
+    if(dr.event_name) g('ev-name').value=dr.event_name; else _aiMiss(g('ev-name'));
+    if(dr.contact_name) g('ev-cname').value=dr.contact_name;
+    if(dr.contact_phone) g('ev-cphone').value=dr.contact_phone;
+    trips.forEach(function(tr){
+      var cnt=tr.vehicles&&Object.keys(tr.vehicles).length?tr.vehicles:null, d={ type:tr.type==='disposal'?'disposal':'ab', from:tr.from, to:tr.to, date:tr.date, time:tr.time, dur:tr.duration_hours||'' };
+      if(cnt){ d.vm='manual'; d.cnt=cnt; }
+      else if(tr.pax){ d.vm='pax'; d.n=String(tr.pax); var sg=_evSuggest(tr.pax); d.cnt=sg[0]?sg[0].c:{business:1}; }
+      else if(tr.vehicle){ d.cnt={}; d.cnt[tr.vehicle]=1; }
+      var r=_evAdd(d); if(!r) return;
+      r.querySelector('.ev-date').value=tr.date||'';
+      _evTr(r);
+      _aiFillTrip(tr, { from:r.querySelector('.ev-from'), to:d.type==='ab'?r.querySelector('.ev-to'):null, date:r.querySelector('.ev-date'), time:r.querySelector('.ev-time'), dur:d.type==='disposal'?r.querySelector('.ev-dur'):null,
+        plan:function(){ return _trPairPlan(_evVal(r,'ev-from'), d.type==='disposal'?null:_evVal(r,'ev-to')); }, tr:function(k){ return r.querySelector('.ev-'+k); } });
+    });
+    _evRenumber();
+  }
+  // Bandeau
+  var nMiss=document.querySelectorAll('#m-new-ride .modal-body .ai-miss').length, n=trips.length;
+  var b=g('ai-banner');
+  if(b){
+    b.innerHTML='<b>✦ '+n+' trajet'+(n>1?'s':'')+' détecté'+(n>1?'s':'')+'.</b> '+(dr.summary?_aiEsc(dr.summary.replace(/[.\s]*$/,'.'))+' ':'')
+      +(nMiss?'Vérifiez les informations : les champs en <em>rouge</em> sont à compléter.':'Vérifiez les informations avant de publier.');
+    b.style.display='';
+  }
+  // La remise à zéro du formulaire efface les cadres rouges juste après (observateur) : on les remet ensuite
+  setTimeout(function(){ document.querySelectorAll('#m-new-ride .ai-miss').forEach(function(d){ if(d._el && d.isConnected) d._el.classList.add('fld-err'); }); }, 60);
+  window._aiFrom=true;
+  var mb=document.querySelector('#m-new-ride .modal-body'); if(mb) mb.scrollTop=0;
+};
+
 // Même barre d'étapes sur la suite du parcours client : attente (3), offres (4), paiement (5)
 window._nrStepsBar=function(modalId, step){
   var m=document.getElementById(modalId); if(!m) return;
@@ -13413,6 +13630,20 @@ function _billingCommList(s){
   return [{country:'BE', rate:s.platform_commission_rate!=null?s.platform_commission_rate:''}];
 }
 
+// Interrupteur « Client génère sa demande par IA » : enregistré tout de suite (côté serveur, admin uniquement)
+window._aiAdminToggle=async function(cb){
+  var on=!!cb.checked, l=document.getElementById('bill-ai-lbl');
+  cb.disabled=true;
+  try{
+    var {error}=await sb.rpc('api_admin_save',{ p_table:'billing_settings', p_id:'1', p_data:{ ai_requests_enabled:on } });
+    if(error) throw error;
+    if(l) l.textContent=on?'Oui':'Non';
+    showToast(on?'✅ Demande par IA activée pour les clients':'Demande par IA désactivée');
+  }catch(e){
+    cb.checked=!on; if(l) l.textContent=!on?'Oui':'Non';
+    showToast('Erreur : '+(e.message||e)+(/ai_requests_enabled|column/i.test(e.message||'')?' — exécutez supabase/ai_requests.sql':''));
+  }finally{ cb.disabled=false; }
+};
 async function loadAdminBilling(){
   var el=document.getElementById('admin-billing-content'); if(!el||!sb)return;
   try{
@@ -13434,7 +13665,12 @@ async function loadAdminBilling(){
         +'</div>';
     };
     el.innerHTML=
-      '<div class="card" style="padding:22px;margin-bottom:16px;">'
+      '<div class="card ai-adm" style="padding:18px 22px;margin-bottom:16px;">'
+        +'<div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:700;margin-bottom:4px;">Client génère sa demande par IA</div>'
+        +'<div style="font-size:12px;color:var(--ink3);line-height:1.45;">Affiche aux clients l’option « Décrivez votre itinéraire » : le client écrit son besoin, l’IA pré-remplit le formulaire, le client vérifie puis publie.</div></div>'
+        +'<label class="ai-sw"><input type="checkbox" id="bill-ai-sw"'+(s.ai_requests_enabled?' checked':'')+' onchange="_aiAdminToggle(this)"><i></i><span id="bill-ai-lbl">'+(s.ai_requests_enabled?'Oui':'Non')+'</span></label>'
+      +'</div>'
+      +'<div class="card" style="padding:22px;margin-bottom:16px;">'
         +'<div style="font-size:15px;font-weight:700;margin-bottom:4px;">Données de facturation Bleenr</div>'
         +'<div style="font-size:12px;color:var(--ink3);margin-bottom:16px;">Coordonnées qui figureront sur les factures.</div>'
         +f('bill-company','Raison sociale',s.company_name,'Bleenr SRL',true)
