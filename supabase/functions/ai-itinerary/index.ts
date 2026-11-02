@@ -180,8 +180,8 @@ Deno.serve(async (req) => {
       console.error("anthropic", ai.status, AI_MODEL, raw);
       await log(false);
       // Code court affiché au client pour le diagnostic (aucune donnée sensible) : statut HTTP + type d'erreur Anthropic
-      let typ = ""; try { typ = JSON.parse(raw)?.error?.type || ""; } catch (_e) { /* texte brut */ }
-      return json({ error: `Le service IA est momentanément indisponible. Utilisez le formulaire classique. (code ${ai.status}${typ ? " " + typ : ""})` }, 502);
+      let typ = "", msg = ""; try { const e = JSON.parse(raw)?.error; typ = e?.type || ""; msg = String(e?.message || "").slice(0, 200); } catch (_e) { /* texte brut */ }
+      return json({ error: `Le service IA est momentanément indisponible. Utilisez le formulaire classique. (code ${ai.status}${typ ? " " + typ : ""}${msg ? " : " + msg : ""})` }, 502);
     }
     const out = await ai.json();
     const block = (out?.content || []).find((c: any) => c?.type === "tool_use");
