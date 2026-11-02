@@ -176,9 +176,12 @@ Deno.serve(async (req) => {
       }),
     });
     if (!ai.ok) {
-      console.error("anthropic", ai.status, (await ai.text()).slice(0, 500));
+      const raw = (await ai.text()).slice(0, 800);
+      console.error("anthropic", ai.status, AI_MODEL, raw);
       await log(false);
-      return json({ error: "Le service IA est momentanément indisponible. Utilisez le formulaire classique." }, 502);
+      // Code court affiché au client pour le diagnostic (aucune donnée sensible) : statut HTTP + type d'erreur Anthropic
+      let typ = ""; try { typ = JSON.parse(raw)?.error?.type || ""; } catch (_e) { /* texte brut */ }
+      return json({ error: `Le service IA est momentanément indisponible. Utilisez le formulaire classique. (code ${ai.status}${typ ? " " + typ : ""})` }, 502);
     }
     const out = await ai.json();
     const block = (out?.content || []).find((c: any) => c?.type === "tool_use");
