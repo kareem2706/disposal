@@ -35,7 +35,7 @@ type Item = {
 const tag = (n: string | null, t: string) => ((n || "").match(new RegExp("\\|" + t + ":([^|]*)")) || [])[1]?.trim() || "";
 const norm = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const AIRPORT = /airport|aeroport|luchthaven|flughafen|aeropuerto|aeroporto|zaventem|\bbru\b|\bcrl\b/;
-const STATION = /\bgare\b|station|bahnhof|stazione|estacion|\bhbf\b|centraal|\bmidi\b|\bzuid\b|eurostar|thalys|\btgv\b/;
+const STATION = /\bgare\b|\bstation\b|\bbahnhof\b|\bhauptbahnhof\b|stazione|estacion|\bhbf\b|centraal|\bmidi\b|\bzuid\b|eurostar|thalys|\btgv\b/;
 
 // Mots significatifs d'un nom (gare / aéroport) retrouvés dans l'adresse de la course
 const STOP = new Set(["gare", "station", "airport", "aeroport", "international", "de", "du", "des", "la", "le", "the", "of", "bruxelles", "brussel", "brussels"]);

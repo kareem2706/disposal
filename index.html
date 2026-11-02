@@ -8580,8 +8580,10 @@ window.submitRide = async function(){
 // en temps réel dans le détail de la course (Edge Function transport-status : AeroDataBox pour les vols, iRail pour les trains).
 (function(){
   var RE_PLANE=/airport|aeroport|luchthaven|flughafen|aeropuerto|aeroporto|zaventem|\bbru\b|\bcrl\b/;
-  var RE_TRAIN=/\bgare\b|station|bahnhof|stazione|estacion|\bhbf\b|centraal|\bmidi\b|\bzuid\b|eurostar|thalys|\btgv\b/;
-  var nrm=function(a){ return String(a||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); };
+  var RE_TRAIN=/\bgare\b|\bstation\b|\bbahnhof\b|\bhauptbahnhof\b|stazione|estacion|\bhbf\b|centraal|\bmidi\b|\bzuid\b|eurostar|thalys|\btgv\b/;
+  // Noms de rues qui contiennent « gare / station / midi » sans être une gare (Stationsplein, Rue de la Station, Bahnhofstraße…)
+  var RE_STREET=/\b(rue|avenue|av|place|pl|boulevard|bd|chaussee|quai|square|allee|impasse|chemin|route|parvis|esplanade|street|st|road|rd|avenue)\.?\s+(de\s+la\s+|du\s+|des\s+|de\s+l['’]?\s*|de\s+|of\s+the\s+)?(gare|station|midi)\b|\b(gare|station)\s+(street|road|square|avenue)\b|\bstations?(plein|straat|laan|lei|weg|dreef|kaai|park|steeg)\b|\bbahnhof(s)?(str|strasse|platz|allee|weg)\b|\bapres-midi\b/g;
+  var nrm=function(a){ return String(a||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ß/g,'ss').replace(RE_STREET,' '); };
   window._trKindOf=function(a){ var s=nrm(a); return { plane:RE_PLANE.test(s), train:RE_TRAIN.test(s) }; };
   var val=function(id){ var e=document.getElementById(id); return e?e.value:''; };
   var vis=function(id){ var e=document.getElementById(id); return !!e && e.style.display!=='none'; };
