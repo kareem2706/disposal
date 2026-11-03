@@ -13,7 +13,7 @@
 -- 4. Gamme cohérente avec le nombre de passagers :
 --      1 à 3  → toutes les gammes
 --      4 à 7  → Peu importe, Economy, Van (Bus accepté, ex. événement)
---      8 et + → Peu importe, Bus
+--      8 et + → Bus uniquement
 -- ════════════════════════════════════════════════════════════════
 
 -- ── Gammes ───────────────────────────────────────────────────────
@@ -198,8 +198,8 @@ begin
     if v_pax between 4 and 7 and v_cls in ('business','luxe') then
       raise exception 'Pour % passagers, choisissez Peu importe, Economy ou Van.', v_pax using errcode = '22023';
     end if;
-    if v_pax >= 8 and v_cls in ('lowcost','business','luxe','van') then
-      raise exception 'Pour 8 passagers ou plus, choisissez Peu importe ou Bus.' using errcode = '22023';
+    if v_pax >= 8 and v_cls <> 'bus' then
+      raise exception 'Pour 8 passagers ou plus, choisissez un Bus.' using errcode = '22023';
     end if;
   end if;
   return new;
