@@ -1988,6 +1988,10 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="3" width="13" height="10" rx="1.8" stroke="currentColor" stroke-width="1.3"/><path d="M2 4.5l6 4.2 6-4.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Campagnes e-mail
         </button>
+        <button class="nav-item" data-page="admin-settings" onclick="showPage('admin-settings')">
+          <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.3"/><path d="M8 1.5v1.8M8 12.7v1.8M14.5 8h-1.8M3.3 8H1.5M12.6 3.4l-1.3 1.3M4.7 11.3l-1.3 1.3M12.6 12.6l-1.3-1.3M4.7 4.7L3.4 3.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          Réglages
+        </button>
       </div>
     </nav>
 
@@ -2623,6 +2627,13 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     </div>
 
     <!-- Admin: Campagnes e-mail -->
+    <div id="page-admin-settings" class="page">
+      <div class="pg-head">
+        <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2M19.1 4.9L17 7M7 17l-2.1 2.1M19.1 19.1L17 17M7 7L4.9 4.9"/></svg></div>
+        <div><h1>R&eacute;glages</h1><p>Fonctionnalit&eacute;s et param&egrave;tres des formulaires de demande</p></div>
+      </div>
+      <div id="admin-settings-content" style="max-width:760px;"><div class="page-loading"><div class="page-spinner"></div></div></div>
+    </div>
     <div id="page-admin-campaigns" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6.5l9 6.5 9-6.5"/></svg></div>
@@ -4707,7 +4718,7 @@ window.showPage = function(pageId){
   const pageNames = { dashboard:t('dashboard'), rides:t('rides'), calendar:'Calendrier', 'd-calendar':'Calendrier', invoices:t('invoices'),
     profile:t('profile'), 'd-dashboard':t('d-dashboard'), marketplace:t('marketplace'), missions:t('missions'),
     'd-invoices':'Factures', 'passengers':'Passagers',
-    'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses', 'admin-billing':'Facturation', 'admin-reports':'Rapports', 'admin-issues':'Signalements', 'admin-campaigns':'Campagnes e-mail' };
+    'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses', 'admin-billing':'Facturation', 'admin-reports':'Rapports', 'admin-issues':'Signalements', 'admin-campaigns':'Campagnes e-mail', 'admin-settings':'Réglages' };
   var ptEl=document.getElementById('page-title');if(ptEl)ptEl.textContent=pageNames[pageId]||'';
   var piEl=document.getElementById('page-title-icon');if(piEl){var _srcIc=pg.querySelector('.pg-head-icon');piEl.innerHTML=_srcIc?_srcIc.innerHTML:'';piEl.classList.toggle('has-icon',!!_srcIc);}
 
@@ -4744,6 +4755,7 @@ async function loadPageData(pageId){
     case 'admin-reports':  await loadAdminReports(); break;
     case 'admin-issues':   await loadAdminIssues(); break;
     case 'admin-campaigns': await loadAdminCampaigns(); break;
+    case 'admin-settings': await loadAdminSettings(); break;
   }
 }
 
@@ -13895,6 +13907,23 @@ window._lugAdminSave=async function(btn){
   }catch(e){ showToast('Erreur : '+(e.message||e)+(/luggage_caps|column/i.test(e.message||'')?' — exécutez supabase/luggage_caps.sql':'')); }
   finally{ btn.disabled=false; }
 };
+// Page Admin › Réglages : demande par IA + capacités en bagages
+async function loadAdminSettings(){
+  var el=document.getElementById('admin-settings-content'); if(!el||!sb) return;
+  try{
+    var {data:s,error}=await sb.from('billing_settings').select('*').eq('id',1).maybeSingle();
+    if(error) throw error;
+    s=s||{};
+    el.innerHTML='<div class="card ai-adm" style="padding:18px 22px;margin-bottom:16px;">'
+        +'<div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:700;margin-bottom:4px;">Client génère sa demande par IA</div>'
+        +'<div style="font-size:12px;color:var(--ink3);line-height:1.45;">Affiche aux clients l’option « Décrivez votre itinéraire » : le client écrit son besoin, l’IA pré-remplit le formulaire, le client vérifie puis publie.</div></div>'
+        +'<label class="ai-sw"><input type="checkbox" id="bill-ai-sw"'+(s.ai_requests_enabled?' checked':'')+' onchange="_aiAdminToggle(this)"><i></i><span id="bill-ai-lbl">'+(s.ai_requests_enabled?'Oui':'Non')+'</span></label>'
+      +'</div>'
+      +_lugAdminCard(s.luggage_caps);
+  }catch(e){
+    el.innerHTML='<div class="card" style="padding:24px;color:var(--red);font-size:13px;">Erreur: '+_billingEsc(e.message||e)+'</div>';
+  }
+}
 // Interrupteur « Client génère sa demande par IA » : enregistré tout de suite (côté serveur, admin uniquement)
 window._aiAdminToggle=async function(cb){
   var on=!!cb.checked, l=document.getElementById('bill-ai-lbl');
@@ -13930,13 +13959,7 @@ async function loadAdminBilling(){
         +'</div>';
     };
     el.innerHTML=
-      '<div class="card ai-adm" style="padding:18px 22px;margin-bottom:16px;">'
-        +'<div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:700;margin-bottom:4px;">Client génère sa demande par IA</div>'
-        +'<div style="font-size:12px;color:var(--ink3);line-height:1.45;">Affiche aux clients l’option « Décrivez votre itinéraire » : le client écrit son besoin, l’IA pré-remplit le formulaire, le client vérifie puis publie.</div></div>'
-        +'<label class="ai-sw"><input type="checkbox" id="bill-ai-sw"'+(s.ai_requests_enabled?' checked':'')+' onchange="_aiAdminToggle(this)"><i></i><span id="bill-ai-lbl">'+(s.ai_requests_enabled?'Oui':'Non')+'</span></label>'
-      +'</div>'
-      +_lugAdminCard(s.luggage_caps)
-      +'<div class="card" style="padding:22px;margin-bottom:16px;">'
+      '<div class="card" style="padding:22px;margin-bottom:16px;">'
         +'<div style="font-size:15px;font-weight:700;margin-bottom:4px;">Données de facturation Bleenr</div>'
         +'<div style="font-size:12px;color:var(--ink3);margin-bottom:16px;">Coordonnées qui figureront sur les factures.</div>'
         +f('bill-company','Raison sociale',s.company_name,'Bleenr SRL',true)
