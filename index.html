@@ -15234,7 +15234,8 @@ window.refreshAdminDashboard = async function() {
 
     // All-time totals for top stat cards
     // Courses réellement effectuées (statut « terminée »)
-    var totalRides = allRides.filter(function(r){ return r.status==='done'; }).length;
+    // (hors sous-traitances : Bleenr ne prend pas de commission dessus)
+    var totalRides = allRides.filter(function(r){ return r.status==='done' && !r.is_subcontract; }).length;
     // Revenue = money actually received and kept: confirmed / in progress / done rides,
     // plus cancelled rides that are not refundable. Bank transfers awaiting the admin's
     // confirmation (pending_payment) are NOT counted until the admin confirms them.
