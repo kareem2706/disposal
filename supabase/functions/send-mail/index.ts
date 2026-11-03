@@ -410,8 +410,12 @@ Deno.serve(async (req: Request) => {
       const { data: drivers } = await admin.from("profiles")
         .select("id, first_name").eq("role", "driver").eq("fleet_verified", "validated").limit(500);
       // Uniquement les fleets qui ont un véhicule de la gamme demandée (vehicle_class_filter.sql)
-      const { data: rcls } = await admin.from("rides").select("vehicle_type").eq("id", String(payload?.ride_id ?? "")).maybeSingle();
-      const { data: okFleets, error: fErr } = await admin.rpc("fleets_for_class", { p_class: rcls?.vehicle_type ?? null });
+      // + assez de places pour les passagers (ride_rules.sql : fleets_for_ride) ; repli sur la gamme seule
+      let { data: okFleets, error: fErr } = await admin.rpc("fleets_for_ride", { p_ride: String(payload?.ride_id ?? "") });
+      if (fErr) {
+        const { data: rcls } = await admin.from("rides").select("vehicle_type").eq("id", String(payload?.ride_id ?? "")).maybeSingle();
+        ({ data: okFleets, error: fErr } = await admin.rpc("fleets_for_class", { p_class: rcls?.vehicle_type ?? null }));
+      }
       const allowedFleets = fErr ? null : new Set(((okFleets as unknown[]) ?? []).map((x: any) => String(typeof x === "object" && x ? Object.values(x)[0] : x)));
       let sent = 0;
       for (const d of drivers ?? []) {

@@ -42,7 +42,7 @@ function clientChanges(rec: Ride, old: Ride): string[] {
   if (clientNote(rec.notes) !== clientNote(old.notes)) out.push("note");
   return out;
 }
-const VEH: Record<string, string> = { lowcost: "Low-cost", business: "Business", van: "Van", luxe: "Luxe" };
+const VEH: Record<string, string> = { lowcost: "Economy", business: "Business", van: "Van", luxe: "Luxe", bus: "Bus", any: "Toute gamme" };
 const MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 const DAYS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
 
@@ -85,35 +85,36 @@ function decide(type: string, rec: Ride, old: Ride | null): Kind | null {
 
 // Gamme demandée → classes de véhicule acceptées (identique à vehicle_class_filter.sql)
 const CLASS_VEHICLES: Record<string, string[]> = {
-  lowcost: ["lowcost", "business", "van", "luxe"], business: ["business", "van", "luxe"], van: ["van"], luxe: ["luxe"],
+  any: ["lowcost", "business", "van", "luxe", "bus"],
+  lowcost: ["lowcost", "business", "van", "luxe"], business: ["business", "van", "luxe"], van: ["van"], luxe: ["luxe"], bus: ["bus"],
 };
-let fleetVeh: Map<string, string[]> | null = null;
+// Places d'un véhicule (défaut selon la gamme, identique à _veh_seats de ride_rules.sql)
+const seatsOf = (v: { seats?: number | null; c: string }) => v.seats ?? (v.c === "van" ? 7 : v.c === "bus" ? 50 : 3);
+let fleetVeh: Map<string, { c: string; seats?: number | null }[]> | null = null;
 async function loadFleetVehicles() {
-  const rows: any[] = await rest(`fleet_vehicles?select=fleet_id,vehicle_class,active,status`);
+  const rows: any[] = await rest(`fleet_vehicles?select=fleet_id,vehicle_class,seats,active,status`);
   fleetVeh = new Map();
   for (const v of rows) {
     if (v.active === false || v.status === "rejected") continue;
-    fleetVeh.set(v.fleet_id, [...(fleetVeh.get(v.fleet_id) || []), v.vehicle_class]);
+    fleetVeh.set(v.fleet_id, [...(fleetVeh.get(v.fleet_id) || []), { c: v.vehicle_class, seats: v.seats }]);
   }
 }
-// La fleet a-t-elle un véhicule de la gamme demandée ? (sans gamme : au moins un véhicule)
-function canServe(fleetId: string, cls?: string | null) {
+// La fleet a-t-elle un véhicule de la gamme demandée avec assez de places ?
+function canServe(fleetId: string, cls?: string | null, pax?: number | null) {
   const mine = fleetVeh?.get(fleetId) || [];
-  if (!mine.length) return false;
-  if (!cls) return true;
-  const ok = CLASS_VEHICLES[cls] || [cls];
-  return mine.some((c) => ok.includes(c));
+  const ok = cls ? (CLASS_VEHICLES[cls] || [cls]) : null;
+  return mine.some((v) => (!ok || ok.includes(v.c)) && seatsOf(v) >= Math.max(1, pax || 1));
 }
 
 // Pastille de l'icône : nombre de demandes ouvertes sans offre du chauffeur, de sa gamme (même calcul que l'app)
 async function badgeCounts(userIds: string[]): Promise<Record<string, number>> {
-  const open: any[] = await rest(`rides?status=in.(waiting,offers)&select=id,client_id,vehicle_type`);
+  const open: any[] = await rest(`rides?status=in.(waiting,offers)&select=id,client_id,vehicle_type,passengers`);
   const out: Record<string, number> = {};
   if (!userIds.length) return out;
   const ids = open.map((r) => r.id);
   const offers: any[] = ids.length ? await rest(`offers?ride_id=in.(${ids.join(",")})&select=ride_id,driver_id`) : [];
   const offered = new Set(offers.map((o) => o.driver_id + ":" + o.ride_id));
-  for (const u of userIds) out[u] = open.filter((r) => r.client_id !== u && !offered.has(u + ":" + r.id) && canServe(u, r.vehicle_type)).length;
+  for (const u of userIds) out[u] = open.filter((r) => r.client_id !== u && !offered.has(u + ":" + r.id) && canServe(u, r.vehicle_type, r.passengers)).length;
   return out;
 }
 
@@ -164,7 +165,7 @@ Deno.serve(async (req) => {
     let users: string[] | null = null; // null = tous les chauffeurs
     if (kind === "new_request") {
       // Uniquement les fleets qui ont un véhicule de la gamme demandée
-      users = [...(fleetVeh?.keys() || [])].filter((f) => canServe(f, rec.vehicle_type));
+      users = [...(fleetVeh?.keys() || [])].filter((f) => canServe(f, rec.vehicle_type, rec.passengers));
     } else if (kind === "offer_accepted") {
       users = [rec.driver_id];
     } else if (kind) {
