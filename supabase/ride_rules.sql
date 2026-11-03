@@ -182,7 +182,7 @@ begin
   -- 1. Délai minimum (création, ou date / heure modifiée)
   if (tg_op = 'INSERT' or new.ride_date is distinct from old.ride_date or new.ride_time is distinct from old.ride_time)
      and new.ride_date is not null and coalesce(new.trip_type, '') <> 'mixed'
-     and _ride_start(new.ride_date, new.ride_time) < v_min then
+     and _ride_start(new.ride_date, new.ride_time::text) < v_min then
     raise exception 'La demande doit commencer au moins 1 heure après sa publication.' using errcode = '22023';
   end if;
   if new.trip_type = 'mixed' and (tg_op = 'INSERT' or new.notes is distinct from old.notes) then
