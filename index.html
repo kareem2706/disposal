@@ -367,6 +367,9 @@ input.fld-err,select.fld-err,textarea.fld-err{border-color:#C0392B!important;box
 .offer-card:hover{border-color:var(--ink3);}
 /* Offres reçues (version « plein écran ») */
 .ofs-ride{margin-bottom:14px;display:flex;flex-direction:column;gap:10px;}
+.off-trj+.off-trj{border-top:1px solid #F0EEE9;padding-top:14px;}
+.off-trj-hd{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px;}
+.off-trj-hd .n{width:22px;height:22px;border-radius:50%;background:#EAF1FB;color:#2F6DB5;font-size:11px;display:flex;align-items:center;justify-content:center;letter-spacing:0;}
 .ofs-route{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--ink);min-width:0;}
 .ofs-route span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .ofs-route svg{flex-shrink:0;color:var(--ink3);}
@@ -6073,8 +6076,18 @@ window.openOfferModal = function(rideId, summary, rideObj){
   if(rideObj){
     // Use the same shared builder as the detail popup for identical rendering
     // Même présentation que l'écran des offres / la fiche : pastilles + trajet (liste des trajets pour un mixte)
-    sumEl.innerHTML = '<div class="ofs-ride">'+_rideMetaChips(rideObj)+_routeBlockHtml(rideObj,'off')+'</div>';
-    setTimeout(function(){ _routeBlockDist(rideObj,'off'); },0);
+    var _segs=rideObj.trip_type==='mixed'?parseMixedNotes(rideObj.notes||''):[];
+    if(_segs.length){
+      // Trajet mixte : chaque trajet présenté comme une course simple (pastilles + bloc départ / arrivée + distance)
+      var _pr=_segs.map(function(sg){ var isD=(sg.type||'').toLowerCase().indexOf('disp')>=0;
+        return { trip_type:isD?'disposal':'ab', ride_date:sg.date||rideObj.ride_date, ride_time:sg.time||'', passengers:parseInt(sg.pax,10)||sg.pax||'', vehicle_type:sg.veh||'',
+          from_address:sg.from||'', to_address:isD?'':(sg.to||''), notes:(isD&&sg.dur?'Durée:'+sg.dur:'')+(sg.flight?'|flight:'+sg.flight:'')+(sg.train?'|train:'+sg.train:'') }; });
+      sumEl.innerHTML=_pr.map(function(x,i){ return '<div class="off-trj"><div class="off-trj-hd"><span class="n">'+(i+1)+'</span>Trajet '+(i+1)+(x.trip_type==='disposal'?' · Mise à disposition':' · Transfert')+'</div><div class="ofs-ride">'+_rideMetaChips(x)+_routeBlockHtml(x,'off'+i)+'</div></div>'; }).join('');
+      setTimeout(function(){ _pr.forEach(function(x,i){ _routeBlockDist(x,'off'+i); }); },0);
+    } else {
+      sumEl.innerHTML = '<div class="ofs-ride">'+_rideMetaChips(rideObj)+_routeBlockHtml(rideObj,'off')+'</div>';
+      setTimeout(function(){ _routeBlockDist(rideObj,'off'); },0);
+    }
   } else if(summary){
     sumEl.textContent = summary;
   } else {
