@@ -1143,6 +1143,14 @@ body{background:var(--bg);}
 #m-new-ride.nr-editing #nr-opt-ai{display:none!important;}
 option[hidden]{display:none;}
 .ai-adm{display:flex;align-items:center;gap:16px;}
+.lca-row{display:flex;align-items:flex-start;gap:12px;padding:9px 0;border-top:1px solid #F0EEE9;}
+.lca-n{width:130px;flex-shrink:0;font-size:13px;font-weight:600;padding-top:7px;}
+.lca-list{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.lca-c{display:inline-flex;align-items:center;gap:5px;background:#FBFBF9;border:1px solid #ECEAE5;border-radius:10px;padding:4px 6px 4px 8px;}
+.lca-c input{width:46px;padding:5px 6px!important;font-size:13px;text-align:center;}
+.lca-c small{font-size:11.5px;color:var(--ink3);}.lca-c b{color:var(--ink3);font-weight:600;margin:0 2px;}
+.lca-c button{border:none;background:none;color:var(--ink3);font-size:16px;cursor:pointer;padding:0 2px;}
+.lca-add{border:1px dashed #CFCBC2;background:none;border-radius:10px;padding:6px 10px;font:600 12px 'DM Sans',sans-serif;color:var(--green);cursor:pointer;}
 .ai-sw{display:flex;align-items:center;gap:8px;cursor:pointer;flex-shrink:0;font-size:13px;font-weight:600;color:var(--ink2);}
 .ai-sw input{display:none;}
 .ai-sw i{width:42px;height:24px;border-radius:24px;background:#D9D6CF;position:relative;transition:background .15s;}
@@ -8407,22 +8415,40 @@ function _lugInput(id, cls){
 function _lugBlock(idL, idS, vehId, paxId, clsL, clsS){
   return '<div class="input-group"><label>Grandes valises</label>'+_lugInput(idL, clsL)+'</div>'
     +'<div class="input-group"><label>Bagages cabine / sacs</label>'+_lugInput(idS, clsS)+'</div>'
-    +'<div class="lug-warn" style="display:none;"'+(vehId?' data-veh="'+vehId+'"':'')+(paxId?' data-pax="'+paxId+'"':'')+(idL?' data-l="'+idL+'"':'')+'></div>';
+    +'<div class="lug-warn" style="display:none;"'+(vehId?' data-veh="'+vehId+'"':'')+(paxId?' data-pax="'+paxId+'"':'')+(idL?' data-l="'+idL+'"':'')+(idS?' data-s="'+idS+'"':'')+'></div>';
 }
 window._lugInc=function(btn,d){ var i=btn.parentNode.querySelector('input'); if(!i) return; i.value=Math.max(0,Math.min(20,(parseInt(i.value,10)||0)+d)); i.dispatchEvent(new Event('input',{bubbles:true})); };
 // Conseil : trop de grandes valises pour la gamme choisie (pas de blocage)
-function _lugLimit(cls, pax){
-  var n=parseInt(pax,10)||1;
-  return cls==='business'||cls==='luxe' ? 3 : cls==='lowcost' ? (n>=4?5:3) : cls==='van' ? 7 : Infinity;
+// Capacités maximum par gamme (Admin › Facturation, billing_settings.luggage_caps) : combinaisons { l: valises, s: cabine }
+var _LUG_CAPS_DEF={ lowcost:[{l:3,s:0},{l:2,s:2}], lowcost7:[{l:5,s:2}], business:[{l:3,s:0},{l:2,s:2}], luxe:[{l:3,s:0},{l:2,s:2}], van:[{l:7,s:7}], bus:[] };
+var _LUG_CLS=[['lowcost','Economy'],['lowcost7','Economy 7 places'],['business','Business'],['luxe','Luxe'],['van','Van'],['bus','Bus']];
+window._lugCaps=_LUG_CAPS_DEF; var _lugCapsT=0;
+window._lugCapsLoad=function(){
+  if(!sb||Date.now()-_lugCapsT<120000) return; _lugCapsT=Date.now();
+  sb.from('billing_settings').select('luggage_caps').eq('id',1).maybeSingle().then(function(r){
+    var c=r&&r.data&&r.data.luggage_caps; if(c&&typeof c==='object'){ window._lugCaps=Object.assign({},_LUG_CAPS_DEF,c); if(window._lugWarnAll) _lugWarnAll(); }
+  }).catch(function(){});
+};
+function _lugCapKey(cls, pax){ return cls==='lowcost'&&(parseInt(pax,10)||1)>=4 ? 'lowcost7' : cls; }
+// Les bagages tiennent-ils dans au moins une combinaison de la gamme ?
+function _lugFits(key, L, S){
+  var list=(window._lugCaps||{})[key];
+  if(!Array.isArray(list)||!list.length) return true;
+  return list.some(function(c){ return L<=(parseInt(c.l,10)||0) && S<=(parseInt(c.s,10)||0); });
+}
+function _lugCapTxt(key){
+  var list=(window._lugCaps||{})[key]||[];
+  return list.map(function(c){ var l=parseInt(c.l,10)||0, s2=parseInt(c.s,10)||0; return [l?l+' valise'+(l>1?'s':''):'', s2?s2+' bagage'+(s2>1?'s':'')+' cabine':''].filter(Boolean).join(' + ')||'aucun bagage'; }).join(', ou ');
 }
 function _lugWarnUpdate(w){
   if(!w) return;
   var g=function(id){ var e=id&&document.getElementById(id); return e?e.value:''; };
-  var L=parseInt(g(w.getAttribute('data-l')),10)||0, cls=g(w.getAttribute('data-veh')), pax=g(w.getAttribute('data-pax'));
-  var lim=_lugLimit(cls,pax);
-  if(L>lim){
-    var nm=({lowcost:'une Economy'+((parseInt(pax,10)||1)>=4?' de 7 places':''),business:'une Business',luxe:'une Luxe',van:'un Van'})[cls]||'ce véhicule';
-    w.innerHTML='⚠️ '+L+' grandes valises pour '+nm+' : le coffre risque d’être trop petit. '+(cls==='van'?'Un <b>Bus</b> est conseillé.':'Un <b>Van</b> est conseillé.');
+  var L=parseInt(g(w.getAttribute('data-l')),10)||0, S=parseInt(g(w.getAttribute('data-s')),10)||0, cls=g(w.getAttribute('data-veh')), pax=g(w.getAttribute('data-pax'));
+  var key=_lugCapKey(cls,pax);
+  if((L||S) && cls && cls!=='any' && !_lugFits(key,L,S)){
+    var nm=({lowcost:'une Economy',lowcost7:'une Economy de 7 places',business:'une Business',luxe:'une Luxe',van:'un Van',bus:'un Bus'})[key]||'ce véhicule';
+    var sug=['van','bus'].filter(function(k){ return k!==cls && _lugFits(k,L,S); })[0];
+    w.innerHTML='⚠️ '+_lugTxt(L,S)+' : trop de bagages pour '+nm+' (max. '+_lugCapTxt(key)+'). Le coffre risque d’être trop petit.'+(sug?' Un <b>'+(sug==='van'?'Van':'Bus')+'</b> est conseillé.':'');
     w.style.display='';
   } else { w.style.display='none'; w.innerHTML=''; }
 }
@@ -10432,6 +10458,7 @@ window._nrInit=function(){
   _nrShow(edit?'form':'choose');
   m.classList.toggle('nr-editing', edit);
   if(window._aiFlag) _aiFlag();
+  if(window._lugCapsLoad) _lugCapsLoad();
   m.classList.remove('nr-recap-on');
   if(!edit && !window._evAddPending){ try{ _evReset(); }catch(_e){} }
   window._evAddPending=false;   // nouvelle demande : formulaire Événement toujours vierge   // en modification, pas d'option « Événement »   // modification : on arrive sur le formulaire, « Changer de type » reste possible
@@ -11271,7 +11298,7 @@ window._debugRides = async function(){
 };
 
 
-window.openSubRideModal=function(){['sub-cli-name','sub-cli-tel','sub-cli-email','sub-cli-ref'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});openModal('m-subcontract');};
+window.openSubRideModal=function(){if(window._lugCapsLoad)_lugCapsLoad();['sub-cli-name','sub-cli-tel','sub-cli-email','sub-cli-ref'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});openModal('m-subcontract');};
 
 
 async function loadNotifications(){
@@ -13835,6 +13862,39 @@ function _billingCommList(s){
   return [{country:'BE', rate:s.platform_commission_rate!=null?s.platform_commission_rate:''}];
 }
 
+// Capacités en bagages par gamme (conseil affiché dans les formulaires de demande)
+function _lugAdminCombo(l, sm){
+  return '<span class="lca-c"><input type="number" min="0" max="50" class="lca-l" value="'+(parseInt(l,10)||0)+'"><small>valises</small><b>+</b><input type="number" min="0" max="50" class="lca-s" value="'+(parseInt(sm,10)||0)+'"><small>cabine</small><button type="button" title="Retirer" onclick="this.parentNode.remove()">×</button></span>';
+}
+function _lugAdminCard(caps){
+  caps=Object.assign({}, _LUG_CAPS_DEF, (caps&&typeof caps==='object')?caps:{});
+  return '<div class="card" style="padding:22px;margin-bottom:16px;">'
+    +'<div style="font-size:15px;font-weight:700;margin-bottom:4px;">Capacité en bagages par gamme</div>'
+    +'<div style="font-size:12px;color:var(--ink3);margin-bottom:14px;line-height:1.45;">Maximum habituel par véhicule. Ajoutez plusieurs combinaisons si besoin (ex. Business : 3 valises + 0 cabine, <i>ou</i> 2 valises + 2 cabine). Au-delà de toutes les combinaisons, le client voit un conseil (jamais un blocage). Aucune combinaison = pas de limite.</div>'
+    +_LUG_CLS.map(function(x){ return '<div class="lca-row" data-k="'+x[0]+'"><div class="lca-n">'+x[1]+'</div><div class="lca-list">'+(caps[x[0]]||[]).map(function(c){ return _lugAdminCombo(c.l,c.s); }).join('')
+      +'<button type="button" class="lca-add" onclick="this.insertAdjacentHTML(\'beforebegin\',_lugAdminCombo(0,0))">+ ou</button></div></div>'; }).join('')
+    +'<button class="btn btn-secondary btn-sm" style="margin-top:12px;" onclick="_lugAdminSave(this)">Enregistrer les capacités</button>'
+    +'</div>';
+}
+window._lugAdminSave=async function(btn){
+  var caps={}, bad='';
+  document.querySelectorAll('.lca-row').forEach(function(r){
+    caps[r.getAttribute('data-k')]=[].map.call(r.querySelectorAll('.lca-c'), function(c){
+      var l=parseInt(c.querySelector('.lca-l').value,10), sm=parseInt(c.querySelector('.lca-s').value,10);
+      if(isNaN(l)||isNaN(sm)||l<0||sm<0||l>50||sm>50) bad='Nombres entre 0 et 50';
+      return { l:l||0, s:sm||0 };
+    }).filter(function(c){ return c.l||c.s; });   // 0 + 0 : combinaison vide ignorée
+  });
+  if(bad){ showToast(bad); return; }
+  btn.disabled=true;
+  try{
+    var {error}=await sb.rpc('api_admin_save',{ p_table:'billing_settings', p_id:'1', p_data:{ luggage_caps:caps } });
+    if(error) throw error;
+    window._lugCaps=Object.assign({},_LUG_CAPS_DEF,caps);
+    showToast('✅ Capacités en bagages enregistrées');
+  }catch(e){ showToast('Erreur : '+(e.message||e)+(/luggage_caps|column/i.test(e.message||'')?' — exécutez supabase/luggage_caps.sql':'')); }
+  finally{ btn.disabled=false; }
+};
 // Interrupteur « Client génère sa demande par IA » : enregistré tout de suite (côté serveur, admin uniquement)
 window._aiAdminToggle=async function(cb){
   var on=!!cb.checked, l=document.getElementById('bill-ai-lbl');
@@ -13875,6 +13935,7 @@ async function loadAdminBilling(){
         +'<div style="font-size:12px;color:var(--ink3);line-height:1.45;">Affiche aux clients l’option « Décrivez votre itinéraire » : le client écrit son besoin, l’IA pré-remplit le formulaire, le client vérifie puis publie.</div></div>'
         +'<label class="ai-sw"><input type="checkbox" id="bill-ai-sw"'+(s.ai_requests_enabled?' checked':'')+' onchange="_aiAdminToggle(this)"><i></i><span id="bill-ai-lbl">'+(s.ai_requests_enabled?'Oui':'Non')+'</span></label>'
       +'</div>'
+      +_lugAdminCard(s.luggage_caps)
       +'<div class="card" style="padding:22px;margin-bottom:16px;">'
         +'<div style="font-size:15px;font-weight:700;margin-bottom:4px;">Données de facturation Bleenr</div>'
         +'<div style="font-size:12px;color:var(--ink3);margin-bottom:16px;">Coordonnées qui figureront sur les factures.</div>'
