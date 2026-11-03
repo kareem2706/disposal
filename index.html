@@ -2501,8 +2501,9 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         </div>
         <div class="stat-card">
           <div style="margin-bottom:14px;color:var(--red);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M12 12v4M10 14h4"/></svg></div>
-          <div class="stat-label">CA total</div>
+          <div class="stat-label">CA Bleenr <span id="admin-stat-ca-rate" style="font-size:11.5px;font-weight:500;color:var(--ink3);"></span></div>
           <div class="stat-val" id="admin-stat-ca" style="font-size:28px;">—</div>
+          <div style="font-size:11.5px;color:var(--ink3);margin-top:4px;">Total des commissions plateforme (HTVA)</div>
         </div>
       </div>
       <div id="admin-live-rides" style="display:none;"></div>
@@ -2529,7 +2530,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
               <span style="font-size:13px;font-weight:600;" id="admin-sum-htva">—</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
-              <span style="font-size:12.5px;color:var(--ink3);">TVA 6%</span>
+              <span style="font-size:12.5px;color:var(--ink3);" id="admin-sum-tva-lbl">TVA</span>
               <span style="font-size:13px;" id="admin-sum-tva">—</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
@@ -2537,11 +2538,11 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
               <span style="font-size:14px;font-weight:700;" id="admin-sum-ca">—</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
-              <span style="font-size:12.5px;color:var(--ink3);">Commission plateforme (10%)</span>
+              <span style="font-size:12.5px;color:var(--ink3);" id="admin-sum-profit-lbl">Commission plateforme</span>
               <span style="font-size:13px;font-weight:600;color:var(--green);" id="admin-sum-profit">—</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:6px 0;">
-              <span style="font-size:12.5px;color:var(--ink3);">Revenu chauffeurs (90%)</span>
+              <span style="font-size:12.5px;color:var(--ink3);" id="admin-sum-driver-lbl">Revenu chauffeurs</span>
               <span style="font-size:13px;" id="admin-sum-driver">—</span>
             </div>
           </div>
@@ -15255,7 +15256,11 @@ window.refreshAdminDashboard = async function() {
       _ppEl.textContent = _pendingPay+' course'+(_pendingPay>1?'s':'')+' en attente de confirmation de paiement';
       _ppEl.style.display = _pendingPay>0 ? 'block' : 'none';
     }
-    set('admin-stat-ca',      totalCA > 0 ? totalCA.toFixed(2).replace('.',',')+' €' : '0,00 €');
+    // CA de Bleenr = commission plateforme (Admin › Facturation) sur le montant HTVA des courses
+    var _cpTop = parseFloat(await _commPct('BE'))||0;
+    var totalComm = Math.round(totalCA / (1 + TVA_RATE) * _cpTop) / 100;
+    set('admin-stat-ca',      totalComm > 0 ? totalComm.toFixed(2).replace('.',',')+' €' : '0,00 €');
+    set('admin-stat-ca-rate', '· '+_pctTxt(_cpTop)+' %');
 
     // Filtered rides for summary cards
     var filteredRides = allRides.filter(function(r) {
@@ -15271,7 +15276,7 @@ window.refreshAdminDashboard = async function() {
     var periodTvac   = periodRides.reduce(function(s,r){ return s + parseFloat(r.final_price); }, 0);
     var periodHtva   = parseFloat((periodTvac / (1 + TVA_RATE)).toFixed(2));
     var periodTva    = parseFloat((periodTvac - periodHtva).toFixed(2));
-    var _cpA = await _commPct('BE');
+    var _cpA = parseFloat(await _commPct('BE'))||0;
     var periodProfit = parseFloat((periodHtva * _cpA / 100).toFixed(2));
     var periodDriver = parseFloat((periodHtva - periodProfit).toFixed(2));
 
@@ -15297,6 +15302,9 @@ window.refreshAdminDashboard = async function() {
     set('admin-sum-tva',           fmt(periodTva));
     set('admin-sum-ca',            fmt(periodTvac));
     set('admin-sum-profit',        fmt(periodProfit));
+    set('admin-sum-tva-lbl',       'TVA '+_pctTxt(Math.round(TVA_RATE*1000)/10)+' %');
+    set('admin-sum-profit-lbl',    'Commission plateforme ('+_pctTxt(_cpA)+' %)');
+    set('admin-sum-driver-lbl',    'Revenu chauffeurs ('+_pctTxt(Math.round((100-_cpA)*100)/100)+' %)');
     set('admin-sum-driver',        fmt(periodDriver));
     set('admin-sum-refund-bank',   refundBank   > 0 ? '− '+fmt(refundBank)   : '0,00 €');
     set('admin-sum-refund-stripe', refundStripe > 0 ? '− '+fmt(refundStripe) : '0,00 €');
