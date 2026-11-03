@@ -98,7 +98,7 @@ function trip(d: Record<string, string>, o: { price?: boolean; title?: string } 
     title: o.title,
     info: [
       ["Passager", d.passenger ?? ""], ["Référence", d.code ?? ""],
-      ["Chauffeur", d.driver ?? ""], ["Véhicule", d.vehicle ?? ""],
+      ["Chauffeur", d.driver ?? ""], ["Véhicule", d.vehicle ?? ""], ["Bagages", d.luggage ?? ""],
       ...(o.price === false ? [] : [["Montant TVAC", d.price ?? ""] as [string, string]]),
     ],
   });
@@ -388,7 +388,7 @@ Deno.serve(async (req: Request) => {
       } else {
         // Nouvelle demande : contenu construit ici à partir de la course (le navigateur ne fournit que son id)
         const { data: r } = await admin.from("rides")
-          .select("id, client_id, status, booking_code, ride_date, ride_time, from_address, to_address, trip_type, is_subcontract, final_price, created_at")
+          .select("id, client_id, status, booking_code, ride_date, ride_time, from_address, to_address, trip_type, is_subcontract, final_price, created_at, passengers, luggage_large, luggage_small")
           .eq("id", String(payload?.ride_id ?? "")).maybeSingle();
         const recent = r?.created_at && Date.now() - new Date(r.created_at).getTime() < 15 * 60_000;
         if (!r || !["waiting", "offers"].includes(r.status) || (!isAdmin && (r.client_id !== user.id || !recent))) {
@@ -402,6 +402,8 @@ Deno.serve(async (req: Request) => {
         Object.assign(data, sanitize({
           code: r.booking_code ?? String(r.id).slice(0, 8), date: day, time: String(r.ride_time ?? "").slice(0, 5),
           from: r.from_address ?? "", to: r.to_address || TL[r.trip_type ?? ""] || "",
+          passenger: r.passengers ? r.passengers + " passager" + (r.passengers > 1 ? "s" : "") : "",
+          luggage: [r.luggage_large ? r.luggage_large + " valise" + (r.luggage_large > 1 ? "s" : "") : "", r.luggage_small ? r.luggage_small + " sac" + (r.luggage_small > 1 ? "s" : "") : ""].filter(Boolean).join(" · "),
           // prix fixe uniquement pour une sous-traitance (jamais le prix d'un client)
           price: r.is_subcontract && r.final_price ? Number(r.final_price).toFixed(2).replace(".", ",") + " € HTVA" : "",
         }));

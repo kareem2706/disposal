@@ -183,7 +183,8 @@ Deno.serve(async (req) => {
     const title = kind === "new_request" ? (rec.is_subcontract ? "Nouvelle sous-traitance" : "Nouvelle demande")
       : kind === "request_updated" ? (mission ? `Mission modifiée${rec.booking_code ? " · " + rec.booking_code : ""}` : "Demande modifiée")
       : kind === "offer_accepted" ? "Offre acceptée 🎉" : "Demande annulée";
-    const extra = [VEH[rec.vehicle_type] || rec.vehicle_type, rec.passengers ? rec.passengers + " pax" : ""].filter(Boolean).join(" · ");
+    const lug = (rec.luggage_large || rec.luggage_small) ? "🧳 " + (rec.luggage_large || 0) + " + " + (rec.luggage_small || 0) : "";
+    const extra = [VEH[rec.vehicle_type] || rec.vehicle_type, rec.passengers ? rec.passengers + " pax" : "", lug].filter(Boolean).join(" · ");
     const lead = kind === "offer_accepted" ? `${rec.booking_code || "Course"} est confirmée pour vous.`
       : changed.length ? "Modifié par le client : " + [...new Set(changed)].join(", ") + "." : "";
     const body = [lead, route(rec), [when(rec), kind === "new_request" ? extra : ""].filter(Boolean).join(" · ")].filter(Boolean).join("\n");

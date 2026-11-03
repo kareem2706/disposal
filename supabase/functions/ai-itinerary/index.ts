@@ -60,6 +60,8 @@ const TOOL = {
             time_hint: { type: "string", description: "Indice sur l'heure quand time est vide : « l'après-midi », « vol à 11:30 »… sinon vide." },
             duration_hours: { type: "integer", description: "Durée en heures pour une mise à disposition (1 à 24), 0 pour un transfert ou si inconnue." },
             pax: { type: "integer", description: "Nombre de personnes, 0 si inconnu." },
+            luggage_large: { type: "integer", description: "Nombre de grandes valises (soute) pour ce trajet, 0 si non précisé." },
+            luggage_small: { type: "integer", description: "Nombre de bagages cabine, sacs à dos, sacs, 0 si non précisé. « chacun avec une valise et un sac à dos » pour 2 personnes = 2 valises et 2 sacs ; une « roller bag » / valise cabine compte comme bagage cabine." },
             vehicle: { type: "string", enum: ["", ...VEH], description: "Gamme : lowcost (Economy), business, van (Mercedes Classe V, 7 places), luxe, bus. Vide si non précisée." },
             vehicles: {
               type: "object", description: "Événement uniquement : nombre de véhicules par gamme si le client les précise (ex. { \"van\": 2, \"business\": 1 }). Vide sinon.",
@@ -107,7 +109,7 @@ function clean(o: any) {
     const num = (v: unknown) => str(v, 12).toUpperCase().replace(/[^A-Z0-9 ]/g, "");
     return {
       type, from, to, date, time, time_hint: str(t?.time_hint, 60), duration_hours: dur,
-      pax: int(t?.pax, 1, 500), vehicle: VEH.includes(t?.vehicle) ? t.vehicle : "", vehicles,
+      pax: int(t?.pax, 1, 500), luggage_large: int(t?.luggage_large, 1, 50), luggage_small: int(t?.luggage_small, 1, 50), vehicle: VEH.includes(t?.vehicle) ? t.vehicle : "", vehicles,
       pickup_number: num(t?.pickup_number), dropoff_number: num(t?.dropoff_number),
       notes: str(t?.notes, 400), missing: [...missing],
     };
