@@ -12,6 +12,7 @@
 //  • le destinataire est lu dans auth.users, pas dans profiles (modifiable).
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import { callout, mailLayout, type MailOpts, steps, tripCard } from "../_shared/mail.ts";
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("MAIL_FROM") ?? "Bleenr <noreply@bleenr.com>";
@@ -88,280 +89,216 @@ async function sendOne(to: string, type: string, data: Record<string, string>) {
   return res.id;
 }
 
-// ── Shared layout ────────────────────────────────────────────────
-function layout(title: string, body: string, cta?: { label: string; url: string }) {
-  return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F6F5F2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F5F2;padding:32px 16px;">
-    <tr><td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);">
-        <tr><td style="padding:26px 28px 0;">
-          <div style="font-size:22px;font-weight:700;color:#1B5E3B;letter-spacing:-.02em;">Bleenr</div>
-        </td></tr>
-        <tr><td style="padding:20px 28px 0;">
-          <h1 style="margin:0 0 14px;font-size:18px;font-weight:700;color:#1A1A18;">${title}</h1>
-          <div style="font-size:14px;line-height:1.6;color:#4A4A46;">${body}</div>
-        </td></tr>
-        ${cta ? `<tr><td style="padding:22px 28px 0;">
-          <a href="${cta.url}" style="display:inline-block;background:#1B5E3B;color:#FFFFFF;text-decoration:none;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;">${cta.label}</a>
-        </td></tr>` : ""}
-        <tr><td style="padding:26px 28px 28px;">
-          <div style="border-top:1px solid #EDEBE6;padding-top:16px;font-size:12px;color:#8A8A84;line-height:1.5;">
-            Cet email vous est envoyé automatiquement par Bleenr.<br>
-            Merci de ne pas y répondre directement.
-          </div>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`;
+// ── Mise en page (commune à tous les e-mails : ../_shared/mail.ts) ──
+const b = (v?: string) => (v ? `<b style="color:#16201B;">${v}</b>` : "");
+const hi = (n?: string) => `Bonjour${n ? " " + n : ""},<br>`;
+// Carte du trajet + infos utiles (passager, référence, chauffeur, véhicule, montant)
+function trip(d: Record<string, string>, o: { price?: boolean; title?: string } = {}) {
+  return tripCard(d, {
+    title: o.title,
+    info: [
+      ["Passager", d.passenger ?? ""], ["Référence", d.code ?? ""],
+      ["Chauffeur", d.driver ?? ""], ["Véhicule", d.vehicle ?? ""],
+      ...(o.price === false ? [] : [["Montant TVAC", d.price ?? ""] as [string, string]]),
+    ],
+  });
 }
-
-function row(label: string, value: string) {
-  return `<tr>
-    <td style="padding:5px 0;font-size:13px;color:#8A8A84;width:130px;vertical-align:top;">${label}</td>
-    <td style="padding:5px 0;font-size:13px;color:#1A1A18;font-weight:600;">${value}</td>
-  </tr>`;
-}
-
-function rideTable(d: Record<string, string>) {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:16px 0;background:#F6F5F2;border-radius:10px;padding:14px 16px;">
-    ${d.code ? row("Référence", d.code) : ""}
-    ${d.date ? row("Date", d.date + (d.time ? " · " + d.time : "")) : ""}
-    ${d.from ? row("Départ", d.from) : ""}
-    ${d.to ? row("Arrivée", d.to) : ""}
-    ${d.vehicle ? row("Véhicule", d.vehicle) : ""}
-    ${d.driver ? row("Chauffeur", d.driver) : ""}
-    ${d.passenger ? row("Passager", d.passenger) : ""}
-    ${d.price ? row("Montant TVAC", d.price) : ""}
-  </table>`;
-}
+const mail = (subject: string, o: MailOpts) => ({ subject, html: mailLayout({ preheader: o.preheader ?? "", ...o }) });
 
 // ── Templates ────────────────────────────────────────────────────
 type Payload = { type: string; data?: Record<string, string> };
 
 function build({ type, data = {} }: Payload) {
   const url = `${APP_URL}/`;
+  const d = data;   // valeurs déjà échappées par sanitize()
 
   switch (type) {
-    case "ride_problem": {
-      const esc = (v?: string) => v ?? "";   // données déjà échappées par sanitize()
-      return {
-        subject: `⚠️ Problème signalé — ${data.code ?? ""}`,
-        html: layout(
-          "Un client signale un problème",
-          `Client : <strong>${esc(data.clientName)}</strong>${data.clientEmail ? ` · ${esc(data.clientEmail)}` : ""}${data.clientPhone ? ` · ${esc(data.clientPhone)}` : ""}${rideTable(data)}<div style="padding:12px 14px;background:#FDECEA;border-radius:10px;color:#8A1F17;white-space:pre-wrap;">${esc(data.message)}</div>`,
-          { label: "Ouvrir Bleenr", url },
-        ),
-      };
-    }
+    case "ride_problem":
+      return mail(`⚠️ Problème signalé — ${d.code ?? ""}`, {
+        title: "Un client signale un problème.",
+        intro: `Client : ${b(d.clientName)}${d.clientEmail ? ` · ${d.clientEmail}` : ""}${d.clientPhone ? ` · ${d.clientPhone}` : ""}`,
+        card: trip(d),
+        after: callout("Message du client", d.message ?? "", "danger"),
+        cta: { label: "Ouvrir Bleenr", url },
+      });
 
     case "ride_created":
-      return {
-        subject: `Demande publiée — ${data.code ?? ""}`,
-        html: layout(
-          "Votre demande est publiée",
-          `Bonjour ${data.clientName ?? ""},<br><br>Votre demande de course a bien été publiée. Les chauffeurs partenaires peuvent désormais vous envoyer leurs offres.${rideTable(data)}Vous recevrez un email dès qu'une offre sera disponible.`,
-          { label: "Voir ma demande", url },
-        ),
-      };
+      return mail(`Demande publiée — ${d.code ?? ""}`, {
+        title: "Votre demande est publiée.",
+        preheader: "Les chauffeurs partenaires peuvent maintenant vous envoyer leurs offres.",
+        intro: `${hi(d.clientName)}votre demande ${b(d.code)} est en ligne. Les chauffeurs partenaires peuvent maintenant vous envoyer leurs offres.`,
+        card: trip(d, { price: false }),
+        cta: { label: "Consulter ma demande", url },
+        note: "Nous vous préviendrons dès qu'un chauffeur aura envoyé une offre.",
+      });
 
     case "offer_received":
-      return {
-        subject: `Nouvelle offre reçue — ${data.code ?? ""}`,
-        html: layout(
-          "Vous avez reçu une offre",
-          `Bonjour ${data.clientName ?? ""},<br><br>Un chauffeur vous a envoyé une offre pour votre course.${rideTable(data)}Connectez-vous pour la consulter et la confirmer.`,
-          { label: "Consulter l'offre", url },
-        ),
-      };
+      return mail(`Nouvelle offre reçue — ${d.code ?? ""}`, {
+        title: "Vous avez reçu une offre.",
+        preheader: "Un chauffeur a répondu à votre demande.",
+        intro: `${hi(d.clientName)}un chauffeur vient d'envoyer une offre pour votre demande ${b(d.code)}.`,
+        card: trip(d),
+        cta: { label: "Consulter l'offre", url },
+        note: "Comparez les offres reçues et confirmez celle qui vous convient.",
+      });
 
-    case "offer_updated":
-      return {
-        subject: `${data.action === "withdrawn" ? "Une offre a été retirée" : "Une offre a été modifiée"} — ${data.code ?? ""}`,
-        html: layout(
-          data.action === "withdrawn" ? "Une offre a été retirée" : "Une offre a été mise à jour",
-          `Bonjour ${data.clientName ?? ""},<br><br>${data.action === "withdrawn"
-            ? "Un chauffeur a retiré son offre sur votre demande. Les autres offres restent valables et votre demande reste visible par les chauffeurs."
-            : `Un chauffeur a modifié son offre sur votre demande${data.price ? ` : <strong>${data.price} TVAC</strong>` : ""}.`}${rideTable({ ...data, price: "" })}Connectez-vous pour consulter vos offres.`,
-          { label: "Voir mes offres", url },
-        ),
-      };
+    case "offer_updated": {
+      const w = d.action === "withdrawn";
+      return mail(`${w ? "Une offre a été retirée" : "Une offre a été modifiée"} — ${d.code ?? ""}`, {
+        title: w ? "Une offre a été retirée." : "Une offre a été mise à jour.",
+        intro: `${hi(d.clientName)}${w
+          ? `un chauffeur a retiré son offre sur votre demande ${b(d.code)}. Les autres offres restent valables et votre demande reste visible par les chauffeurs.`
+          : `un chauffeur a modifié son offre sur votre demande ${b(d.code)}${d.price ? ` : nouveau montant ${b(d.price + " TVAC")}` : ""}.`}`,
+        card: trip(d, { price: false }),
+        cta: { label: "Voir mes offres", url },
+      });
+    }
 
     case "ride_confirmed_client":
-      return {
-        subject: `Course confirmée — ${data.code ?? ""}`,
-        html: layout(
-          "Votre course est confirmée",
-          `Bonjour ${data.clientName ?? ""},<br><br>Votre paiement a bien été reçu et votre course est confirmée.${rideTable(data)}${data.driverPhone ? `Vous pouvez joindre votre chauffeur au <strong>${data.driverPhone}</strong>.` : ""}`,
-          { label: "Voir les détails", url },
-        ),
-      };
+      return mail(`Course confirmée — ${d.code ?? ""}`, {
+        title: "Votre course est confirmée.",
+        preheader: "Paiement reçu, votre chauffeur est réservé.",
+        intro: `${hi(d.clientName)}votre paiement a bien été reçu et votre course ${b(d.code)} est confirmée.`,
+        card: trip(d),
+        after: d.driverPhone ? callout("Votre chauffeur", `Vous pouvez le joindre au ${b(d.driverPhone)}.`, "info") : "",
+        cta: { label: "Voir les détails", url },
+        note: "Vous recevrez un rappel la veille du départ.",
+      });
 
     case "ride_confirmed_driver":
-      return {
-        subject: `Mission confirmée — ${data.code ?? ""}`,
-        html: layout(
-          "Votre mission est confirmée",
-          `Bonjour ${data.driverName ?? ""},<br><br>Votre offre a été acceptée. La mission suivante vous est attribuée.${rideTable(data)}Pensez à télécharger votre ordre de mission depuis l'application.`,
-          { label: "Voir ma mission", url },
-        ),
-      };
+      return mail(`Mission confirmée — ${d.code ?? ""}`, {
+        title: "Votre mission est confirmée.",
+        intro: `${hi(d.driverName)}votre offre a été acceptée et le paiement est reçu. La mission ${b(d.code)} vous est attribuée.`,
+        card: trip(d, { title: "Votre mission" }),
+        cta: { label: "Voir ma mission", url },
+        note: "Pensez à télécharger votre ordre de mission depuis l'application.",
+      });
 
     case "ride_cancelled":
-      return {
-        subject: `Course annulée — ${data.code ?? ""}`,
-        html: layout(
-          "Course annulée",
-          `Bonjour ${data.name ?? ""},<br><br>La course suivante a été annulée.${rideTable(data)}${data.refund === "yes"
-            ? "Un remboursement intégral sera effectué sous 5 à 10 jours ouvrables."
-            : "Conformément aux conditions générales, cette annulation intervenue à moins de 48 h du départ ne donne pas lieu à remboursement."}`,
-        ),
-      };
+      return mail(`Course annulée — ${d.code ?? ""}`, {
+        title: "Course annulée.",
+        intro: `${hi(d.name)}la course ${b(d.code)} a été annulée.`,
+        card: trip(d),
+        after: callout("Remboursement", d.refund === "yes"
+          ? "Un remboursement intégral sera effectué sous 5 à 10 jours ouvrables, sur le moyen de paiement utilisé."
+          : "Conformément aux conditions générales, cette annulation tardive ne donne pas lieu à un remboursement.", d.refund === "yes" ? "info" : "warn"),
+        cta: { label: "Ouvrir Bleenr", url },
+      });
 
     case "ride_reminder":
-      return {
-        subject: `Rappel — votre course demain (${data.code ?? ""})`,
-        html: layout(
-          "Votre course a lieu demain",
-          `Bonjour ${data.name ?? ""},<br><br>Petit rappel concernant votre course prévue demain.${rideTable(data)}`,
-          { label: "Voir les détails", url },
-        ),
-      };
+      return mail(`Rappel — votre course demain (${d.code ?? ""})`, {
+        title: "Votre course a lieu demain.",
+        preheader: "Petit rappel avant votre départ.",
+        intro: `${hi(d.name)}petit rappel concernant votre course ${b(d.code)}.`,
+        card: trip(d, { price: false }),
+        cta: { label: "Voir les détails", url },
+        note: "Votre chauffeur vous attendra au lieu de prise en charge.",
+      });
 
     case "welcome_client":
-      return {
-        subject: "Bienvenue sur Bleenr",
-        html: layout(
-          `Bienvenue${data.name ? ", " + data.name : ""}`,
-          `Votre compte Bleenr est créé. Vous pouvez dès maintenant réserver un chauffeur privé en quelques clics.
-          <div style="background:#F6F5F2;border-radius:10px;padding:16px 18px;margin:18px 0;">
-            <div style="font-size:13px;font-weight:700;color:#1A1A18;margin-bottom:10px;">Comment ça marche</div>
-            <div style="font-size:13px;color:#4A4A46;line-height:1.9;">
-              <strong>1.</strong> Publiez votre demande de course<br>
-              <strong>2.</strong> Recevez les offres des chauffeurs partenaires<br>
-              <strong>3.</strong> Choisissez la vôtre et confirmez le paiement<br>
-              <strong>4.</strong> Votre chauffeur vous attend au point de départ
-            </div>
-          </div>
-          ${data.isPro === "yes"
-            ? `Votre compte professionnel vous donne accès au carnet de passagers et à la facturation mensuelle centralisée.`
-            : `Vous recevrez un email à chaque étape : offre reçue, course confirmée, rappel la veille du départ.`}`,
-          { label: "Réserver ma première course", url },
-        ),
-      };
+      return mail("Bienvenue sur Bleenr", {
+        title: `Bienvenue${d.name ? ", " + d.name : ""}.`,
+        intro: "Votre compte Bleenr est créé. Vous pouvez dès maintenant réserver un chauffeur privé en quelques clics.",
+        card: steps("Comment ça marche", [
+          "Publiez votre demande de course",
+          "Recevez les offres des chauffeurs partenaires",
+          "Choisissez la vôtre et confirmez le paiement",
+          "Votre chauffeur vous attend au point de départ",
+        ]),
+        after: d.isPro === "yes"
+          ? "Votre compte professionnel vous donne accès au carnet de passagers et à la facturation mensuelle centralisée."
+          : "Vous recevrez un e-mail à chaque étape : offre reçue, course confirmée, rappel la veille du départ.",
+        cta: { label: "Réserver ma première course", url },
+      });
 
     case "welcome_driver":
-      return {
-        subject: "Bienvenue sur Bleenr — activation de votre compte",
-        html: layout(
-          `Bienvenue${data.name ? ", " + data.name : ""}`,
-          `Votre compte chauffeur Bleenr est créé. Avant d'accéder à la marketplace, votre flotte doit être validée par nos équipes.
-          <div style="background:#F6F5F2;border-radius:10px;padding:16px 18px;margin:18px 0;">
-            <div style="font-size:13px;font-weight:700;color:#1A1A18;margin-bottom:10px;">Prochaines étapes</div>
-            <div style="font-size:13px;color:#4A4A46;line-height:1.9;">
-              <strong>1.</strong> Complétez votre profil et vos coordonnées<br>
-              <strong>2.</strong> Ajoutez vos véhicules et vos chauffeurs<br>
-              <strong>3.</strong> Téléversez vos documents (licence, assurance, contrôle technique)<br>
-              <strong>4.</strong> Notre équipe valide votre dossier sous 48 h ouvrées
-            </div>
-          </div>
-          Une fois votre flotte validée, vous recevrez une alerte à chaque nouvelle course disponible et pourrez soumettre vos offres.`,
-          { label: "Compléter mon profil", url },
-        ),
-      };
+      return mail("Bienvenue sur Bleenr — activation de votre compte", {
+        title: `Bienvenue${d.name ? ", " + d.name : ""}.`,
+        intro: "Votre compte chauffeur Bleenr est créé. Avant d'accéder à la marketplace, votre flotte doit être validée par nos équipes.",
+        card: steps("Prochaines étapes", [
+          "Complétez votre profil et vos coordonnées",
+          "Ajoutez vos véhicules et vos chauffeurs",
+          "Téléversez vos documents (licence, assurance, contrôle technique)",
+          "Notre équipe valide votre dossier sous 48 h ouvrées",
+        ]),
+        cta: { label: "Compléter mon profil", url },
+        note: "Une fois votre flotte validée, vous serez alerté à chaque nouvelle course disponible.",
+      });
 
     case "new_marketplace_ride":
-      return {
-        subject: `Nouvelle course disponible — ${data.code ?? ""}`,
-        html: layout(
-          "Nouvelle course sur la marketplace",
-          `Bonjour ${data.driverName ?? ""},<br><br>Une nouvelle course correspondant à votre profil vient d'être publiée.${rideTable(data)}Soyez réactif : les offres sont traitées par ordre d'arrivée.`,
-          { label: "Faire une offre", url },
-        ),
-      };
+      return mail(`Nouvelle course disponible — ${d.code ?? ""}`, {
+        title: "Nouvelle course disponible.",
+        preheader: "Une demande correspondant à votre flotte vient d'être publiée.",
+        intro: `${hi(d.driverName)}une nouvelle demande ${b(d.code)} correspondant à votre flotte vient d'être publiée sur la marketplace.`,
+        card: trip(d, { title: "La course" }),
+        cta: { label: "Faire une offre", url },
+        note: "Soyez réactif : les clients choisissent souvent parmi les premières offres.",
+      });
 
     case "ride_completed":
-      return {
-        subject: `Merci d'avoir voyagé avec Bleenr — ${data.code ?? ""}`,
-        html: layout(
-          `Merci${data.clientName ? ", " + data.clientName : ""} !`,
-          `Votre course est terminée. Merci d'avoir fait confiance à Bleenr.${rideTable(data)}
-          <div style="background:#F6F5F2;border-radius:10px;padding:16px 18px;margin:18px 0;">
-            <div style="font-size:13px;font-weight:700;color:#1A1A18;margin-bottom:8px;">⭐ Votre avis compte</div>
-            <div style="font-size:13px;color:#4A4A46;line-height:1.6;">Prenez quelques secondes pour noter votre chauffeur : cela nous aide à garantir un service de qualité.</div>
-          </div>
-          <div style="font-size:13px;color:#4A4A46;line-height:1.6;margin-bottom:6px;">
-            Quelque chose ne s'est pas passé comme prévu ? Vous pouvez <strong>signaler un incident</strong>
-            directement depuis la fiche de votre demande (menu <strong>⋮</strong> → <em>Signaler un problème</em>).
-            Notre équipe vous répondra rapidement.
-          </div>
-          Nous espérons vous revoir très bientôt parmi nous.<br><br>L'équipe Bleenr`,
-          { label: "Noter mon chauffeur", url },
-        ),
-      };
+      return mail(`Merci d'avoir voyagé avec Bleenr — ${d.code ?? ""}`, {
+        title: `Merci${d.clientName ? ", " + d.clientName : ""}.`,
+        intro: "Votre course est terminée. Merci d'avoir fait confiance à Bleenr.",
+        card: trip(d),
+        after: callout("Votre avis compte", "Prenez quelques secondes pour noter votre chauffeur : cela nous aide à garantir un service de qualité.<br><br>Un souci ? Signalez-le depuis la fiche de votre demande (menu ⋮ → Signaler un problème).", "neutral"),
+        cta: { label: "Noter mon chauffeur", url },
+        note: "Au plaisir de vous revoir très bientôt.",
+      });
 
     case "offer_accepted_driver":
-      return {
-        subject: `Offre acceptée — ${data.code ?? ""}`,
-        html: layout(
-          "Votre offre a été acceptée",
-          `Bonjour,<br><br>Le client a retenu votre offre. La course vous sera attribuée dès réception du paiement.${rideTable(data)}`,
-          { label: "Voir la mission", url },
-        ),
-      };
+      return mail(`Offre acceptée — ${d.code ?? ""}`, {
+        title: "Votre offre a été acceptée.",
+        intro: `Bonjour,<br>le client a retenu votre offre pour la course ${b(d.code)}. Elle vous sera attribuée dès réception du paiement.`,
+        card: trip(d, { title: "La course" }),
+        cta: { label: "Voir la mission", url },
+      });
 
     case "ride_updated":
-      return {
-        subject: `Course modifiée — ${data.code ?? ""}`,
-        html: layout(
-          "Le client a modifié sa course",
-          `Bonjour,<br><br>Le client a modifié ${data.changes ? "<strong>" + data.changes + "</strong>" : "sa course"}.${rideTable(data)}${data.note ? `<div style="padding:12px 14px;background:#F6F5F2;border-radius:10px;font-style:italic;">${data.note}</div>` : ""}`,
-          { label: "Voir la course", url },
-        ),
-      };
+      return mail(`Course modifiée — ${d.code ?? ""}`, {
+        title: "Une course a été modifiée.",
+        intro: `Bonjour,<br>le client a modifié ${d.changes ? b(d.changes) : "sa course"} sur la demande ${b(d.code)}.`,
+        card: trip(d, { title: "La course", price: false }),
+        after: d.note ? callout("Note", d.note) : "",
+        cta: { label: "Voir la course", url },
+        note: "Si vous aviez envoyé une offre, vérifiez qu'elle est toujours adaptée.",
+      });
 
     case "driver_on_way":
-      return {
-        subject: `Votre chauffeur est en route — ${data.code ?? ""}`,
-        html: layout(
-          "Votre chauffeur est en route",
-          `Bonjour,<br><br>Votre chauffeur vient de partir vers le point de prise en charge.${rideTable(data)}${data.driverPhone ? `Vous pouvez le joindre au <strong>${data.driverPhone}</strong>.` : ""}`,
-          { label: "Suivre en direct", url },
-        ),
-      };
+      return mail(`Votre chauffeur est en route — ${d.code ?? ""}`, {
+        title: "Votre chauffeur est en route.",
+        preheader: "Il se dirige vers le lieu de prise en charge.",
+        intro: `Bonjour,<br>votre chauffeur vient de partir vers le lieu de prise en charge de la course ${b(d.code)}.`,
+        card: trip(d, { price: false }),
+        after: d.driverPhone ? callout("Votre chauffeur", `Vous pouvez le joindre au ${b(d.driverPhone)}.`, "info") : "",
+        cta: { label: "Suivre en direct", url },
+      });
 
     case "driver_note":
-      return {
-        subject: `Message de votre chauffeur — ${data.code ?? ""}`,
-        html: layout(
-          data.noteAction === "updated" ? "Votre chauffeur a mis à jour son message" : "Votre chauffeur vous a laissé un message",
-          `Bonjour,${rideTable(data)}<div style="padding:12px 14px;background:#EEF4FB;border-radius:10px;white-space:pre-wrap;">${data.note ?? ""}</div>`,
-          { label: "Voir la course", url },
-        ),
-      };
+      return mail(`Message de votre chauffeur — ${d.code ?? ""}`, {
+        title: d.noteAction === "updated" ? "Votre chauffeur a mis à jour son message." : "Votre chauffeur vous a laissé un message.",
+        intro: `Bonjour,<br>message concernant votre course ${b(d.code)} :`,
+        card: callout("Message du chauffeur", d.note ?? "", "info"),
+        after: trip(d, { price: false }),
+        cta: { label: "Voir la course", url },
+      });
 
     case "assignment_changed":
-      return {
-        subject: `Mise à jour de votre course — ${data.code ?? ""}`,
-        html: layout(
-          "Votre course a été mise à jour",
-          `Bonjour,<br><br>Le transporteur a modifié ${data.changes ? "<strong>" + data.changes + "</strong>" : "l'attribution"} de votre course.${rideTable(data)}${data.driverPhone ? `Votre chauffeur : <strong>${data.driverPhone}</strong>.` : ""}`,
-          { label: "Voir la course", url },
-        ),
-      };
+      return mail(`Mise à jour de votre course — ${d.code ?? ""}`, {
+        title: "Votre course a été mise à jour.",
+        intro: `Bonjour,<br>le transporteur a modifié ${d.changes ? b(d.changes) : "l'attribution"} de votre course ${b(d.code)}.`,
+        card: trip(d, { price: false }),
+        after: d.driverPhone ? callout("Votre chauffeur", `Vous pouvez le joindre au ${b(d.driverPhone)}.`, "info") : "",
+        cta: { label: "Voir la course", url },
+      });
 
     case "ride_no_show":
-      return {
-        subject: `Course clôturée (absence) — ${data.code ?? ""}`,
-        html: layout(
-          "Vous n'étiez pas au rendez-vous",
-          `Bonjour,<br><br>Votre chauffeur s'est présenté au lieu de prise en charge, mais vous n'étiez pas présent. La course a été clôturée (No Show).${rideTable(data)}`,
-          { label: "Voir la course", url },
-        ),
-      };
+      return mail(`Course clôturée (absence) — ${d.code ?? ""}`, {
+        title: "Vous n'étiez pas au rendez-vous.",
+        intro: `Bonjour,<br>votre chauffeur s'est présenté au lieu de prise en charge, mais vous n'étiez pas présent. La course ${b(d.code)} a été clôturée.`,
+        card: trip(d),
+        cta: { label: "Voir la course", url },
+        note: "Une erreur ? Écrivez-nous à info@bleenr.com.",
+      });
 
     default:
       throw new Error(`Type d'email inconnu : ${type}`);

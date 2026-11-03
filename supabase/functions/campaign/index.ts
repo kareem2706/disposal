@@ -16,6 +16,7 @@
 // paragraphes, les liens https et {prenom} sont mis en forme (aucun HTML injecté).
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import { mailLayout } from "../_shared/mail.ts";
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("MAIL_FROM") ?? "Bleenr <noreply@bleenr.com>";
@@ -54,31 +55,11 @@ type Content = { subject: string; title?: string; body: string; cta_label?: stri
 function render(c: Content, prenom: string, unsub: string) {
   const paras = String(c.body ?? "").replace(/\r/g, "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
     .map((p) => `<p style="margin:0 0 14px;">${inline(p, prenom).replace(/\n/g, "<br>")}</p>`).join("");
-  const cta = c.cta_label && /^https:\/\//.test(c.cta_url ?? "")
-    ? `<tr><td style="padding:8px 28px 0;"><a href="${esc(c.cta_url)}" style="display:inline-block;background:#1B5E3B;color:#FFFFFF;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">${esc(c.cta_label)}</a></td></tr>`
-    : "";
-  return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F6F5F2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F5F2;padding:32px 16px;">
-    <tr><td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);">
-        <tr><td style="padding:26px 28px 0;"><div style="font-size:22px;font-weight:700;color:#1B5E3B;letter-spacing:-.02em;">Bleenr</div></td></tr>
-        <tr><td style="padding:20px 28px 0;">
-          ${c.title ? `<h1 style="margin:0 0 14px;font-size:20px;font-weight:700;color:#1A1A18;">${inline(c.title, prenom)}</h1>` : ""}
-          <div style="font-size:14.5px;line-height:1.65;color:#4A4A46;">${paras}</div>
-        </td></tr>
-        ${cta}
-        <tr><td style="padding:26px 28px 28px;">
-          <div style="border-top:1px solid #EDEBE6;padding-top:16px;font-size:12px;color:#8A8A84;line-height:1.5;">
-            Vous recevez cet e-mail car vous avez un compte Bleenr.<br>
-            <a href="${esc(unsub)}" style="color:#8A8A84;">Se désinscrire des offres et nouveautés Bleenr</a>
-          </div>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`;
+  const cta = c.cta_label && /^https:\/\//.test(c.cta_url ?? "") ? { label: esc(c.cta_label), url: esc(c.cta_url) } : undefined;
+  return mailLayout({
+    title: inline(c.title || c.subject || "", prenom), intro: paras, cta,
+    footer: `Vous recevez cet e-mail car vous avez un compte Bleenr. <a href="${esc(unsub)}" style="color:#9AA19C;">Se désinscrire des offres et nouveautés Bleenr</a>`,
+  });
 }
 
 // ── Désinscription ──

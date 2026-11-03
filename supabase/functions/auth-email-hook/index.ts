@@ -12,6 +12,7 @@
 // Déployer SANS vérification JWT (c'est Supabase Auth qui appelle la fonction, signature vérifiée ci-dessous).
 
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
+import { codeCard, mailLayout } from "../_shared/mail.ts";
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("MAIL_FROM") ?? "Bleenr <noreply@bleenr.com>";
@@ -41,34 +42,9 @@ type EmailData = {
 
 const esc = (s: string) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]!));
 
-function layout(title: string, body: string) {
-  return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#F6F5F2;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F6F5F2;padding:32px 16px;">
-    <tr><td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);">
-        <tr><td style="padding:26px 28px 0;"><div style="font-size:22px;font-weight:700;color:#1B5E3B;letter-spacing:-.02em;">Bleenr</div></td></tr>
-        <tr><td style="padding:20px 28px 0;">
-          <h1 style="margin:0 0 14px;font-size:18px;font-weight:700;color:#1A1A18;">${title}</h1>
-          <div style="font-size:14px;line-height:1.6;color:#4A4A46;">${body}</div>
-        </td></tr>
-        <tr><td style="padding:26px 28px 28px;">
-          <div style="border-top:1px solid #EDEBE6;padding-top:16px;font-size:12px;color:#8A8A84;line-height:1.5;">
-            Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail.<br>
-            Cet e-mail vous est envoyé automatiquement par Bleenr.
-          </div>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`;
-}
-
-function codeBox(code: string) {
-  return `<div style="margin:18px 0;padding:16px;background:#F6F5F2;border-radius:10px;text-align:center;">
-    <div style="font-size:32px;font-weight:700;letter-spacing:10px;color:#1B5E3B;font-family:ui-monospace,Menlo,Consolas,monospace;">${esc(code)}</div>
-  </div>`;
+const FOOT = "Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet e-mail. Cet e-mail vous est envoyé automatiquement par Bleenr.";
+function layout(title: string, intro: string, card = "", cta?: { label: string; url: string }, note = "") {
+  return mailLayout({ title, intro, card, cta, note, footer: FOOT });
 }
 
 function verifyUrl(d: EmailData, hash: string, type: string) {
@@ -76,50 +52,44 @@ function verifyUrl(d: EmailData, hash: string, type: string) {
   return `${SB_URL}/auth/v1/verify?token=${encodeURIComponent(hash)}&type=${encodeURIComponent(type)}&redirect_to=${encodeURIComponent(redirect)}`;
 }
 
-function button(label: string, url: string) {
-  return `<p style="margin:18px 0 4px;"><a href="${url}" style="display:inline-block;background:#1B5E3B;color:#FFFFFF;text-decoration:none;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;">${label}</a></p>`;
-}
-
 // Contenu selon le type d'e-mail
 function build(d: EmailData, code: string, hash: string, account: string, forwarded: boolean) {
   const t = d.email_action_type;
-  const forFor = forwarded ? `<p style="margin:0 0 10px;font-size:12.5px;color:#8A8A84;">Code destiné au compte <b>${esc(account)}</b>.</p>` : "";
+  const forFor = forwarded ? `<div style="font-size:13px;color:#7C8580;margin-bottom:8px;">Code destiné au compte <b>${esc(account)}</b>.</div>` : "";
+  const limit = "Ce code est valable pendant une durée limitée.";
   if (t === "recovery") {
     return {
       subject: "Réinitialisation de votre mot de passe Bleenr",
-      html: layout("Réinitialiser votre mot de passe", forFor +
-        "Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe." +
-        button("Choisir un nouveau mot de passe", verifyUrl(d, hash, "recovery")) +
-        (code ? `<p style="margin:16px 0 0;">Ou saisissez ce code :</p>${codeBox(code)}` : "")),
+      html: layout("Réinitialisez votre mot de passe.", forFor + "Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe." + (code ? " Vous pouvez aussi saisir ce code :" : ""),
+        code ? codeCard(esc(code), limit) : "", { label: "Choisir un nouveau mot de passe", url: verifyUrl(d, hash, "recovery") }),
     };
   }
   if (t === "email_change") {
     return {
       subject: "Confirmez votre adresse e-mail Bleenr",
-      html: layout("Confirmer le changement d'adresse", forFor +
-        "Saisissez ce code pour confirmer votre nouvelle adresse e-mail :" + codeBox(code) +
-        button("Confirmer l'adresse", verifyUrl(d, hash, "email_change"))),
+      html: layout("Confirmez votre nouvelle adresse.", forFor + "Saisissez ce code pour confirmer votre nouvelle adresse e-mail :",
+        codeCard(esc(code), limit), { label: "Confirmer l'adresse", url: verifyUrl(d, hash, "email_change") }),
     };
   }
   if (t === "invite") {
     return {
       subject: "Vous êtes invité sur Bleenr",
-      html: layout("Bienvenue sur Bleenr", forFor + "Vous avez été invité à rejoindre Bleenr." +
-        button("Accepter l'invitation", verifyUrl(d, hash, "invite"))),
+      html: layout("Bienvenue sur Bleenr.", forFor + "Vous avez été invité à rejoindre Bleenr, la plateforme de réservation de chauffeurs privés.",
+        "", { label: "Accepter l'invitation", url: verifyUrl(d, hash, "invite") }),
     };
   }
   if (t === "reauthentication") {
     return {
       subject: "Votre code de confirmation Bleenr",
-      html: layout("Code de confirmation", forFor + "Saisissez ce code pour confirmer l'opération :" + codeBox(code)),
+      html: layout("Votre code de confirmation.", forFor + "Saisissez ce code pour confirmer l'opération :", codeCard(esc(code), limit)),
     };
   }
   const signup = t === "signup";
   return {
     subject: signup ? `${code} — votre code d'inscription Bleenr` : `${code} — votre code de connexion Bleenr`,
-    html: layout(signup ? "Confirmez votre inscription" : "Votre code de connexion",
-      forFor + (signup ? "Saisissez ce code pour activer votre compte :" : "Saisissez ce code pour vous connecter :") +
-      codeBox(code) + `<p style="margin:0;font-size:13px;color:#8A8A84;">Ce code est valable pendant une durée limitée.</p>`),
+    html: layout(signup ? "Confirmez votre inscription." : "Votre code de connexion.",
+      forFor + (signup ? "Bienvenue ! Saisissez ce code pour activer votre compte :" : "Saisissez ce code pour vous connecter à Bleenr :"),
+      codeCard(esc(code), limit)),
   };
 }
 
