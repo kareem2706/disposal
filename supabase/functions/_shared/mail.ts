@@ -108,15 +108,27 @@ export function infoGrid(items: [string, string][]) {
 export function tripCard(d: Record<string, string>, opts: { title?: string; info?: [string, string][] } = {}) {
   const when = [d.date, d.time].filter(Boolean).join("&nbsp;&nbsp;·&nbsp;&nbsp;");
   const disposal = !d.to || /^(mise à disposition|mise &agrave; disposition|trajet mixte|course mixte)/i.test(d.to);
-  const stop = (c: string, addr: string, top = "") =>
-    `<tr><td width="26" valign="top">${dot(c)}</td><td valign="top">${top}${place(addr)}</td></tr>`;
-  const line = `<tr><td width="26" style="padding:6px 0;"><div style="margin-left:5px;width:0;height:30px;border-left:2px dotted #C9C6BE;font-size:0;line-height:0;">&nbsp;</div></td><td></td></tr>`;
   const top = when ? `<div style="font-family:${FONT};font-size:13.5px;color:${INK3};margin-bottom:3px;">${when}</div>` : "";
+  // Ligne pointillée continue d'un point à l'autre, sans rowspan (fiable dans tous les clients mail) :
+  //   ligne 1 : point + 1re ligne de texte ; ligne 2 : trait pointillé (bord gauche) à côté du reste du bloc.
+  const DOTS = "border-left:2px dotted #C9C6BE;";
+  const nameOf = (a: string) => place(a).split("</div>")[0] + "</div>";
+  const restOf = (a: string) => place(a).slice(nameOf(a).length);
+  const head = (c: string, html: string) =>
+    `<tr><td colspan="2" width="26" valign="top">${dot(c)}</td><td valign="top">${html}</td></tr>`;
+  const body = (html: string, line: boolean, pad = 16) =>
+    `<tr><td width="5" style="font-size:0;line-height:0;">&nbsp;</td><td width="21" style="${line ? DOTS : ""}font-size:0;line-height:0;">&nbsp;</td><td valign="top" style="padding-bottom:${pad}px;">${html}</td></tr>`;
   let route = "";
   if (d.from) {
-    route = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px;">${stop(GREEN, d.from, top)}`;
-    if (!disposal) route += line + stop("#E0605A", d.to);
-    else if (d.to) route += line + `<tr><td width="26" valign="top">${dot("#E0A33A")}</td><td valign="top"><div style="font-family:${FONT};font-size:15px;font-weight:700;color:${INK};">${d.to}</div></td></tr>`;
+    const end = !disposal ? d.to : (d.to || "");
+    const first = when ? top.replace("margin-bottom:3px;", "") : nameOf(d.from);
+    const rest = when ? `<div style="margin-top:3px;">${place(d.from)}</div>` : restOf(d.from);
+    route = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px;">`;
+    route += head(GREEN, first) + body(rest, !!end, end ? 18 : 0);
+    if (end) {
+      if (!disposal) route += head("#E0605A", nameOf(end)) + body(restOf(end), false, 0);
+      else route += head("#E0A33A", `<div style="font-family:${FONT};font-size:15px;font-weight:700;line-height:1.35;color:${INK};">${end}</div>`);
+    }
     route += `</table>`;
   } else if (when) route = `<div style="margin-top:10px;">${top}</div>`;
   const grid = infoGrid(opts.info ?? []);
