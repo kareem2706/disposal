@@ -2495,7 +2495,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         </div>
         <div class="stat-card">
           <div style="margin-bottom:14px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-          <div class="stat-label">Nombre de courses</div>
+          <div class="stat-label">Courses effectuées</div>
           <div class="stat-val" id="admin-stat-rides">—</div>
           <div id="admin-stat-rides-pending" style="display:none;margin-top:8px;font-size:12px;font-weight:600;color:#1E4D7B;background:#EAF1FB;border-radius:8px;padding:4px 10px;width:fit-content;cursor:pointer;" onclick="showPage('admin-rides');setTimeout(function(){var f=document.getElementById('ar-filter-status');if(f){f.value='pending_payment';if(typeof loadAdminRides==='function')loadAdminRides();}},50);" title="Voir les courses en attente de confirmation"></div>
         </div>
@@ -15233,7 +15233,8 @@ window.refreshAdminDashboard = async function() {
     var allRides     = ridesRes.data    || [];
 
     // All-time totals for top stat cards
-    var totalRides = allRides.length;
+    // Courses réellement effectuées (statut « terminée »)
+    var totalRides = allRides.filter(function(r){ return r.status==='done'; }).length;
     // Revenue = money actually received and kept: confirmed / in progress / done rides,
     // plus cancelled rides that are not refundable. Bank transfers awaiting the admin's
     // confirmation (pending_payment) are NOT counted until the admin confirms them.
