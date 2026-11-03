@@ -1251,9 +1251,9 @@ option[hidden]{display:none;}
 .evx-go{background:#C8453A;color:#fff;border:none;}
 .evx-go:hover{background:#B33A2E;}
 @media(max-width:600px){ .evx-ft{flex-direction:column-reverse;} .evx-ft .btn{width:100%;} }
-#mixed-segments .mixed-segment{background:#fff;border:1px solid #ECEAE5;border-radius:14px;padding:12px 14px;margin-bottom:10px;}
-#mixed-segments .ev-vh .n{background:#EAF1FB;color:#2F5FA8;}
-#panel-mixed .ev-add{border-color:#BFD3EE;color:#2F5FA8;background:#F7FAFE;}
+#mixed-segments .mixed-segment,#sub-mixed-segments .mixed-segment{background:#fff;border:1px solid #ECEAE5;border-radius:14px;padding:12px 14px;margin-bottom:10px;}
+#mixed-segments .ev-vh .n,#sub-mixed-segments .ev-vh .n{background:#EAF1FB;color:#2F5FA8;}
+#panel-mixed .ev-add,#sub-panel-mixed .ev-add{border-color:#BFD3EE;color:#2F5FA8;background:#F7FAFE;}
 .tr-pair{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;}
 .tr-pair.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
 .tr-pair > .input-group{margin:0!important;min-width:0;}
@@ -3091,11 +3091,9 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       </div>
       <!-- Mixte -->
       <div id="sub-panel-mixed" style="display:none;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <span style="font-size:12px;color:var(--ink3);">Composez votre trajet segment par segment</span>
-          <button class="btn btn-secondary btn-sm" onclick="addSubSegment()">+ Segment</button>
-        </div>
+        <div class="ev-lbl" id="sub-mix-count">Trajets</div>
         <div id="sub-mixed-segments"></div>
+        <button type="button" class="ev-add" onclick="addSubSegment()">+ Ajouter un trajet</button>
       </div>
       <div style="margin-top:14px;padding:12px 14px;background:var(--sand);border-radius:var(--r);">
         <div style="font-size:12px;font-weight:600;margin-bottom:2px;">Informations du client</div>
@@ -9059,6 +9057,7 @@ window.selSubType = function(el){
   });
   var target = v==='ab'?'sub-panel-ab':v==='disposal'?'sub-panel-disposal':'sub-panel-mixed';
   var p=document.getElementById(target); if(p) p.style.display='block';
+  if(v==='mixed' && !document.querySelector('#sub-mixed-segments .mixed-segment')) addSubSegment();   // un premier trajet prêt à remplir
 };
 
 
@@ -9121,6 +9120,7 @@ window.addSubSegment = function(){
 
   var paxOpts='<option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option>';
   var vehOpts='<option value="lowcost">Economy</option><option value="business">Business</option><option value="van">Van</option><option value="luxe">Luxe</option><option value="bus">Bus</option>';
+  var vehLbl='<label class="veh-lbl">V\u00e9hicule <button type="button" class="veh-info" onclick="openVehGuide()" title="Voir les gammes">i</button></label>';
 
   var abFields=
     '<div class="input-group full"><label>D\u00e9part <span style="color:var(--red)">*</span></label><input id="sub-sf-'+n+'" placeholder="Gare du Midi, Bruxelles" autocomplete="off"></div>'+
@@ -9128,7 +9128,7 @@ window.addSubSegment = function(){
     '<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="sub-sd8-'+n+'"></div>'+
     '<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="sub-sh-'+n+'" value="08:00"></div>'+
     '<div class="input-group"><label>Passagers</label><select id="sub-spax-'+n+'">'+paxOpts+'</select></div>'+
-    '<div class="input-group"><label>V\u00e9hicule</label><select id="sub-sveh-'+n+'">'+vehOpts+'</select></div>'+
+    '<div class="input-group">'+vehLbl+'<select id="sub-sveh-'+n+'">'+vehOpts+'</select></div>'+
     _lugBlock('sub-slgL-'+n,'sub-slgS-'+n,'sub-sveh-'+n,'sub-spax-'+n)+
     '<div class="input-group full"><label>Instructions</label><textarea id="sub-snotes-'+n+'" rows="2" placeholder="Bagages, enfants, acc\u00e8s PMR\u2026"></textarea></div>';
 
@@ -9138,17 +9138,19 @@ window.addSubSegment = function(){
     '<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="sub-sh-'+n+'" value="08:00"></div>'+
     '<div class="input-group"><label>Dur\u00e9e (heures)</label><input type="number" id="sub-sdur-'+n+'" min="1" max="24" value="2" placeholder="2"></div>'+
     '<div class="input-group"><label>Passagers</label><select id="sub-spax-'+n+'">'+paxOpts+'</select></div>'+
-    '<div class="input-group"><label>V\u00e9hicule</label><select id="sub-sveh-'+n+'">'+vehOpts+'</select></div>'+
+    '<div class="input-group">'+vehLbl+'<select id="sub-sveh-'+n+'">'+vehOpts+'</select></div>'+
     _lugBlock('sub-slgL-'+n,'sub-slgS-'+n,'sub-sveh-'+n,'sub-spax-'+n)+
     '<div class="input-group full"><label>Instructions</label><textarea id="sub-snotes-'+n+'" rows="2" placeholder="Itin\u00e9raire, arr\u00eats pr\u00e9vus\u2026"></textarea></div>';
 
+  // Même présentation que les trajets mixtes du client : « Trajet n », Dupliquer / Supprimer, type en liste déroulante
   div.innerHTML=
-    '<div class="mixed-segment-head"><div class="mseg-num">'+n+'</div><div class="mseg-lbl">Segment '+n+'</div>'
-    +'<button class="mseg-del" onclick="removeSubSegSafe('+n+')" title="Supprimer">&#215;</button></div>'
-    +'<div class="seg-type-btns"><button class="seg-type-btn active" onclick="setSubSegType(this,'+n+',\'ab\')">A \u2192 B</button><button class="seg-type-btn" onclick="setSubSegType(this,'+n+',\'disposal\')">Disposition</button></div>'
+    '<div class="ev-vh"><span class="n">'+n+'</span><span class="mix-ttl">Trajet '+n+'</span><span class="tl"><button type="button" onclick="_subSegDup('+n+')">Dupliquer</button><button type="button" class="mix-del" onclick="removeSubSegSafe('+n+')">Supprimer</button></span></div>'
+    +'<div class="seg-type-btns" style="display:none;"><button class="seg-type-btn active" onclick="setSubSegType(this,'+n+',\'ab\')">A \u2192 B</button><button class="seg-type-btn" onclick="setSubSegType(this,'+n+',\'disposal\')">Disposition</button></div>'
+    +'<div class="input-group" style="margin-bottom:12px;"><label>Type de trajet</label><select class="mix-type" onchange="var b=this.closest(\'.mixed-segment\').querySelectorAll(\'.seg-type-btn\');b[this.value===\'disposal\'?1:0].click();"><option value="ab">Transfert simple</option><option value="disposal">Mise à disposition</option></select></div>'
     +'<div class="form-grid" id="sub-seg-fields-'+n+'">'+abFields+'</div>';
 
   container.appendChild(div);
+  _subMixRenumber();
   div._abFields=abFields;
   div._dispFields=dispFields;
   var dateEl=document.getElementById('sub-sd8-'+n);
@@ -9161,8 +9163,10 @@ window.setSubSegType=function(btn,n,t2){
   btn.classList.add('active');
   var seg=document.getElementById('sub-seg-'+n);
   var fieldsEl=document.getElementById('sub-seg-fields-'+n);
+  var _ms=seg&&seg.querySelector('.mix-type'); if(_ms) _ms.value=t2==='disposal'?'disposal':'ab';
   if(seg&&fieldsEl){
     fieldsEl.innerHTML=t2==='disposal'?seg._dispFields:seg._abFields;
+    setTimeout(function(){ if(window._vehPaxSync) _vehPaxSync(); },0);
     var dateEl=document.getElementById('sub-sd8-'+n);
     if(dateEl){ dateEl.value=todayStr(); dateEl.min=todayStr(); }
     setTimeout(function(){ if(typeof _attachGoogleAC==='function')_attachGoogleAC(); },50);
@@ -9172,8 +9176,27 @@ window.setSubSegType=function(btn,n,t2){
 window.removeSubSegSafe=function(n){
   var cont=document.getElementById('sub-mixed-segments');
   if(!cont)return;
-  if(cont.querySelectorAll('.mixed-segment').length<=1){showToast('\u26a0\ufe0f Il faut au moins un segment.');return;}
+  if(cont.querySelectorAll('.mixed-segment').length<=1){showToast('\u26a0\ufe0f Il faut au moins un trajet.');return;}
   var el=document.getElementById('sub-seg-'+n);if(el)el.remove();
+  _subMixRenumber();
+};
+window._subMixRenumber=function(){
+  var segs=[].slice.call(document.querySelectorAll('#sub-mixed-segments .mixed-segment')), k=segs.length;
+  segs.forEach(function(sg,i){ var a=sg.querySelector('.ev-vh .n'), t=sg.querySelector('.mix-ttl'), dl=sg.querySelector('.mix-del'); if(a) a.textContent=i+1; if(t) t.textContent='Trajet '+(i+1); if(dl) dl.style.display=k>1?'':'none'; });
+  var c=document.getElementById('sub-mix-count'); if(c) c.textContent='Trajets ('+k+')';
+};
+window._subSegDup=function(n){
+  var src=document.getElementById('sub-seg-'+n); if(!src) return;
+  var gv=function(id){ var e=document.getElementById(id); return e?e.value:''; };
+  var isD=(src.querySelector('.mix-type')||{}).value==='disposal';
+  var keys=['sf','st','sd8','sh','sdur','spax','sveh','snotes','slgL','slgS'], v={};
+  keys.forEach(function(k){ v[k]=gv('sub-'+k+'-'+n); });
+  addSubSegment(); var m=_subSegN, nw=document.getElementById('sub-seg-'+m);
+  if(nw && src.nextSibling!==nw) src.parentNode.insertBefore(nw, src.nextSibling);
+  if(isD){ var ms=nw.querySelector('.mix-type'); if(ms) ms.value='disposal'; setSubSegType(nw.querySelectorAll('.seg-type-btn')[1], m, 'disposal'); }
+  keys.forEach(function(k){ var e=document.getElementById('sub-'+k+'-'+m); if(e&&v[k]!=='') e.value=v[k]; });
+  if(window._vehPaxSync) _vehPaxSync();
+  _subMixRenumber();
 };
 
 window.submitSubcontract = async function(){
