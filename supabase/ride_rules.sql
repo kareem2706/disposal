@@ -108,7 +108,12 @@ begin
   select * into o from offers where ride_id = p_ride and driver_id = uid for update;
   if found then
     if o.status <> 'pending' then raise exception 'Offre déjà traitée' using errcode = '42501'; end if;
-    return _api_update('public.offers', o.id::text, d);
+    perform _api_update('public.offers', o.id::text, d);
+    -- offre remise à jour par la fleet : elle redevient valable (offer_outdated.sql)
+    perform _api_trusted(true);
+    update offers set outdated_at = null, outdated_reason = null where id = o.id;
+    perform _api_trusted(false);
+    return (select to_jsonb(x) from offers x where x.id = o.id);
   end if;
   return _api_insert('public.offers', d || jsonb_build_object('ride_id', p_ride, 'driver_id', uid, 'status', 'pending'));
 end $$;
