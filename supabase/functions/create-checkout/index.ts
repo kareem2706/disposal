@@ -41,11 +41,44 @@ Deno.serve(async (req: Request) => {
 
     const body = await req.json();
     const { rideId, offerId } = body;
-    if (!rideId || !offerId) return json({ error: "Paramètres manquants" }, 400);
+    const kind = body.kind === "supplement" ? "supplement" : "offer";
+    if (!rideId || (kind === "offer" && !offerId)) return json({ error: "Paramètres manquants" }, 400);
+    const APP_URL0 = (Deno.env.get("APP_URL") || "https://kareem2706.github.io/disposal").replace(/\/+$/, "");
+    const asked0 = String((body as any).returnUrl || "").replace(/[?#].*$/, "").replace(/\/+$/, "");
+    const origin0 = asked0 && asked0.startsWith(APP_URL0) ? asked0 : APP_URL0;
+
+    // ── Supplément demandé par le chauffeur après une modification (mission_changes.sql) ──
+    if (kind === "supplement") {
+      const { data: r } = await admin.from("rides")
+        .select("id, client_id, status, booking_code, change_state, supp_amount, supp_deadline").eq("id", rideId).maybeSingle();
+      if (!r || r.client_id !== user.id) return json({ error: "Course introuvable" }, 404);
+      if (r.status !== "confirmed" || r.change_state !== "supplement" || !(Number(r.supp_amount) > 0)) {
+        return json({ error: "Aucun supplément à payer pour cette course" }, 409);
+      }
+      if (r.supp_deadline && new Date(r.supp_deadline).getTime() < Date.now()) {
+        return json({ error: "Le délai pour payer le supplément est dépassé" }, 409);
+      }
+      const amt = Math.round(Number(r.supp_amount) * 100) / 100;
+      const { data: prevS } = await admin.from("ride_checkouts").select("session_id").eq("ride_id", rideId).eq("status", "open");
+      for (const p of prevS ?? []) {
+        try { const old = await stripe.checkout.sessions.retrieve(p.session_id); if (old.status === "open") await stripe.checkout.sessions.expire(p.session_id); } catch (_) { /* déjà expirée */ }
+        await admin.from("ride_checkouts").update({ status: "expired", updated_at: new Date().toISOString() }).eq("session_id", p.session_id).eq("status", "open");
+      }
+      const ss = await stripe.checkout.sessions.create({
+        mode: "payment", expires_at: Math.floor(Date.now() / 1000) + 30 * 60, customer_email: user.email || undefined,
+        line_items: [{ price_data: { currency: "eur", product_data: { name: `Supplément course Bleenr ${r.booking_code ?? String(rideId).slice(0, 8)}` },
+          unit_amount: Math.round(amt * 100) }, quantity: 1 }],
+        metadata: { rideId, kind: "supplement", userId: user.id },
+        success_url: `${origin0}/?payment=success&ride=${rideId}&supp=1&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin0}/?payment=cancel`,
+      });
+      await admin.from("ride_checkouts").insert({ session_id: ss.id, ride_id: rideId, offer_id: null, user_id: user.id, amount: amt, status: "open" });
+      return json({ url: ss.url, amount: amt });
+    }
 
     // 2) La course appartient au client et attend encore une offre
     const { data: ride } = await admin.from("rides")
-      .select("id, client_id, status, booking_code").eq("id", rideId).maybeSingle();
+      .select("id, client_id, status, booking_code, credit_amount").eq("id", rideId).maybeSingle();
     if (!ride || ride.client_id !== user.id) return json({ error: "Course introuvable" }, 404);
     if (!["waiting", "offers"].includes(ride.status)) {
       return json({ error: "Cette course n'est plus en attente de paiement" }, 409);
@@ -63,7 +96,17 @@ Deno.serve(async (req: Request) => {
     }
 
     // 4) Montant calculé côté serveur (HTVA + TVA), en centimes
-    const tvac = Math.round(Number(offer.price) * (1 + TVA_RATE) * 100) / 100;
+    const full = Math.round(Number(offer.price) * (1 + TVA_RATE) * 100) / 100;
+    // Crédit reporté d'une course annulée : déduit ; entièrement couvert → confirmée sans paiement
+    const credit = Math.round(Number(ride.credit_amount ?? 0) * 100) / 100;
+    if (credit > 0 && credit >= full) {
+      const { data: cr, error: cErr } = await admin.rpc("confirm_ride_credit", { p_ride: rideId, p_offer: offerId });
+      if (cErr) throw new Error("confirm_ride_credit: " + cErr.message);
+      const row = Array.isArray(cr) ? cr[0] : cr;
+      if (row?.result !== "confirmed") return json({ error: "Cette offre ne peut plus être choisie" }, 409);
+      return json({ confirmed: true, credit_used: full, refund: Math.round((credit - full) * 100) / 100 });
+    }
+    const tvac = Math.round((full - credit) * 100) / 100;
     const unitAmount = Math.round(tvac * 100);
     if (!(unitAmount > 0)) return json({ error: "Montant invalide" }, 400);
 
@@ -97,7 +140,7 @@ Deno.serve(async (req: Request) => {
       line_items: [{
         price_data: {
           currency: "eur",
-          product_data: { name: `Course Bleenr ${ride.booking_code ?? String(rideId).slice(0, 8)}` },
+          product_data: { name: `Course Bleenr ${ride.booking_code ?? String(rideId).slice(0, 8)}` + (credit > 0 ? ` (crédit de ${credit.toFixed(2).replace(".", ",")} € déduit)` : "") },
           unit_amount: unitAmount,
         },
         quantity: 1,

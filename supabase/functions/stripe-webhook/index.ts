@@ -45,16 +45,17 @@ async function refundSession(s: Stripe.Checkout.Session) {
 async function settleSession(s: Stripe.Checkout.Session) {
   if (s.payment_status !== "paid") return { paid: false, status: s.payment_status };
   const md = s.metadata ?? {};
-  if (!md.rideId || !md.offerId) return { paid: true, confirmed: false, error: "Métadonnées manquantes" };
+  const supp = md.kind === "supplement";   // supplément après modification de la mission
+  if (!md.rideId || (!supp && !md.offerId)) return { paid: true, confirmed: false, error: "Métadonnées manquantes" };
   const amount = Math.round(Number(s.amount_total ?? 0)) / 100;
-  const { data, error } = await admin.rpc("confirm_ride_payment", {
-    p_session: s.id, p_ride: md.rideId, p_offer: md.offerId, p_amount: amount,
-  });
-  if (error) throw new Error("confirm_ride_payment: " + error.message);   // erreur technique : pas de remboursement
+  const { data, error } = supp
+    ? await admin.rpc("confirm_supplement_payment", { p_session: s.id, p_ride: md.rideId, p_amount: amount })
+    : await admin.rpc("confirm_ride_payment", { p_session: s.id, p_ride: md.rideId, p_offer: md.offerId, p_amount: amount });
+  if (error) throw new Error((supp ? "confirm_supplement_payment: " : "confirm_ride_payment: ") + error.message);   // erreur technique : pas de remboursement
   const row = Array.isArray(data) ? data[0] : data;
   const result = row?.result as string;
   if (result === "confirmed" || result === "already") {
-    return { paid: true, confirmed: true, rideId: md.rideId, driverId: row?.driver ?? null, amount };
+    return { paid: true, confirmed: true, rideId: md.rideId, driverId: row?.driver ?? null, amount, supplement: supp };
   }
   // duplicate | not_confirmable | refunded → l'argent est rendu au client
   if (result !== "refunded") await refundSession(s);

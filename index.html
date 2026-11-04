@@ -674,6 +674,33 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .lug-st input{flex:1;min-width:0;border:none!important;box-shadow:none!important;text-align:center;font-weight:700;font-size:15px;background:transparent;padding:4px 0!important;-moz-appearance:textfield;}
 .lug-st input::-webkit-outer-spin-button,.lug-st input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .lug-warn{grid-column:1/-1;background:#FFF7E8;border:1px solid #F3E2BF;color:#8A5A12;border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.45;}
+.chg-ban{border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:12px;}
+.chg-ban .chg-t{display:block;font-size:14px;margin-bottom:4px;}
+.chg-ban.o{background:#FFF7E8;border:1px solid #F3E2BF;color:#6E4A08;}
+.chg-ban.b{background:#EEF4FB;border:1px solid #D6E4F5;color:#1E4D7B;}
+.chg-ban.r{background:#FDEEEC;border:1px solid #F3D2CD;color:#8A1F17;}
+.chg-ul{margin:4px 0 0;padding-left:18px;}.chg-ul li{margin:2px 0;}
+.chg-sm{font-size:12px;margin-top:8px;}.chg-msg{font-style:italic;margin-top:6px;}
+.chg-kv{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.06);}
+.chg-ban .chg-kv:first-of-type{margin-top:8px;}
+.chg-act{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.chg-no{background:#fff;border:1px solid #F3D2CD;color:#B3261E;}
+.chg-box{border:1px solid #ECEAE5;border-radius:12px;padding:12px 14px;margin-bottom:12px;background:#fff;}
+.chg-q{font-size:13.5px;font-weight:600;margin:12px 0 8px;}
+.chg-opt{display:flex;gap:10px;align-items:flex-start;border:1.5px solid #ECEAE5;border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer;font-size:13px;}
+.chg-opt.on,.chg-opt:has(input:checked){border-color:var(--green);background:#F3F8F4;}
+.chg-opt input[type=radio]{margin:3px 0 0;accent-color:#1B5E3B;width:auto!important;flex:0 0 auto;padding:0;box-shadow:none;}
+.chg-opt>span{flex:1;min-width:0;display:block;color:var(--ink);}
+.chg-opt b{font-weight:600;}
+.chg-opt small{display:block;color:var(--ink3);font-size:12px;margin-top:2px;line-height:1.4;}
+.chg-opt.sm{padding:8px 10px;margin:6px 0 0;}
+.chg-supp,.chg-sub{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+.chg-supp[style*="none"],.chg-sub[style*="none"]{display:none!important;}
+.chg-lbl{font-size:12px;color:var(--ink3);}
+.chg-supp input,.chg-supp textarea{border:1px solid #E2E0DA;border-radius:10px;padding:8px 10px;font:14px 'DM Sans',sans-serif;width:100%;box-sizing:border-box;}
+.chg-prev{font-size:12.5px;color:#1E4D7B;background:#EEF4FB;border-radius:8px;padding:6px 9px;}.chg-prev:empty{display:none;}
+.chg-pill{display:inline-block;font-size:10.5px;font-weight:700;border-radius:20px;padding:2px 8px;margin-left:4px;white-space:nowrap;}
+.chg-pill.o{background:#FFF1CC;color:#7A4F00;border:1px solid #F0D27A;}.chg-pill.r{background:#FDE7E4;color:#B3261E;border:1px solid #F5C2BC;}
 .veh-pax-hint{font-size:11.5px;color:var(--ink3);margin-top:5px;line-height:1.4;}
 .veh-lbl{display:flex;align-items:center;gap:6px;}
 .veh-info{
@@ -2774,6 +2801,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div class="pay-line"><span>Montant HTVA</span><span id="payment-amount">—</span></div>
         <div class="pay-line"><span id="payment-tva-label">TVA 6%</span><span id="payment-tva">—</span></div>
         <div class="pay-line pay-total"><span>Total TVAC</span><span id="payment-total">—</span></div>
+        <div id="payment-credit"></div>
         <div class="pay-secure"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg><span id="payment-confirm-label">Paiement sécurisé &bull; Confirmation immédiate</span></div>
       </div>
 
@@ -3299,10 +3327,10 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 <script>
 (function(){
   var params=new URLSearchParams(window.location.search);
-  var payStatus=params.get('payment'),pRide=params.get('ride'),pOffer=params.get('offer'),pSess=params.get('session_id');
+  var payStatus=params.get('payment'),pRide=params.get('ride'),pOffer=params.get('offer'),pSess=params.get('session_id'),pSupp=params.get('supp');
   if(!payStatus)return;
   window.history.replaceState({},'',window.location.pathname);
-  window._stripePendingReturn = {status: payStatus, ride: pRide, offer: pOffer, session: pSess};
+  window._stripePendingReturn = {status: payStatus, ride: pRide, offer: pOffer, session: pSess, supp: pSupp==='1'};
   window._stripeResetEntering = true;
 
   // For cancel/error: inject a self-contained overlay that shows immediately
@@ -4456,7 +4484,16 @@ function enterApp(){
     else {
     window._stripePendingReturn = null;
     setTimeout(async function(){
-      if(_sr.status==='success' && _sr.ride && _sr.offer && sb){
+      if(_sr.status==='success' && _sr.ride && _sr.supp && sb){
+        // Supplément payé après une modification de la mission
+        try{
+          var vs=await _callEdge('verify-checkout',{sessionId:_sr.session});
+          if(vs && vs.refunded){ if(typeof loadClientDashboard==='function') await loadClientDashboard(); showPaymentResult('error','Paiement rembours\u00e9','Le suppl\u00e9ment ne pouvait plus \u00eatre pay\u00e9 (d\u00e9lai d\u00e9pass\u00e9 ou course modifi\u00e9e). Votre paiement a \u00e9t\u00e9 int\u00e9gralement rembours\u00e9.'); return; }
+          if(!vs || !vs.confirmed) throw new Error((vs&&vs.error)||'Paiement non vérifié');
+          if(typeof loadClientDashboard==='function') await loadClientDashboard();
+          await _showPaymentSuccess(_sr.ride, vs.amount);
+        }catch(e){ console.error('Stripe supp return error:',e); showPaymentResult('error','Erreur','Paiement re\u00e7u mais erreur de mise \u00e0 jour. Contactez le support.'); }
+      } else if(_sr.status==='success' && _sr.ride && _sr.offer && sb){
         try{
           var tvac=parseFloat(localStorage.getItem('stripe_pending_tvac')||'0');
           localStorage.removeItem('stripe_pending_tvac');
@@ -4762,6 +4799,7 @@ async function loadPageData(pageId){
 
 // CLIENT DASHBOARD
 async function loadClientDashboard(){
+  if(window._chgExpire) _chgExpire();
   if(!sb && localStorage.getItem(DEMO_MODE_KEY) !== '1') return;
   const uid = currentUser?.id;
   let rides = [];
@@ -4864,6 +4902,7 @@ async function loadClientDashboard(){
 
 // CLIENT RIDES
 async function loadRides(filter){
+  if(window._chgExpire) _chgExpire();
   // Sans filtre explicite (ouverture de la page, mise à jour en direct) : on garde le filtre sélectionné
   if(filter===undefined){ var _act=document.querySelector('#rides-filters .btn-primary'); var _fm=_act&&(_act.getAttribute('onclick')||'').match(/filterRides\('(\w+)'/); filter=_fm?_fm[1]:'all'; }
   const uid = currentUser?.id;
@@ -5529,6 +5568,7 @@ function _renderDriverActiveRides(list, boxId, forClient){
 }
 
 async function loadDriverDashboard(){
+  if(window._chgExpire) _chgExpire();
   const uid = currentUser?.id;
   let missions = [], pending = [];
   _renderDriverVerifyBanner();
@@ -5769,6 +5809,7 @@ window.msSwitch = function(btn, target){
 };
 
 async function loadMissions(){
+  if(window._chgExpire) _chgExpire();
   let missions = [];
   const MISSIONS_ALL = [...MISSION_STATUSES, 'cancelled'];
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
@@ -6188,7 +6229,7 @@ function renderMkItem(r,isSub,isMine){
   var dayNum=rDate2?rDate2.getDate().toString().padStart(2,'0'):'--';
   var monStr=rDate2?rDate2.toLocaleDateString('fr-FR',{month:'short'}).toUpperCase().replace('.',''):'';
   var offerCnt2=r._offerCount||0;
-  var statusPill=(r.no_show_at?_noShowPill()+' ':'')+getStatusPill(r.status,offerCnt2);
+  var statusPill=(r.no_show_at?_noShowPill()+' ':'')+getStatusPill(r.status,offerCnt2)+_chgPill(r);
   var tLabel=r.status==='personal'?'Personnel':r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';
   var tColor=r.status==='personal'?'#6750A4':r.trip_type==='disposal'?'var(--amber)':r.trip_type==='mixed'?'var(--blue)':'var(--green)';
   var tBg=r.status==='personal'?'#E8DEF8':r.trip_type==='disposal'?'var(--amber-bg)':r.trip_type==='mixed'?'var(--blue-bg)':'var(--green-bg)';
@@ -6325,7 +6366,7 @@ window.openRideDetail=function(el){
       if(!stillOpen || !stillOpen.classList.contains('open')) return;
       if(!window._lastDetailRide || window._lastDetailRide.id !== r.id) return;
       var fresh = res.data;
-      var changed = ['status','notes','final_price','driver_id','payment_method','ride_date','ride_time','from_address','to_address']
+      var changed = ['status','notes','final_price','driver_id','payment_method','ride_date','ride_time','from_address','to_address','change_state','supp_amount','luggage_large','luggage_small']
         .some(function(k){ return String(fresh[k]==null?'':fresh[k]) !== String(r[k]==null?'':r[k]); });
       if(!changed) return;
       var freshEl = document.createElement('div');
@@ -6528,6 +6569,8 @@ function _openRideDetailImpl(el){
   // Vol / train : pastille à côté de la gamme (demande ouverte) ; bloc de suivi une fois la course attribuée
   if(r.status!=='waiting' && r.status!=='offers') body+=(window._trBlockHtml?window._trBlockHtml(r):'');
   var bodyEl=document.getElementById('detail-body');if(bodyEl)bodyEl.innerHTML=body;
+  // Mission modifiée après confirmation : réponse du chauffeur / supplément / choix du client
+  if(bodyEl && r.status==='confirmed' && r.change_state && window._chgBannerHtml) bodyEl.insertAdjacentHTML('afterbegin', _chgBannerHtml(r, isClient));
   // Km inclus : seulement la proposition du chauffeur (offre retenue, ou sa propre offre côté fleet)
   if(isDisp||isMixed){
     (async function(myGen){
@@ -7109,7 +7152,8 @@ function _openRideDetailImpl(el){
       } else if(_rideCancelLocked(r)){
         ft=_clientRideMenu(rId,false,false,_vItem)+'<div style="margin-right:auto;font-size:12px;color:var(--ink3);">Annulation/Modification impossible \u00e0 moins de '+_refundDelayHours(r)+' h du d\u00e9part</div>'+closeBtn;
       } else {
-        ft=_clientRideMenu(rId,false,true,_vItem)+'<div style="margin-right:auto;"></div>'+closeBtn;
+        // Au-delà du délai : la course confirmée peut encore être modifiée (le chauffeur valide ensuite) ou annulée
+        ft=_clientRideMenu(rId,r.status==='confirmed' && r.change_state!=='withdrawn',true,_vItem)+'<div style="margin-right:auto;"></div>'+closeBtn;
       }
       if(r.on_way_at||r.status==='active') ft+='<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');openLiveTracking(\''+String(rId).replace(/'/g,'')+'\')">Suivre en direct</button>';
     } else if(r.status==='done'){
@@ -9522,6 +9566,15 @@ window.openPaymentModal = function(offerId, driverId, amount){
   var totalTvac = amount + tva;
   document.getElementById('payment-tva').textContent = _eur(tva);
   document.getElementById('payment-total').textContent = _eur(totalTvac);
+  // Crédit reporté d'une course annulée (mission_changes.sql) : déduit du montant à payer
+  var _cr=parseFloat((_currentPaymentRide&&_currentPaymentRide.credit_amount)||0)||0, _pcEl=document.getElementById('payment-credit');
+  window._payCredit=_cr;
+  if(_pcEl){
+    var _due=Math.max(0, Math.round((totalTvac-_cr)*100)/100), _back=Math.max(0, Math.round((_cr-totalTvac)*100)/100);
+    _pcEl.innerHTML=_cr>0?'<div class="pay-line"><span>Crédit (course précédente)</span><span style="color:var(--green);font-weight:600;">− '+_eur(Math.min(_cr,totalTvac))+'</span></div>'
+      +'<div class="pay-line pay-total"><span>Reste à payer</span><span>'+_eur(_due)+'</span></div>'
+      +(_back>0?'<div style="font-size:12px;color:var(--ink3);margin-top:6px;">Votre crédit dépasse le prix : '+_eur(_back)+' vous seront remboursés.</div>':''):'';
+  }
   var _tl=document.getElementById('payment-tva-label'); if(_tl) _tl.textContent='TVA '+String(+(TVA_RATE*100).toFixed(2)).replace('.',',')+' %';
   var _pr=_currentPaymentRide, _pc=_pr?(_pr.booking_code||''):'';
   document.getElementById('payment-modal-title').innerHTML=(_pc?'<span class="rd-code">'+_pc+'</span><span class="rd-sep"> · </span>':'')+'<span class="rd-sub">Confirmation et paiement</span>';
@@ -9646,7 +9699,8 @@ window.openPaymentModal = function(offerId, driverId, amount){
   var nextBtn=document.getElementById('payment-btn-next');
   if(nextBtn){
     var _payTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
-    nextBtn.textContent='Payer '+_payTvac.toFixed(2).replace('.',',')+' € par carte';
+    var _payDue=Math.max(0, Math.round((_payTvac-(window._payCredit||0))*100)/100);
+    nextBtn.textContent=(window._payCredit>0&&_payDue===0)?'Confirmer avec mon crédit →':'Payer '+_payDue.toFixed(2).replace('.',',')+' € par carte';
     nextBtn.onclick=function(){ confirmStripeCheckout(_payTvac,_payTvac); };
   }
 
@@ -9744,8 +9798,9 @@ window.selectPaymentMethod = function(method){
     if(method==='stripe'){
       // Compute amount once here so button label and Stripe charge are identical
       var totalTvac=parseFloat((currentOfferAmount*(1+TVA_RATE)).toFixed(2));
-      var totalStripe=totalTvac.toFixed(2).replace('.',',');
-      nextBtn.textContent='Payer '+totalStripe+' \u20ac via Stripe \u2192';
+      var _due2=Math.max(0, Math.round((totalTvac-(window._payCredit||0))*100)/100);
+      var totalStripe=_due2.toFixed(2).replace('.',',');
+      nextBtn.textContent=(window._payCredit>0&&_due2===0)?'Confirmer avec mon crédit \u2192':'Payer '+totalStripe+' \u20ac via Stripe \u2192';
       nextBtn.onclick=function(){confirmStripeCheckout(totalTvac,totalTvac);};
     } else {
       // Immediately show bank transfer details
@@ -9807,6 +9862,7 @@ window.confirmStripeCheckout=async function(amount,totalTvac){
     // Le montant est recalculé par le serveur à partir de l'offre
     var result=await _callEdge('create-checkout',{rideId:currentRideId,offerId:currentOfferId,returnUrl:location.origin+location.pathname});
     if(result.error) throw new Error(result.error);
+    if(result.confirmed){ await _creditConfirmed(currentRideId, result); return; }
     if(!result.url)throw new Error('Lien de paiement manquant');
     window.location.href=result.url;
   }catch(e){
@@ -9815,6 +9871,137 @@ window.confirmStripeCheckout=async function(amount,totalTvac){
   }
 };
 
+
+// ══ MISSION MODIFIÉE APRÈS CONFIRMATION (mission_changes.sql) ══
+function _chgEur(v){ return (Math.round((parseFloat(v)||0)*100)/100).toFixed(2).replace('.',',')+' €'; }
+function _chgWhen(ts){ if(!ts) return ''; var d=new Date(ts); return d.toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'')+' à '+d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit'}); }
+function _chgList(sum){ var it=String(sum||'').split(' · ').filter(Boolean); return it.length?'<ul class="chg-ul">'+it.map(function(x){ var p=x.split(' : '); return '<li>'+_rdEsc(p[0])+(p[1]?' : <b>'+_rdEsc(p.slice(1).join(' : '))+'</b>':'')+'</li>'; }).join('')+'</ul>':''; }
+window._chgBannerHtml=function(r, isClient){
+  var st=r.change_state, code=_rdEsc(r.booking_code||''), id=_rdEsc(r.id);
+  var paid=parseFloat(r.final_price)||0, htva=Math.round(paid/(1+TVA_RATE)*100)/100;
+  if(isClient){
+    if(st==='to_review') return '<div class="chg-ban b"><b class="chg-t">Modification envoyée à votre chauffeur</b>'+_chgList(r.change_summary)+'<div class="chg-sm">En attente de sa réponse. La course reste confirmée.</div></div>';
+    if(st==='supplement'){
+      var sup=parseFloat(r.supp_amount)||0;
+      return '<div class="chg-ban b"><b class="chg-t">Votre chauffeur demande un supplément de '+_chgEur(sup)+'</b>'
+        +'Suite à votre modification, le prix passe de '+_chgEur(paid)+' à <b>'+_chgEur(paid+sup)+' TVAC</b>.'
+        +(r.supp_message?'<div class="chg-msg">« '+_rdEsc(r.supp_message)+' »</div>':'')
+        +'<div class="chg-kv"><span>Déjà payé</span><span>'+_chgEur(paid)+'</span></div><div class="chg-kv"><span>Supplément</span><b>+ '+_chgEur(sup)+'</b></div><div class="chg-kv"><span>Nouveau total</span><b>'+_chgEur(paid+sup)+' TVAC</b></div>'
+        +(r.supp_deadline?'<div class="chg-sm">⏱ Répondez avant le <b>'+_chgWhen(r.supp_deadline)+'</b>. Sans réponse, la course sera annulée et remboursée.</div>':'')
+        +'<div class="chg-act"><button type="button" class="btn chg-no" onclick="_chgChoice(\''+id+'\',\'supplement\')">Refuser</button><button type="button" class="btn btn-green" onclick="_chgPaySupp(this,\''+id+'\')">Payer '+_chgEur(sup)+' →</button></div></div>';
+    }
+    if(st==='withdrawn') return '<div class="chg-ban r"><b class="chg-t">Votre chauffeur s’est retiré</b>Suite à votre modification, il ne peut plus assurer cette course.'
+      +(r.supp_message?'<div class="chg-msg">« '+_rdEsc(r.supp_message)+' »</div>':'')
+      +(r.supp_deadline?'<div class="chg-sm">⏱ Choisissez avant le <b>'+_chgWhen(r.supp_deadline)+'</b>, sinon la course sera annulée et remboursée.</div>':'')
+      +'<div class="chg-act"><button type="button" class="btn btn-green" onclick="_chgChoice(\''+id+'\',\'withdrawn\')">Choisir la suite →</button></div></div>';
+    return '';
+  }
+  // Chauffeur
+  if(st==='to_review') return '<div class="chg-ban o"><b class="chg-t">Le client a modifié cette mission</b>'+_chgList(r.change_summary)+'</div>'
+    +'<div class="chg-box"><div class="chg-kv"><span>Prix payé par le client</span><b>'+_chgEur(paid)+' TVAC</b></div><div class="chg-kv"><span>Soit HTVA</span><b>'+_chgEur(htva)+'</b></div>'
+    +'<div class="chg-q">Que souhaitez-vous faire ?</div>'
+    +'<label class="chg-opt"><input type="radio" name="chg-act" value="accept" onchange="_chgOpt(this)"><span><b>J’accepte la modification</b><small>Au même prix. La mission reste confirmée.</small></span></label>'
+    +'<label class="chg-opt"><input type="radio" name="chg-act" value="supplement" onchange="_chgOpt(this)"><span style="flex:1;"><b>Je demande un supplément</b><small>Le client paie la différence ou annule.</small>'
+      +'<span class="chg-supp" style="display:none;"><span class="chg-lbl">Nouveau prix total (€ HTVA)</span><input type="number" id="chg-price" min="1" step="1" inputmode="decimal" placeholder="'+Math.ceil(htva+10)+'" data-paid="'+paid+'" oninput="_chgPrev()">'
+      +'<span class="chg-prev" id="chg-prev"></span><span class="chg-lbl">Message au client (optionnel)</span><textarea id="chg-msg" rows="2" maxlength="500" placeholder="Trajet plus long, attente supplémentaire…"></textarea></span></span></label>'
+    +'<label class="chg-opt"><input type="radio" name="chg-act" value="withdraw" onchange="_chgOpt(this)"><span><b>Je me retire de la mission</b><small>Le client est prévenu et choisit : republier sa demande ou l’annuler (remboursé).</small></span></label>'
+    +'<div id="chg-err" class="auth-error"></div>'
+    +'<div class="chg-act"><button type="button" class="btn btn-green" onclick="_chgSend(this,\''+id+'\')">Envoyer ma réponse →</button></div></div>';
+  if(st==='supplement') return '<div class="chg-ban b"><b class="chg-t">Supplément demandé : '+_chgEur(r.supp_amount)+'</b>En attente de la réponse du client'+(r.supp_deadline?' (au plus tard le '+_chgWhen(r.supp_deadline)+')':'')+'. Sans réponse, la mission sera annulée.</div>';
+  if(st==='withdrawn') return '<div class="chg-ban r"><b class="chg-t">Vous vous êtes retiré de cette mission</b>En attente de la décision du client (republier ou annuler).</div>';
+  return '';
+};
+window._chgOpt=function(el){
+  document.querySelectorAll('.chg-opt').forEach(function(o){ o.classList.toggle('on', o.contains(el)&&el.checked); });
+  var sp=document.querySelector('.chg-supp'); if(sp) sp.style.display=el.value==='supplement'?'':'none';
+  if(el.value==='supplement') setTimeout(function(){ var i=document.getElementById('chg-price'); if(i) i.focus(); },50);
+};
+window._chgPrev=function(){
+  var i=document.getElementById('chg-price'), pv=document.getElementById('chg-prev'); if(!i||!pv) return;
+  var p=parseFloat(String(i.value).replace(',','.')), paid=parseFloat(i.getAttribute('data-paid'))||0;
+  if(!(p>0)){ pv.textContent=''; return; }
+  var sup=Math.round((p*(1+TVA_RATE)-paid)*100)/100;
+  pv.innerHTML=sup>=0.5?'Supplément pour le client : <b>+ '+_chgEur(sup)+' TVAC</b> (nouveau total '+_chgEur(paid+sup)+')':'<span style="color:var(--red);">Le nouveau prix doit être supérieur au prix payé ('+_chgEur(paid/(1+TVA_RATE))+' HTVA).</span>';
+};
+function _chgRefresh(){ try{ closeModal('m-ride-detail'); }catch(e){} var a=document.querySelector('.page.active'); if(a) showPage(a.id.replace('page-','')); }
+window._chgSend=async function(btn, rideId){
+  var sel=document.querySelector('input[name="chg-act"]:checked'), err=document.getElementById('chg-err');
+  var fail=function(m){ if(err) showError(err,m); };
+  if(!sel) return fail('Choisissez une réponse.');
+  var price=null, msg=(document.getElementById('chg-msg')||{}).value||'';
+  if(sel.value==='supplement'){ price=parseFloat(String((document.getElementById('chg-price')||{}).value||'').replace(',','.')); if(!(price>0)) return fail('Indiquez le nouveau prix total HTVA.'); }
+  if(sel.value==='withdraw' && !confirm('Vous retirer de cette mission ? Le client sera prévenu.')) return;
+  btn.disabled=true;
+  try{
+    var res=await sb.rpc('api_mission_reply',{ p_ride:rideId, p_action:sel.value, p_price:price, p_message:msg||null });
+    if(res.error) throw res.error;
+    showToast(sel.value==='accept'?'✅ Modification acceptée':sel.value==='supplement'?'✅ Supplément envoyé au client':'Vous vous êtes retiré de la mission');
+    _chgRefresh();
+  }catch(e){ fail(e.message||String(e)); btn.disabled=false; }
+};
+window._chgPaySupp=async function(btn, rideId){
+  btn.disabled=true; var t0=btn.textContent; btn.textContent='Redirection vers Stripe…';
+  try{
+    var d=await _callEdge('create-checkout',{ rideId:rideId, kind:'supplement', returnUrl:location.origin+location.pathname });
+    if(d.error) throw new Error(d.error);
+    if(!d.url) throw new Error('Lien de paiement manquant');
+    window.location.href=d.url;
+  }catch(e){ showToast('⚠️ '+(e.message||e)); btn.disabled=false; btn.textContent=t0; }
+};
+// Refus du supplément / chauffeur retiré : annuler ou republier (remboursé ou en crédit)
+window._chgChoice=function(rideId, why){
+  var r=null; try{ r=(window._lastDetailRide&&window._lastDetailRide.id===rideId)?window._lastDetailRide:null; }catch(e){}
+  var paid=r?parseFloat(r.final_price)||0:0;
+  var old=document.getElementById('m-chg-choice'); if(old) old.remove();
+  document.body.insertAdjacentHTML('beforeend','<div class="modal-overlay" id="m-chg-choice"><div class="modal" style="max-width:460px;">'
+    +'<div class="modal-hd"><span class="modal-title">'+(why==='withdrawn'?'Votre chauffeur s’est retiré':'Refuser le supplément')+'</span><button class="close-btn" onclick="closeModal(\'m-chg-choice\')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>'
+    +'<div class="modal-body" style="display:flex;flex-direction:column;gap:10px;">'
+    +'<div style="font-size:13px;color:var(--ink3);">La course actuelle sera annulée. Que souhaitez-vous faire ?</div>'
+    +'<label class="chg-opt"><input type="radio" name="chg-ch" value="cancel" onchange="_chgCh(this)"><span><b>Annuler définitivement</b><small>Remboursement intégral'+(paid?' de '+_chgEur(paid):'')+' sous 5 à 10 jours.</small></span></label>'
+    +'<label class="chg-opt"><input type="radio" name="chg-ch" value="republish" onchange="_chgCh(this)"><span style="flex:1;"><b>Remettre ma demande sur le marketplace</b><small>Une nouvelle demande identique est publiée ; les chauffeurs (y compris l’actuel) peuvent refaire une offre.</small>'
+      +'<span class="chg-sub" style="display:none;">'
+      +'<label class="chg-opt sm"><input type="radio" name="chg-pay" value="republish_refund" checked><span><b>Être remboursé maintenant</b><small>'+(paid?_chgEur(paid)+' remboursés ; ':'')+'je paierai la nouvelle offre choisie.</small></span></label>'
+      +'<label class="chg-opt sm"><input type="radio" name="chg-pay" value="republish_credit"><span><b>Garder '+(paid?_chgEur(paid):'le montant payé')+' en crédit</b><small>Déduit de la nouvelle offre : je ne paierai que la différence (remboursé si je n’en choisis aucune).</small></span></label>'
+      +'</span></span></label>'
+    +'<div id="chg-ch-err" class="auth-error"></div></div>'
+    +'<div class="modal-ft"><button class="btn btn-secondary" onclick="closeModal(\'m-chg-choice\')">Retour</button><button class="btn btn-green" onclick="_chgDecline(this,\''+_rdEsc(rideId)+'\')">Confirmer</button></div>'
+    +'</div></div>');
+  openModal('m-chg-choice');
+};
+window._chgCh=function(el){
+  document.querySelectorAll('#m-chg-choice > .modal > .modal-body > .chg-opt').forEach(function(o){ o.classList.toggle('on', o.contains(el)&&el.checked); });
+  var sb2=document.querySelector('#m-chg-choice .chg-sub'); if(sb2) sb2.style.display=el.value==='republish'?'':'none';
+};
+window._chgDecline=async function(btn, rideId){
+  var c=document.querySelector('input[name="chg-ch"]:checked'), err=document.getElementById('chg-ch-err');
+  if(!c){ showError(err,'Choisissez une option.'); return; }
+  var choice=c.value==='cancel'?'cancel':((document.querySelector('input[name="chg-pay"]:checked')||{}).value||'republish_refund');
+  btn.disabled=true;
+  try{
+    var res=await sb.rpc('api_change_decline',{ p_ride:rideId, p_choice:choice });
+    if(res.error) throw res.error;
+    closeModal('m-chg-choice');
+    var d=res.data||{};
+    showToast(choice==='cancel'?'Course annulée — vous serez remboursé intégralement':choice==='republish_credit'?'✅ Demande republiée ('+(d.booking_code||'')+') avec votre crédit de '+_chgEur(d.credit):'✅ Demande republiée ('+(d.booking_code||'')+') — vous serez remboursé');
+    _chgRefresh();
+  }catch(e){ showError(err, e.message||String(e)); btn.disabled=false; }
+};
+// Délais dépassés (supplément sans réponse…) : traités à l'ouverture des listes (et toutes les 10 min par le serveur)
+// Pastille dans les listes : mission modifiée en attente d'une réponse
+function _chgPill(r){
+  if(!r || r.status!=='confirmed' || !r.change_state) return '';
+  var cl=currentRole==='client';
+  var m={ to_review:cl?['o','Modif. envoyée']:['o','À valider'], supplement:cl?['o','Supplément demandé']:['o','Supplément en attente'], withdrawn:cl?['r','Chauffeur retiré']:['r','Retiré'] }[r.change_state];
+  return m?'<span class="chg-pill '+m[0]+'">'+m[1]+'</span>':'';
+}
+window._chgExpire=function(){ if(sb && currentUser && localStorage.getItem(DEMO_MODE_KEY)!=='1') sb.rpc('expire_mission_changes').then(function(){}).catch(function(){}); };
+// Offre entièrement couverte par le crédit : confirmée par le serveur sans paiement
+async function _creditConfirmed(rideId, res){
+  closeModal('m-payment'); closeModal('m-view-offers');
+  try{ _notifyRideConfirmed(rideId, null); }catch(e){}
+  if(typeof loadClientDashboard==='function') await loadClientDashboard();
+  showToast('✅ Course confirmée grâce à votre crédit'+(res.refund>0?' — '+Number(res.refund).toFixed(2).replace('.',',')+' € vous seront remboursés':''));
+}
 window.paymentNextStep = function(){
   var errEl = document.getElementById('payment-err');
   if(!_selectedPaymentMethod){
@@ -9867,6 +10054,7 @@ window.confirmStripePayment=async function(){
     var amountCents = Math.round(totalTvac * 100);
     var d=await _callEdge('create-checkout',{rideId:currentRideId,offerId:currentOfferId,returnUrl:location.origin+location.pathname});
     if(d.error) throw new Error(d.error);
+    if(d.confirmed){ await _creditConfirmed(currentRideId, d); return; }
     if(!d.url)throw new Error('URL manquante');window.location.href=d.url;
   }catch(e){if(btn)setLoading(btn,false,'Payer par carte bancaire');if(errEl)showError(errEl,e.message||'Erreur Stripe');}
 };;
@@ -13351,7 +13539,7 @@ function getStatusPill(status, offerCount){
 
 function renderRideItem(r){
   var offerCnt=r._offerCount!==undefined?r._offerCount:(r.offers&&r.offers[0]?parseInt(r.offers[0].count)||0:0);
-  var statusPill=(r.no_show_at?_noShowPill()+' ':'')+getStatusPill(r.status, offerCnt);
+  var statusPill=(r.no_show_at?_noShowPill()+' ':'')+getStatusPill(r.status, offerCnt)+_chgPill(r);
   var typeLabel=tripTypeLabel(r.trip_type);
   var from=cleanAddr(r.from_address||'\u2014'),to=r.to_address||'\u2014';
   var isDisp=r.trip_type==='disposal',isMixed=r.trip_type==='mixed';
