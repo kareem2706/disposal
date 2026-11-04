@@ -14128,11 +14128,11 @@ var _rptYear = new Date().getFullYear(), _rptMonth = new Date().getMonth()+1;
 var _rptData = null, _rptSettings = null;
 var _RPT_MONTHS = ['Janvier','F\u00e9vrier','Mars','Avril','Mai','Juin','Juillet','Ao\u00fbt','Septembre','Octobre','Novembre','D\u00e9cembre'];
 // Amounts kept to the 1/1000 (e.g. 9,075 €), shown with 2 decimals, or 3 when needed
-function _rptR3(v){ return Math.round((v||0)*1000)/1000; }
-function _rptR2(v){ return Math.round((v||0)*100)/100; }
+// Montants : toujours arrondis au centime (2 décimales), calculs comme affichage
+function _rptR3(v){ return Math.round(((v||0)+Number.EPSILON)*100)/100; }
+function _rptR2(v){ return Math.round(((v||0)+Number.EPSILON)*100)/100; }
 function _rptMoney(v){
-  var x=_rptR3(v), s=x.toFixed(3);
-  if(s.slice(-1)==='0') s=x.toFixed(2);
+  var s=_rptR2(v).toFixed(2);
   return s.replace('.',',')+' €';
 }
 function _rptPeriod(){ return _rptYear+'-'+String(_rptMonth).padStart(2,'0'); }
@@ -14298,7 +14298,7 @@ function _rptFleetName(f){ return (f && (f.company_name || ((f.first_name||'')+'
 
 window.rptExportCsv=function(){
   if(!_rptData||!_rptData.length) return;
-  var n=function(v){ return String(_rptR3(v)).replace('.',','); };
+  var n=function(v){ return _rptR2(v).toFixed(2).replace('.',','); };
   var lines=[['Fleet','Email','TVA fleet','Courses','Prestation HTVA','TVA prestation %','TVA prestation','Prestation TVAC','Commission %','Commission HTVA','TVA commission %','TVA commission','Commission TVAC','Net a payer'].join(';')];
   _rptData.forEach(function(d){
     lines.push(['"'+_rptFleetName(d.fleet).replace(/"/g,'""')+'"',d.fleet.email||'',d.fleet.vat_number||'',d.rides.length,n(d.htva),d.pVat,n(d.pVatAmt),n(d.pTvac),d.commRate,n(d.cHt),d.cRc?'autoliquidation':d.cVat,n(d.cVatAmt),n(d.cTvac),n(d.net)].join(';'));
