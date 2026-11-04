@@ -5867,20 +5867,25 @@ var _NT_ITEMS=[
   {k:'ride_confirmed', l:'Course confirmée',              d:'Paiement reçu, votre chauffeur est réservé'},
   {k:'driver_message', l:'Message ou modification du chauffeur', d:'Note du chauffeur, changement de véhicule ou de chauffeur'},
   {k:'driver_on_way',  l:'Chauffeur en route',            d:'Votre chauffeur part vers le lieu de prise en charge'},
+  {k:'ride_changes',   l:'Modification de ma course',     d:'Supplément demandé, chauffeur retiré ou modification acceptée'},
   {k:'marketing',      l:'Offres et nouveautés Bleenr',   d:'Nos actualités et promotions, de temps en temps', emailOnly:true}
+];
+// Chauffeur / fleet : notifications liées aux missions (mission_change_emails.sql)
+var _NT_DRV=[
+  {k:'mission_changed', l:'Mission modifiée par le client', d:'Modification à valider, supplément payé par le client'}
 ];
 function _ntRender(isClient){
   var cli=document.getElementById('pf-notif-cli'), drv=document.getElementById('pf-notif-drv');
-  if(cli) cli.style.display=isClient?'block':'none';
-  if(drv) drv.style.display=isClient?'none':'block';
-  if(!isClient) return;
+  if(cli) cli.style.display='block';
+  if(drv) drv.style.display='none';
+  var _items=isClient?_NT_ITEMS:_NT_DRV;
   var prefs=(currentProfile&&currentProfile.notif_prefs)||{};
   var sw=function(ch,it){
     var on=((prefs[ch]||{})[it.k])!==false;
     return '<span class="nt-sw"><input type="checkbox" role="switch" aria-label="'+it.l+(ch==='app'?' — application':' — e-mail')+'" data-ch="'+ch+'" data-k="'+it.k+'"'+(on?' checked':'')+' onchange="_ntToggle(this)"><span></span></span>';
   };
   var box=document.getElementById('nt-list');
-  if(box) box.innerHTML=_NT_ITEMS.map(function(it){
+  if(box) box.innerHTML=_items.map(function(it){
     return '<div class="nt-row"><div><div class="nt-lbl">'+it.l+'</div><div class="nt-desc">'+it.d+'</div></div>'+(it.emailOnly?'<span style="justify-self:center;color:var(--ink4);">—</span>':sw('app',it))+sw('email',it)+'</div>';
   }).join('');
   var ms=document.getElementById('nt-mail-sub');

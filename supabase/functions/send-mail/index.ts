@@ -12,7 +12,7 @@
 //  • le destinataire est lu dans auth.users, pas dans profiles (modifiable).
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { callout, mailLayout, type MailOpts, steps, tripCard } from "../_shared/mail.ts";
+import { box, callout, infoGrid, mailLayout, type MailOpts, steps, tripCard } from "../_shared/mail.ts";
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("MAIL_FROM") ?? "Bleenr <noreply@bleenr.com>";
@@ -68,6 +68,8 @@ const PREF_KEY: Record<string, string> = {
   ride_created: "ride_published", offer_received: "offer_received", offer_updated: "offer_updated",
   ride_confirmed_client: "ride_confirmed", driver_note: "driver_message", assignment_changed: "driver_message",
   driver_on_way: "driver_on_way",
+  supplement_requested: "ride_changes", driver_withdrew: "ride_changes", mission_accepted: "ride_changes",
+  mission_changed: "mission_changed", supplement_paid: "mission_changed",
 };
 async function wantsEmail(userId: string | null | undefined, type: string): Promise<boolean> {
   const key = PREF_KEY[type];
@@ -300,6 +302,53 @@ function build({ type, data = {} }: Payload) {
         note: "Une erreur ? Écrivez-nous à info@bleenr.com.",
       });
 
+    // ── Mission modifiée après confirmation (mission_changes.sql) ──
+    case "mission_changed": {
+      const items = String(d.changes ?? "").split(" · ").filter(Boolean);
+      return mail(`Mission modifiée — à valider (${d.code ?? ""})`, {
+        title: "Le client a modifié votre mission.",
+        preheader: "Acceptez, demandez un supplément ou retirez-vous.",
+        intro: `Bonjour,<br>le client a modifié la mission ${b(d.code)}. Merci de lui répondre rapidement.`,
+        card: items.length ? callout("Changements", items.map((x) => "• " + x).join("<br>"), "warn") : "",
+        after: trip(d, { title: "La mission (après modification)", price: false }),
+        cta: { label: "Répondre au client", url },
+        note: "Trois choix : accepter au même prix, demander un supplément, ou vous retirer.",
+      });
+    }
+    case "supplement_requested":
+      return mail(`Supplément demandé — ${d.code ?? ""}`, {
+        title: "Votre chauffeur demande un supplément.",
+        preheader: `Supplément de ${d.amount ?? ""} suite à votre modification.`,
+        intro: `${hi(d.clientName)}suite à votre modification de la course ${b(d.code)}, votre chauffeur demande un supplément de ${b(d.amount)}.`,
+        card: box(infoGrid([["Déjà payé", d.paid ?? ""], ["Supplément", d.amount ? "+ " + d.amount : ""], ["Nouveau total TVAC", d.total ?? ""], ["Répondre avant le", d.deadline ?? ""]])),
+        after: (d.note ? callout("Message du chauffeur", d.note, "info") + "<div style=\"height:12px\"></div>" : "") + trip(d, { price: false }),
+        cta: { label: "Payer ou refuser", url },
+        note: "Sans réponse avant le délai, la course sera annulée et remboursée intégralement.",
+      });
+    case "driver_withdrew":
+      return mail(`Votre chauffeur s'est retiré — ${d.code ?? ""}`, {
+        title: "Votre chauffeur s'est retiré.",
+        intro: `${hi(d.clientName)}suite à votre modification de la course ${b(d.code)}, votre chauffeur ne peut plus l'assurer.`,
+        card: callout("Choisissez la suite", "Republier votre demande pour recevoir de nouvelles offres (remboursé ou en crédit), ou l'annuler avec remboursement intégral." +
+          (d.deadline ? `<br><br>Choisissez avant le <b>${d.deadline}</b>, sinon la course sera annulée et remboursée.` : ""), "danger"),
+        after: (d.note ? callout("Message du chauffeur", d.note, "neutral") + "<div style=\"height:12px\"></div>" : "") + trip(d, { price: false }),
+        cta: { label: "Choisir la suite", url },
+      });
+    case "mission_accepted":
+      return mail(`Modification acceptée — ${d.code ?? ""}`, {
+        title: "Votre modification est acceptée.",
+        intro: `${hi(d.clientName)}votre chauffeur a accepté la modification de la course ${b(d.code)}. Elle reste confirmée au même prix.`,
+        card: trip(d, { price: false }),
+        cta: { label: "Voir la course", url },
+      });
+    case "supplement_paid":
+      return mail(`Supplément payé — ${d.code ?? ""}`, {
+        title: "Le client a payé le supplément.",
+        intro: `Bonjour,<br>le client a payé le supplément de ${b(d.amount)} pour la mission ${b(d.code)}. Elle est confirmée avec ses modifications.`,
+        card: trip(d, { title: "La mission", price: false }),
+        cta: { label: "Voir la mission", url },
+      });
+
     default:
       throw new Error(`Type d'email inconnu : ${type}`);
   }
@@ -322,7 +371,8 @@ Deno.serve(async (req: Request) => {
     const hookHdr = req.headers.get("x-hook-secret") ?? "";
     if (hookHdr) {
       if (!HOOK_SECRET || hookHdr !== HOOK_SECRET) return json({ ok: false, error: "Non autorisé" }, 403);
-      if (!["ride_completed", "driver_on_way", "ride_no_show", "offer_received", "offer_updated", "driver_note", "assignment_changed"].includes(type)
+      if (!["ride_completed", "driver_on_way", "ride_no_show", "offer_received", "offer_updated", "driver_note", "assignment_changed",
+            "mission_changed", "supplement_requested", "driver_withdrew", "mission_accepted", "supplement_paid"].includes(type)
           || !Array.isArray(payload?.to_user_ids)) {
         return json({ ok: false, error: "Non autorisé" }, 403);
       }
