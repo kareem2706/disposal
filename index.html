@@ -479,6 +479,12 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 /* ═══ MODAL ═══ */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(14,14,12,.45);z-index:800;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
 .modal-overlay.open{display:flex;animation:fadeIn .15s ease;}
+#m-pax-edit.glass-ov{position:fixed;inset:0;background:rgba(20,22,20,.28);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);z-index:9999;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .18s ease;}
+#m-pax-edit .glass-sheet{width:100%;max-width:520px;padding:14px 22px calc(28px + env(safe-area-inset-bottom));border-radius:26px 26px 0 0;background:linear-gradient(180deg,rgba(250,250,250,.62),rgba(232,234,236,.55));-webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);border:1px solid rgba(255,255,255,.55);border-bottom:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.75),0 -10px 40px rgba(0,0,0,.18);animation:glassUp .24s cubic-bezier(.2,.8,.2,1);}
+#m-pax-edit .glass-sheet::before{content:'';display:block;width:38px;height:5px;border-radius:3px;background:rgba(60,60,67,.3);margin:0 auto 16px;}
+#m-pax-edit .glass-sheet input,#m-pax-edit .glass-sheet textarea{background:rgba(255,255,255,.78)!important;border-color:rgba(255,255,255,.9)!important;box-shadow:0 1px 2px rgba(0,0,0,.05);}
+#m-pax-edit .glass-sheet .btn-secondary{background:rgba(255,255,255,.55);border-color:rgba(255,255,255,.8);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
+@keyframes glassUp{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
 .modal{background:white;border-radius:var(--r-xl);width:100%;max-width:480px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--sh-lg);animation:scaleIn .2s var(--ease);overflow:hidden;}
 #m-view-offers .modal{max-width:680px;}
 @keyframes scaleIn{from{opacity:0;transform:scale(.96) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
@@ -12087,8 +12093,8 @@ window.savePersonalMission=async function(btn){
 // ── Rating functions ──
 // ── Passenger info edit helpers ──
 function _paxModalHtml(title, fields, saveType, rideId){
-  return '<div id="m-pax-edit" style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)this.remove();">'
-    +'<div style="background:#EEF4FB;border-radius:16px 16px 0 0;padding:24px 22px 32px;width:100%;max-width:520px;box-shadow:0 -4px 24px rgba(0,0,0,.12);">'
+  return '<div id="m-pax-edit" class="glass-ov" onclick="if(event.target===this)this.remove();">'
+    +'<div class="glass-sheet">'
       +'<div style="font-size:15px;font-weight:700;margin-bottom:16px;">'+title+'</div>'
       +fields
       +'<div style="display:flex;gap:8px;margin-top:16px;">'
