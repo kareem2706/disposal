@@ -7247,7 +7247,9 @@ function _openRideDetailImpl(el){
       if(currentUser&&r.driver_id===currentUser.id){
         // Mission progress: En chemin -> Pick up terminé -> Mission terminée (timestamp stored at each step)
         if(r.on_way_at||r.pickup_at) _canAssign=false;
-        ft=_rideActionsMenu(rId,_canAssign,_canNote)+_missionProgressHtml(r)+closeBtn+_missionStepBtn(r);
+        // Modification du client pas encore traitée (ou chauffeur retiré) : ni « En chemin », ni actions
+        if(r.change_state==='to_review'||r.change_state==='withdrawn') ft='<span style="flex:1;"></span>'+closeBtn;
+        else ft=_rideActionsMenu(rId,_canAssign,_canNote)+_missionProgressHtml(r)+closeBtn+_missionStepBtn(r);
       } else if(_isOverdue){
         ft=_rideActionsMenu(rId,false,_canNote)+'<span style="flex:1;"></span>'+closeBtn+'<button class="btn btn-green" onclick="completeRide(\''+rId+'\')" style="margin-left:8px;">Terminer la course</button>';
       } else {

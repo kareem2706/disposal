@@ -377,6 +377,21 @@ drop trigger if exists z_rides_credit_release on public.rides;
 create trigger z_rides_credit_release after update of status on public.rides
   for each row execute function public.trg_rides_credit_release();
 
+-- Pas de départ (« En chemin », pick up…) tant que le chauffeur n'a pas répondu à la modification ou s'est retiré
+create or replace function public.trg_rides_change_block_steps()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  if old.change_state in ('to_review','withdrawn')
+     and (new.on_way_at is distinct from old.on_way_at or new.pickup_at is distinct from old.pickup_at
+          or (new.status in ('active','done') and new.status is distinct from old.status)) then
+    raise exception 'Répondez d''abord à la modification du client (accepter, supplément ou retrait).' using errcode = '42501';
+  end if;
+  return new;
+end $$;
+drop trigger if exists b_rides_change_block_steps on public.rides;
+create trigger b_rides_change_block_steps before update on public.rides
+  for each row execute function public.trg_rides_change_block_steps();
+
 -- ── Délais dépassés ──────────────────────────────────────────────
 --  supplément / chauffeur retiré sans réponse du client → annulée, remboursable
 --  modification non traitée par le chauffeur → acceptée au même prix
