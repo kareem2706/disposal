@@ -8245,7 +8245,7 @@ window.deleteRide = async function(rideId){
       if(isPaid){
         var refundMsg = '';
         if(isStripe || isBank){
-          refundMsg = '💳 <strong>Remboursement partiel</strong> — Le prix payé vous sera remboursé, <strong>déduction faite des frais Stripe</strong> non récupérables.';
+          refundMsg = '💳 <strong>Remboursement intégral</strong> — Le prix payé vous sera intégralement remboursé sur votre carte (visible sous 5 à 10 jours ouvrables).';
         } else {
           refundMsg = 'ℹ️ Votre remboursement sera traité selon le mode de paiement utilisé.';
         }
@@ -15241,7 +15241,7 @@ window.arOpenDetail = async function(row){
     var isRefundBank   = r.payment_method === 'bank_transfer';
     var isRefundStripe = r.payment_method === 'stripe';
     var refundMethod   = isRefundBank ? 'Virement bancaire' : isRefundStripe ? 'Stripe' : r.payment_method;
-    var refundNote     = isRefundStripe ? '<div style="font-size:11px;color:var(--red);margin-top:4px;">⚠️ Déduire les frais Stripe non récupérables avant remboursement.</div>' : '';
+    var refundNote     = isRefundStripe ? '<div style="font-size:11px;color:var(--ink3);margin-top:4px;">Remboursement intégral du montant payé (dans Stripe : Rembourser le paiement).</div>' : '';
     body += '<div style="padding:14px 16px;background:var(--red-bg);border-radius:var(--r);border:1.5px solid var(--red)22;">'
       +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;color:var(--red);">'
         +'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>'
