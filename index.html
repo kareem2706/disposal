@@ -7210,7 +7210,7 @@ function _openRideDetailImpl(el){
       if(r.final_price){
         var pm = r.payment_method||'';
         if(pm==='refunded'){
-          cancelledPriceTag = '<div style="margin-right:auto;padding:6px 12px;background:var(--green-bg);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--green);">Montant remboursé\u00a0: '+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</div>';
+          cancelledPriceTag = '<div style="margin-right:auto;padding:6px 12px;background:#FDECEA;border-radius:var(--r);font-size:13px;font-weight:600;color:var(--red);">Montant remboursé\u00a0: '+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</div>';
         } else if(pm==='non_refundable'||!pm){
           cancelledPriceTag = '<div style="margin-right:auto;padding:6px 12px;background:var(--red-bg);border-radius:var(--r);font-size:13px;font-weight:600;color:var(--red);">Montant non remboursé\u00a0: '+parseFloat(r.final_price).toFixed(2).replace('.',',')+'\u00a0€</div>';
         } else {
