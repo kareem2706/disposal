@@ -6465,7 +6465,9 @@ function _openRideDetailImpl(el){
   if(r.passengers) metaParts.push(r.passengers+' pax');
   if(r.vehicle_type) metaParts.push(_DOC_CLASSES[r.vehicle_type]||r.vehicle_type);
   var metaLine=metaParts.length?'<div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;font-size:12px;color:var(--ink3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>'+metaParts.join(' &middot; ')+'</div>':'';
-  var _stEl=document.getElementById('detail-status'); if(_stEl) _stEl.innerHTML=(r.no_show_at?_noShowPill(true)+' ':'')+_statusBadge(r.status,r._offerCount||0);
+  var _stEl=document.getElementById('detail-status'); if(_stEl) _stEl.innerHTML=(r.no_show_at?_noShowPill(true)+' ':'')+(_chgPending(r)
+      ?'<span style="display:inline-flex;align-items:center;gap:6px;background:#FFF1DC;color:#9A5B00;border:1px solid #F2D9AE;border-radius:999px;padding:6px 12px 6px 10px;font-size:12.5px;font-weight:700;white-space:nowrap;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'+String(t('confirmed')).replace(/^\s*●\s*/,'')+'</span>'
+      :_statusBadge(r.status,r._offerCount||0));
   var body=(isMixed&&mixedSegs.length)?'':_rideMetaChips(r);
 
   
@@ -9992,9 +9994,9 @@ window._chgDecline=async function(btn, rideId){
 };
 // Délais dépassés (supplément sans réponse…) : traités à l'ouverture des listes (et toutes les 10 min par le serveur)
 // Client : modification envoyée au chauffeur → « Confirmée » en orange avec une petite horloge (en attente de sa réponse)
-function _chgPending(r){ return !!r && currentRole==='client' && r.status==='confirmed' && r.change_state==='to_review'; }
+function _chgPending(r){ return !!r && r.status==='confirmed' && r.change_state==='to_review'; }
 function _chgConfirmedPill(){
-  return '<span class="pill" title="Modification envoyée — en attente de la réponse du chauffeur" style="background:#FFF1DC;color:#9A5B00;display:inline-flex;align-items:center;gap:5px;">'
+  return '<span class="pill" title="'+(currentRole==='client'?'Modification envoyée — en attente de la réponse du chauffeur':'Mission modifiée par le client — à valider')+'" style="background:#FFF1DC;color:#9A5B00;display:inline-flex;align-items:center;gap:5px;">'
     +'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'+String(t('confirmed')).replace(/^\s*●\s*/,'')+'</span>';
 }
 // Pastille dans les listes : mission modifiée en attente d'une réponse
