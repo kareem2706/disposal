@@ -8749,7 +8749,8 @@ window.submitRide = async function(){
         if((_prevRide.vehicle_type||'') !== (rideData.vehicle_type||'')) _chg.push('v\u00e9hicule');
         if((_prevRide.trip_type||'') !== (rideData.trip_type||'')) _chg.push('type de course');
         if((_prevRide.notes||'') !== (rideData.notes||'')) _chg.push('note / d\u00e9tails');
-        if(_chg.length) _notifyRideUpdated(editId, _chg);
+        // Mission confirmée : le serveur envoie déjà « Mission modifiée — à valider » au chauffeur (un seul e-mail)
+        if(_chg.length && !(_prevRide.status==='confirmed' && _prevRide.driver_id)) _notifyRideUpdated(editId, _chg);
       }
     } else {
       // Création par le serveur (référence BLxx-MMAA### calculée par le serveur)
