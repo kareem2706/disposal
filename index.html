@@ -3325,6 +3325,34 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 
 <div class="toast" id="toast"></div>
 <script>
+// Pop-up de résultat de paiement (même présentation que « Paiement confirmé ») : tone = cancel | error
+window._payPopup=function(o){
+  o=o||{};
+  var old=document.getElementById('pay-popup'); if(old) old.remove();
+  var esc=function(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  var err=o.tone==='error';
+  var grad=err?'linear-gradient(135deg,#A8322A 0%,#C8453A 100%)':'linear-gradient(135deg,#9A5B00 0%,#D98A1C 100%)';
+  var ic=err?'<path d="M12 7v6M12 16.5v.5"/>':'<path d="M7 7l10 10M17 7L7 17"/>';
+  var ov=document.createElement('div'); ov.id='pay-popup';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(14,20,16,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML='<div style="background:#fff;border-radius:20px;max-width:400px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);font-family:\'DM Sans\',sans-serif;">'
+    +'<div style="background:'+grad+';padding:30px 24px 24px;text-align:center;color:#fff;">'
+      +'<div style="width:62px;height:62px;border-radius:50%;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">'
+        +'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">'+ic+'</svg></div>'
+      +'<div style="font-size:20px;font-weight:700;letter-spacing:-.2px;">'+esc(o.title||'')+'</div>'
+      +(o.sub?'<div style="font-size:13.5px;opacity:.88;margin-top:5px;">'+esc(o.sub)+'</div>':'')
+    +'</div>'
+    +'<div style="padding:18px 24px 0;font-size:14px;color:#3F4A44;line-height:1.55;text-align:center;">'+esc(o.msg||'')+'</div>'
+    +'<div style="padding:20px 24px 22px;display:flex;gap:10px;">'
+      +'<button data-act="rides" style="flex:1;padding:12px;background:#fff;color:#1B5E3B;border:1.5px solid #CFE3D6;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Mes demandes</button>'
+      +'<button data-act="close" style="flex:1;padding:12px;background:#1B5E3B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">'+esc(o.ok||'Fermer')+'</button>'
+    +'</div></div>';
+  ov.addEventListener('click',function(e){
+    var b=e.target.closest('button[data-act]'); if(!b) return;
+    ov.remove(); if(b.dataset.act==='rides' && typeof showPage==='function') showPage('rides');
+  });
+  document.body.appendChild(ov);
+};
 (function(){
   var params=new URLSearchParams(window.location.search);
   var payStatus=params.get('payment'),pRide=params.get('ride'),pOffer=params.get('offer'),pSess=params.get('session_id'),pSupp=params.get('supp');
@@ -3341,20 +3369,8 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     var title = payStatus==='cancel' ? 'Paiement annulé' : 'Paiement échoué';
 
     window._showStripeCancel = function(){
-      // Remove any existing overlay
-      var old = document.getElementById('stripe-cancel-overlay');
-      if(old) old.remove();
-
-      var div = document.createElement('div');
-      div.id = 'stripe-cancel-overlay';
-      div.style.cssText = 'position:fixed;inset:0;background:rgba(14,14,12,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
-      div.innerHTML = '<div style="background:#fff;border-radius:16px;padding:36px 28px;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.18);">'
-        +'<div style="font-size:52px;margin-bottom:12px;">❌</div>'
-        +'<div style="font-size:19px;font-weight:700;color:#C0392B;margin-bottom:10px;">'+title+'</div>'
-        +'<div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:24px;">'+msg+'</div>'
-        +'<button onclick="document.getElementById(\'stripe-cancel-overlay\').remove()" style="padding:11px 28px;background:#1A1A18;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">OK</button>'
-        +'</div>';
-      document.body.appendChild(div);
+      window._payPopup({ tone: payStatus==='cancel'?'cancel':'error', title: title,
+        sub: payStatus==='cancel'?'Aucun montant n’a été débité.':'Aucun montant n’a été débité.', msg: msg });
       window._stripePendingReturn = null;
     };
 
@@ -4515,15 +4531,7 @@ function enterApp(){
         }catch(e){ console.error('Stripe return error:',e); showPaymentResult('error','Erreur','Paiement re\u00e7u mais erreur de mise \u00e0 jour. Contactez le support.'); }
       } else if(_sr.status==='error'){
         if(typeof loadClientDashboard==='function') await loadClientDashboard();
-        var _eo=document.createElement('div');
-        _eo.style.cssText='position:fixed;inset:0;background:rgba(14,14,12,.55);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
-        _eo.innerHTML='<div style="background:#fff;border-radius:16px;padding:36px 28px;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.18);">'
-          +'<div style="font-size:52px;margin-bottom:12px;">❌</div>'
-          +'<div style="font-size:19px;font-weight:700;color:#C0392B;margin-bottom:10px;">Le paiement a échoué</div>'
-          +'<div style="font-size:14px;color:#555;line-height:1.6;margin-bottom:24px;">Le paiement n\'a pas pu être traité. Vous pouvez réessayer depuis vos demandes.</div>'
-          +'<button onclick="this.closest(\'[style*=fixed]\').remove()" style="padding:11px 28px;background:#1A1A18;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">OK</button>'
-          +'</div>';
-        document.body.appendChild(_eo);
+        _payPopup({ tone:'error', title:'Le paiement a échoué', sub:'Aucun montant n’a été débité.', msg:'Le paiement n’a pas pu être traité. Vous pouvez réessayer depuis vos demandes.' });
       }
     }, 1200);
     }
@@ -11612,6 +11620,7 @@ async function _liveRefresh(){
 
 
 window.showPaymentResult=function(type,title,msg){
+  if(type!=='success'){ _payPopup({ tone:'error', title:title, msg:msg }); return; }
   var el=document.getElementById('m-payment-result');if(!el)return;
   document.getElementById('payment-result-icon').textContent=type==='success'?'✅':'❌';
   document.getElementById('payment-result-title').textContent=title;
