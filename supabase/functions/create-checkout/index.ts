@@ -70,7 +70,7 @@ Deno.serve(async (req: Request) => {
           unit_amount: Math.round(amt * 100) }, quantity: 1 }],
         metadata: { rideId, kind: "supplement", userId: user.id },
         success_url: `${origin0}/?payment=success&ride=${rideId}&supp=1&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin0}/?payment=cancel`,
+        cancel_url: `${origin0}/?payment=cancel&t=${Date.now()}`,   // URL unique : jamais servie depuis le cache du navigateur
       });
       await admin.from("ride_checkouts").insert({ session_id: ss.id, ride_id: rideId, offer_id: null, user_id: user.id, amount: amt, status: "open" });
       return json({ url: ss.url, amount: amt });
@@ -148,7 +148,7 @@ Deno.serve(async (req: Request) => {
       metadata: { rideId, offerId, userId: user.id },
       success_url:
         `${origin}/?payment=success&ride=${rideId}&offer=${offerId}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/?payment=cancel`,
+      cancel_url: `${origin}/?payment=cancel&t=${Date.now()}`,   // URL unique : jamais servie depuis le cache du navigateur
     });
 
     await admin.from("ride_checkouts").insert({
