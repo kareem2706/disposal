@@ -5926,7 +5926,7 @@ async function openOffersModal(rideId){
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     // Fetch ride data for payment modal route info
     const { data: rideData, error: rideErr } = await sb.from('rides')
-      .select('id, booking_code, from_address, to_address, trip_type, ride_date, ride_time, passengers, vehicle_type, notes')
+      .select('*')   // toutes les colonnes (bagages compris) : rappel de la demande
       .eq('id', rideId)
       .maybeSingle();
     if(rideErr){ console.error('offers modal ride error:', rideErr); window._offersLoadErr = 'Course : '+(rideErr.message||rideErr.code); }
