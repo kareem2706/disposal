@@ -3507,7 +3507,7 @@ const TX = {
        client:'Client', driver:'Fleet',
        waiting:'En attente', offers_pill:'offres', offer_submitted:'Offre soumise', confirmed:'● Confirmée',
        active:'● En cours', done:'Terminée', cancelled:'Annulée',
-       toast_ride:'✅ Demande publiée !', toast_offer:'✅ Offre envoyée !',
+       toast_ride:'✅ Demande publiée !', toast_ride_edit:'✅ Demande modifiée !', toast_offer:'✅ Offre envoyée !',
        toast_offer_acc:'🎉 Chauffeur confirmé !', toast_saved:'✅ Sauvegardé',
        toast_rated:'⭐ Merci pour votre évaluation !', toast_subcontract:'✅ Mission publiée',
        toast_signout:'À bientôt !', toast_copy:'📋 Lien copié',
@@ -3542,7 +3542,7 @@ const TX = {
        client:'Client', driver:'Fleet',
        waiting:'Pending', offers_pill:'offers', offer_submitted:'Offer submitted', confirmed:'● Confirmed',
        active:'● In progress', done:'Completed', cancelled:'Cancelled',
-       toast_ride:'✅ Request published!', toast_offer:'✅ Offer sent!',
+       toast_ride:'✅ Request published!', toast_ride_edit:'✅ Request updated!', toast_offer:'✅ Offer sent!',
        toast_offer_acc:'🎉 Driver confirmed!', toast_saved:'✅ Saved',
        toast_rated:'⭐ Thank you for your review!', toast_subcontract:'✅ Mission published',
        toast_signout:'Goodbye!', toast_copy:'📋 Link copied',
@@ -3577,7 +3577,7 @@ const TX = {
        client:'Cliente', driver:'Fleet',
        waiting:'En espera', offers_pill:'ofertas', offer_submitted:'Oferta enviada', confirmed:'● Confirmado',
        active:'● En curso', done:'Completado', cancelled:'Cancelado',
-       toast_ride:'✅ ¡Solicitud publicada!', toast_offer:'✅ ¡Oferta enviada!',
+       toast_ride:'✅ ¡Solicitud publicada!', toast_ride_edit:'✅ ¡Solicitud modificada!', toast_offer:'✅ ¡Oferta enviada!',
        toast_offer_acc:'🎉 ¡Chófer confirmado!', toast_saved:'✅ Guardado',
        toast_rated:'⭐ ¡Gracias por tu valoración!', toast_subcontract:'✅ Misión publicada',
        toast_signout:'¡Hasta luego!', toast_copy:'📋 Enlace copiado',
@@ -8775,7 +8775,7 @@ window.submitRide = async function(){
 
     closeModal('m-new-ride');
     cancelRideModal();
-    showToast(t('toast_ride'));
+    showToast(editId ? t('toast_ride_edit') : t('toast_ride'));
     await loadClientDashboard();
     var ridesPage=document.getElementById('page-rides');
     if(ridesPage&&ridesPage.classList.contains('active')&&typeof loadRides==='function')await loadRides();
