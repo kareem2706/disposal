@@ -5156,17 +5156,8 @@ async function _autoCancelOverdueRides(pendingRides){
 function _driverCanHandleRide(r){
   // No active vehicle: the fleet cannot handle any request, Economy included
   if(!_fleetVehicles || _fleetVehicles.length === 0) return false;
-  if(!r.vehicle_type || r.vehicle_type === '') return true;
-  var _vehicleServes = {
-    lowcost:  ['lowcost'],
-    business: ['lowcost','business'],
-    van:      ['lowcost','business','van'],
-    luxe:     ['lowcost','business','luxe']
-  };
-  return _fleetVehicles.some(function(v){
-    var s = _vehicleServes[v.vehicle_class] || [v.vehicle_class];
-    return s.indexOf(r.vehicle_type) >= 0;
-  });
+  // Même règle que le serveur (ride_rules.sql) : gamme compatible (« Toute gamme » incluse) et assez de places
+  return _fleetVehicles.some(function(v){ return v.status!=='rejected' && _vehFitsRide(v, r.vehicle_type, r.passengers); });
 }
 
 // Banner shown to a fleet that is not verified yet
