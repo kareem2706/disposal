@@ -6234,7 +6234,7 @@ function renderMkItem(r,isSub,isMine){
   var dayNum=rDate2?rDate2.getDate().toString().padStart(2,'0'):'--';
   var monStr=rDate2?rDate2.toLocaleDateString('fr-FR',{month:'short'}).toUpperCase().replace('.',''):'';
   var offerCnt2=r._offerCount||0;
-  var statusPill=(r.no_show_at?_noShowPill()+' ':'')+getStatusPill(r.status,offerCnt2)+_chgPill(r);
+  var statusPill=(r.no_show_at?_noShowPill()+' ':'')+(_chgPending(r)?_chgConfirmedPill():getStatusPill(r.status,offerCnt2)+_chgPill(r));
   var tLabel=r.status==='personal'?'Personnel':r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';
   var tColor=r.status==='personal'?'#6750A4':r.trip_type==='disposal'?'var(--amber)':r.trip_type==='mixed'?'var(--blue)':'var(--green)';
   var tBg=r.status==='personal'?'#E8DEF8':r.trip_type==='disposal'?'var(--amber-bg)':r.trip_type==='mixed'?'var(--blue-bg)':'var(--green-bg)';
@@ -9991,11 +9991,18 @@ window._chgDecline=async function(btn, rideId){
   }catch(e){ showError(err, e.message||String(e)); btn.disabled=false; }
 };
 // Délais dépassés (supplément sans réponse…) : traités à l'ouverture des listes (et toutes les 10 min par le serveur)
+// Client : modification envoyée au chauffeur → « Confirmée » en orange avec une petite horloge (en attente de sa réponse)
+function _chgPending(r){ return !!r && currentRole==='client' && r.status==='confirmed' && r.change_state==='to_review'; }
+function _chgConfirmedPill(){
+  return '<span class="pill" title="Modification envoyée — en attente de la réponse du chauffeur" style="background:#FFF1DC;color:#9A5B00;display:inline-flex;align-items:center;gap:5px;">'
+    +'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'+t('confirmed')+'</span>';
+}
 // Pastille dans les listes : mission modifiée en attente d'une réponse
 function _chgPill(r){
   if(!r || r.status!=='confirmed' || !r.change_state) return '';
   var cl=currentRole==='client';
-  var m={ to_review:cl?['o','Modif. envoyée']:['o','À valider'], supplement:cl?['o','Supplément demandé']:['o','Supplément en attente'], withdrawn:cl?['r','Chauffeur retiré']:['r','Retiré'] }[r.change_state];
+  if(cl && r.change_state==='to_review') return '';
+  var m={ to_review:['o','À valider'], supplement:cl?['o','Supplément demandé']:['o','Supplément en attente'], withdrawn:cl?['r','Chauffeur retiré']:['r','Retiré'] }[r.change_state];
   return m?'<span class="chg-pill '+m[0]+'">'+m[1]+'</span>':'';
 }
 window._chgExpire=function(){ if(sb && currentUser && localStorage.getItem(DEMO_MODE_KEY)!=='1') sb.rpc('expire_mission_changes').then(function(){}).catch(function(){}); };
@@ -13543,7 +13550,7 @@ function getStatusPill(status, offerCount){
 
 function renderRideItem(r){
   var offerCnt=r._offerCount!==undefined?r._offerCount:(r.offers&&r.offers[0]?parseInt(r.offers[0].count)||0:0);
-  var statusPill=(r.no_show_at?_noShowPill()+' ':'')+getStatusPill(r.status, offerCnt)+_chgPill(r);
+  var statusPill=(r.no_show_at?_noShowPill()+' ':'')+(_chgPending(r)?_chgConfirmedPill():getStatusPill(r.status, offerCnt)+_chgPill(r));
   var typeLabel=tripTypeLabel(r.trip_type);
   var from=cleanAddr(r.from_address||'\u2014'),to=r.to_address||'\u2014';
   var isDisp=r.trip_type==='disposal',isMixed=r.trip_type==='mixed';
