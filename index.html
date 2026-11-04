@@ -6947,8 +6947,8 @@ function _openRideDetailImpl(el){
       bodyElMain.insertAdjacentHTML('afterbegin',
         '<div class="rdv-hero"><small>Course confirmée'+(r.booking_code?' \u00b7 '+_rdEsc(r.booking_code):'')+'</small><b>'+_rdEsc(_heroT)+'</b>'
           +'<p>'+_rdEsc([_rdD+(r.ride_time?' \u00e0 '+r.ride_time.slice(0,5):''), _trj].filter(Boolean).join(' \u00b7 '))+'</p></div>'
-        +'<div class="rdv-vch"><div class="vi">'+_docIc+'</div><div style="min-width:0"><div class="rdv-t">Voucher de transport</div><div class="rdv-s">\u00c0 pr\u00e9senter \u00e0 votre chauffeur \u00b7 PDF</div></div>'
-          +'<button class="rdv-dl" type="button" onclick="generateRideVoucher(\''+String(r.id).replace(/'/g,'')+'\')">'+_dlIc+'<span>T\u00e9l\u00e9charger</span></button></div>');
+        +(r.change_state?'':'<div class="rdv-vch"><div class="vi">'+_docIc+'</div><div style="min-width:0"><div class="rdv-t">Voucher de transport</div><div class="rdv-s">\u00c0 pr\u00e9senter \u00e0 votre chauffeur \u00b7 PDF</div></div>'
+          +'<button class="rdv-dl" type="button" onclick="generateRideVoucher(\''+String(r.id).replace(/'/g,'')+'\')">'+_dlIc+'<span>T\u00e9l\u00e9charger</span></button></div>'));
       // Date, passagers et trajet sont dans le bandeau : on retire les pastilles et la carte du trajet (sauf course mixte)
       var _chipsEl=bodyElMain.querySelector('.rmc-wrap'); if(_chipsEl) _chipsEl.remove();
       if(!isMixed){ var _rtEl=bodyElMain.querySelector('.rd-route'); if(_rtEl) _rtEl.remove(); }
@@ -7156,6 +7156,9 @@ function _openRideDetailImpl(el){
         var _vOnly=_vItem.slice(_paxItems.length);
         var _probItem='<button class="ft-menu-item rd-prob-item" style="color:var(--red);" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openRideProblem(\''+String(rId).replace(/'/g,'')+'\')"><svg style="color:var(--red);" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Signaler un probl\u00e8me</button>';
         ft=_clientRideMenu(rId,false,false,_vOnly+_probItem)+'<div style="margin-right:auto;"></div>'+closeBtn;
+      } else if(r.change_state){
+        // Modification en attente de réponse du chauffeur (ou supplément / retrait) : seulement l'annulation
+        ft=_clientRideMenu(rId,false,true,'')+'<div style="margin-right:auto;"></div>'+closeBtn;
       } else if(_rideCancelLocked(r)){
         // Moins de 48 h : passager, note, voucher ; annulation possible mais non remboursable
         ft=_clientRideMenu(rId,false,true,_vItem)+'<div style="margin-right:auto;font-size:12px;color:var(--ink3);">Modification impossible \u00e0 moins de '+_refundDelayHours(r)+' h du d\u00e9part</div>'+closeBtn;

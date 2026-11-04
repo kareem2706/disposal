@@ -89,6 +89,9 @@ begin
   if r.change_state = 'withdrawn' then
     raise exception 'Votre chauffeur s''est retiré : choisissez d''abord la suite à donner à votre demande.' using errcode = '42501';
   end if;
+  if r.change_state in ('to_review','supplement') then
+    raise exception 'Une modification est déjà en attente de la réponse de votre chauffeur.' using errcode = '42501';
+  end if;
   d := _api_cols('public.rides', p, array['trip_type','from_address','to_address','ride_date','ride_time',
                                           'passengers','vehicle_type','notes','final_price','luggage_large','luggage_small']);
   if d ? 'trip_type' and d ->> 'trip_type' not in ('ab','disposal','mixed') then raise exception 'Type de course invalide' using errcode = '22023'; end if;
@@ -114,7 +117,6 @@ begin
   if r.status = 'confirmed' and r.driver_id is not null then
     v_chg := _mission_changes(r, n);
     if v_chg <> '' then
-      if r.change_state = 'to_review' and coalesce(r.change_summary, '') <> '' then v_chg := r.change_summary || ' · ' || v_chg; end if;
       perform _api_trusted(true);
       update rides set change_state = 'to_review', change_summary = left(v_chg, 1000), change_at = now(),
                        supp_new_htva = null, supp_amount = null, supp_message = null, supp_deadline = null
