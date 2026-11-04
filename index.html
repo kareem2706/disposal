@@ -8244,9 +8244,7 @@ window.deleteRide = async function(rideId){
     if(warnEl){
       if(isPaid){
         var refundMsg = '';
-        if(isBank){
-          refundMsg = '💳 <strong>Remboursement intégral</strong> — Votre paiement par virement sera intégralement remboursé.';
-        } else if(isStripe){
+        if(isStripe || isBank){
           refundMsg = '💳 <strong>Remboursement partiel</strong> — Le prix payé vous sera remboursé, <strong>déduction faite des frais Stripe</strong> non récupérables.';
         } else {
           refundMsg = 'ℹ️ Votre remboursement sera traité selon le mode de paiement utilisé.';

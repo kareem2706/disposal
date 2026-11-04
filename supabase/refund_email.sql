@@ -11,8 +11,7 @@ returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if new.payment_method = 'refunded' and old.payment_method is distinct from 'refunded' and new.client_id is not null then
     perform _send_mail_hook('ride_refunded', new.client_id, _ride_mail_data(new) || jsonb_build_object(
-      'amount', replace(to_char(coalesce(new.final_price, 0), 'FM999990.00'), '.', ',') || ' €',
-      'method', case old.payment_method when 'bank_transfer' then 'bank' else 'card' end));
+      'amount', replace(to_char(coalesce(new.final_price, 0), 'FM999990.00'), '.', ',') || ' €'));   -- paiement par carte uniquement
   end if;
   return new;
 exception when others then

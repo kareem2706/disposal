@@ -354,9 +354,8 @@ function build({ type, data = {} }: Payload) {
         title: "Votre remboursement est effectué.",
         preheader: `${d.amount ?? ""} remboursés pour la course ${d.code ?? ""}.`,
         intro: `${hi(d.clientName)}nous avons remboursé ${b(d.amount)} pour la course ${b(d.code)}.`,
-        card: callout("Quand verrai-je le montant ?", d.method === "bank"
-          ? "Le montant est reversé sur le compte bancaire qui a servi au virement. Selon votre banque, il apparaîtra sous <b>2 à 5 jours ouvrables</b>."
-          : "Le montant est recrédité sur la carte utilisée pour le paiement. Selon votre banque, il apparaîtra sur votre relevé sous <b>5 à 10 jours ouvrables</b>.", "info"),
+        card: callout("Quand verrai-je le montant ?",
+          "Le montant est recrédité sur la carte utilisée pour le paiement. Selon votre banque, il apparaîtra sur votre relevé dans les <b>5 à 10 jours ouvrables</b>.", "info"),
         after: trip(d, { price: false }),
         cta: { label: "Voir mes demandes", url },
         note: "Une question sur ce remboursement ? Écrivez-nous à info@bleenr.com.",
