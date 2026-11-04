@@ -4405,9 +4405,27 @@ window.signOut = async function(){
   _entering = false;
   _passwordRecoveryActive = false;
   localStorage.removeItem(DEMO_MODE_KEY);
+  _resetAuthUI();
   showToast(t('toast_signout'));
   showScreen('landing');
 };
+// Après déconnexion : écran de connexion remis à zéro (onglet Connexion, champs vides, plus d'étape « code »)
+function _resetAuthUI(){
+  try{
+    if(window.backToAuthMain) backToAuthMain();
+    var scr=document.getElementById('screen-auth');
+    if(scr){
+      scr.querySelectorAll('input').forEach(function(i){ if(i.type==='checkbox'||i.type==='radio') i.checked=false; else i.value=''; i.classList&&i.classList.remove('fld-err'); });
+      scr.querySelectorAll('.auth-error').forEach(function(e){ e.classList.remove('show'); e.textContent=''; });
+    }
+    var bo=document.getElementById('btn-otp'); if(bo){ bo.disabled=false; bo.textContent='Confirmer'; }
+    var be=document.getElementById('btn-email-submit'); if(be){ be.disabled=false; }
+    if(window.toggleLoginPwd) toggleLoginPwd(false);
+    if(typeof _showRegStep==='function') _showRegStep(1);
+    if(window.authMode) authMode('login');
+    try{ _phoneForOTP=''; }catch(e){}
+  }catch(e){ console.warn('resetAuthUI', e); }
+}
 
 // ── ENTER APP ─────────────────────────────────────────
 
