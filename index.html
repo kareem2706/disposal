@@ -688,7 +688,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .chg-box{border:1px solid #ECEAE5;border-radius:12px;padding:12px 14px;margin-bottom:12px;background:#fff;}
 .chg-q{font-size:13.5px;font-weight:600;margin:12px 0 8px;}
 .chg-opt{display:flex;gap:10px;align-items:flex-start;border:1.5px solid #ECEAE5;border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer;font-size:13px;}
-.chg-opt.on,.chg-opt:has(input:checked){border-color:var(--green);background:#F3F8F4;}
+.chg-opt:has(> input:checked){border-color:var(--green);background:#F3F8F4;}   /* seulement l'option cochée elle-même (pas son parent) */
 .chg-opt input[type=radio]{margin:3px 0 0;accent-color:#1B5E3B;width:auto!important;flex:0 0 auto;padding:0;box-shadow:none;}
 .chg-opt>span{flex:1;min-width:0;display:block;color:var(--ink);}
 .chg-opt b{font-weight:600;}
