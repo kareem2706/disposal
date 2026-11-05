@@ -7677,7 +7677,7 @@ function _docContractPage(d){
     +'<div class="ct-parties">'+party('Le transporteur',d.carrier)+party('Le client',d.client)+'</div>'
     +'<p>Avec l’intervention de <b>'+e(d.bleenr.name)+'</b>'+(d.bleenr.l1||d.bleenr.l2?' ('+e([d.bleenr.l1,d.bleenr.l2].filter(Boolean).join(', '))+')':'')+(d.bleenr.vat?', TVA '+e(d.bleenr.vat):'')+', exploitant de la plateforme Bleenr, en qualité d’<b>intermédiaire de réservation</b>.</p>'
     +art(1,'Objet','<p>Le transporteur s’engage à effectuer pour le client le transport de personnes décrit en page 1 (référence <b>'+e(d.code)+'</b>) : '
-      +e(d.summary)+'. Le prix convenu est de <b>'+e(d.priceTvac)+' TVAC</b>'+(d.priceHtva?' ('+e(d.priceHtva)+' HTVA, TVA '+e(d.tvaPct)+' %)':'')+'.</p>')
+      +e(d.summary)+', au prix convenu lors de la réservation.</p>')
     +art(2,'Rôle de Bleenr','<p>Bleenr met en relation le client et des transporteurs professionnels, transmet la demande, l’offre et la réservation, et encaisse le paiement pour le compte du transporteur. '
       +'Bleenr n’est pas transporteur et n’est pas partie au contrat de transport : l’exécution du transport relève de la seule responsabilité du transporteur. Bleenr perçoit une commission auprès du transporteur ; elle n’est pas facturée en supplément au client.</p>')
     +art(3,'Formation du contrat et prix','<p>Le contrat est conclu lorsque le client accepte l’offre du transporteur et la paie sur la plateforme. Le prix est fixé avant le départ et ne peut être modifié que selon l’article 5. '
@@ -7789,14 +7789,7 @@ async function _docRideDocument(rideId, mode){
   }
 
   var sum='';
-  if(r.final_price){
-    var _pr=await _ridePrice(r), tvac=_pr.tvac, htva=_pr.htva, tva=_pr.tva;
-    sum='<div class="sum"><table>'
-      +'<tr><td>Prix HTVA</td><td class="r">'+_rptMoney(htva)+'</td></tr>'
-      +'<tr><td>TVA '+_pr.pct+' %</td><td class="r">'+_rptMoney(tva)+'</td></tr>'
-      +'<tr class="grand"><td>Total TVAC (EUR)</td><td class="r">'+_rptMoney(tvac)+'</td></tr>'
-      +'</table></div>';
-  }
+  // aucun montant sur le voucher / l'ordre de mission
 
   var page='<div class="page">'
     +_docTop(kind, code, ['Émis le : '+_docDate(), 'Départ : '+_docIso(r.ride_date)+(r.ride_time?' · '+String(r.ride_time).slice(0,5):'')])
