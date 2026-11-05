@@ -9113,23 +9113,60 @@ async function _initPaxSelector(){
   if(window._mixFillPax) _mixFillPax();
 }
 
-function _renderNewRidePaxCard(sid){
+function _renderNewRidePaxCard(sid, editing){
   var sec = document.getElementById(sid); if(!sec) return;
   var n = window._newRidePaxName||'';
   var t = window._newRidePaxTel||'';
+  var esc = function(v){ return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); };
   var pencilSvg = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>';
-  sec.innerHTML = '<div style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
-      +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">Informations du passager</div>'
-      +'<button id="'+sid+'-edit-btn" type="button" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;font-family:\'DM Sans\',sans-serif;">'+pencilSvg+' Modifier</button>'
+  var paxIc = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>';
+  if(!editing){
+    // Même présentation que l'écran « course confirmée » (carte grise, icône + nom + téléphone)
+    sec.innerHTML = '<div class="rd-card">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+        +'<div class="rd-cap">Informations du passager</div>'
+        +'<button id="'+sid+'-edit-btn" type="button" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--green);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;font-family:\'DM Sans\',sans-serif;">'+pencilSvg+' Modifier</button>'
+      +'</div>'
+      +'<div class="rd-line"><span class="rd-ic">'+paxIc+'</span><div style="min-width:0;flex:1"><div class="rd-strong"'+(n?'':' style="color:var(--ink3);font-weight:400;"')+'>'+esc(n||'Non renseigné')+'</div></div>'
+        +(t?'<span class="rd-call" style="color:var(--ink2);">'+esc(t)+'</span>':'')
+      +'</div>'
+    +'</div>';
+    document.getElementById(sid+'-edit-btn').addEventListener('click', function(){ _renderNewRidePaxCard(sid, true); });
+    return;
+  }
+  // Modification directement dans la carte
+  var isPro = currentProfile?.client_type === 'pro';
+  var passList = window._newRidePassengers||[];
+  var inp = 'width:100%;padding:10px 12px;border:1.5px solid var(--sand3);border-radius:var(--r);font-size:14px;background:#fff;font-family:\'DM Sans\',sans-serif;';
+  var lbl = 'font-size:12px;font-weight:600;display:block;margin-bottom:4px;color:var(--ink2);';
+  var sel = '';
+  if(isPro && passList.length){
+    sel = '<div style="margin-bottom:10px;"><label style="'+lbl+'">Choisir un passager</label><select id="'+sid+'-pax-sel" style="'+inp+'">'
+      +'<option value="">— Choisir un passager —</option>'
+      +passList.map(function(p){ var pn=((p.first_name||'')+' '+(p.last_name||'')).trim(), pt=p.phone||''; return '<option value="'+esc(pn)+'||'+esc(pt)+'">'+esc(pn)+(pt?' · '+esc(pt):'')+'</option>'; }).join('')
+      +'</select></div>';
+  }
+  sec.innerHTML = '<div class="rd-card">'
+    +'<div class="rd-cap" style="margin-bottom:10px;">Informations du passager</div>'
+    +sel
+    +'<div style="margin-bottom:10px;"><label style="'+lbl+'">Nom &amp; Prénom</label><input id="'+sid+'-pax-name" type="text" value="'+esc(n)+'" placeholder="Marie Dupont" style="'+inp+'"></div>'
+    +'<div><label style="'+lbl+'">Téléphone</label><input id="'+sid+'-pax-tel" type="tel" value="'+esc(t)+'" placeholder="+32 470 12 34 56" style="'+inp+'"></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">'
+      +'<button type="button" class="btn btn-secondary btn-sm" id="'+sid+'-pax-cancel">Annuler</button>'
+      +'<button type="button" class="btn btn-green btn-sm" id="'+sid+'-pax-ok">Enregistrer</button>'
     +'</div>'
-    +'<div style="font-weight:600;font-size:14px;'+(n?'':'color:var(--ink3);font-weight:400;')+'">'+( n||'Non renseigné')+'</div>'
-    +(t?'<div style="font-size:12.5px;color:var(--ink3);">'+t+'</div>':'')
   +'</div>';
-
-  document.getElementById(sid+'-edit-btn').addEventListener('click', function(){
-    _openNewRidePaxEdit(sid);
+  var g = function(x){ return document.getElementById(sid+'-'+x); };
+  if(g('pax-sel')) g('pax-sel').addEventListener('change', function(){ if(!this.value) return; var pts=this.value.split('||'); g('pax-name').value=pts[0]||''; g('pax-tel').value=pts[1]||''; });
+  g('pax-cancel').addEventListener('click', function(){ _renderNewRidePaxCard(sid); });
+  g('pax-ok').addEventListener('click', function(){
+    window._newRidePaxName = (g('pax-name').value||'').trim();
+    window._newRidePaxTel  = (g('pax-tel').value||'').trim();
+    _renderNewRidePaxCard('ride-pax-section');
+    _renderNewRidePaxCard('disp-pax-section');
+    if(window._mixFillPax) _mixFillPax();
   });
+  setTimeout(function(){ var x=g('pax-name'); if(x) x.focus(); }, 30);
 }
 
 function _openNewRidePaxEdit(sid){
