@@ -7659,6 +7659,58 @@ function _docOpen(html){
 var _DOC_TYPES={ab:'Course A → B',disposal:'Mise à disposition',mixed:'Course mixte'};
 var _DOC_CLASSES={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus',any:'Toute gamme'};
 
+// ── Page 2 du voucher / de l'ordre de mission : contrat de transport ──
+// Transporteur (fleet) ↔ client, Bleenr intermédiaire de réservation ; rappel des obligations et des règles de l'application.
+// (même texte que l'app chauffeur : bleenr-chauffeur/src/lib/contract.ts)
+function _docContractPage(d){
+  var e=_billingEsc;
+  var party=function(t,p){ return '<div class="party"><div class="lbl">'+t+'</div><div class="pname">'+e(p.name||'—')+'</div>'
+    +[p.l1,p.l2,p.l3].filter(Boolean).map(function(x){return '<div>'+e(x)+'</div>';}).join('')
+    +(p.vat?'<div>N° de TVA : '+e(p.vat)+'</div>':'')+(p.contact?'<div>'+e(p.contact)+'</div>':'')+'</div>'; };
+  var H=d.refundH||48;
+  var art=function(n,t,body){ return '<div class="ct-a"><h3>Article '+n+' — '+t+'</h3>'+body+'</div>'; };
+  var ul=function(items){ return '<ul>'+items.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'; };
+  return '<div class="page ct">'
+    +'<style>.ct .top{margin-bottom:14px}.ct .logo{height:34px}.ct .num{font-size:18px}.ct .sect{margin-top:4px}.ct .ct-a{margin-top:8px}.ct h3{font-size:11.5px;font-weight:800;color:#1B5E3B;margin-bottom:2px}.ct p,.ct li{font-size:10.3px;line-height:1.42}.ct ul{padding-left:15px;margin-top:1px}.ct li{margin:0}.ct .ct-parties{display:flex;gap:14px;margin:4px 0 6px}.ct .ct-parties .party{flex:1;border:1px solid #E1E6E3;border-radius:6px;padding:8px 10px;font-size:10.5px}.ct .pname{font-size:12px}.ct .ct-sign{display:flex;gap:18px;margin-top:14px}.ct .ct-sign div{flex:1;border-top:1px solid #1A1A18;padding-top:5px;font-size:10px;color:#555}.ct .foot{margin-top:12px}</style>'
+    +_docTop('Contrat de transport', d.code, ['Annexe au '+(d.mode==='voucher'?'voucher':'l’ordre de mission'), 'Émis le : '+_docDate()])
+    +'<div class="sect">Entre les parties</div>'
+    +'<div class="ct-parties">'+party('Le transporteur',d.carrier)+party('Le client',d.client)+'</div>'
+    +'<p>Avec l’intervention de <b>'+e(d.bleenr.name)+'</b>'+(d.bleenr.l1||d.bleenr.l2?' ('+e([d.bleenr.l1,d.bleenr.l2].filter(Boolean).join(', '))+')':'')+(d.bleenr.vat?', TVA '+e(d.bleenr.vat):'')+', exploitant de la plateforme Bleenr, en qualité d’<b>intermédiaire de réservation</b>.</p>'
+    +art(1,'Objet','<p>Le transporteur s’engage à effectuer pour le client le transport de personnes décrit en page 1 (référence <b>'+e(d.code)+'</b>) : '
+      +e(d.summary)+'. Le prix convenu est de <b>'+e(d.priceTvac)+' TVAC</b>'+(d.priceHtva?' ('+e(d.priceHtva)+' HTVA, TVA '+e(d.tvaPct)+' %)':'')+'.</p>')
+    +art(2,'Rôle de Bleenr','<p>Bleenr met en relation le client et des transporteurs professionnels, transmet la demande, l’offre et la réservation, et encaisse le paiement pour le compte du transporteur. '
+      +'Bleenr n’est pas transporteur et n’est pas partie au contrat de transport : l’exécution du transport relève de la seule responsabilité du transporteur. Bleenr perçoit une commission auprès du transporteur ; elle n’est pas facturée en supplément au client.</p>')
+    +art(3,'Formation du contrat et prix','<p>Le contrat est conclu lorsque le client accepte l’offre du transporteur et la paie sur la plateforme. Le prix est fixé avant le départ et ne peut être modifié que selon l’article 5. '
+      +'Aucun paiement ne peut être demandé ni accepté en dehors de la plateforme.</p>')
+    +art(4,'Obligations du transporteur',ul([
+      'Disposer des autorisations, licences, assurances et documents exigés pour le transport rémunéré de personnes, pour lui-même, ses chauffeurs et ses véhicules.',
+      'Fournir un véhicule de la gamme réservée, propre, en bon état, avec assez de places pour les passagers et les bagages annoncés, et un chauffeur qualifié.',
+      'Être présent au lieu de prise en charge à l’heure prévue et suivre, le cas échéant, le vol ou le train indiqué.',
+      'Tenir à jour les étapes de la mission dans l’application (« En chemin » au plus tôt 4 h avant le départ, prise en charge, fin de mission) et le véhicule / chauffeur attribués.',
+      'Respecter le code de la route, la sécurité et la confidentialité des passagers.',
+      'Répondre à toute modification du client dans les délais (accepter, modifier son offre ou se retirer).']))
+    +art(5,'Modification de la réservation',ul([
+      'Le client peut modifier sa réservation jusqu’à '+H+' h avant le départ ; ensuite, seuls le passager et la note au chauffeur restent modifiables, et plus du tout une fois la course commencée.',
+      'Le transporteur accepte la modification au même prix, propose un nouveau prix ou se retire. Un prix plus élevé doit être accepté et payé par le client ; un prix plus bas est appliqué et la différence remboursée.',
+      'Sans réponse du client avant l’échéance, ou si le transporteur se retire et que le client ne republie pas sa demande, la course est annulée et remboursée.']))
+    +art(6,'Annulation et absence',ul([
+      'Annulation par le client plus de '+H+' h avant le départ : remboursement intégral. À moins de '+H+' h : aucun remboursement. Aucune annulation n’est possible une fois le chauffeur en route.',
+      'Client absent au lieu de prise en charge (« No Show ») : la course est clôturée et reste due.',
+      'Si le transporteur ne peut assurer la course, il prévient sans délai le client et Bleenr ; le client est remboursé intégralement.']))
+    +art(7,'Obligations du client',ul([
+      'Fournir des informations exactes : adresses, date et heure, nombre de passagers, bagages, numéro de vol ou de train, coordonnées du passager.',
+      'Être prêt au lieu et à l’heure de prise en charge, respecter le chauffeur, le véhicule et les règles de sécurité (ceinture, comportement).',
+      'Assumer les dommages causés au véhicule par les passagers.']))
+    +art(8,'Obligations de Bleenr',ul([
+      'Transmettre fidèlement les demandes, offres, modifications et réservations entre les parties.',
+      'Sécuriser le paiement, effectuer les remboursements prévus et reverser au transporteur le prix diminué de sa commission.',
+      'Traiter les signalements (menu ⋮ › « Signaler un problème ») et protéger les données personnelles des parties.']))
+    +art(9,'Réclamations et droit applicable','<p>Toute réclamation est adressée via l’application ou à Bleenr, qui la transmet à la partie concernée. Le contrat est soumis au droit belge.</p>')
+    +'<div class="ct-sign"><div>Le transporteur — '+e(d.carrier.name||'')+'</div><div>Le client — '+e(d.client.name||'')+'</div></div>'
+    +'<p class="muted" style="margin-top:6px;">Contrat accepté électroniquement par les parties via la plateforme Bleenr lors de la confirmation de la réservation. '+e(d.footer)+'</p>'
+  +'</div>';
+}
+
 // Shared body of a ride voucher / mission order
 async function _docRideDocument(rideId, mode){
   if(!sb) return;
@@ -7757,7 +7809,26 @@ async function _docRideDocument(rideId, mode){
     +'<div class="box"><div class="boxt">'+boxTitle+'</div>'+boxBody+'</div>'
     +'<div class="foot">'+e(_docFooter(s))+'</div>'
     +'</div>';
-  _docOpen(_bleenrDocHtml((mode==='voucher'?'Voucher':'Mission')+' — '+code, page));
+  // Page 2 : contrat de transport (transporteur ↔ client, Bleenr intermédiaire)
+  var ctPage='';
+  try{
+    var _cp=null, _fp=null;
+    if(r.client_id){ try{ _cp=(await sb.from('profiles').select('*').eq('id',r.client_id).maybeSingle()).data; }catch(_e){} }
+    if(r.driver_id){ try{ _fp=(await sb.from('profiles').select('*').eq('id',r.driver_id).maybeSingle()).data; }catch(_e){} }
+    var _cl=_docProfileParty(_cp, !!(_cp && (_cp.client_type==='pro' || _cp.company_name)));
+    var _ca=_docProfileParty(_fp, true);
+    var _prc=r.final_price?await _ridePrice(r):null;
+    var _lg=_lugTxt(r.luggage_large, r.luggage_small);
+    var _sm=[(_DOC_TYPES[r.trip_type]||'Course')+(r.trip_type==='disposal'&&dur?' de '+dur+' h':''),
+             'le '+_docIso(r.ride_date)+(r.ride_time?' à '+String(r.ride_time).slice(0,5):''),
+             'au départ de '+(r.from_address||'—')+(r.to_address?' vers '+r.to_address:''),
+             'gamme '+(_DOC_CLASSES[r.vehicle_type]||r.vehicle_type||'—'),
+             (r.passengers||1)+' passager(s)'+(_lg?', '+_lg:'')].join(', ');
+    try{ await _loadRefundRules(); }catch(_e){}
+    ctPage=_docContractPage({ mode:mode, code:code, carrier:_ca, client:_cl, bleenr:_docBleenrParty(s), summary:_sm,
+      priceTvac:_prc?_rptMoney(_prc.tvac):'—', priceHtva:_prc?_rptMoney(_prc.htva):'', tvaPct:_prc?_prc.pct:'', refundH:_refundDelayHours(r), footer:_docFooter(s) });
+  }catch(_e){ console.warn('contrat', _e); }
+  _docOpen(_bleenrDocHtml((mode==='voucher'?'Voucher':'Mission')+' — '+code, page+ctPage));
 }
 
 window.generateMissionPdf = function(rideId){ return _docRideDocument(rideId,'mission'); };
