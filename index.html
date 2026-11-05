@@ -15283,13 +15283,15 @@ window.arOpenDetail = async function(row){
     var commission = parseFloat((htva * _cp / 100).toFixed(2));
     var driverNet = parseFloat((htva - commission).toFixed(2));
     var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
-    infoRows += '<div style="padding:7px 0;border-bottom:1px solid var(--sand2);">'
-      +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Détail du prix</div>'
-      +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Prix HTVA</span><span>'+fmt(htva)+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">TVA '+_pr.pct+'%</span><span>'+fmt(tvaAmt)+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Commission plateforme ('+_pctTxt(_cp)+' %)</span><span style="color:var(--red);">− '+fmt(commission)+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Prix chauffeur net</span><span style="color:var(--green);font-weight:600;">'+fmt(driverNet)+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:5px 0 2px;border-top:1px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(tvac)+'</span></div>'
+    // Ordre : prix HTVA, commission, total (net chauffeur), TVA, total TVAC
+    var _row=function(l,v,st){ return '<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:13px;padding:7px 0;'+(st||'')+'"><span style="color:var(--ink3);">'+l+'</span>'+v+'</div>'; };
+    infoRows += '<div style="padding:12px 0 8px;border-bottom:1px solid var(--sand2);">'
+      +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:8px;">Détail du prix</div>'
+      +_row('Prix HTVA','<span>'+fmt(htva)+'</span>')
+      +_row('Commission plateforme ('+_pctTxt(_cp)+' %)','<span style="color:var(--red);">− '+fmt(commission)+'</span>')
+      +_row('<b style="color:var(--ink);">Total</b>','<span style="color:var(--green);font-weight:700;">'+fmt(driverNet)+'</span>','border-top:1px solid var(--sand2);margin-top:4px;padding-top:10px;')
+      +_row('TVA '+_pr.pct+' %','<span>'+fmt(tvaAmt)+'</span>','margin-top:6px;')
+      +'<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:10px 0 4px;border-top:1.5px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(tvac)+'</span></div>'
     +'</div>';
   }
 
