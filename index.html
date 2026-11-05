@@ -1545,14 +1545,15 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <button class="ld-book-tab on" data-ld-mode="trajet">Aller simple</button>
           <button class="ld-book-tab" data-ld-mode="heure">&Agrave; l'heure</button>
         </div>
-        <div class="ld-book-row">
+        <!-- formulaire séparé : le gestionnaire de mots de passe du navigateur n'y place plus l'e-mail de connexion -->
+        <form class="ld-book-row" autocomplete="off" onsubmit="return false">
           <div class="ld-field"><label>D&eacute;part</label><input id="ld-from" name="ld-trip-start" autocomplete="off" placeholder="Adresse, gare, a&eacute;roport"></div>
           <div class="ld-field" id="ld-to-wrap"><label>Arriv&eacute;e</label><input id="ld-to" name="ld-trip-end" autocomplete="off" placeholder="Destination"></div>
           <div class="ld-field" id="ld-dur-wrap" style="display:none"><label>Dur&eacute;e</label><select id="ld-dur"><option value="2">2 heures</option><option value="3" selected>3 heures</option><option value="6">6 heures</option><option value="10">Journ&eacute;e &middot; 10 h</option></select></div>
           <div class="ld-field"><label>Date</label><input id="ld-date" type="date"></div>
           <div class="ld-field"><label>Heure</label><input id="ld-time" type="time" value="09:00"></div>
-          <button class="ld-btn" id="ld-book-go">Recevoir des offres &rarr;</button>
-        </div>
+          <button type="button" class="ld-btn" id="ld-book-go">Recevoir des offres &rarr;</button>
+        </form>
         <div class="ld-book-note">Gratuit et sans engagement &mdash; vous acceptez l'offre qui vous convient.</div>
       </div>
     </div>
@@ -1724,7 +1725,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           </button>
         </div>
         <div class="auth-or"><span>OU</span></div>
-        <div class="input-group"><label>Adresse email</label><input id="inp-email" type="email" placeholder="marie@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')submitLoginMain()"></div>
+        <div class="input-group"><label>Adresse email</label><input id="inp-email" type="email" placeholder="marie@example.com" autocomplete="username" onkeydown="if(event.key==='Enter')submitLoginMain()"></div>
         <div id="login-pwd-wrap" style="display:none;">
           <div class="input-group"><label>Mot de passe</label><input id="inp-pwd" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitEmail()"></div>
           <div id="forgot-pwd-link" style="text-align:right;margin:-4px 0 8px;"><a href="#" onclick="forgotPassword();return false;" style="font-size:12px;color:var(--green);text-decoration:none;">Mot de passe oublié ?</a></div>
