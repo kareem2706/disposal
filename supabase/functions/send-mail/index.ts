@@ -69,7 +69,7 @@ const PREF_KEY: Record<string, string> = {
   ride_confirmed_client: "ride_confirmed", driver_note: "driver_message", assignment_changed: "driver_message",
   driver_on_way: "driver_on_way",
   supplement_requested: "ride_changes", driver_withdrew: "ride_changes", mission_accepted: "ride_changes",
-  mission_changed: "mission_changed", supplement_paid: "mission_changed",
+  mission_changed: "mission_changed", supplement_paid: "mission_changed", offer_outdated: "mission_changed",
 };
 async function wantsEmail(userId: string | null | undefined, type: string): Promise<boolean> {
   const key = PREF_KEY[type];
@@ -255,7 +255,30 @@ function build({ type, data = {} }: Payload) {
         cta: { label: "Voir la mission", url },
       });
 
+    case "offer_outdated": {
+      const items = String(d.changes ?? "").split(" · ").filter(Boolean);
+      return mail(`Demande modifiée — offre à mettre à jour (${d.code ?? ""})`, {
+        title: "Le client a modifié sa demande.",
+        preheader: "Votre offre n'est plus à jour : vérifiez les changements.",
+        intro: `Bonjour,<br>le client a modifié la demande ${b(d.code)} après votre offre. Votre offre ne peut plus être choisie tant que vous ne l'avez pas mise à jour.`,
+        card: callout(d.reason || "Changements", items.length ? items.map((x) => "• " + x).join("<br>") : "Vérifiez les trajets de la demande.", "warn"),
+        after: trip(d, { title: "La demande (après modification)", price: false }),
+        cta: { label: "Mettre à jour mon offre", url },
+        note: "Revoyez votre prix et vos kilomètres inclus, puis renvoyez l'offre.",
+      });
+    }
+
     case "ride_updated":
+      if (d.still_valid) {
+        const items = String(d.changes ?? "").split(" · ").filter(Boolean);
+        return mail(`Demande mise à jour — ${d.code ?? ""}`, {
+          title: "Le client a mis à jour sa demande.",
+          intro: `Bonjour,<br>le client a mis à jour la demande ${b(d.code)}. Votre offre reste valable, aucune action n'est nécessaire.`,
+          card: callout("Changements", items.map((x) => "• " + x).join("<br>"), "info"),
+          after: trip(d, { title: "La demande", price: false }),
+          cta: { label: "Voir la demande", url },
+        });
+      }
       return mail(`Course modifiée — ${d.code ?? ""}`, {
         title: "Une course a été modifiée.",
         intro: `Bonjour,<br>le client a modifié ${d.changes ? b(d.changes) : "sa course"} sur la demande ${b(d.code)}.`,
@@ -384,7 +407,8 @@ Deno.serve(async (req: Request) => {
     if (hookHdr) {
       if (!HOOK_SECRET || hookHdr !== HOOK_SECRET) return json({ ok: false, error: "Non autorisé" }, 403);
       if (!["ride_completed", "driver_on_way", "ride_no_show", "offer_received", "offer_updated", "driver_note", "assignment_changed",
-            "mission_changed", "supplement_requested", "driver_withdrew", "mission_accepted", "supplement_paid", "ride_refunded"].includes(type)
+            "mission_changed", "supplement_requested", "driver_withdrew", "mission_accepted", "supplement_paid", "ride_refunded",
+            "offer_outdated", "ride_updated"].includes(type)
           || !Array.isArray(payload?.to_user_ids)) {
         return json({ ok: false, error: "Non autorisé" }, 403);
       }
@@ -426,6 +450,7 @@ Deno.serve(async (req: Request) => {
 
     // ── Envoi groupé aux fleets vérifiées ──
     if (payload?.broadcast === "verified_drivers") {
+      let withOffer = new Set<string>();
       if (type !== "new_marketplace_ride" && type !== "ride_updated") return json({ ok: false, error: "Non autorisé" }, 403);
       if (type === "ride_updated") {
         // Demande modifiée : contenu construit ici à partir de la course (jamais la note ni le passager)
@@ -447,6 +472,9 @@ Deno.serve(async (req: Request) => {
           changes: chg.join(", "),
         }));
         if (!chg.length) return json({ ok: true, sent: 0 });
+        // les fleets ayant une offre en attente reçoivent déjà le détail par le serveur (offer_outdated / ride_updated)
+        const { data: offs } = await admin.from("offers").select("driver_id").eq("ride_id", r.id).eq("status", "pending");
+        withOffer = new Set((offs ?? []).map((o: any) => String(o.driver_id)));
       } else {
         // Nouvelle demande : contenu construit ici à partir de la course (le navigateur ne fournit que son id)
         const { data: r } = await admin.from("rides")
@@ -483,7 +511,7 @@ Deno.serve(async (req: Request) => {
       const allowedFleets = fErr ? null : new Set(((okFleets as unknown[]) ?? []).map((x: any) => String(typeof x === "object" && x ? Object.values(x)[0] : x)));
       let sent = 0;
       for (const d of drivers ?? []) {
-        if (d.id === user.id || d.id === payload?.exclude_user_id) continue;
+        if (d.id === user.id || d.id === payload?.exclude_user_id || withOffer.has(d.id)) continue;
         if (allowedFleets && !allowedFleets.has(d.id)) continue;
         try {
           const to = await emailOfUser(d.id);

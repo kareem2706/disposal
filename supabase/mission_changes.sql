@@ -19,6 +19,7 @@
 --     remboursement (la course d'origine réapparaît dans « Remboursements »).
 -- ════════════════════════════════════════════════════════════════
 
+alter table public.offers add column if not exists outdated_changes text;   -- détail de ce qui a changé depuis l'offre
 alter table public.rides add column if not exists change_state   text;          -- to_review | supplement | withdrawn
 alter table public.rides add column if not exists change_summary text;
 alter table public.rides add column if not exists change_at      timestamptz;
@@ -47,27 +48,89 @@ create or replace function public._change_deadline(r public.rides) returns times
   select (_ride_start(r) - make_interval(hours => _refund_delay_hours(r))) at time zone 'Europe/Brussels';
 $$;
 
+-- Trajets d'un trajet mixte (« A>B@HH:MM:départ>arrivée|d:AAAA-MM-JJ|v:gamme|p:2|lg:1/0 | Disposition@… (3h) »)
+create or replace function public._mixed_segs(p_notes text)
+returns table(i int, disp boolean, tm text, dt text, fr text, dst text, dur text, veh text, pax text, lg text)
+language sql immutable as $$
+  with t as (
+    select ord::int as i, s,
+           regexp_replace(regexp_replace(s, '\|[a-z0-9]+:[^|]*', '', 'g'), '^(A>B|Disposition)(@\d{1,2}:\d{2})?:\s*', '') as body
+      from regexp_split_to_table(regexp_replace(regexp_replace(coalesce(p_notes, ''), '^Mixte:\s*', ''), '\|[a-z_]{3,}:[^|]*', '', 'g'),
+                                 '\s*\|\s*(?=A>B|Disposition)') with ordinality x(s, ord)
+     where s ~ '^(A>B|Disposition)')
+  select i, s ~ '^Disposition',
+         substring(s from '^(?:A>B|Disposition)@(\d{1,2}:\d{2})'),
+         substring(s from '\|d:(\d{4}-\d{2}-\d{2})'),
+         nullif(trim(split_part(regexp_replace(body, '\s*\([^)]*\)', ''), '>', 1)), ''),
+         nullif(trim(split_part(regexp_replace(body, '\s*\([^)]*\)', ''), '>', 2)), ''),
+         substring(body from '\(([^)]+)\)'),
+         nullif(trim(substring(s from '\|v:([^|]*)')), ''),
+         nullif(trim(substring(s from '\|p:([^|]*)')), ''),
+         nullif(trim(substring(s from '\|lg:([^|]*)')), '')
+    from t;
+$$;
+
+-- Différences trajet par trajet (« Trajet 2 — Heure : 10:00 → 11:00 », « Trajet 3 ajouté : … »)
+create or replace function public._mixed_changes(p_old text, p_new text) returns text[] language plpgsql immutable as $$
+declare a record; b record; p text[] := '{}'; x text[]; v_max int;
+  lbl jsonb := '{"lowcost":"Economy","business":"Business","van":"Van","luxe":"Luxe","bus":"Bus","any":"Toute gamme"}';
+begin
+  for b in select * from _mixed_segs(p_new) order by i loop
+    select * into a from _mixed_segs(p_old) where i = b.i;
+    if a.i is null then
+      p := p || ('Trajet ' || b.i || ' ajouté : ' || concat_ws(', ',
+              case when b.disp then 'Mise à disposition' || coalesce(' ' || b.dur, '') else 'Transfert' end,
+              lbl ->> b.veh,
+              nullif(concat_ws(' à ', to_char(b.dt::date, 'DD/MM'), b.tm), ''),
+              split_part(b.fr, ',', 1) || coalesce(' → ' || split_part(b.dst, ',', 1), '')));
+      continue;
+    end if;
+    x := '{}';
+    if a.disp is distinct from b.disp then x := x || ('Type : ' || case when a.disp then 'Mise à disposition' else 'Transfert' end || ' → ' || case when b.disp then 'Mise à disposition' else 'Transfert' end); end if;
+    if a.dt  is distinct from b.dt  then x := x || ('Date : ' || coalesce(to_char(a.dt::date, 'DD/MM'), '—') || ' → ' || coalesce(to_char(b.dt::date, 'DD/MM'), '—')); end if;
+    if a.tm  is distinct from b.tm  then x := x || ('Heure : ' || coalesce(a.tm, '—') || ' → ' || coalesce(b.tm, '—')); end if;
+    if a.fr  is distinct from b.fr  then x := x || ('Départ : ' || coalesce(split_part(a.fr, ',', 1), '—') || ' → ' || coalesce(split_part(b.fr, ',', 1), '—')); end if;
+    if a.dst is distinct from b.dst and not b.disp then x := x || ('Arrivée : ' || coalesce(split_part(a.dst, ',', 1), '—') || ' → ' || coalesce(split_part(b.dst, ',', 1), '—')); end if;
+    if a.dur is distinct from b.dur and b.disp then x := x || ('Durée : ' || coalesce(a.dur, '—') || ' → ' || coalesce(b.dur, '—')); end if;
+    if a.veh is distinct from b.veh then x := x || ('Gamme : ' || coalesce(lbl ->> a.veh, '—') || ' → ' || coalesce(lbl ->> b.veh, '—')); end if;
+    if a.pax is distinct from b.pax then x := x || ('Passagers : ' || coalesce(a.pax, '—') || ' → ' || coalesce(b.pax, '—')); end if;
+    if a.lg  is distinct from b.lg  then x := x || ('Bagages : ' || replace(coalesce(a.lg, '0/0'), '/', ' + ') || ' → ' || replace(coalesce(b.lg, '0/0'), '/', ' + ')); end if;
+    if cardinality(x) > 0 then p := p || ('Trajet ' || b.i || ' — ' || array_to_string(x, ', ')); end if;
+  end loop;
+  select coalesce(max(i), 0) into v_max from _mixed_segs(p_new);
+  for a in select * from _mixed_segs(p_old) where i > v_max order by i loop
+    p := p || ('Trajet ' || a.i || ' supprimé : ' || concat_ws(', ',
+            case when a.disp then 'Mise à disposition' else 'Transfert' end,
+            nullif(concat_ws(' à ', to_char(a.dt::date, 'DD/MM'), a.tm), ''),
+            split_part(a.fr, ',', 1)));
+  end loop;
+  return p;
+end $$;
+
 -- Résumé lisible des changements importants (« Heure : 11:15 → 13:30 · Passagers : 2 → 3 »)
 create or replace function public._mission_changes(o public.rides, n public.rides) returns text language plpgsql stable as $$
-declare p text[] := '{}'; sa text; sb text;
+declare p text[] := '{}'; sa text; sb text; v_mx boolean;
   lbl jsonb := '{"lowcost":"Economy","business":"Business","van":"Van","luxe":"Luxe","bus":"Bus","any":"Toute gamme"}';
   tl  jsonb := '{"ab":"Transfert","disposal":"Mise à disposition","mixed":"Trajet mixte"}';
 begin
+  v_mx := o.trip_type = 'mixed' and n.trip_type = 'mixed';   -- trajet mixte : détail trajet par trajet
   if o.trip_type is distinct from n.trip_type then p := p || ('Type : ' || coalesce(tl ->> o.trip_type, '—') || ' → ' || coalesce(tl ->> n.trip_type, '—')); end if;
-  if o.ride_date is distinct from n.ride_date then p := p || ('Date : ' || coalesce(to_char(o.ride_date, 'DD/MM'), '—') || ' → ' || coalesce(to_char(n.ride_date, 'DD/MM'), '—')); end if;
-  if left(o.ride_time::text, 5) is distinct from left(n.ride_time::text, 5) then p := p || ('Heure : ' || coalesce(left(o.ride_time::text, 5), '—') || ' → ' || coalesce(left(n.ride_time::text, 5), '—')); end if;
-  if o.from_address is distinct from n.from_address then p := p || ('Départ : ' || coalesce(split_part(o.from_address, ',', 1), '—') || ' → ' || coalesce(split_part(n.from_address, ',', 1), '—')); end if;
-  if o.to_address is distinct from n.to_address and n.trip_type = 'ab' then p := p || ('Arrivée : ' || coalesce(nullif(split_part(o.to_address, ',', 1), ''), '—') || ' → ' || coalesce(split_part(n.to_address, ',', 1), '—')); end if;
+  if not v_mx then
+    if o.ride_date is distinct from n.ride_date then p := p || ('Date : ' || coalesce(to_char(o.ride_date, 'DD/MM'), '—') || ' → ' || coalesce(to_char(n.ride_date, 'DD/MM'), '—')); end if;
+    if left(o.ride_time::text, 5) is distinct from left(n.ride_time::text, 5) then p := p || ('Heure : ' || coalesce(left(o.ride_time::text, 5), '—') || ' → ' || coalesce(left(n.ride_time::text, 5), '—')); end if;
+    if o.from_address is distinct from n.from_address then p := p || ('Départ : ' || coalesce(split_part(o.from_address, ',', 1), '—') || ' → ' || coalesce(split_part(n.from_address, ',', 1), '—')); end if;
+    if o.to_address is distinct from n.to_address and n.trip_type = 'ab' then p := p || ('Arrivée : ' || coalesce(nullif(split_part(o.to_address, ',', 1), ''), '—') || ' → ' || coalesce(split_part(n.to_address, ',', 1), '—')); end if;
+    if o.vehicle_type is distinct from n.vehicle_type then p := p || ('Gamme : ' || coalesce(lbl ->> o.vehicle_type, '—') || ' → ' || coalesce(lbl ->> n.vehicle_type, '—')); end if;
+  end if;
   if o.passengers is distinct from n.passengers then p := p || ('Passagers : ' || coalesce(o.passengers::text, '—') || ' → ' || coalesce(n.passengers::text, '—')); end if;
-  if o.vehicle_type is distinct from n.vehicle_type then p := p || ('Gamme : ' || coalesce(lbl ->> o.vehicle_type, '—') || ' → ' || coalesce(lbl ->> n.vehicle_type, '—')); end if;
   if row(coalesce(o.luggage_large, 0), coalesce(o.luggage_small, 0)) is distinct from row(coalesce(n.luggage_large, 0), coalesce(n.luggage_small, 0)) then
     p := p || ('Bagages : ' || coalesce(o.luggage_large, 0) || ' + ' || coalesce(o.luggage_small, 0) || ' → ' || coalesce(n.luggage_large, 0) || ' + ' || coalesce(n.luggage_small, 0));
   end if;
-  sa := (regexp_match(coalesce(o.notes, ''), 'Durée:([^\s|,]+)'))[1]; sb := (regexp_match(coalesce(n.notes, ''), 'Durée:([^\s|,]+)'))[1];
-  if sa is distinct from sb then p := p || ('Durée : ' || coalesce(sa, '—') || ' → ' || coalesce(sb, '—')); end if;
-  if n.trip_type = 'mixed' and regexp_replace(regexp_replace(coalesce(o.notes, ''), '\|[a-z_]{3,}:[^|]*', '', 'g'), '\|(n|fl|tr|fl2|tr2|pn|pt):[^|]*', '', 'g')
-       is distinct from regexp_replace(regexp_replace(coalesce(n.notes, ''), '\|[a-z_]{3,}:[^|]*', '', 'g'), '\|(n|fl|tr|fl2|tr2|pn|pt):[^|]*', '', 'g') then
-    p := p || 'Trajets modifiés'::text;
+  if not v_mx then
+    sa := (regexp_match(coalesce(o.notes, ''), 'Durée:([^\s|,]+)'))[1]; sb := (regexp_match(coalesce(n.notes, ''), 'Durée:([^\s|,]+)'))[1];
+    if sa is distinct from sb then p := p || ('Durée : ' || coalesce(sa, '—') || ' → ' || coalesce(sb, '—')); end if;
+  else
+    p := p || _mixed_changes(o.notes, n.notes);
   end if;
   return array_to_string(p, ' · ');
 end $$;
@@ -142,14 +205,24 @@ begin
         when v_new > v_old then (v_new - v_old) || ' trajets ont été ajoutés'
         when v_new = v_old - 1 then 'Un trajet a été supprimé'
         when v_new < v_old then (v_old - v_new) || ' trajets ont été supprimés'
-        else 'Départ, arrivée, date, heure, durée ou gamme modifiés' end;
+        else 'La demande a été modifiée' end;
+      v_chg := _mission_changes(r, n);
       perform _api_trusted(true);
-      update offers set outdated_at = now(), outdated_reason = v_reason where ride_id = p_ride and status = 'pending';
+      -- les changements s'additionnent tant que le chauffeur n'a pas mis son offre à jour
+      update offers set outdated_reason = case when outdated_at is null then v_reason else 'Demande modifiée plusieurs fois' end,
+                        outdated_changes = left(case when outdated_at is null or coalesce(outdated_changes, '') = '' then v_chg
+                                                     when v_chg = '' then outdated_changes
+                                                     else outdated_changes || ' · ' || v_chg end, 2000),
+                        outdated_at = now()
+       where ride_id = p_ride and status = 'pending';
       perform _api_trusted(false);
       for v_drv in select distinct driver_id from offers where ride_id = p_ride and status = 'pending' loop
         perform _api_notify(v_drv, 'ride_updated', 'Demande modifiée — offre à mettre à jour',
-          'La demande ' || coalesce(n.booking_code, left(n.id::text, 8)) || ' a été modifiée par le client : ' || lower(left(v_reason,1)) || substr(v_reason,2) ||
+          'La demande ' || coalesce(n.booking_code, left(n.id::text, 8)) || ' a été modifiée par le client : ' ||
+          coalesce(nullif(v_chg, ''), lower(left(v_reason,1)) || substr(v_reason,2)) ||
           '. Votre offre n’est plus à jour : vérifiez la demande et mettez votre offre à jour.', p_ride);
+        perform _send_mail_hook('offer_outdated', v_drv, _ride_mail_data(n) || jsonb_build_object(
+          'reason', v_reason, 'changes', (select outdated_changes from offers where ride_id = p_ride and driver_id = v_drv and status = 'pending' limit 1)));
       end loop;
     elsif row(n.passengers, n.luggage_large, n.luggage_small, regexp_replace(coalesce(n.notes,''), '\|(pax|tel|pemail|pref|note_drv|offer_note):[^|]*', '', 'g'))
           is distinct from row(r.passengers, r.luggage_large, r.luggage_small, regexp_replace(coalesce(r.notes,''), '\|(pax|tel|pemail|pref|note_drv|offer_note):[^|]*', '', 'g')) then
@@ -158,9 +231,13 @@ begin
                        when row(n.luggage_large, n.luggage_small) is distinct from row(r.luggage_large, r.luggage_small)
                        then 'bagages : ' || coalesce(n.luggage_large, 0) || ' valise(s), ' || coalesce(n.luggage_small, 0) || ' sac(s)'
                        else 'informations de la demande mises à jour (passagers, bagages, instructions, vol / train…)' end;
+      v_chg := _mission_changes(r, n);
       for v_drv in select distinct driver_id from offers where ride_id = p_ride and status = 'pending' loop
+        if v_chg <> '' then
+          perform _send_mail_hook('ride_updated', v_drv, _ride_mail_data(n) || jsonb_build_object('changes', v_chg, 'still_valid', '1'));
+        end if;
         perform _api_notify(v_drv, 'ride_updated', 'Demande mise à jour',
-          'La demande ' || coalesce(n.booking_code, left(n.id::text, 8)) || ' a été mise à jour par le client (' || v_reason ||
+          'La demande ' || coalesce(n.booking_code, left(n.id::text, 8)) || ' a été mise à jour par le client (' || coalesce(nullif(v_chg, ''), v_reason) ||
           '). Votre offre reste valable, aucune action n’est nécessaire.', p_ride);
       end loop;
     end if;
@@ -435,5 +512,15 @@ begin
   end if;
 exception when others then raise notice 'pg_cron : %', sqlerrm;
 end $$;
+
+-- Offre mise à jour par le chauffeur (outdated_at remis à null) → le détail des changements disparaît
+create or replace function public.trg_offers_outdated_reset() returns trigger language plpgsql as $$
+begin
+  if new.outdated_at is null then new.outdated_changes := null; end if;
+  return new;
+end $$;
+drop trigger if exists b_offers_outdated_reset on public.offers;
+create trigger b_offers_outdated_reset before update on public.offers
+  for each row execute function public.trg_offers_outdated_reset();
 
 notify pgrst, 'reload schema';

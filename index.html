@@ -680,6 +680,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .lug-st input{flex:1;min-width:0;border:none!important;box-shadow:none!important;text-align:center;font-weight:700;font-size:15px;background:transparent;padding:4px 0!important;-moz-appearance:textfield;}
 .lug-st input::-webkit-outer-spin-button,.lug-st input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .lug-warn{grid-column:1/-1;background:#FFF7E8;border:1px solid #F3E2BF;color:#8A5A12;border-radius:10px;padding:9px 11px;font-size:12.5px;line-height:1.45;}
+.btn-red-solid{background:var(--red);color:#fff;border:none;}.btn-red-solid:hover{filter:brightness(.95);}
 .chg-ban{border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:12px;}
 .chg-ban .chg-t{display:block;font-size:14px;margin-bottom:4px;}
 .chg-ban.o{background:#FFF1DC;border:1px solid #F2D9AE;color:#9A5B00;}
@@ -2920,7 +2921,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="disp-from" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>
           <div class="input-group full tr-grp" id="disp-flight-grp" style="display:none;"><label id="disp-flight-lbl">Num&eacute;ro de vol</label><input id="disp-flight" class="tr-input" placeholder="Ex. SN 3123" autocomplete="off" maxlength="10"><div class="tr-hint" id="disp-flight-hint"></div></div>
           <div class="input-group full tr-grp" id="disp-train-grp" style="display:none;"><label id="disp-train-lbl">Num&eacute;ro de train</label><input id="disp-train" class="tr-input" placeholder="Ex. IC 1832" autocomplete="off" maxlength="10"><div class="tr-hint" id="disp-train-hint"></div></div>
-          <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
+          <div class="input-group"><label>Dur&eacute;e (heures)</label><input id="disp-duration" type="number" min="1" max="24" value="2" placeholder="2" inputmode="numeric" oninput="this.value=String(this.value).replace(/[^0-9]/g,'').slice(0,2)" onblur="if(this.value!=='')this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>
           <div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input id="disp-date" type="date" min=""></div>
           <div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input id="disp-time" type="time"></div>
           <div class="input-group"><label>Passagers</label><select id="disp-pax"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option value="8+">8+</option></select></div>
@@ -2930,8 +2931,8 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         </div>
       </div>
       <div id="panel-mixed" style="display:none;">
-        <div class="input-group" id="mix-drv-grp"><label>Chauffeur</label>
-          <div class="ev-seg"><button type="button" class="on" data-d="same" onclick="_mixDrv('same')">Si possible, le m&ecirc;me chauffeur pour tous les trajets</button><button type="button" data-d="any" onclick="_mixDrv('any')">Peu importe</button></div>
+        <div class="input-group" id="mix-drv-grp"><label>Demande</label>
+          <div class="ev-seg"><button type="button" class="on" data-d="same" onclick="_mixDrv('same')">Une seule demande pour tous les trajets</button><button type="button" data-d="any" onclick="_mixDrv('any')">Une demande par trajet</button></div>
           <div class="mix-drv-hint" id="mix-drv-hint"></div>
         </div>
         <div class="input-group" id="mix-pm-grp"><label>Passagers</label>
@@ -2994,6 +2995,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
   <div class="modal">
     <div class="modal-hd"><span class="modal-title">Soumettre une offre</span><button class="close-btn" onclick="closeModal('m-submit-offer')"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1 1l9 9M10 1L1 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
     <div class="modal-body">
+      <div id="offer-outd"></div>
       <div id="offer-ride-summary" style="margin-bottom:6px;"></div>
       <div id="offer-vehicle-wrap" style="display:none;margin-bottom:14px;">
         <div class="input-group"><label>V&eacute;hicule &agrave; assigner <span style="color:var(--red)">*</span></label><select id="offer-vehicle-select"><option value="">-- Choisir un v&eacute;hicule --</option></select></div>
@@ -3114,8 +3116,8 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div class="modal-body" style="overflow-y:auto;flex:1;">
       <div class="input-group"><label>Type de course</label>
         <div class="trip-types">
-          <div class="trip-type active" data-val="ab" onclick="selSubType(this)">A &rarr; B</div>
-          <div class="trip-type" data-val="disposal" onclick="selSubType(this)">Disposition</div>
+          <div class="trip-type active" data-val="ab" onclick="selSubType(this)">Transfert simple</div>
+          <div class="trip-type" data-val="disposal" onclick="selSubType(this)">Mise &agrave; disposition</div>
           <div class="trip-type" data-val="mixed" onclick="selSubType(this)">Mixte</div>
         </div>
       </div>
@@ -4441,13 +4443,14 @@ async function loadMyOffers(){
   _myOffers = {}; // reset before reload
   try {
     var result = await sb.from('offers')
-      .select('ride_id, price, message, included_km')
+      .select('*')   // inclut outdated_at / outdated_reason / outdated_changes
       .eq('driver_id', currentUser.id)
       .in('status', ['pending', 'accepted']);
     if(result.error) return;
     var rows = result.data || [];
     rows.forEach(function(row){
-      _myOffers[row.ride_id] = { price: row.price, msg: row.message || '', km: row.included_km || null };
+      _myOffers[row.ride_id] = { price: row.price, msg: row.message || '', km: row.included_km || null,
+        outdated: row.status==='pending' && !!row.outdated_at, reason: row.outdated_reason || '', changes: row.outdated_changes || '' };
     });
   } catch(e){ console.warn('loadMyOffers error:', e); }
 }
@@ -5017,6 +5020,16 @@ async function loadInvoices(){
 }
 
 function _invoiceKey(){ return _invoiceSelYear+'-'+String(_invoiceSelMonth).padStart(2,'0'); }
+// Sélection de courses à facturer (vide = tout le mois)
+var _invSel = {}, _invSelKey = '';
+window._invToggle = function(id, on){ if(on) _invSel[id]=1; else delete _invSel[id]; _invSelUi(); };
+window._invToggleAll = function(on){ var k=_invoiceKey(); _invSel={}; if(on) (_invoiceAllRides[k]||[]).forEach(function(r){ _invSel[r.id]=1; }); document.querySelectorAll('#invoices-list .inv-ck').forEach(function(c){ c.checked=on; }); _invSelUi(); };
+function _invSelUi(){
+  var n=Object.keys(_invSel).length, all=(_invoiceAllRides[_invoiceKey()]||[]).length;
+  var b=document.getElementById('inv-pdf-lbl'); if(b) b.textContent=n?'PDF ('+n+')':'PDF';
+  var a=document.getElementById('inv-ck-all'); if(a){ a.checked=n>0&&n===all; a.indeterminate=n>0&&n<all; }
+  var h=document.getElementById('inv-sel-hint'); if(h) h.textContent=n?n+' course'+(n>1?'s':'')+' sélectionnée'+(n>1?'s':'')+' — le PDF ne reprendra que celle'+(n>1?'s-ci':'-ci')+'.':'Cochez une ou plusieurs courses pour ne télécharger que celles-ci.';
+}
 
 function _renderInvoiceMonth(){
   var listEl = document.getElementById('invoices-list');
@@ -5024,6 +5037,7 @@ function _renderInvoiceMonth(){
 
   var key = _invoiceKey();
   var monthRides = _invoiceAllRides[key] || [];
+  if(_invSelKey !== key){ _invSel = {}; _invSelKey = key; }
   var monthLabels = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   var monthShort  = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
 
@@ -5050,8 +5064,8 @@ function _renderInvoiceMonth(){
       +'<button onclick="_invoiceStep(1)" style="'+btnStyle+'">&gt;</button>'
     +'</div>'
     +(monthRides.length
-      ? '<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;flex-shrink:0;" onclick="generateMonthInvoice(\''+key+'\')">'
-          +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>PDF</button>'
+      ? '<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;flex-shrink:0;" onclick="generateMonthInvoice(\''+key+'\', Object.keys(_invSel))">'
+          +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span id="inv-pdf-lbl">PDF</span></button>'
       : '')
   +'</div>';
 
@@ -5081,8 +5095,9 @@ function _renderInvoiceMonth(){
     var statusBadge = r.status==='cancelled'
       ? '<span style="font-size:9px;font-weight:700;background:var(--red-bg);color:var(--red);padding:1px 6px;border-radius:20px;margin-left:6px;">Annulée</span>'
       : '';
-    return '<div style="display:grid;grid-template-columns:130px 1fr auto;gap:6px 14px;align-items:start;padding:10px 0;border-bottom:1px solid var(--sand2);">'
-      +'<div style="font-size:11px;font-family:monospace;font-weight:600;color:var(--ink2);padding-top:2px;">'+code+'</div>'
+    return '<label class="inv-row" style="display:grid;grid-template-columns:20px minmax(0,130px) 1fr auto;gap:6px 12px;align-items:start;padding:10px 0;border-bottom:1px solid var(--sand2);cursor:pointer;">'
+      +'<input type="checkbox" class="inv-ck" style="width:17px;height:17px;margin:1px 0 0;accent-color:var(--green);cursor:pointer;"'+(_invSel[r.id]?' checked':'')+' onchange="_invToggle(\''+r.id+'\',this.checked)">'
+      +'<div style="font-size:11px;font-family:monospace;font-weight:600;color:var(--ink2);padding-top:2px;word-break:break-all;">'+code+'</div>'
       +'<div>'
         +'<div style="font-size:12.5px;color:var(--ink3);margin-bottom:1px;">'+dateTimeStr+statusBadge+'</div>'
         +'<div style="font-size:12.5px;color:var(--ink);">'+route+'</div>'
@@ -5091,7 +5106,7 @@ function _renderInvoiceMonth(){
         +'<div style="font-size:13px;font-weight:600;">'+htva.toFixed(2).replace('.',',')+' €</div>'
         +'<div style="font-size:11px;color:var(--ink3);">TVA '+((r.final_price?parseFloat(r.final_price):0)-htva).toFixed(2).replace('.',',')+' €</div>'
       +'</div>'
-    +'</div>';
+    +'</label>';
   }).join('');
 
   var totalHtva = monthRides.reduce(function(s,r){ return s+(r.final_price?parseFloat((parseFloat(r.final_price)/(1+TVA_RATE)).toFixed(2)):0); },0);
@@ -5101,7 +5116,9 @@ function _renderInvoiceMonth(){
 
   listEl.innerHTML = '<div class="card" style="padding:0;">'
     +header
-    +'<div style="display:grid;grid-template-columns:130px 1fr auto;gap:4px 14px;padding:6px 20px;border-bottom:2px solid var(--sand3);">'
+    +'<div id="inv-sel-hint" style="padding:8px 20px 0;font-size:12px;color:var(--ink3);"></div>'
+    +'<div style="display:grid;grid-template-columns:20px minmax(0,130px) 1fr auto;gap:4px 12px;align-items:center;padding:6px 20px;border-bottom:2px solid var(--sand3);">'
+      +'<input type="checkbox" id="inv-ck-all" title="Tout sélectionner" style="width:17px;height:17px;margin:0;accent-color:var(--green);cursor:pointer;" onchange="_invToggleAll(this.checked)">'
       +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Code</div>'
       +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Trajet</div>'
       +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);text-align:right;">Prix HTVA</div>'
@@ -5113,6 +5130,7 @@ function _renderInvoiceMonth(){
       +'<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding:7px 0 2px;border-top:1.5px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(totalTvac)+'</span></div>'
     +'</div>'
   +'</div>';
+  _invSelUi();
 }
 
 window._invoiceSetMonth = function(m){ _invoiceSelMonth = m; _renderInvoiceMonth(); };
@@ -5129,7 +5147,7 @@ window._invoiceStep = function(dir){
 window._invoiceNav = function(dir){ window._invoiceStep(dir); };
 window._invoiceGoTo = function(idx){ _invoiceCurrentIdx = parseInt(idx); _renderInvoiceMonth(); };
 
-window.generateMonthInvoice = async function(monthKey){
+window.generateMonthInvoice = async function(monthKey, onlyIds){
   // Client space: one invoice per fleet (the fleet invoices the client)
   if(!sb || localStorage.getItem(DEMO_MODE_KEY)){ showToast('Indisponible en mode démo'); return; }
   var from=monthKey+'-01';
@@ -5141,6 +5159,7 @@ window.generateMonthInvoice = async function(monthKey){
   ]);
   var rides=(res[0].data||[]).concat((res[1].data||[]).filter(function(r){ return r.payment_method && r.payment_method!=='refunded'; }));
   rides=rides.filter(function(r){ return !r.is_subcontract; }); // sous-traitances : hors facturation
+  if(onlyIds && onlyIds.length) rides=rides.filter(function(r){ return onlyIds.indexOf(r.id)>=0; });   // courses cochées
   rides.sort(function(a,b){ return (a.ride_date||'').localeCompare(b.ride_date||''); });
   var people={}; if(currentProfile) people[currentUser.id]=Object.assign({email:currentUser.email},currentProfile);
   _invOpen({ rides:rides, kind:'prestation', year:parseInt(monthKey.slice(0,4)), month:parseInt(monthKey.slice(5,7)), people:people });
@@ -6116,7 +6135,7 @@ function _renderOfferKmFields(r, existing){
   var segs=_offerKmSegments(r);
   if(!segs.length){ wrap.innerHTML=''; wrap.style.display='none'; return; }
   var prev=(existing&&existing.km)||{};
-  var dis=!!existing;
+  var dis=!!existing && !existing.outdated;
   wrap.innerHTML=segs.map(function(s){
     var val=(prev[String(s.idx)]!=null)?prev[String(s.idx)]:'';
     var lbl=s.label?'Kilom\u00e8tres inclus \u2014 '+s.label.replace(/</g,'&lt;'):'Kilom\u00e8tres inclus';
@@ -6188,6 +6207,10 @@ window.openOfferModal = function(rideId, summary, rideObj){
 
   // Pre-fill if driver already submitted an offer
   var existing = _myOffers && currentRideId ? _myOffers[rideId] : null;
+  var _outd = !!(existing && existing.outdated);
+  var _ob=document.getElementById('offer-outd'); if(_ob) _ob.innerHTML=_outd?_outdBannerHtml(existing, true):'';
+  var _ot=document.querySelector('#m-submit-offer .modal-title'); if(_ot) _ot.textContent=_outd?'Mettre à jour mon offre':'Soumettre une offre';
+  if(_outd) existing = Object.assign({}, existing, { _edit:true });
   document.getElementById('offer-price').value = existing ? existing.price : '';
   document.getElementById('offer-msg').value   = existing ? (existing.msg||'') : '';
   _offerNetUpdate();
@@ -6195,16 +6218,17 @@ window.openOfferModal = function(rideId, summary, rideObj){
   // Disable price and message fields if offer already submitted (cannot be modified)
   var priceEl = document.getElementById('offer-price');
   var msgEl   = document.getElementById('offer-msg');
-  if(priceEl){ priceEl.disabled = !!existing; priceEl.style.opacity = existing ? '0.5' : ''; priceEl.style.cursor = existing ? 'not-allowed' : ''; }
-  if(msgEl){   msgEl.disabled   = !!existing; msgEl.style.opacity   = existing ? '0.5' : ''; msgEl.style.cursor   = existing ? 'not-allowed' : ''; }
+  var _lock = !!existing && !_outd;
+  if(priceEl){ priceEl.disabled = _lock; priceEl.style.opacity = _lock ? '0.5' : ''; priceEl.style.cursor = _lock ? 'not-allowed' : ''; }
+  if(msgEl){   msgEl.disabled   = _lock; msgEl.style.opacity   = _lock ? '0.5' : ''; msgEl.style.cursor   = _lock ? 'not-allowed' : ''; }
   // Km inclus fields (disposal ride / disposal segments of a mixed ride)
   _renderOfferKmFields(rideObj, existing);
   // Hide submit button if offer already submitted (submitted offers cannot be modified)
   var offerBtnWrap = document.getElementById('offer-btn-wrap');
-  if(offerBtnWrap){ offerBtnWrap.style.display = existing ? 'none' : ''; }
+  if(offerBtnWrap){ offerBtnWrap.style.display = _lock ? 'none' : ''; }
   // Populate vehicle selector based on requested vehicle class
   var reqClass=(rideObj&&rideObj.vehicle_type)||'lowcost';
-  if(isDriverRole()&&!existing){
+  if(isDriverRole()&&!_lock){
     // Always show vehicle selector for drivers
     var vwrap=document.getElementById('offer-vehicle-wrap');if(vwrap)vwrap.style.display='block';
     // Ensure vehicles are loaded
@@ -6258,7 +6282,9 @@ function renderMkItem(r,isSub,isMine){
 
   // 3. Offer text under date if offer submitted
   var myOff2 = _myOffers && _myOffers[r.id];
-  var offerLine = myOff2
+  var offerLine = myOff2 && myOff2.outdated
+    ? '<div style="font-size:11.5px;color:var(--red);font-weight:600;margin-top:3px;">⚠ Demande modifiée : votre offre est à mettre à jour</div>'
+    : myOff2
     ? '<div style="font-size:11.5px;color:#E8820C;font-weight:500;margin-top:3px;">Vous avez soumis une offre \u00e0 '+parseFloat(myOff2.price).toFixed(0)+'\u20ac pour cette course</div>'
     : '';
 
@@ -6610,6 +6636,9 @@ function _openRideDetailImpl(el){
   var bodyEl=document.getElementById('detail-body');if(bodyEl)bodyEl.innerHTML=body;
   // Mission modifiée après confirmation : réponse du chauffeur / supplément / choix du client
   if(bodyEl && r.status==='confirmed' && r.change_state && window._chgBannerHtml) bodyEl.insertAdjacentHTML('afterbegin', _chgBannerHtml(r, isClient));
+  // Demande modifiée après l'offre du chauffeur : ce qui a changé
+  if(bodyEl && !isClient && (r.status==='waiting'||r.status==='offers') && window._myOffers && _myOffers[r.id] && _myOffers[r.id].outdated)
+    bodyEl.insertAdjacentHTML('afterbegin', _outdBannerHtml(_myOffers[r.id]));
   // Km inclus : seulement la proposition du chauffeur (offre retenue, ou sa propre offre côté fleet)
   if(isDisp||isMixed){
     (async function(myGen){
@@ -7183,8 +7212,8 @@ function _openRideDetailImpl(el){
       var _paxItems='<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openPaxEdit(window._rdPax.id,window._rdPax.name,window._rdPax.phone)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Modifier les informations du passager</button>'
         +'<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openNoteEdit(window._rdPax.id,window._rdPax.note)">'+_penIc+(_hasNote?'Modifier la note au chauffeur':'Ajouter une note au chauffeur')+'</button>';
       var _vItem=_paxItems+'<button class="ft-menu-item" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');generateRideVoucher(\''+String(rId).replace(/'/g,'')+'\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Télécharger le voucher</button>';
-      if(r.status==='active'||r.pickup_at){
-        // Après la prise en charge : plus de modification passager / note, mais signalement possible
+      if(r.status==='active'||r.pickup_at||r.on_way_at){
+        // Course commencée (chauffeur en route, prise en charge…) : plus de modification passager / note, mais signalement possible
         var _vOnly=_vItem.slice(_paxItems.length);
         var _probItem='<button class="ft-menu-item rd-prob-item" style="color:var(--red);" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');openRideProblem(\''+String(rId).replace(/'/g,'')+'\')"><svg style="color:var(--red);" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>Signaler un probl\u00e8me</button>';
         ft=_clientRideMenu(rId,false,false,_vOnly+_probItem)+'<div style="margin-right:auto;"></div>'+closeBtn;
@@ -8616,7 +8645,7 @@ window.submitRide = async function(){
     pax   = g('disp-pax');
     veh   = g('disp-vehicle');
     var lugL=_lugVal('disp-lugL'), lugS=_lugVal('disp-lugS');
-    var dur = g('disp-duration') || '2';
+    var dur = String(Math.max(1, Math.min(24, parseInt(g('disp-duration')) || 2)));
     notes = (g('disp-notes')||'') + (dur ? ' Dur\u00e9e:'+dur+'h' : '');
     if(!from||!date||!time){ if(err){ err.textContent=t('err_required'); err.classList.add('show'); } return; }
   } else if(tripType==='mixed'){
@@ -9187,6 +9216,11 @@ window._editOffer = function(btn){
   setTimeout(function(){ openOfferModal(rId, '', r); }, 150);
 };
 
+window._mkOfferFromDetail = function(){
+  var r=window._lastDetailRide; if(!r) return;
+  _rdPushUnder('m-ride-detail');
+  setTimeout(function(){ openOfferModal(r.id, '', r); }, 150);
+};
 window._detailOffer = function(btn){
   var raw=btn.dataset.ride||'';
   var r=null; try{ r=JSON.parse(raw.replace(/&#39;/g,"'")); }catch(e){ r=null; }
@@ -9916,7 +9950,21 @@ window.confirmStripeCheckout=async function(amount,totalTvac){
 // ══ MISSION MODIFIÉE APRÈS CONFIRMATION (mission_changes.sql) ══
 function _chgEur(v){ return (Math.round((parseFloat(v)||0)*100)/100).toFixed(2).replace('.',',')+' €'; }
 function _chgWhen(ts){ if(!ts) return ''; var d=new Date(ts); return d.toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'')+' à '+d.toLocaleTimeString('fr-BE',{hour:'2-digit',minute:'2-digit'}); }
-function _chgList(sum){ var it=String(sum||'').split(' · ').filter(Boolean); return it.length?'<ul class="chg-ul">'+it.map(function(x){ var p=x.split(' : '); return '<li>'+_rdEsc(p[0])+(p[1]?' : <b>'+_rdEsc(p.slice(1).join(' : '))+'</b>':'')+'</li>'; }).join('')+'</ul>':''; }
+function _chgList(sum){ var it=String(sum||'').split(' · ').filter(Boolean); return it.length?'<ul class="chg-ul">'+it.map(function(x){
+  var m=x.match(/^(Trajet \d+)( — | ajouté : | supprimé : )(.*)$/);
+  if(m){
+    if(m[2]===' — ') return '<li><b>'+_rdEsc(m[1])+'</b> — '+m[3].split(', ').map(function(y){ var q=y.split(' : '); return _rdEsc(q[0])+(q[1]?' : <b>'+_rdEsc(q.slice(1).join(' : '))+'</b>':''); }).join(' · ')+'</li>';
+    return '<li><b>'+_rdEsc(m[1])+(m[2].indexOf('ajout')>=0?' ajouté':' supprimé')+'</b> : '+_rdEsc(m[3])+'</li>';
+  }
+  var p=x.split(' : '); return '<li>'+_rdEsc(p[0])+(p[1]?' : <b>'+_rdEsc(p.slice(1).join(' : '))+'</b>':'')+'</li>'; }).join('')+'</ul>':''; }
+// Offre faite avant une modification de la demande : ce qui a changé (chauffeur)
+window._outdBannerHtml=function(o, inModal){
+  return '<div class="chg-ban r"><b class="chg-t"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px;"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.01"/></svg>'+_rdEsc(o.reason||'La demande a été modifiée')+'</b>'
+    +(o.changes?_chgList(o.changes):'')
+    +'<div class="chg-sm">'+(inModal?'Revoyez votre prix et vos kilomètres inclus, puis mettez votre offre à jour.':'Le client a modifié sa demande après votre offre. Elle ne peut pas être choisie tant que vous ne l’avez pas mise à jour.')+'</div>'
+    +(inModal?'':'<div class="chg-act"><button type="button" class="btn btn-red-solid" onclick="_mkOfferFromDetail()">Mettre à jour mon offre →</button></div>')
+    +'</div>';
+};
 window._chgBannerHtml=function(r, isClient){
   var st=r.change_state, code=_rdEsc(r.booking_code||''), id=_rdEsc(r.id);
   var paid=parseFloat(r.final_price)||0, htva=Math.round(paid/(1+TVA_RATE)*100)/100;
@@ -11139,8 +11187,10 @@ window.submitOffer = async function(){
     // Notify the client that a new offer arrived (only on first submission)
     // Email « offre reçue » : envoyé par la base à la création de l'offre (ride_driver_emails.sql)
 
+    var _wasOutd = !!(_myOffers[currentRideId] && _myOffers[currentRideId].outdated);
     _myOffers[currentRideId] = { price: price, msg: msg, km: includedKm };
     setLoading(btn, false, 'Soumettre →');
+    if(_wasOutd){ closeModal('m-submit-offer'); showToast('✅ Offre mise à jour'); if(typeof loadDriverDashboard === 'function') loadDriverDashboard(); var _mk=document.getElementById('page-marketplace'); if(_mk && _mk.classList.contains('active') && typeof loadMarketplace === 'function') loadMarketplace(); return; }
     closeModal('m-submit-offer');
     showToast('✅ Offre soumise avec succès');
     if(typeof loadDriverDashboard === 'function') loadDriverDashboard();
@@ -11211,12 +11261,13 @@ function resetOfferBtn(){
   _offerCounting = false;
   var btn = document.getElementById('btn-offer-submit');
   var bar = document.getElementById('offer-progress-bar');
-  if(btn){ btn.textContent = 'Soumettre →'; btn.className = 'btn btn-green'; btn.style.width='100%'; }
-  if(bar){ bar.style.width = '0%'; }
-  // Respect existing offer state: keep submit wrap hidden if offer already submitted
   var existingOffer = _myOffers && currentRideId && _myOffers[currentRideId];
+  var _upd = !!(existingOffer && existingOffer.outdated);
+  if(btn){ btn.textContent = _upd ? 'Mettre à jour mon offre →' : 'Soumettre →'; btn.className = _upd ? 'btn btn-red-solid' : 'btn btn-green'; btn.style.width='100%'; }
+  if(bar){ bar.style.width = '0%'; }
+  // Respect existing offer state: keep submit wrap hidden if offer already submitted (sauf offre à mettre à jour)
   var wrap = document.getElementById('offer-btn-wrap');
-  if(wrap){ wrap.style.display = existingOffer ? 'none' : ''; }
+  if(wrap){ wrap.style.display = existingOffer && !_upd ? 'none' : ''; }
 }
 
 
@@ -12461,7 +12512,7 @@ window.addMixedSegment=function(){
   var dispFields=
     '<div class="input-group full"><label>Lieu de prise en charge <span style="color:var(--red)">*</span></label><input id="sf-'+n+'" placeholder="Grand-Place, Bruxelles" autocomplete="off"></div>'+
     _segTrHtml(n)+
-    '<div class="input-group full"><label>Dur&eacute;e (heures)</label><input type="number" id="sdur-'+n+'" min="1" max="24" value="2" placeholder="2" oninput="this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>'+
+    '<div class="input-group full"><label>Dur&eacute;e (heures)</label><input type="number" id="sdur-'+n+'" min="1" max="24" value="2" placeholder="2" inputmode="numeric" oninput="this.value=String(this.value).replace(/[^0-9]/g,\'\').slice(0,2)" onblur="if(this.value!==\'\')this.value=Math.max(1,Math.min(24,parseInt(this.value)||1))"></div>'+
     '<div class="input-group"><label>Date <span style="color:var(--red)">*</span></label><input type="date" id="sd8-'+n+'"></div>'+
     '<div class="input-group"><label>Heure <span style="color:var(--red)">*</span></label><input type="time" id="sh-'+n+'" value="08:00"></div>'+
     '<div class="input-group"><label>Passagers</label><select id="spax-'+n+'">'+paxOpts+'</select></div>'+
@@ -12533,7 +12584,7 @@ function _mixDrvVal(){ var b=document.querySelector('#mix-drv-grp .ev-seg .on');
 window._mixDrv=function(v){
   document.querySelectorAll('#mix-drv-grp .ev-seg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-d')===v); });
   var h=document.getElementById('mix-drv-hint');
-  if(h) h.textContent=v==='any'?'Une demande par trajet : chaque trajet peut être pris par un chauffeur différent. Vous suivez tout depuis une seule fiche.':'Une seule demande : le chauffeur retenu effectue tous les trajets.';
+  if(h) h.textContent=v==='any'?'Chaque trajet peut être pris par un chauffeur différent. Vous suivez tout depuis une seule fiche.':'Le chauffeur retenu effectue tous les trajets.';
 };
 // Trajet mixte : un passager pour tous les trajets, ou un passager par trajet
 function _mixPMVal(){ var b=document.querySelector('#mix-pm-grp .ev-seg .on'); return b?b.getAttribute('data-m'):'one'; }
