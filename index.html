@@ -6636,6 +6636,9 @@ function _openRideDetailImpl(el){
   var bodyEl=document.getElementById('detail-body');if(bodyEl)bodyEl.innerHTML=body;
   // Mission modifiée après confirmation : réponse du chauffeur / supplément / choix du client
   if(bodyEl && r.status==='confirmed' && r.change_state && window._chgBannerHtml) bodyEl.insertAdjacentHTML('afterbegin', _chgBannerHtml(r, isClient));
+  // Prix revu à la baisse par le chauffeur : remboursement partiel en cours (client)
+  if(bodyEl && isClient && r.status!=='cancelled' && parseFloat(r.refund_due)>0)
+    bodyEl.insertAdjacentHTML('afterbegin','<div class="chg-ban b"><b class="chg-t">'+(r.refund_done_at?'Remboursement effectué':'Remboursement en cours')+' : '+_chgEur(parseFloat(r.refund_due))+'</b>Votre chauffeur a revu son prix à la baisse suite à votre modification. Nouveau prix : <b>'+_chgEur(parseFloat(r.final_price)||0)+' TVAC</b>.</div>');
   // Demande modifiée après l'offre du chauffeur : ce qui a changé
   if(bodyEl && !isClient && (r.status==='waiting'||r.status==='offers') && window._myOffers && _myOffers[r.id] && _myOffers[r.id].outdated)
     bodyEl.insertAdjacentHTML('afterbegin', _outdBannerHtml(_myOffers[r.id]));
@@ -8095,10 +8098,26 @@ function _clientRideMenu(rId, canEdit, canCancel, extra){
   return items?_ftMenu(items):'';
 }
 document.addEventListener('click',function(e){ if(!e.target.closest('.ft-menu')) document.querySelectorAll('.ft-menu.open').forEach(function(m){m.classList.remove('open');}); });
+// « En chemin » : au plus tôt 4 h avant le départ, et jamais pendant une modification de prix en attente
+function _onWayLock(r){
+  if(r.on_way_at || r.status!=='confirmed') return '';
+  if(r.change_state==='supplement') return 'En attente du paiement du client';
+  if(r.change_state) return 'Modification à traiter';
+  if(!r.ride_date) return '';
+  var st=new Date(r.ride_date+'T'+String(r.ride_time||'00:00').slice(0,5)+':00'), from=new Date(st.getTime()-4*3600000);
+  if(new Date()>=from) return '';
+  var hm=String(from.getHours()).padStart(2,'0')+':'+String(from.getMinutes()).padStart(2,'0');
+  var same=from.toDateString()===new Date().toDateString();
+  return 'En chemin dès '+(same?'':String(from.getDate()).padStart(2,'0')+'/'+String(from.getMonth()+1).padStart(2,'0')+' ')+hm;
+}
 function _missionStepBtn(r){
   var id=String(r.id).replace(/'/g,'');
   var b=function(step,label){ return '<button class="btn btn-green ms-btn" style="margin-left:8px;" onclick="missionStep(\''+id+'\',\''+step+'\',this)">'+label+'</button>'; };
-  if(!r.on_way_at) return b('on_way','En chemin');
+  if(!r.on_way_at){
+    var lk=_onWayLock(r);
+    if(lk) return '<button class="btn ms-btn" disabled style="margin-left:8px;background:#E4E8E3;color:var(--ink3);cursor:not-allowed;" title="'+_rdEsc(lk)+'">'+_rdEsc(lk)+'</button>';
+    return b('on_way','En chemin');
+  }
   if(!r.pickup_at) return '<button class="btn ms-btn" style="margin-left:8px;background:#fff;color:#B3261E;border:1.5px solid #F5C2BC;" onclick="missionNoShow(\''+id+'\',this)">No Show</button>'+b('pickup','Pick up terminé');
   return b('done','Mission terminée');
 }
@@ -9990,10 +10009,10 @@ window._chgBannerHtml=function(r, isClient){
     +'<div class="chg-box"><div class="chg-kv"><span>Prix payé par le client</span><b>'+_chgEur(paid)+' TVAC</b></div><div class="chg-kv"><span>Soit HTVA</span><b>'+_chgEur(htva)+'</b></div>'
     +'<div class="chg-q">Que souhaitez-vous faire ?</div>'
     +'<label class="chg-opt"><input type="radio" name="chg-act" value="accept" onchange="_chgOpt(this)"><span><b>J’accepte la modification</b><small>Au même prix. La mission reste confirmée.</small></span></label>'
-    +'<label class="chg-opt"><input type="radio" name="chg-act" value="supplement" onchange="_chgOpt(this)"><span style="flex:1;"><b>Je demande un supplément</b><small>Le client paie la différence ou annule.</small>'
+    +'<label class="chg-opt"><input type="radio" name="chg-act" value="supplement" onchange="_chgOpt(this)"><span style="flex:1;"><b>Je modifie mon offre</b><small>Prix plus élevé : le client paie la différence ou annule. Prix plus bas : appliqué tout de suite, la différence est remboursée au client.</small>'
       +'<span class="chg-supp" style="display:none;"><span class="chg-lbl">Nouveau prix total (€ HTVA)</span><input type="number" id="chg-price" min="1" step="1" inputmode="decimal" placeholder="'+Math.ceil(htva+10)+'" data-paid="'+paid+'" oninput="_chgPrev()">'
       +'<span class="chg-prev" id="chg-prev"></span><span class="chg-lbl">Message au client (optionnel)</span><textarea id="chg-msg" rows="2" maxlength="500" placeholder="Trajet plus long, attente supplémentaire…"></textarea></span></span></label>'
-    +'<label class="chg-opt"><input type="radio" name="chg-act" value="withdraw" onchange="_chgOpt(this)"><span><b>Je me retire de la mission</b><small>Le client est prévenu et choisit : republier sa demande ou l’annuler (remboursé).</small></span></label>'
+    +'<label class="chg-opt"><input type="radio" name="chg-act" value="withdraw" onchange="_chgOpt(this)"><span><b style="color:var(--red);">Je me retire de la mission</b><small>Le client est prévenu et choisit : republier sa demande ou l’annuler (remboursé).</small></span></label>'
     +'<div id="chg-err" class="auth-error"></div>'
     +'<div class="chg-act"><button type="button" class="btn btn-green" onclick="_chgSend(this,\''+id+'\')">Envoyer ma réponse →</button></div></div>';
   if(st==='supplement') return '<div class="chg-ban b"><b class="chg-t">Supplément demandé : '+_chgEur(r.supp_amount)+'</b>En attente de la réponse du client'+(r.supp_deadline?' (au plus tard le '+_chgWhen(r.supp_deadline)+')':'')+'. Sans réponse, la mission sera annulée.</div>';
@@ -10010,7 +10029,9 @@ window._chgPrev=function(){
   var p=parseFloat(String(i.value).replace(',','.')), paid=parseFloat(i.getAttribute('data-paid'))||0;
   if(!(p>0)){ pv.textContent=''; return; }
   var sup=Math.round((p*(1+TVA_RATE)-paid)*100)/100;
-  pv.innerHTML=sup>=0.5?'Supplément pour le client : <b>+ '+_chgEur(sup)+' TVAC</b> (nouveau total '+_chgEur(paid+sup)+')':'<span style="color:var(--red);">Le nouveau prix doit être supérieur au prix payé ('+_chgEur(paid/(1+TVA_RATE))+' HTVA).</span>';
+  pv.innerHTML=sup>=0.5?'Supplément pour le client : <b>+ '+_chgEur(sup)+' TVAC</b> (nouveau total '+_chgEur(paid+sup)+')'
+    :sup<=-0.5?'Prix revu à la baisse : <b>'+_chgEur(-sup)+' TVAC</b> remboursés au client (nouveau total '+_chgEur(paid+sup)+')'
+    :'<span style="color:var(--red);">Prix identique au prix payé : choisissez « J’accepte la modification ».</span>';
 };
 function _chgRefresh(){ try{ closeModal('m-ride-detail'); }catch(e){} var a=document.querySelector('.page.active'); if(a) showPage(a.id.replace('page-','')); }
 window._chgSend=async function(btn, rideId){
@@ -10024,7 +10045,7 @@ window._chgSend=async function(btn, rideId){
   try{
     var res=await sb.rpc('api_mission_reply',{ p_ride:rideId, p_action:sel.value, p_price:price, p_message:msg||null });
     if(res.error) throw res.error;
-    showToast(sel.value==='accept'?'✅ Modification acceptée':sel.value==='supplement'?'✅ Supplément envoyé au client':'Vous vous êtes retiré de la mission');
+    showToast(sel.value==='accept'?'✅ Modification acceptée':sel.value==='supplement'?(res.data&&res.data.refund?'✅ Nouveau prix appliqué — le client sera remboursé':'✅ Nouveau prix envoyé au client'):'Vous vous êtes retiré de la mission');
     _chgRefresh();
   }catch(e){ fail(e.message||String(e)); btn.disabled=false; }
 };
@@ -15201,7 +15222,7 @@ function _arRenderTable(rides, el){
       : '';
     var safeR = JSON.stringify(r).replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    var refundBadge = (r.status==='cancelled' && r.final_price && r.payment_method && r.payment_method!=='refunded' && r.payment_method!=='non_refundable')
+    var refundBadge = ((r.status==='cancelled' && r.final_price && r.payment_method && r.payment_method!=='refunded' && r.payment_method!=='non_refundable') || (r.status!=='cancelled' && _partialRefund(r)>0))
       ? '<span style="font-size:10px;font-weight:700;background:var(--red-bg);color:var(--red);padding:2px 7px;border-radius:20px;margin-left:4px;white-space:nowrap;">⚠ Remb.</span>'
       : '';
 
@@ -15312,7 +15333,7 @@ window.arOpenDetail = async function(row){
     footerHtml = '<button class="btn btn-secondary" onclick="closeModal(\'m-ar-detail\')">Fermer</button>'
       +'<button class="btn btn-green" onclick="adminConfirmPayment(\''+r.id+'\')" style="margin-left:8px;">✓ Confirmer le paiement</button>';
   } else if(r.status === 'cancelled' && r.final_price && r.payment_method && r.payment_method !== 'non_refundable'){
-    var refundAmt = parseFloat(r.final_price).toFixed(2).replace('.',',');
+    var refundAmt = (parseFloat(r.final_price) + _partialRefund(r)).toFixed(2).replace('.',',');
     var isRefundBank   = r.payment_method === 'bank_transfer';
     var isRefundStripe = r.payment_method === 'stripe';
     var refundMethod   = isRefundBank ? 'Virement bancaire' : isRefundStripe ? 'Stripe' : r.payment_method;
@@ -15330,6 +15351,20 @@ window.arOpenDetail = async function(row){
     +'</div>';
     footerHtml = '<button class="btn btn-secondary" onclick="closeModal(\'m-ar-detail\')">Fermer</button>'
       +'<button class="btn btn-danger" onclick="adminMarkRefunded(\''+r.id+'\')" style="margin-left:8px;">✓ Remboursement effectué</button>';
+  } else if(_partialRefund(r) > 0){
+    // Prix revu à la baisse par le chauffeur après une modification du client : remboursement partiel
+    var pAmt=_partialRefund(r).toFixed(2).replace('.',',');
+    body += '<div style="padding:14px 16px;background:var(--red-bg);border-radius:var(--r);border:1.5px solid var(--red)22;">'
+      +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;color:var(--red);"><span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Remboursement partiel à effectuer</span></div>'
+      +'<div style="display:grid;grid-template-columns:130px 1fr;gap:4px 12px;font-size:12.5px;line-height:1.9;">'
+        +'<span style="color:var(--ink3);">Mode</span><span style="font-weight:600;">'+(r.payment_method==='bank_transfer'?'Virement bancaire':'Stripe')+'</span>'
+        +'<span style="color:var(--ink3);">Montant TVAC</span><span style="font-weight:700;color:var(--red);">'+pAmt+' €</span>'
+        +'<span style="color:var(--ink3);">Nouveau prix</span><span style="font-weight:600;">'+parseFloat(r.final_price||0).toFixed(2).replace('.',',')+' € TVAC</span>'
+      +'</div>'
+      +'<div style="font-size:11px;color:var(--ink3);margin-top:4px;">Le chauffeur a revu son prix à la baisse après une modification du client (dans Stripe : remboursement partiel du paiement).</div>'
+    +'</div>';
+    footerHtml = '<button class="btn btn-secondary" onclick="closeModal(\'m-ar-detail\')">Fermer</button>'
+      +'<button class="btn btn-danger" onclick="adminMarkPartialRefunded(\''+r.id+'\')" style="margin-left:8px;">✓ Remboursement partiel effectué</button>';
   }
 
   var subIcon2 = r.is_subcontract
@@ -15468,7 +15503,7 @@ window.adminMarkRefunded = async function(rideId){
   if(btn){ btn.disabled=true; btn.textContent='Traitement…'; }
   try {
     // Mark ride as refunded by clearing final_price (or add a refunded flag if available)
-    var { error } = await sb.rpc('api_admin_save',{ p_table:'rides', p_id:rideId, p_data:{payment_method:'refunded'} });
+    var { error } = await sb.rpc('api_admin_save',{ p_table:'rides', p_id:rideId, p_data:{payment_method:'refunded', refund_done_at:new Date().toISOString()} });
     if(error) throw error;
     closeModal('m-ar-detail');
     showToast('✅ Remboursement marqué comme effectué');
@@ -15480,6 +15515,24 @@ window.adminMarkRefunded = async function(rideId){
   }
 };
 
+// Remboursement partiel en attente (prix revu à la baisse) : montant TVAC
+function _partialRefund(r){ return r && !r.refund_done_at ? (parseFloat(r.refund_due)||0) : 0; }
+window.adminMarkPartialRefunded = async function(rideId){
+  if(!sb) return;
+  var btn = document.querySelector('#ar-detail-ft .btn-danger');
+  if(btn){ btn.disabled=true; btn.textContent='Traitement…'; }
+  try {
+    var { error } = await sb.rpc('api_admin_save',{ p_table:'rides', p_id:rideId, p_data:{ refund_done_at:new Date().toISOString() } });
+    if(error) throw error;
+    closeModal('m-ar-detail');
+    showToast('✅ Remboursement partiel marqué comme effectué');
+    await loadAdminRides();
+    await refreshAdminDashboard();
+  } catch(e) {
+    showToast('Erreur : '+(e.message||e));
+    if(btn){ btn.disabled=false; btn.textContent='✓ Remboursement partiel effectué'; }
+  }
+};
 window.adminConfirmPayment = async function(rideId){
   if(!sb) return;
   var btn = document.querySelector('#ar-detail-ft .btn-green');
@@ -15510,7 +15563,7 @@ window.refreshAdminDashboard = async function() {
     var [clientsRes, fleetsRes, ridesRes] = await Promise.all([
       sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','client'),
       sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','driver'),
-      sb.from('rides').select('id,final_price,ride_date,status,is_subcontract,payment_method')
+      sb.from('rides').select('id,final_price,ride_date,status,is_subcontract,payment_method,refund_due,refund_done_at')
     ]);
 
     var totalClients = clientsRes.count || 0;
@@ -15571,6 +15624,8 @@ window.refreshAdminDashboard = async function() {
     var refundRides = filteredRides.filter(function(r){ return r.status==='cancelled' && r.final_price && !r.is_subcontract && r.payment_method && r.payment_method!=='refunded' && r.payment_method!=='non_refundable'; });
     var refundBank   = refundRides.filter(function(r){ return r.payment_method==='bank_transfer'; }).reduce(function(s,r){ return s+parseFloat(r.final_price); },0);
     var refundStripe = refundRides.filter(function(r){ return r.payment_method==='stripe'; }).reduce(function(s,r){ return s+parseFloat(r.final_price); },0);
+    // + remboursements partiels (prix revu à la baisse) encore à faire
+    filteredRides.forEach(function(r){ var pr=_partialRefund(r); if(pr>0 && !(r.status==='cancelled' && r.payment_method==='refunded')){ if(r.payment_method==='bank_transfer') refundBank+=pr; else refundStripe+=pr; } });
     var refundTotal  = refundBank + refundStripe;
 
     var fmt = function(v){ return v > 0 ? v.toFixed(2).replace('.',',')+' €' : '0,00 €'; };

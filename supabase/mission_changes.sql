@@ -20,6 +20,9 @@
 -- ════════════════════════════════════════════════════════════════
 
 alter table public.offers add column if not exists outdated_changes text;   -- détail de ce qui a changé depuis l'offre
+alter table public.rides add column if not exists refund_due     numeric;       -- prix revu à la baisse : montant TVAC à rembourser au client
+alter table public.rides add column if not exists refund_due_at  timestamptz;
+alter table public.rides add column if not exists refund_done_at timestamptz;   -- remboursement partiel effectué (admin)
 alter table public.rides add column if not exists change_state   text;          -- to_review | supplement | withdrawn
 alter table public.rides add column if not exists change_summary text;
 alter table public.rides add column if not exists change_at      timestamptz;
@@ -267,9 +270,22 @@ begin
     if p_price is null or p_price <= 0 or p_price > 100000 then raise exception 'Prix invalide' using errcode = '22023'; end if;
     v_new := round(p_price * 1.06, 2);                       -- TVA 6 % (identique à create-checkout)
     v_supp := round(v_new - coalesce(r.final_price, 0), 2);
-    if v_supp < 0.5 then
-      raise exception 'Le nouveau prix doit être supérieur au prix déjà payé (% € TVAC, soit % € HTVA).',
-        _eur(coalesce(r.final_price, 0)), _eur(coalesce(r.final_price, 0) / 1.06) using errcode = '22023';
+    if v_supp > -0.5 and v_supp < 0.5 then
+      raise exception 'Le nouveau prix est identique au prix payé : choisissez « J’accepte la modification ».' using errcode = '22023';
+    end if;
+    if v_supp <= -0.5 then
+      -- Prix revu à la baisse (le client a réduit sa demande) : appliqué tout de suite, la différence est remboursée
+      t := _trusted_begin();
+      update offers set price = round(p_price, 2) where ride_id = p_ride and status = 'accepted';
+      update rides set final_price = v_new, refund_due = round(coalesce(case when refund_done_at is null then refund_due end, 0) - v_supp, 2),
+                       refund_due_at = now(), refund_done_at = null,
+                       change_state = null, change_summary = null, change_at = null, supp_message = _api_txt(p_message, 500)
+       where id = p_ride;
+      perform _trusted_end(t);
+      perform _api_notify(r.client_id, 'mission_accepted', 'Modification acceptée — prix revu à la baisse',
+        'Votre chauffeur a accepté la modification de la course ' || v_code || ' et revu son prix : ' || _eur(v_new) ||
+        ' € TVAC. La différence de ' || _eur(-v_supp) || ' € vous sera remboursée.', p_ride);
+      return jsonb_build_object('state', null, 'refund', -v_supp);
     end if;
     if v_dl is null or v_dl <= now() then raise exception 'Trop tard : la course commence dans moins de % h.', _refund_delay_hours(r) using errcode = '42501'; end if;
     t := _trusted_begin();
@@ -460,10 +476,18 @@ create trigger z_rides_credit_release after update of status on public.rides
 create or replace function public.trg_rides_change_block_steps()
 returns trigger language plpgsql set search_path = public as $$
 begin
-  if old.change_state in ('to_review','withdrawn')
+  if old.change_state in ('to_review','withdrawn','supplement')
      and (new.on_way_at is distinct from old.on_way_at or new.pickup_at is distinct from old.pickup_at
           or (new.status in ('active','done') and new.status is distinct from old.status)) then
-    raise exception 'Répondez d''abord à la modification du client (accepter, supplément ou retrait).' using errcode = '42501';
+    raise exception '%', case when old.change_state = 'supplement'
+      then 'En attente du client : il doit d''abord accepter et payer votre nouveau prix.'
+      else 'Répondez d''abord à la modification du client (accepter, modifier votre offre ou vous retirer).' end using errcode = '42501';
+  end if;
+  -- « En chemin » au plus tôt 4 h avant le début de la course
+  if new.on_way_at is not null and old.on_way_at is null and public._is_user_not_admin()
+     and _ride_start(new) is not null and _ride_start(new) - interval '4 hours' > _now_bxl() then
+    raise exception 'Trop tôt : « En chemin » est possible à partir du % (4 h avant le départ).',
+      to_char(_ride_start(new) - interval '4 hours', 'DD/MM à HH24:MI') using errcode = '42501';
   end if;
   return new;
 end $$;

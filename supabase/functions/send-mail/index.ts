@@ -360,8 +360,13 @@ function build({ type, data = {} }: Payload) {
     case "mission_accepted":
       return mail(`Modification acceptée — ${d.code ?? ""}`, {
         title: "Votre modification est acceptée.",
-        intro: `${hi(d.clientName)}votre chauffeur a accepté la modification de la course ${b(d.code)}. Elle reste confirmée au même prix.`,
-        card: trip(d, { price: false }),
+        intro: d.refund
+          ? `${hi(d.clientName)}votre chauffeur a accepté la modification de la course ${b(d.code)} et a revu son prix à la baisse. La différence de ${b(d.refund)} vous sera remboursée.`
+          : `${hi(d.clientName)}votre chauffeur a accepté la modification de la course ${b(d.code)}. Elle reste confirmée au même prix.`,
+        card: d.refund
+          ? box(infoGrid([["Déjà payé", d.paid ?? ""], ["Nouveau prix TVAC", d.total ?? ""], ["Remboursé", d.refund ? "− " + d.refund : ""]]))
+          : trip(d, { price: false }),
+        after: d.refund ? (d.note ? callout("Message du chauffeur", d.note, "info") : "") + trip(d, { price: false }) : "",
         cta: { label: "Voir la course", url },
       });
     case "supplement_paid":

@@ -57,7 +57,11 @@ begin
     perform _send_mail_hook('driver_withdrew', new.client_id, d || jsonb_build_object(
       'note', coalesce(new.supp_message, ''), 'deadline', coalesce(to_char(new.supp_deadline at time zone 'Europe/Brussels', 'DD/MM/YYYY à HH24:MI'), '')));
   elsif new.change_state is null and old.change_state = 'to_review' then
-    perform _send_mail_hook('mission_accepted', new.client_id, d);
+    perform _send_mail_hook('mission_accepted', new.client_id, d || case
+      when coalesce(new.refund_due, 0) > coalesce(old.refund_due, 0) + 0.004 and new.final_price < old.final_price
+      then jsonb_build_object('refund', _eur(old.final_price - new.final_price) || ' €',
+                              'paid', _eur(old.final_price) || ' €', 'total', _eur(new.final_price) || ' €', 'note', coalesce(new.supp_message, ''))
+      else '{}'::jsonb end);
   elsif new.change_state is null and old.change_state = 'supplement' and new.final_price > old.final_price then
     perform _send_mail_hook('supplement_paid', new.driver_id, d || jsonb_build_object('amount', _eur(new.final_price - old.final_price) || ' €'));
   end if;
