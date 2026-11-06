@@ -934,6 +934,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .ld-nav.solid .ld-logo .lt{opacity:0}.ld-nav.solid .ld-logo .dk{opacity:1}
 .ld-nav-r{display:flex;align-items:center;gap:26px;font-size:13.5px}
 .ld-nav-r .ln-link{background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0}.ld-nav-r .ln-link:hover{opacity:.7}
+.ld-lang{display:flex;gap:2px;padding:2px;border-radius:999px;border:1px solid currentColor;border-color:color-mix(in srgb,currentColor 35%,transparent)}.ld-lang .lang-btn{flex:none;padding:4px 8px;border-radius:999px;font-size:11px;color:inherit;opacity:.75;background:transparent}.ld-lang .lang-btn.active{opacity:1;background:color-mix(in srgb,currentColor 18%,transparent);color:inherit}
 .ld-nav .ld-btn{padding:11px 20px;font-size:13px}
 .ld-hero{position:relative;height:100vh;min-height:700px;color:#F5F1E8;overflow:hidden;flex-shrink:0}
 .ld-hero-bg{position:absolute;inset:-6% 0 0 0;will-change:transform}
@@ -1513,6 +1514,10 @@ option[hidden]{display:none;}
 // Largeur « logique » : sur iPad on se comporte comme sur iPhone
 function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.innerWidth; }
 </script>
+<!-- Traductions (i18n/fr.js = référence, en.js, es.js) — augmenter ?v= à chaque modification -->
+<script src="i18n/fr.js?v=1"></script>
+<script src="i18n/en.js?v=1"></script>
+<script src="i18n/es.js?v=1"></script>
 <script>window.initGooglePlaces=window.initGooglePlaces||function(){if(window._gpReady)window._gpReady();};window._gpReady=null;</script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places,routes&language=fr&loading=async&callback=initGooglePlaces" async defer></script>
 </head>
@@ -1525,11 +1530,12 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
   <nav class="ld-nav" id="ld-nav">
     <div class="ld-logo"><img class="lt" src="logo_text_light.png" alt="Bleenr"><img class="dk" src="data:image/png;base64,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" alt=""></div>
     <div class="ld-nav-r">
-      <button class="ln-link" data-ld-go="ld-services">Services</button>
-      <button class="ln-link" data-ld-go="ld-classes">V&eacute;hicules</button>
-      <button class="ln-link" data-ld-go="ld-drivers">Chauffeurs</button>
-      <button class="ln-link" onclick="showLandingAuth('login')">Connexion</button>
-      <button class="ld-btn" onclick="showLandingAuth('register')">Commencer</button>
+      <button data-i18n="ld.services" class="ln-link" data-ld-go="ld-services">Services</button>
+      <button data-i18n="ld.vehicules" class="ln-link" data-ld-go="ld-classes">V&eacute;hicules</button>
+      <button data-i18n="ld.chauffeurs" class="ln-link" data-ld-go="ld-drivers">Chauffeurs</button>
+      <button data-i18n="ld.connexion" class="ln-link" onclick="showLandingAuth('login')">Connexion</button>
+      <div class="ld-lang" role="group" aria-label="Langue / Language"><button class="lang-btn" onclick="setLang('fr')">FR</button><button class="lang-btn" onclick="setLang('en')">EN</button><button class="lang-btn" onclick="setLang('es')">ES</button></div>
+      <button data-i18n="ld.commencer" class="ld-btn" onclick="showLandingAuth('register')">Commencer</button>
     </div>
   </nav>
 
@@ -1539,23 +1545,23 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     </div>
     <div class="ld-hero-scrim"></div>
     <div class="ld-wrap ld-hero-in">
-      <h1 class="ld-serif">Arrivez<br><em>&agrave; votre fa&ccedil;on.</em></h1>
-      <p class="ld-hero-lead">Publiez votre trajet, recevez les offres de chauffeurs et de flottes v&eacute;rifi&eacute;s, choisissez. Le prix est fix&eacute; avant le d&eacute;part.</p>
+      <h1 data-i18n-html="ld.arriveza_votre_facon" class="ld-serif">Arrivez<br><em>&agrave; votre fa&ccedil;on.</em></h1>
+      <p data-i18n="ld.publiez_votre_trajet_recevez_les" class="ld-hero-lead">Publiez votre trajet, recevez les offres de chauffeurs et de flottes v&eacute;rifi&eacute;s, choisissez. Le prix est fix&eacute; avant le d&eacute;part.</p>
       <div class="ld-book">
         <div class="ld-book-tabs">
-          <button class="ld-book-tab on" data-ld-mode="trajet">Aller simple</button>
-          <button class="ld-book-tab" data-ld-mode="heure">&Agrave; l'heure</button>
+          <button data-i18n="ld.aller_simple" class="ld-book-tab on" data-ld-mode="trajet">Aller simple</button>
+          <button data-i18n="ld.a_l_heure" class="ld-book-tab" data-ld-mode="heure">&Agrave; l'heure</button>
         </div>
         <!-- formulaire séparé : le gestionnaire de mots de passe du navigateur n'y place plus l'e-mail de connexion -->
         <form class="ld-book-row" autocomplete="off" onsubmit="return false">
-          <div class="ld-field"><label>D&eacute;part</label><input id="ld-from" name="ld-trip-start" autocomplete="off" readonly data-ro="1" placeholder="Adresse, gare, a&eacute;roport"></div>
-          <div class="ld-field" id="ld-to-wrap"><label>Arriv&eacute;e</label><input id="ld-to" name="ld-trip-end" autocomplete="off" readonly data-ro="1" placeholder="Destination"></div>
-          <div class="ld-field" id="ld-dur-wrap" style="display:none"><label>Dur&eacute;e</label><select id="ld-dur"><option value="2">2 heures</option><option value="3" selected>3 heures</option><option value="6">6 heures</option><option value="10">Journ&eacute;e &middot; 10 h</option></select></div>
-          <div class="ld-field"><label>Date</label><input id="ld-date" type="date"></div>
-          <div class="ld-field"><label>Heure</label><input id="ld-time" type="time" value="09:00"></div>
-          <button type="button" class="ld-btn" id="ld-book-go">Recevoir des offres &rarr;</button>
+          <div class="ld-field"><label data-i18n="ld.depart">D&eacute;part</label><input data-i18n-ph="ld.adresse_gare_aeroport" id="ld-from" name="ld-trip-start" autocomplete="off" readonly data-ro="1" placeholder="Adresse, gare, a&eacute;roport"></div>
+          <div class="ld-field" id="ld-to-wrap"><label data-i18n="ld.arrivee">Arriv&eacute;e</label><input data-i18n-ph="ld.destination" id="ld-to" name="ld-trip-end" autocomplete="off" readonly data-ro="1" placeholder="Destination"></div>
+          <div class="ld-field" id="ld-dur-wrap" style="display:none"><label data-i18n="ld.duree">Dur&eacute;e</label><select id="ld-dur"><option data-i18n="ld.2_heures" value="2">2 heures</option><option data-i18n="ld.3_heures" value="3" selected>3 heures</option><option data-i18n="ld.6_heures" value="6">6 heures</option><option data-i18n="ld.journee_10_h" value="10">Journ&eacute;e &middot; 10 h</option></select></div>
+          <div class="ld-field"><label data-i18n="ld.date">Date</label><input id="ld-date" type="date"></div>
+          <div class="ld-field"><label data-i18n="ld.heure">Heure</label><input id="ld-time" type="time" value="09:00"></div>
+          <button data-i18n="ld.recevoir_des_offres" type="button" class="ld-btn" id="ld-book-go">Recevoir des offres &rarr;</button>
         </form>
-        <div class="ld-book-note">Gratuit et sans engagement &mdash; vous acceptez l'offre qui vous convient.</div>
+        <div data-i18n="ld.gratuit_et_sans_engagement_vous" class="ld-book-note">Gratuit et sans engagement &mdash; vous acceptez l'offre qui vous convient.</div>
       </div>
     </div>
   </section>
@@ -1563,14 +1569,14 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
   <section class="ld-story" id="ld-story">
     <div class="ld-story-pin">
       <div class="ld-story-l">
-        <span class="ld-eye" style="color:rgba(169,212,176,.8)">Une course Bleenr, de bout en bout</span>
+        <span data-i18n="ld.une_course_bleenr_de_bout" class="ld-eye" style="color:rgba(169,212,176,.8)">Une course Bleenr, de bout en bout</span>
         <div class="ld-clock" id="ld-clock">08:12</div>
         <div class="ld-chaps">
-          <div class="ld-chap on" data-t="08:12"><span class="ld-eye">01 &middot; R&eacute;servation</span><h3 class="ld-serif">Elle a r&eacute;serv&eacute; ce matin, <em>en une minute.</em></h3><p>Adresse de d&eacute;part, destination, heure. Sa course est publi&eacute;e aux chauffeurs disponibles de la r&eacute;gion.</p></div>
-          <div class="ld-chap" data-t="08:26"><span class="ld-eye">02 &middot; Les offres</span><h3 class="ld-serif">Des chauffeurs <em>r&eacute;pondent.</em></h3><p>Les chauffeurs et flottes disponibles re&ccedil;oivent la demande sur leur t&eacute;l&eacute;phone et envoient leur offre. Elle compare et choisit.</p></div>
-          <div class="ld-chap" data-t="19:40"><span class="ld-eye">03 &middot; L'accueil</span><h3 class="ld-serif">Il l'attend <em>&agrave; l'heure.</em></h3><p>Devant l'h&ocirc;tel, porti&egrave;re ouverte. Licence, assurance, contr&ocirc;le technique : chaque chauffeur partenaire est v&eacute;rifi&eacute;.</p></div>
-          <div class="ld-chap" data-t="19:42"><span class="ld-eye">04 &middot; Le trajet</span><h3 class="ld-serif">Rien &agrave; <em>expliquer.</em></h3><p>Destination, horaire, pr&eacute;f&eacute;rences : tout a &eacute;t&eacute; transmis avant son arriv&eacute;e. Pas de compteur, pas de surprise.</p></div>
-          <div class="ld-chap" data-t="20:05"><span class="ld-eye">05 &middot; Le d&eacute;part</span><h3 class="ld-serif">En route. <em>Rien &agrave; r&eacute;gler.</em></h3><p>Le paiement a &eacute;t&eacute; s&eacute;curis&eacute; en ligne &agrave; la r&eacute;servation. Le re&ccedil;u l'attend d&eacute;j&agrave;. Bonne soir&eacute;e.</p></div>
+          <div class="ld-chap on" data-t="08:12"><span data-i18n="ld.01_reservation" class="ld-eye">01 &middot; R&eacute;servation</span><h3 data-i18n-html="ld.elle_a_reserve_ce_matin" class="ld-serif">Elle a r&eacute;serv&eacute; ce matin, <em>en une minute.</em></h3><p data-i18n="ld.adresse_de_depart_destination_heure">Adresse de d&eacute;part, destination, heure. Sa course est publi&eacute;e aux chauffeurs disponibles de la r&eacute;gion.</p></div>
+          <div class="ld-chap" data-t="08:26"><span data-i18n="ld.02_les_offres" class="ld-eye">02 &middot; Les offres</span><h3 data-i18n-html="ld.des_chauffeurs_repondent" class="ld-serif">Des chauffeurs <em>r&eacute;pondent.</em></h3><p data-i18n="ld.les_chauffeurs_et_flottes_disponibles">Les chauffeurs et flottes disponibles re&ccedil;oivent la demande sur leur t&eacute;l&eacute;phone et envoient leur offre. Elle compare et choisit.</p></div>
+          <div class="ld-chap" data-t="19:40"><span data-i18n="ld.03_l_accueil" class="ld-eye">03 &middot; L'accueil</span><h3 data-i18n-html="ld.il_l_attend_a_l" class="ld-serif">Il l'attend <em>&agrave; l'heure.</em></h3><p data-i18n="ld.devant_l_hotel_portiere_ouverte">Devant l'h&ocirc;tel, porti&egrave;re ouverte. Licence, assurance, contr&ocirc;le technique : chaque chauffeur partenaire est v&eacute;rifi&eacute;.</p></div>
+          <div class="ld-chap" data-t="19:42"><span data-i18n="ld.04_le_trajet" class="ld-eye">04 &middot; Le trajet</span><h3 data-i18n-html="ld.rien_a_expliquer" class="ld-serif">Rien &agrave; <em>expliquer.</em></h3><p data-i18n="ld.destination_horaire_preferences_tout_a">Destination, horaire, pr&eacute;f&eacute;rences : tout a &eacute;t&eacute; transmis avant son arriv&eacute;e. Pas de compteur, pas de surprise.</p></div>
+          <div class="ld-chap" data-t="20:05"><span data-i18n="ld.05_le_depart" class="ld-eye">05 &middot; Le d&eacute;part</span><h3 data-i18n-html="ld.en_route_rien_a_regler" class="ld-serif">En route. <em>Rien &agrave; r&eacute;gler.</em></h3><p data-i18n="ld.le_paiement_a_ete_securise">Le paiement a &eacute;t&eacute; s&eacute;curis&eacute; en ligne &agrave; la r&eacute;servation. Le re&ccedil;u l'attend d&eacute;j&agrave;. Bonne soir&eacute;e.</p></div>
         </div>
         <div class="ld-rail" id="ld-rail"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
       </div>
@@ -1580,11 +1586,11 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 03 &mdash; accueil devant l'h&ocirc;tel</span></div><img src="assets/story/03-installation.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
         <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 04 &mdash; le trajet</span></div><img src="assets/story/04-fermeture.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
         <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 05 &mdash; la berline s'&eacute;loigne, feux arri&egrave;re allum&eacute;s</span></div><img src="assets/story/05-depart.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-card on"><div class="k">Course publi&eacute;e</div><div class="v">Bruxelles &rarr; Zaventem</div><div class="s">Ce soir, 19:40 &middot; Business</div></div>
-        <div class="ld-card"><div class="k">Offres re&ccedil;ues</div><div class="v">5 chauffeurs</div><div class="s">Comparez prix, v&eacute;hicule et avis</div></div>
-        <div class="ld-card"><div class="k">Chauffeur confirm&eacute;</div><div class="v">Mercedes Classe E</div><div class="s">Profil v&eacute;rifi&eacute; &middot; licence et assurance</div></div>
-        <div class="ld-card"><div class="k">Prix fixe</div><div class="v">Accept&eacute; &agrave; la r&eacute;servation</div><div class="s">Aucun suppl&eacute;ment en route</div></div>
-        <div class="ld-card"><div class="k">En route</div><div class="v">Paiement s&eacute;curis&eacute;</div><div class="s">Re&ccedil;u envoy&eacute; par e-mail</div></div>
+        <div class="ld-card on"><div data-i18n="ld.course_publiee" class="k">Course publi&eacute;e</div><div data-i18n="ld.bruxelles_zaventem" class="v">Bruxelles &rarr; Zaventem</div><div data-i18n="ld.ce_soir_19_40_business" class="s">Ce soir, 19:40 &middot; Business</div></div>
+        <div class="ld-card"><div data-i18n="ld.offres_recues" class="k">Offres re&ccedil;ues</div><div data-i18n="ld.5_chauffeurs" class="v">5 chauffeurs</div><div data-i18n="ld.comparez_prix_vehicule_et_avis" class="s">Comparez prix, v&eacute;hicule et avis</div></div>
+        <div class="ld-card"><div data-i18n="ld.chauffeur_confirme" class="k">Chauffeur confirm&eacute;</div><div data-i18n="ld.mercedes_classe_e" class="v">Mercedes Classe E</div><div data-i18n="ld.profil_verifie_licence_et_assurance" class="s">Profil v&eacute;rifi&eacute; &middot; licence et assurance</div></div>
+        <div class="ld-card"><div data-i18n="ld.prix_fixe" class="k">Prix fixe</div><div data-i18n="ld.accepte_a_la_reservation" class="v">Accept&eacute; &agrave; la r&eacute;servation</div><div data-i18n="ld.aucun_supplement_en_route" class="s">Aucun suppl&eacute;ment en route</div></div>
+        <div class="ld-card"><div data-i18n="ld.en_route" class="k">En route</div><div data-i18n="ld.paiement_securise" class="v">Paiement s&eacute;curis&eacute;</div><div data-i18n="ld.recu_envoye_par_e_mail" class="s">Re&ccedil;u envoy&eacute; par e-mail</div></div>
       </div>
     </div>
   </section>
@@ -1593,16 +1599,16 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div class="ld-svc-pin">
       <div class="ld-wrap">
         <div class="ld-svc-head">
-          <div><span class="ld-eye">Nos services</span><h2 class="ld-serif">Chaque trajet a<br>son <em>chauffeur</em>.</h2></div>
+          <div><span data-i18n="ld.nos_services" class="ld-eye">Nos services</span><h2 data-i18n-html="ld.chaque_trajet_ason_chauffeur" class="ld-serif">Chaque trajet a<br>son <em>chauffeur</em>.</h2></div>
           <span class="ld-svc-count" id="ld-svc-count">01 / 05</span>
         </div>
       </div>
       <div class="ld-track" id="ld-track">
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; terminal d'a&eacute;roport</span></div><img src="assets/landing/service-aeroport.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">01</span><h3 class="ld-serif">Transferts a&eacute;roport</h3><p>Zaventem, Charleroi, Schiphol ou Roissy : le chauffeur vous attend &agrave; l'heure convenue, bagages compris.</p></div></article>
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; chauffeur attendant devant un h&ocirc;tel</span></div><img src="assets/landing/service-heure.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">02</span><h3 class="ld-serif">Mise &agrave; disposition</h3><p>Un chauffeur &agrave; vos c&ocirc;t&eacute;s pour quelques heures ou une journ&eacute;e enti&egrave;re, pour encha&icirc;ner les rendez-vous.</p></div></article>
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; berline sur autoroute</span></div><img src="assets/landing/service-ville.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">03</span><h3 class="ld-serif">Ville &agrave; ville</h3><p>Bruxelles&ndash;Anvers, Li&egrave;ge, Paris ou Amsterdam : porte &agrave; porte, sans correspondance.</p></div></article>
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; arriv&eacute;e &agrave; une soir&eacute;e</span></div><img src="assets/landing/service-evenement.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">04</span><h3 class="ld-serif">&Eacute;v&eacute;nements</h3><p>Mariages, galas, s&eacute;minaires : plusieurs v&eacute;hicules coordonn&eacute;s pour tous vos invit&eacute;s.</p></div></article>
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; passager d'affaires &agrave; l'arri&egrave;re</span></div><img src="assets/landing/service-entreprise.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">05</span><h3 class="ld-serif">Entreprises</h3><p>Compte soci&eacute;t&eacute; avec num&eacute;ro de TVA, factures automatiques et historique de toutes les courses.</p></div></article>
+        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; terminal d'a&eacute;roport</span></div><img src="assets/landing/service-aeroport.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">01</span><h3 data-i18n="ld.transferts_aeroport" class="ld-serif">Transferts a&eacute;roport</h3><p data-i18n="ld.zaventem_charleroi_schiphol_ou_roissy">Zaventem, Charleroi, Schiphol ou Roissy : le chauffeur vous attend &agrave; l'heure convenue, bagages compris.</p></div></article>
+        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; chauffeur attendant devant un h&ocirc;tel</span></div><img src="assets/landing/service-heure.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">02</span><h3 data-i18n="ld.mise_a_disposition" class="ld-serif">Mise &agrave; disposition</h3><p data-i18n="ld.un_chauffeur_a_vos_cotes">Un chauffeur &agrave; vos c&ocirc;t&eacute;s pour quelques heures ou une journ&eacute;e enti&egrave;re, pour encha&icirc;ner les rendez-vous.</p></div></article>
+        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; berline sur autoroute</span></div><img src="assets/landing/service-ville.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">03</span><h3 data-i18n="ld.ville_a_ville" class="ld-serif">Ville &agrave; ville</h3><p data-i18n="ld.bruxellesanvers_liege_paris_ou_amsterdam">Bruxelles&ndash;Anvers, Li&egrave;ge, Paris ou Amsterdam : porte &agrave; porte, sans correspondance.</p></div></article>
+        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; arriv&eacute;e &agrave; une soir&eacute;e</span></div><img src="assets/landing/service-evenement.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">04</span><h3 data-i18n="ld.evenements" class="ld-serif">&Eacute;v&eacute;nements</h3><p data-i18n="ld.mariages_galas_seminaires_plusieurs_vehicules">Mariages, galas, s&eacute;minaires : plusieurs v&eacute;hicules coordonn&eacute;s pour tous vos invit&eacute;s.</p></div></article>
+        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; passager d'affaires &agrave; l'arri&egrave;re</span></div><img src="assets/landing/service-entreprise.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">05</span><h3 data-i18n="ld.entreprises" class="ld-serif">Entreprises</h3><p data-i18n="ld.compte_societe_avec_numero_de">Compte soci&eacute;t&eacute; avec num&eacute;ro de TVA, factures automatiques et historique de toutes les courses.</p></div></article>
         <div style="flex:0 0 40px"></div>
       </div>
     </div>
@@ -1611,8 +1617,8 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
   <section class="ld-cls" id="ld-classes">
     <div class="ld-wrap">
       <div class="ld-cls-top">
-        <div class="ld-rv"><span class="ld-eye">La flotte</span><h2 class="ld-serif">Choisissez votre<br><em>classe</em>.</h2></div>
-        <div class="ld-cls-tabs" id="ld-cls-tabs"><button class="ld-cls-tab on" data-k="0">Economy</button><button class="ld-cls-tab" data-k="1">Business</button><button class="ld-cls-tab" data-k="2">Premi&egrave;re</button><button class="ld-cls-tab" data-k="3">Van</button><button class="ld-cls-tab" data-k="4">Autocar</button></div>
+        <div class="ld-rv"><span data-i18n="ld.la_flotte" class="ld-eye">La flotte</span><h2 data-i18n-html="ld.choisissez_votreclasse" class="ld-serif">Choisissez votre<br><em>classe</em>.</h2></div>
+        <div class="ld-cls-tabs" id="ld-cls-tabs"><button class="ld-cls-tab on" data-k="0">Economy</button><button class="ld-cls-tab" data-k="1">Business</button><button data-i18n="ld.premiere" class="ld-cls-tab" data-k="2">Premi&egrave;re</button><button class="ld-cls-tab" data-k="3">Van</button><button data-i18n="ld.autocar" class="ld-cls-tab" data-k="4">Autocar</button></div>
       </div>
       <div class="ld-cls-body ld-rv">
         <div class="ld-cls-img" id="ld-cls-img">
@@ -1629,13 +1635,13 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 
   <section class="ld-inc">
     <div class="ld-wrap ld-inc-grid">
-      <div class="ld-inc-h"><span class="ld-eye">Dans chaque course</span><h2 class="ld-serif">Tout est <em>clair</em>.<br>D&egrave;s le d&eacute;part.</h2></div>
+      <div class="ld-inc-h"><span data-i18n="ld.dans_chaque_course" class="ld-eye">Dans chaque course</span><h2 data-i18n-html="ld.tout_est_clair_des_le" class="ld-serif">Tout est <em>clair</em>.<br>D&egrave;s le d&eacute;part.</h2></div>
       <div>
-        <div class="ld-inc-item ld-rv"><span class="n">01</span><div><h4>Prix fixe</h4><p>Vous acceptez un prix &agrave; la r&eacute;servation. C'est celui que vous payez.</p></div></div>
-        <div class="ld-inc-item ld-rv"><span class="n">02</span><div><h4>Chauffeurs v&eacute;rifi&eacute;s</h4><p>Licence, assurance et contr&ocirc;le technique sont contr&ocirc;l&eacute;s pour chaque partenaire.</p></div></div>
-        <div class="ld-inc-item ld-rv"><span class="n">03</span><div><h4>Vous choisissez</h4><p>Plusieurs offres, un comparatif clair : prix, v&eacute;hicule, avis des autres clients.</p></div></div>
-        <div class="ld-inc-item ld-rv"><span class="n">04</span><div><h4>Paiement s&eacute;curis&eacute;</h4><p>Carte bancaire en ligne, re&ccedil;u et facture envoy&eacute;s automatiquement.</p></div></div>
-        <div class="ld-inc-item ld-rv"><span class="n">05</span><div><h4>Tout est transmis</h4><p>Adresse, horaire, pr&eacute;f&eacute;rences : votre chauffeur sait tout avant d'arriver.</p></div></div>
+        <div class="ld-inc-item ld-rv"><span class="n">01</span><div><h4 data-i18n="ld.prix_fixe">Prix fixe</h4><p data-i18n="ld.vous_acceptez_un_prix_a">Vous acceptez un prix &agrave; la r&eacute;servation. C'est celui que vous payez.</p></div></div>
+        <div class="ld-inc-item ld-rv"><span class="n">02</span><div><h4 data-i18n="ld.chauffeurs_verifies">Chauffeurs v&eacute;rifi&eacute;s</h4><p data-i18n="ld.licence_assurance_et_controle_technique">Licence, assurance et contr&ocirc;le technique sont contr&ocirc;l&eacute;s pour chaque partenaire.</p></div></div>
+        <div class="ld-inc-item ld-rv"><span class="n">03</span><div><h4 data-i18n="ld.vous_choisissez">Vous choisissez</h4><p data-i18n="ld.plusieurs_offres_un_comparatif_clair">Plusieurs offres, un comparatif clair : prix, v&eacute;hicule, avis des autres clients.</p></div></div>
+        <div class="ld-inc-item ld-rv"><span class="n">04</span><div><h4 data-i18n="ld.paiement_securise">Paiement s&eacute;curis&eacute;</h4><p data-i18n="ld.carte_bancaire_en_ligne_recu">Carte bancaire en ligne, re&ccedil;u et facture envoy&eacute;s automatiquement.</p></div></div>
+        <div class="ld-inc-item ld-rv"><span class="n">05</span><div><h4 data-i18n="ld.tout_est_transmis">Tout est transmis</h4><p data-i18n="ld.adresse_horaire_preferences_votre_chauffeur">Adresse, horaire, pr&eacute;f&eacute;rences : votre chauffeur sait tout avant d'arriver.</p></div></div>
       </div>
     </div>
   </section>
@@ -1644,15 +1650,15 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div class="ld-wrap ld-drv-grid">
       <div class="ld-drv-img" id="ld-drv-img"><div class="ld-par" id="ld-drv-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; chauffeur au volant, lumi&egrave;re naturelle</span></div><img src="assets/landing/chauffeur.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
       <div>
-        <span class="ld-eye ld-rv" style="color:var(--lmi)">Chauffeurs &amp; flottes partenaires</span>
-        <h2 class="ld-serif ld-rv">De l'autre c&ocirc;t&eacute;<br>de la <em>vitre</em>.</h2>
-        <p class="lead ld-rv">Chauffeur ind&eacute;pendant ou soci&eacute;t&eacute; de transport, recevez des demandes de courses qualifi&eacute;es et faites vos offres.</p>
+        <span data-i18n="ld.chauffeurs_flottes_partenaires" class="ld-eye ld-rv" style="color:var(--lmi)">Chauffeurs &amp; flottes partenaires</span>
+        <h2 data-i18n-html="ld.de_l_autre_cotede_la" class="ld-serif ld-rv">De l'autre c&ocirc;t&eacute;<br>de la <em>vitre</em>.</h2>
+        <p data-i18n="ld.chauffeur_independant_ou_societe_de" class="lead ld-rv">Chauffeur ind&eacute;pendant ou soci&eacute;t&eacute; de transport, recevez des demandes de courses qualifi&eacute;es et faites vos offres.</p>
         <div class="ld-drv-list ld-rv">
-          <div><b>Vos courses</b><span>Consultez les demandes et r&eacute;pondez uniquement &agrave; celles qui vous int&eacute;ressent.</span></div>
-          <div><b>Vos prix</b><span>Vous fixez le montant de chaque offre.</span></div>
-          <div><b>Votre agenda</b><span>Un calendrier clair de vos courses confirm&eacute;es, paiements suivis en ligne.</span></div>
+          <div><b data-i18n="ld.vos_courses">Vos courses</b><span data-i18n="ld.consultez_les_demandes_et_repondez">Consultez les demandes et r&eacute;pondez uniquement &agrave; celles qui vous int&eacute;ressent.</span></div>
+          <div><b data-i18n="ld.vos_prix">Vos prix</b><span data-i18n="ld.vous_fixez_le_montant_de">Vous fixez le montant de chaque offre.</span></div>
+          <div><b data-i18n="ld.votre_agenda">Votre agenda</b><span data-i18n="ld.un_calendrier_clair_de_vos">Un calendrier clair de vos courses confirm&eacute;es, paiements suivis en ligne.</span></div>
         </div>
-        <button class="ld-btn light ld-rv" onclick="showLandingAuth('register')">Proposer mes services &rarr;</button>
+        <button data-i18n="ld.proposer_mes_services" class="ld-btn light ld-rv" onclick="showLandingAuth('register')">Proposer mes services &rarr;</button>
       </div>
     </div>
   </section>
@@ -1661,11 +1667,11 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 
   <section class="ld-final">
     <div class="ld-wrap">
-      <h2 class="ld-serif ld-rv">Votre chauffeur<br><em>vous attend.</em></h2>
-      <p class="ld-rv">Rejoignez Bleenr. Gratuit, sans engagement.</p>
+      <h2 data-i18n-html="ld.votre_chauffeurvous_attend" class="ld-serif ld-rv">Votre chauffeur<br><em>vous attend.</em></h2>
+      <p data-i18n="ld.rejoignez_bleenr_gratuit_sans_engagement" class="ld-rv">Rejoignez Bleenr. Gratuit, sans engagement.</p>
       <div class="ld-final-a ld-rv">
-        <button class="ld-btn" onclick="showLandingAuth('register')">Cr&eacute;er un compte</button>
-        <button class="ld-btn ghost" onclick="showLandingAuth('login')">Se connecter</button>
+        <button data-i18n="ld.creer_un_compte" class="ld-btn" onclick="showLandingAuth('register')">Cr&eacute;er un compte</button>
+        <button data-i18n="ld.se_connecter" class="ld-btn ghost" onclick="showLandingAuth('login')">Se connecter</button>
       </div>
     </div>
   </section>
@@ -1673,12 +1679,12 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
   <footer class="ld-foot">
     <div class="ld-wrap">
       <div class="ld-foot-g">
-        <div><img src="logo_text_light.png" alt="Bleenr" style="height:26px;width:auto;display:block"><p style="margin-top:18px;max-width:320px;line-height:1.6">Chauffeurs priv&eacute;s &agrave; Bruxelles et dans toute la Belgique.</p></div>
-        <div><h5>Services</h5><button data-ld-go="ld-services">Transferts a&eacute;roport</button><button data-ld-go="ld-services">Mise &agrave; disposition</button><button data-ld-go="ld-services">Ville &agrave; ville</button><button data-ld-go="ld-services">Entreprises</button></div>
-        <div><h5>Chauffeurs</h5><button onclick="showLandingAuth('register')">Devenir partenaire</button><button onclick="showLandingAuth('login')">Espace chauffeur</button></div>
-        <div><h5>Compte</h5><button onclick="showLandingAuth('register')">Cr&eacute;er un compte</button><button onclick="showLandingAuth('login')">Connexion</button></div>
+        <div><img src="logo_text_light.png" alt="Bleenr" style="height:26px;width:auto;display:block"><p data-i18n="ld.chauffeurs_prives_a_bruxelles_et" style="margin-top:18px;max-width:320px;line-height:1.6">Chauffeurs priv&eacute;s &agrave; Bruxelles et dans toute la Belgique.</p></div>
+        <div><h5 data-i18n="ld.services">Services</h5><button data-i18n="ld.transferts_aeroport" data-ld-go="ld-services">Transferts a&eacute;roport</button><button data-i18n="ld.mise_a_disposition" data-ld-go="ld-services">Mise &agrave; disposition</button><button data-i18n="ld.ville_a_ville" data-ld-go="ld-services">Ville &agrave; ville</button><button data-i18n="ld.entreprises" data-ld-go="ld-services">Entreprises</button></div>
+        <div><h5 data-i18n="ld.chauffeurs">Chauffeurs</h5><button data-i18n="ld.devenir_partenaire" onclick="showLandingAuth('register')">Devenir partenaire</button><button data-i18n="ld.espace_chauffeur" onclick="showLandingAuth('login')">Espace chauffeur</button></div>
+        <div><h5 data-i18n="ld.compte">Compte</h5><button data-i18n="ld.creer_un_compte" onclick="showLandingAuth('register')">Cr&eacute;er un compte</button><button data-i18n="ld.connexion" onclick="showLandingAuth('login')">Connexion</button></div>
       </div>
-      <div class="ld-foot-b"><span>&copy; 2026 DISPOSAL SRL &mdash; bleenr.com</span><span>Bruxelles, Belgique</span></div>
+      <div class="ld-foot-b"><span data-i18n="ld.2026_disposal_srl_bleenr_com">&copy; 2026 DISPOSAL SRL &mdash; bleenr.com</span><span data-i18n="ld.bruxelles_belgique">Bruxelles, Belgique</span></div>
     </div>
   </footer>
 
@@ -1691,14 +1697,14 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
   <aside class="au-side is-login" id="au-side">
     <div class="au-side-img"><img data-au="client" src="assets/auth/client.png" alt=""><img data-au="driver" src="assets/auth/fleet.png" alt=""></div>
     <div class="au-side-scrim"></div>
-    <div class="au-side-top"><img src="logo_text_light.png" alt="Bleenr"><button class="au-back" onclick="showScreen('landing')">&larr; Retour &agrave; l'accueil</button></div>
+    <div class="au-side-top"><img src="logo_text_light.png" alt="Bleenr"><button data-i18n="au.retour_a_l_accueil" class="au-back" onclick="showScreen('landing')">&larr; Retour &agrave; l'accueil</button></div>
     <div>
       <div class="au-copy">
-        <div class="au-msg on" data-au="login"><span class="au-eye">Espace membre</span><h2>Bon<br><em>retour.</em></h2><p>Retrouvez vos courses, vos offres et vos factures au m&ecirc;me endroit.</p></div>
-        <div class="au-msg" data-au="client"><span class="au-eye">Nouveau client</span><h2>Bienvenue<br><em>&agrave; bord.</em></h2><p>Cr&eacute;ez votre compte en une minute et publiez votre premi&egrave;re course.</p></div>
-        <div class="au-msg" data-au="driver"><span class="au-eye">Chauffeurs &amp; flottes</span><h2>Proposez vos<br><em>services.</em></h2><p>Recevez des demandes qualifi&eacute;es, faites vos offres et g&eacute;rez votre agenda.</p></div>
+        <div class="au-msg on" data-au="login"><span data-i18n="au.espace_membre" class="au-eye">Espace membre</span><h2 data-i18n-html="au.bonretour">Bon<br><em>retour.</em></h2><p data-i18n="au.retrouvez_vos_courses_vos_offres">Retrouvez vos courses, vos offres et vos factures au m&ecirc;me endroit.</p></div>
+        <div class="au-msg" data-au="client"><span data-i18n="au.nouveau_client" class="au-eye">Nouveau client</span><h2 data-i18n-html="au.bienvenuea_bord">Bienvenue<br><em>&agrave; bord.</em></h2><p data-i18n="au.creez_votre_compte_en_une">Cr&eacute;ez votre compte en une minute et publiez votre premi&egrave;re course.</p></div>
+        <div class="au-msg" data-au="driver"><span data-i18n="au.chauffeurs_flottes" class="au-eye">Chauffeurs &amp; flottes</span><h2 data-i18n-html="au.proposez_vosservices">Proposez vos<br><em>services.</em></h2><p data-i18n="au.recevez_des_demandes_qualifiees_faites">Recevez des demandes qualifi&eacute;es, faites vos offres et g&eacute;rez votre agenda.</p></div>
       </div>
-      <div class="au-points"><div><b>Prix fixe</b>accept&eacute; &agrave; la r&eacute;servation</div><div><b>V&eacute;rifi&eacute;s</b>licence et assurance</div><div><b>S&eacute;curis&eacute;</b>paiement en ligne</div></div>
+      <div class="au-points"><div data-i18n-html="au.prix_fixeaccepte_a_la_reservation"><b>Prix fixe</b>accept&eacute; &agrave; la r&eacute;servation</div><div data-i18n-html="au.verifieslicence_et_assurance"><b>V&eacute;rifi&eacute;s</b>licence et assurance</div><div data-i18n-html="au.securisepaiement_en_ligne"><b>S&eacute;curis&eacute;</b>paiement en ligne</div></div>
     </div>
   </aside>
   <div class="au-main"><div class="au-main-in">
@@ -1725,11 +1731,11 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
             <span>Microsoft</span>
           </button>
         </div>
-        <div class="auth-or"><span>OU</span></div>
-        <div class="input-group"><label>Adresse email</label><input id="inp-email" type="email" placeholder="marie@example.com" autocomplete="username" onkeydown="if(event.key==='Enter')submitLoginMain()"></div>
+        <div class="auth-or"><span data-i18n="au.or">OU</span></div>
+        <div class="input-group"><label data-i18n="au.adresse_email">Adresse email</label><input id="inp-email" type="email" placeholder="marie@example.com" autocomplete="username" onkeydown="if(event.key==='Enter')submitLoginMain()"></div>
         <div id="login-pwd-wrap" style="display:none;">
-          <div class="input-group"><label>Mot de passe</label><input id="inp-pwd" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitEmail()"></div>
-          <div id="forgot-pwd-link" style="text-align:right;margin:-4px 0 8px;"><a href="#" onclick="forgotPassword();return false;" style="font-size:12px;color:var(--green);text-decoration:none;">Mot de passe oublié ?</a></div>
+          <div class="input-group"><label data-i18n="au.mot_de_passe">Mot de passe</label><input id="inp-pwd" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitEmail()"></div>
+          <div id="forgot-pwd-link" style="text-align:right;margin:-4px 0 8px;"><a href="#" data-i18n="au.forgot_pwd" onclick="forgotPassword();return false;" style="font-size:12px;color:var(--green);text-decoration:none;">Mot de passe oublié ?</a></div>
         </div>
         <div id="auth-err-email" class="auth-error"></div>
         <button class="btn btn-primary btn-full" id="btn-email-submit" onclick="submitLoginMain()">Recevoir un code →</button>
@@ -1741,43 +1747,43 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 
         <!-- Step R1: Choose role -->
         <div id="reg-step1">
-          <div style="font-size:13px;font-weight:600;color:var(--ink3);margin-bottom:12px;">Vous êtes</div>
+          <div data-i18n="au.vous_etes" style="font-size:13px;font-weight:600;color:var(--ink3);margin-bottom:12px;">Vous êtes</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
             <div class="role-opt active" id="role-client" onclick="selectRole('client')">
               <span class="role-opt-icon"><svg width="30" height="30" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="11" r="4.6"/><path d="M5 26.5c1.4-5 5-7.8 9-7.8 2 0 3.9.7 5.4 2"/><path d="M24.5 17.5c-2.2 0-4 1.7-4 3.9 0 2.8 4 6.1 4 6.1s4-3.3 4-6.1c0-2.2-1.8-3.9-4-3.9z"/><circle cx="24.5" cy="21.3" r="1.2" fill="currentColor" stroke="none"/></svg></span>
-              <div class="role-opt-label">Client</div>
+              <div data-i18n="au.client" class="role-opt-label">Client</div>
             </div>
             <div class="role-opt" id="role-driver" onclick="selectRole('driver')">
               <span class="role-opt-icon"><svg width="38" height="20" viewBox="5 7.5 37 19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><g opacity=".45"><path d="M9 13.5l3-3.4c.5-.6 1.3-.9 2-.9h7.3c.8 0 1.5.3 2 .9l3.2 3.4"/><path d="M6.5 16.5v-1.2c0-.8.5-1.4 1.3-1.6"/></g><path d="M8 23v-3.4c0-1 .7-1.8 1.6-2l4.4-1 3.8-4.3c.7-.7 1.6-1.1 2.5-1.1h8.4c1 0 1.9.4 2.5 1.1l3.9 4.3 4.2 1c.9.2 1.6 1 1.6 2V23"/><path d="M8 23h2.4M18.6 23h6.8M33.6 23H40"/><circle cx="14.5" cy="23" r="2.9"/><circle cx="29.5" cy="23" r="2.9"/><path d="M17.8 16.2h13.4"/><path d="M24.5 12.2v4"/></svg></span>
-              <div class="role-opt-label">Fleet</div>
+              <div data-i18n="au.fleet" class="role-opt-label">Fleet</div>
             </div>
           </div>
-          <button class="btn btn-primary btn-full" onclick="regNextStep()">Continuer →</button>
+          <button data-i18n="au.continuer" class="btn btn-primary btn-full" onclick="regNextStep()">Continuer →</button>
         </div>
 
         <!-- Step R2a: Client type (particulier / pro) -->
         <div id="reg-step2-client" style="display:none;">
           <button onclick="regPrevStep()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink3);display:flex;align-items:center;gap:5px;padding:0;margin-bottom:16px;font-family:'DM Sans',sans-serif;">
-            <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Retour
+            <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> <span data-i18n="au.back">Retour</span>
           </button>
-          <div style="font-size:13px;font-weight:600;color:var(--ink3);margin-bottom:12px;">Type de compte</div>
+          <div data-i18n="au.type_de_compte" style="font-size:13px;font-weight:600;color:var(--ink3);margin-bottom:12px;">Type de compte</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
             <div class="role-opt active" id="ctype-perso" onclick="selectClientType('perso')">
               <span class="role-opt-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg></span>
-              <div class="role-opt-label">Particulier</div>
+              <div data-i18n="au.particulier" class="role-opt-label">Particulier</div>
             </div>
             <div class="role-opt" id="ctype-pro" onclick="selectClientType('pro')">
               <span class="role-opt-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg></span>
-              <div class="role-opt-label">Professionnel</div>
+              <div data-i18n="au.professionnel" class="role-opt-label">Professionnel</div>
             </div>
           </div>
-          <button class="btn btn-primary btn-full" onclick="regShowForm()">Continuer →</button>
+          <button data-i18n="au.continuer" class="btn btn-primary btn-full" onclick="regShowForm()">Continuer →</button>
         </div>
 
         <!-- Step R3: SSO + form -->
         <div id="reg-step3" style="display:none;">
           <button onclick="regPrevStep()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink3);display:flex;align-items:center;gap:5px;padding:0;margin-bottom:16px;font-family:'DM Sans',sans-serif;">
-            <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Retour
+            <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M8 2L4 6l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> <span data-i18n="au.back">Retour</span>
           </button>
           <div class="sso-stack">
             <button class="sso-row" onclick="ssoAuth('google')">
@@ -1789,32 +1795,32 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
               <span>Microsoft</span>
             </button>
           </div>
-          <div class="auth-or"><span>OU</span></div>
+          <div class="auth-or"><span data-i18n="au.or">OU</span></div>
           <!-- Registration fields -->
           <div id="reg-client-fields" style="display:none;">
             <div id="reg-perso-fields" class="form-grid">
-              <div class="input-group"><label>Prénom</label><input id="inp-fname" placeholder="Marie" autocomplete="given-name"></div>
-              <div class="input-group"><label>Nom</label><input id="inp-lname" placeholder="Dupont" autocomplete="family-name"></div>
+              <div class="input-group"><label data-i18n="au.prenom">Prénom</label><input id="inp-fname" placeholder="Marie" autocomplete="given-name"></div>
+              <div class="input-group"><label data-i18n="au.nom">Nom</label><input id="inp-lname" placeholder="Dupont" autocomplete="family-name"></div>
             </div>
             <div id="reg-pro-fields" style="display:none;">
-              <div class="input-group"><label>Nom de société</label><input id="inp-company-client" placeholder="Acme SA" autocomplete="organization"></div>
+              <div class="input-group"><label data-i18n="au.nom_de_societe">Nom de société</label><input id="inp-company-client" placeholder="Acme SA" autocomplete="organization"></div>
             </div>
           </div>
           <div id="reg-driver-fields" style="display:none;">
-            <div class="input-group"><label>Nom de société</label><input id="inp-company-driver" placeholder="Transport Dupont SPRL" autocomplete="organization"></div>
+            <div class="input-group"><label data-i18n="au.nom_de_societe">Nom de société</label><input id="inp-company-driver" placeholder="Transport Dupont SPRL" autocomplete="organization"></div>
           </div>
-          <div class="input-group"><label>Adresse email</label><input id="inp-email-reg" type="email" placeholder="marie@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')submitEmailReg()"></div>
-          <div id="reg-vat" class="input-group" style="display:none;"><label>N° de TVA (optionnel)</label><input id="inp-vat" placeholder="BE 0000.000.000"></div>
+          <div class="input-group"><label data-i18n="au.adresse_email">Adresse email</label><input id="inp-email-reg" type="email" placeholder="marie@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')submitEmailReg()"></div>
+          <div id="reg-vat" class="input-group" style="display:none;"><label data-i18n="au.n_de_tva_optionnel">N° de TVA (optionnel)</label><input id="inp-vat" placeholder="BE 0000.000.000"></div>
           <div id="auth-err-email-reg" class="auth-error"></div>
-          <button class="btn btn-primary btn-full" id="btn-reg-submit" onclick="submitEmailReg()">Recevoir un code →</button>
-          <div style="text-align:center;font-size:11.5px;color:var(--ink3);margin-top:8px;">Un code à 6 chiffres vous sera envoyé par e-mail pour confirmer votre adresse.</div>
+          <button data-i18n="au.recevoir_un_code" class="btn btn-primary btn-full" id="btn-reg-submit" onclick="submitEmailReg()">Recevoir un code →</button>
+          <div data-i18n="au.un_code_a_6_chiffres" style="text-align:center;font-size:11.5px;color:var(--ink3);margin-top:8px;">Un code à 6 chiffres vous sera envoyé par e-mail pour confirmer votre adresse.</div>
         </div>
 
         <!-- Step R4: email verification link sent -->
         <div id="reg-done" style="display:none;padding:110px 0;">
           <div style="display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap;text-align:center;">
             <svg width="64" height="80" viewBox="0 0 64 80" fill="none" stroke="#1FA34A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M4 50l18 20L60 4"/></svg>
-            <div style="font-size:17px;font-weight:700;color:#1FA34A;line-height:1.5;max-width:420px;">Un lien a &eacute;t&eacute; envoy&eacute; sur votre adresse email pour v&eacute;rification</div>
+            <div data-i18n="au.un_lien_a_ete_envoye" style="font-size:17px;font-weight:700;color:#1FA34A;line-height:1.5;max-width:420px;">Un lien a &eacute;t&eacute; envoy&eacute; sur votre adresse email pour v&eacute;rification</div>
           </div>
         </div>
 
@@ -1834,9 +1840,9 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <div id="panel-email" style="display:none;"></div>
 
       <div style="text-align:center;margin-top:12px;">
-        <button class="btn btn-ghost btn-sm" onclick="showConfig()">← Paramètres</button>
+        <button data-i18n="au.parametres" class="btn btn-ghost btn-sm" onclick="showConfig()">← Paramètres</button>
       </div>
-      <p style="text-align:center;font-size:11px;color:#aaa;margin-top:16px;line-height:1.6;">En continuant, vous acceptez nos <a href="#" style="color:var(--green);text-decoration:underline;">Conditions d'utilisation</a> et notre <a href="#" style="color:var(--green);text-decoration:underline;">Politique de confidentialité</a>.</p>
+      <p data-i18n-html="au.en_continuant_vous_acceptez_nos" style="text-align:center;font-size:11px;color:#aaa;margin-top:16px;line-height:1.6;">En continuant, vous acceptez nos <a href="#" style="color:var(--green);text-decoration:underline;">Conditions d'utilisation</a> et notre <a href="#" style="color:var(--green);text-decoration:underline;">Politique de confidentialité</a>.</p>
     </div>
 
     <!-- Step 2: OTP -->
@@ -1845,7 +1851,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div style="width:50px;height:50px;background:var(--sand2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5l8.5 6.5 8.5-6.5"/></svg>
         </div>
-        <div style="font-size:15px;font-weight:600;margin-bottom:4px;">V&eacute;rification</div>
+        <div data-i18n="au.verification" style="font-size:15px;font-weight:600;margin-bottom:4px;">V&eacute;rification</div>
         <p id="otp-label" class="text-xs">Code envoy&eacute; &agrave; votre contact</p>
       </div>
       <div class="otp-grid" id="otp-inputs">
@@ -1857,10 +1863,10 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <input type="text" maxlength="1" inputmode="numeric" oninput="otpNext(this)" onkeydown="otpKey(event,this)">
       </div>
       <div id="auth-err-otp" class="auth-error"></div>
-      <button class="btn btn-primary btn-full" id="btn-otp" onclick="verifyOTP()">Confirmer</button>
+      <button class="btn btn-primary btn-full" id="btn-otp" data-i18n="au.confirm" onclick="verifyOTP()">Confirmer</button>
       <div style="display:flex;justify-content:space-between;margin-top:10px;">
-        <button class="btn btn-ghost btn-sm" onclick="backToAuthMain()">&larr; Retour</button>
-        <button class="btn btn-ghost btn-sm" id="btn-otp-resend" onclick="resendOTP()">Renvoyer</button>
+        <button data-i18n="au.retour" class="btn btn-ghost btn-sm" onclick="backToAuthMain()">&larr; Retour</button>
+        <button class="btn btn-ghost btn-sm" id="btn-otp-resend" data-i18n="au.resend" onclick="resendOTP()">Renvoyer</button>
       </div>
     </div>
 
@@ -1868,8 +1874,8 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 <!-- SSO redirect -->
     <div id="auth-sso" style="display:none;" class="sso-redirect">
       <div class="sso-redirect-spinner"></div>
-      <div style="font-weight:500;font-size:14px;" id="sso-msg">Redirection…</div>
-      <p class="text-xs" style="margin-top:4px;">Authentification sécurisée</p>
+      <div style="font-weight:500;font-size:14px;" id="sso-msg" data-i18n="au.redirecting">Redirection…</div>
+      <p data-i18n="au.authentification_securisee" class="text-xs" style="margin-top:4px;">Authentification sécurisée</p>
     </div>
 
     <!-- Password reset request -->
@@ -1883,9 +1889,9 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       </div>
       <div class="input-group" style="margin-bottom:12px;"><label data-i18n="auth_email_label">Adresse email</label><input id="inp-reset-email" type="email" placeholder="marie@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')submitResetRequest()"></div>
       <div id="auth-err-reset" class="auth-error"></div>
-      <button class="btn btn-primary btn-full" id="btn-reset-submit" onclick="submitResetRequest()">Envoyer le lien &rarr;</button>
+      <button data-i18n="au.envoyer_le_lien" class="btn btn-primary btn-full" id="btn-reset-submit" onclick="submitResetRequest()">Envoyer le lien &rarr;</button>
       <div style="text-align:center;margin-top:10px;">
-        <button class="btn btn-ghost btn-sm" onclick="backToAuthMain()">&larr; Retour</button>
+        <button data-i18n="au.retour" class="btn btn-ghost btn-sm" onclick="backToAuthMain()">&larr; Retour</button>
       </div>
     </div>
 
@@ -1901,7 +1907,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <div class="input-group" style="margin-bottom:8px;"><label data-i18n="auth_new_pwd_label">Nouveau mot de passe</label><input id="inp-new-pwd" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitNewPassword()"></div>
       <div class="input-group" style="margin-bottom:12px;"><label data-i18n="auth_new_pwd2_label">Confirmer le mot de passe</label><input id="inp-new-pwd2" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="new-password" onkeydown="if(event.key==='Enter')submitNewPassword()"></div>
       <div id="auth-err-new-pwd" class="auth-error"></div>
-      <button class="btn btn-primary btn-full" id="btn-new-pwd-submit" onclick="submitNewPassword()">Confirmer &rarr;</button>
+      <button data-i18n="au.confirmer" class="btn btn-primary btn-full" id="btn-new-pwd-submit" onclick="submitNewPassword()">Confirmer &rarr;</button>
     </div>
 
     <div style="display:flex;justify-content:center;margin-top:18px;">
@@ -2300,6 +2306,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div id="pf-names-grid" class="form-grid"><div class="input-group"><label>Pr&#xe9;nom</label><input id="pf-fname"></div><div class="input-group"><label>Nom</label><input id="pf-lname"></div></div>
           <div id="pf-company-wrap" class="input-group" style="display:none;"><label>Nom de l&#x27;entreprise</label><input id="pf-company"></div>
           <div class="input-group"><label>T&#xe9;l&#xe9;phone</label><input id="pf-phone" type="tel"></div>
+          <div class="input-group"><label data-i18n="pf.language">Langue</label><select id="pf-lang" class="lang-sel" onchange="setLang(this.value)"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option></select><div class="text-xs" style="margin-top:4px;" data-i18n="pf.language_hint">Langue de l’application, des e-mails et des documents. Enregistrée immédiatement.</div></div>
           <div id="pf-addr-wrap" class="input-group" style="display:none;">
             <label style="font-weight:600;font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;display:block;">Adresse</label>
             <div class="form-grid" style="gap:8px;">
@@ -3521,7 +3528,13 @@ let currentDriverId = null;   // for payment modal
 let currentOfferAmount = 0;   // for payment modal
 let _currentPaymentRide = null; // ride object for payment modal route info
 var _myOffers = {};  // rideId -> {price, msg} for submitted offers
-let currentLang = localStorage.getItem('disposal_lang') || 'fr';
+// Langue : choix enregistré, sinon langue du navigateur (fr / en / es), sinon français
+let currentLang = (function(){
+  var ok = ['fr','en','es'], l = null;
+  try{ l = localStorage.getItem('disposal_lang'); }catch(e){}
+  if(ok.indexOf(l) < 0){ var n = String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr').slice(0,2).toLowerCase(); l = ok.indexOf(n) >= 0 ? n : 'fr'; }
+  return l;
+})();
 var _selectedPaymentMethod = null; // for payment modal step 1
 var _stripeInstance = null;        // Stripe.js instance
 var _stripeCardElement = null;     // Stripe card element
@@ -3627,26 +3640,73 @@ const TX = {
      active_ride:'Trayecto en curso', eta:'Llegada estimada',
   }
 };
-const t = k => (TX[currentLang]||TX.fr)[k] || TX.fr[k] || k;
+// t('cle', {param}) : fichiers i18n/<langue>.js d'abord, puis l'ancien dictionnaire TX, puis le français, sinon la clé
+var I18N = window.I18N || {};
+const t = function(k, p){
+  var v = (I18N[currentLang] || {})[k];
+  if(v == null) v = (TX[currentLang] || {})[k];
+  if(v == null) v = (I18N.fr || {})[k];
+  if(v == null) v = TX.fr[k];
+  if(v == null) return k;
+  if(p) v = String(v).replace(/\{(\w+)\}/g, function(m, n){ return p[n] != null ? p[n] : m; });
+  return v;
+};
+// Locale pour les dates / montants
+function _i18nLocale(){ return currentLang === 'en' ? 'en-GB' : currentLang === 'es' ? 'es-ES' : 'fr-BE'; }
+// Applique les traductions aux textes marqués : data-i18n (texte), data-i18n-html (avec balises), data-i18n-ph (placeholder)
+// Le texte d'origine (français) est mémorisé pour pouvoir revenir au français sans perte.
+function applyI18n(root){
+  root = root || document;
+  var one = function(sel, attr, get, set){
+    [].forEach.call(root.querySelectorAll(sel), function(el){
+      var k = el.getAttribute(attr); if(!k) return;
+      var o = '_i18nFr_' + attr; if(el[o] == null) el[o] = get(el);
+      var v = (I18N[currentLang] || {})[k];
+      if(v == null) v = (TX[currentLang] || {})[k];
+      if(v == null) v = currentLang === 'fr' ? el[o] : ((I18N.fr || {})[k] != null ? I18N.fr[k] : (TX.fr[k] != null ? TX.fr[k] : el[o]));
+      if(get(el) !== v) set(el, v);
+    });
+  };
+  one('[data-i18n]', 'data-i18n', function(e){ return e.textContent; }, function(e, v){ e.textContent = v; });
+  one('[data-i18n-html]', 'data-i18n-html', function(e){ return e.innerHTML; }, function(e, v){ e.innerHTML = v; });
+  one('[data-i18n-ph]', 'data-i18n-ph', function(e){ return e.getAttribute('placeholder') || ''; }, function(e, v){ e.setAttribute('placeholder', v); });
+  try{ document.documentElement.lang = currentLang; }catch(e){}
+}
 
-window.setLang = function(l){
+window.setLang = function(l, opt){
+  if(['fr','en','es'].indexOf(l) < 0) l = 'fr';
+  var changed = l !== currentLang;
   currentLang = l;
-  localStorage.setItem('disposal_lang', l);
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent===l.toUpperCase()));
-  // Update all static i18n elements
-  document.querySelectorAll('[data-i18n]').forEach(function(el){
-    el.textContent = t(el.dataset.i18n);
-  });
+  try{ localStorage.setItem('disposal_lang', l); }catch(e){}
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.trim()===l.toUpperCase()));
+  document.querySelectorAll('select.lang-sel').forEach(function(x){ x.value = l; });
+  applyI18n(document);
+  if(typeof window._i18nRefresh === 'function'){ try{ window._i18nRefresh(); }catch(e){} }
+  // Langue enregistrée dans le profil (e-mails, documents…) — sauf si elle vient justement du profil
+  if(changed && !(opt && opt.noSave) && sb && currentUser && currentProfile && currentProfile.lang !== l){
+    currentProfile.lang = l;
+    sb.rpc('api_profile_update', { p:{ lang:l } }).then(function(r){ if(r && r.error) console.warn('lang save', r.error); }, function(){});
+  }
   // Reload current page content to refresh dynamic strings
-  var curPage = document.querySelector('.page.active');
-  if(curPage){
-    var pageId = curPage.id.replace('page-','');
-    if(typeof showPage === 'function') showPage(pageId);
+  if(changed){
+    var curPage = document.querySelector('#screen-app.active .page.active');
+    if(curPage){
+      var pageId = curPage.id.replace('page-','');
+      if(typeof showPage === 'function') showPage(pageId);
+    }
   }
 };
+// Profil chargé : sa langue prime ; s'il n'en a pas encore, on y enregistre la langue choisie sur la page
+function _i18nSyncProfile(){
+  if(!currentProfile) return;
+  var pl = currentProfile.lang;
+  if(['fr','en','es'].indexOf(pl) >= 0){ if(pl !== currentLang) setLang(pl, { noSave:true }); }
+  else if('lang' in currentProfile && sb){ currentProfile.lang = currentLang; sb.rpc('api_profile_update', { p:{ lang:currentLang } }).then(function(){}, function(){}); }
+}
 
 // ── INIT ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  try{ setLang(currentLang, { noSave:true }); }catch(e){ console.warn('i18n init', e); }
   // Initialise stripe fee label from constant so it's always in sync
   var _feeEl = document.getElementById('stripe-fee-label');
   if(_feeEl){ _feeEl.textContent = 'Des frais supplémentaires peuvent s\'appliquer'; }
@@ -3801,6 +3861,7 @@ async function loadProfile(){
   const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
   if(data) {
     currentProfile = data;
+    try{ _i18nSyncProfile(); }catch(e){ console.warn('lang profile', e); }
     var updates = {};
     if(currentUser.email && data.email !== currentUser.email){ updates.email = currentUser.email; currentProfile.email = currentUser.email; }
     if(currentUser.phone && data.phone !== currentUser.phone){ updates.phone = currentUser.phone; currentProfile.phone = currentUser.phone; }
@@ -3994,7 +4055,7 @@ window.selectClientType = function(type){
 window.submitEmailReg = async function(){
   var email = (document.getElementById('inp-email-reg')?.value||'').trim().toLowerCase();
   var errEl = document.getElementById('auth-err-email-reg');
-  if(!_validEmail(email)){ if(errEl){errEl.textContent='Adresse e-mail invalide';errEl.classList.add('show');} return; }
+  if(!_validEmail(email)){ if(errEl){errEl.textContent=t('au.err_email_invalid');errEl.classList.add('show');} return; }
 
   var role = _authSelectedRole||'client';
   var clientType = role==='client' ? (_regClientType||'perso') : null;
@@ -4005,25 +4066,25 @@ window.submitEmailReg = async function(){
     fname = company; lname = '';
   } else if(clientType==='pro'){
     company = (document.getElementById('inp-company-client')?.value||'').trim();
-    if(!company){ if(errEl){errEl.textContent='Nom de société requis';errEl.classList.add('show');} return; }
+    if(!company){ if(errEl){errEl.textContent=t('au.err_company_required');errEl.classList.add('show');} return; }
     fname = company; lname = '';
   } else {
     fname = (document.getElementById('inp-fname')?.value||'').trim();
     lname = (document.getElementById('inp-lname')?.value||'').trim();
   }
 
-  if(role==='driver' && !company){ if(errEl){errEl.textContent='Nom de société requis';errEl.classList.add('show');} return; }
+  if(role==='driver' && !company){ if(errEl){errEl.textContent=t('au.err_company_required');errEl.classList.add('show');} return; }
   if(!sb){ if(errEl){errEl.textContent='Supabase non configuré';errEl.classList.add('show');} return; }
   if(errEl) errEl.classList.remove('show');
   var btn = document.getElementById('btn-reg-submit');
-  if(btn) setLoading(btn,true,'Envoi du code…');
+  if(btn) setLoading(btn,true,t('au.sending_code'));
   var meta = {role, client_type:clientType, first_name:fname||null, last_name:lname||null, company_name:company||null};
   var vat = (document.getElementById('inp-vat')?.value||'').trim();
   var {error} = await _sendEmailCode(email, true, meta);
-  if(btn) setLoading(btn,false,'Recevoir un code →');
+  if(btn) setLoading(btn,false,t('au.recevoir_un_code'));
   if(error){
     var _m=error.message||'';
-    if(errEl){ errEl.textContent=/rate|security purposes|seconds/i.test(_m)?'Trop de demandes : patientez une minute avant de redemander un code.':_m; errEl.classList.add('show'); }
+    if(errEl){ errEl.textContent=/rate|security purposes|seconds/i.test(_m)?t('au.err_rate'):_m; errEl.classList.add('show'); }
     return;
   }
   // Même rôle mémorisé que pour Google / Microsoft (appliqué au premier chargement du profil)
@@ -4123,7 +4184,7 @@ window.submitEmail = async function(){
   const pwd   = (document.getElementById('inp-pwd')?.value||'');
   const err   = document.getElementById('auth-err-email');
   const btn   = document.getElementById('btn-email-submit');
-  if(!email || !pwd){ if(err){err.textContent='Email et mot de passe requis';err.classList.add('show');} return; }
+  if(!email || !pwd){ if(err){err.textContent=t('au.err_email_pwd_required');err.classList.add('show');} return; }
   if(localStorage.getItem(DEMO_MODE_KEY) === '1'){ enterApp(); return; }
   if(!sb){ if(err){err.textContent='Supabase non configuré';err.classList.add('show');} return; }
   if(btn) setLoading(btn, true, 'Connexion…');
@@ -4135,14 +4196,14 @@ window.submitEmail = async function(){
     if(error) throw error;
     currentUser = data.user;
     await loadProfile();
-    if(btn) setLoading(btn, false, 'Connexion →');
+    if(btn) setLoading(btn, false, t('au.login_btn'));
     enterApp();
     _loginInProgress = false;
   } catch(e){
     _loginInProgress = false;
-    const msg = e.message?.includes('Invalid login') ? 'Email ou mot de passe incorrect' : e.message || 'Erreur inconnue';
+    const msg = e.message?.includes('Invalid login') ? t('au.err_bad_credentials') : e.message || t('au.err_unknown');
     if(err){err.textContent=msg;err.classList.add('show');}
-    if(btn) setLoading(btn, false, 'Connexion →');
+    if(btn) setLoading(btn, false, t('au.login_btn'));
   }
 };
 
@@ -4158,18 +4219,18 @@ window.submitPhone = async function(){
   _phoneForOTP = prefix + num.replace(/\s/g, '');
   _otpType = 'phone';
 
-  setLoading(btn, true, 'Envoi…');
+  setLoading(btn, true, t('au.sending'));
   err.classList.remove('show');
 
   try {
     const { error } = await sb.auth.signInWithOtp({ phone: _phoneForOTP });
     if(error) throw error;
-    document.getElementById('otp-label').textContent = 'Code envoyé au ' + _phoneForOTP;
+    document.getElementById('otp-label').textContent = t('au.code_sent_phone', { phone:_phoneForOTP });
     showOTPScreen();
-    setLoading(btn, false, 'Envoyer le code →');
+    setLoading(btn, false, t('au.send_code'));
   } catch(e){
-    showError(err, e.message || 'Erreur SMS');
-    setLoading(btn, false, 'Envoyer le code →');
+    showError(err, e.message || t('au.err_sms'));
+    setLoading(btn, false, t('au.send_code'));
   }
 };
 
@@ -4179,7 +4240,7 @@ window.ssoAuth = async function(provider){
 
   document.getElementById('auth-main').style.display = 'none';
   document.getElementById('auth-sso').style.display = 'block';
-  document.getElementById('sso-msg').textContent = 'Redirection vers ' + provider.charAt(0).toUpperCase() + provider.slice(1) + '…';
+  document.getElementById('sso-msg').textContent = t('au.redirect_to', { provider: provider==='azure' ? 'Microsoft' : provider.charAt(0).toUpperCase() + provider.slice(1) });
   // OAuth sign-up: the provider returns no role, so keep the choice made on the register screen
   try{
     if(_authCurrentMode==='register'){
@@ -4200,7 +4261,7 @@ window.ssoAuth = async function(provider){
   if(error){
     document.getElementById('auth-main').style.display = 'block';
     document.getElementById('auth-sso').style.display = 'none';
-    showToast('Erreur: ' + error.message);
+    showToast(t('au.error_prefix') + error.message);
   }
 };
 
@@ -4234,8 +4295,8 @@ var _loginPwdMode=false, _otpEmail='', _otpPurpose='login', _otpRegExtra=null, _
 window.toggleLoginPwd=function(force){
   _loginPwdMode = (typeof force==='boolean') ? force : !_loginPwdMode;
   var w=document.getElementById('login-pwd-wrap'); if(w) w.style.display=_loginPwdMode?'block':'none';
-  var b=document.getElementById('btn-email-submit'); if(b) b.textContent=_loginPwdMode?'Connexion →':'Recevoir un code →';
-  var l=document.getElementById('login-mode-link'); if(l) l.textContent=_loginPwdMode?'Recevoir un code par e-mail à la place':'Se connecter avec un mot de passe';
+  var b=document.getElementById('btn-email-submit'); if(b) b.textContent=_loginPwdMode?t('au.login_btn'):t('au.recevoir_un_code');
+  var l=document.getElementById('login-mode-link'); if(l) l.textContent=_loginPwdMode?t('au.code_instead'):t('au.login_with_pwd');
   var er=document.getElementById('auth-err-email'); if(er) er.classList.remove('show');
   if(_loginPwdMode){ var p=document.getElementById('inp-pwd'); if(p) setTimeout(function(){p.focus();},50); }
 };
@@ -4248,30 +4309,30 @@ async function _sendEmailCode(email, createUser, meta){
 }
 function _otpOpen(email){
   _otpType='email'; _otpEmail=email; _otpResendAt=Date.now()+60000;
-  var lbl=document.getElementById('otp-label'); if(lbl) lbl.innerHTML='Code envoyé à <b>'+String(email).replace(/</g,'&lt;')+'</b><br>Vérifiez aussi vos courriers indésirables.';
+  var lbl=document.getElementById('otp-label'); if(lbl) lbl.innerHTML=t('au.code_sent_email', { email:'<b>'+String(email).replace(/</g,'&lt;')+'</b>' });
   var err=document.getElementById('auth-err-otp'); if(err) err.classList.remove('show');
-  var b=document.getElementById('btn-otp'); if(b) setLoading(b,false,'Confirmer');
+  var b=document.getElementById('btn-otp'); if(b) setLoading(b,false,t('au.confirm'));
   showOTPScreen(); _otpResendTick();
 }
 function _otpResendTick(){
   var b=document.getElementById('btn-otp-resend'); if(!b) return;
   var left=Math.ceil((_otpResendAt-Date.now())/1000);
-  if(left>0){ b.disabled=true; b.textContent='Renvoyer ('+left+' s)'; setTimeout(_otpResendTick,1000); }
-  else { b.disabled=false; b.textContent='Renvoyer'; }
+  if(left>0){ b.disabled=true; b.textContent=t('au.resend_in', { s:left }); setTimeout(_otpResendTick,1000); }
+  else { b.disabled=false; b.textContent=t('au.resend'); }
 }
 window.sendLoginCode=async function(){
   var email=(document.getElementById('inp-email')?.value||'').trim().toLowerCase();
   var err=document.getElementById('auth-err-email'), btn=document.getElementById('btn-email-submit');
-  if(!_validEmail(email)){ showError(err,'Adresse e-mail invalide'); return; }
+  if(!_validEmail(email)){ showError(err,t('au.err_email_invalid')); return; }
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){ enterApp(); return; }
   if(!sb){ showError(err,'Supabase non configuré'); return; }
-  err.classList.remove('show'); setLoading(btn,true,'Envoi du code…');
+  err.classList.remove('show'); setLoading(btn,true,t('au.sending_code'));
   var {error}=await _sendEmailCode(email,false,null);
-  setLoading(btn,false,'Recevoir un code →');
+  setLoading(btn,false,t('au.recevoir_un_code'));
   if(error){
     var m=error.message||'';
-    if(/signups? not allowed|not found|user not found/i.test(m)) showError(err,'Aucun compte avec cette adresse. Créez un compte dans l’onglet « Inscription ».');
-    else if(/rate|security purposes|seconds/i.test(m)) showError(err,'Trop de demandes : patientez une minute avant de redemander un code.');
+    if(/signups? not allowed|not found|user not found/i.test(m)) showError(err,t('au.err_no_account'));
+    else if(/rate|security purposes|seconds/i.test(m)) showError(err,t('au.err_rate'));
     else showError(err,m);
     return;
   }
@@ -4288,12 +4349,12 @@ window.verifyOTP = async function(){
   const err    = document.getElementById('auth-err-otp');
   const btn    = document.getElementById('btn-otp');
 
-  if(token.length < 6){ showError(err, 'Veuillez entrer les 6 chiffres'); return; }
+  if(token.length < 6){ showError(err, t('au.err_6_digits')); return; }
 
   if(localStorage.getItem(DEMO_MODE_KEY) === '1'){ enterApp(); return; }
   if(!sb){ showError(err, 'Supabase non configuré'); return; }
 
-  setLoading(btn, true, 'Vérification…');
+  setLoading(btn, true, t('au.verifying'));
   err.classList.remove('show');
 
   try {
@@ -4308,13 +4369,13 @@ window.verifyOTP = async function(){
     currentUser = result.data.user;
     await loadProfile();
     if(_otpType==='email' && _otpPurpose==='register') await _afterCodeSignup();
-    setLoading(btn, false, 'Confirmer');
+    setLoading(btn, false, t('au.confirm'));
     enterApp();
     _loginInProgress = false;
   } catch(e){
     _loginInProgress = false;
-    showError(err, 'Code incorrect ou expiré');
-    setLoading(btn, false, 'Confirmer');
+    showError(err, t('au.err_bad_code'));
+    setLoading(btn, false, t('au.confirm'));
     document.querySelectorAll('#otp-inputs input').forEach(function(i){ i.value=''; });
     var f=document.querySelector('#otp-inputs input'); if(f) f.focus();
   }
@@ -4324,7 +4385,7 @@ window.resendOTP = async function(){
   if(_otpType==='email'){
     if(!sb || !_otpEmail || Date.now()<_otpResendAt) return;
     var r=await _sendEmailCode(_otpEmail, _otpPurpose==='register', _otpRegExtra && _otpRegExtra.meta);
-    if(r.error){ showError(document.getElementById('auth-err-otp'), /rate|seconds/i.test(r.error.message||'')?'Patientez avant de redemander un code.':r.error.message); return; }
+    if(r.error){ showError(document.getElementById('auth-err-otp'), /rate|seconds/i.test(r.error.message||'')?t('au.err_wait'):r.error.message); return; }
     _otpResendAt=Date.now()+60000; _otpResendTick(); showToast('📧 Nouveau code envoyé'); return;
   }
   if(!sb || !_phoneForOTP) return;
@@ -4333,7 +4394,7 @@ window.resendOTP = async function(){
 };
 
 window.backToAuthMain = function(){
-  var _bo=document.getElementById('btn-otp'); if(_bo) setLoading(_bo,false,'Confirmer');
+  var _bo=document.getElementById('btn-otp'); if(_bo) setLoading(_bo,false,t('au.confirm'));
   document.getElementById('auth-otp').style.display = 'none';
   document.getElementById('auth-sso').style.display = 'none';
   document.getElementById('auth-reset-request').style.display = 'none';
@@ -4355,17 +4416,17 @@ window.submitResetRequest = async function(){
   var btn   = document.getElementById('btn-reset-submit');
   if(!email){ showError(err, t('err_required')||'Champ requis'); return; }
   if(!sb){ showError(err, 'Supabase non configuré'); return; }
-  setLoading(btn, true, 'Envoi…');
+  setLoading(btn, true, t('au.sending'));
   err.classList.remove('show');
   try {
     var { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
     if(error) throw error;
-    setLoading(btn, false, 'Envoyer le lien →');
+    setLoading(btn, false, t('au.envoyer_le_lien'));
     showToast((t('toast_reset_sent')||'📧 Un lien de réinitialisation a été envoyé à {email}').replace('{email}', email));
     backToAuthMain();
   } catch(e){
-    showError(err, e.message || 'Erreur lors de l\'envoi');
-    setLoading(btn, false, 'Envoyer le lien →');
+    showError(err, e.message || t('au.err_send'));
+    setLoading(btn, false, t('au.envoyer_le_lien'));
   }
 };
 
@@ -4378,19 +4439,19 @@ window.submitNewPassword = async function(){
   if(pwd !== pwd2){ showError(err, t('err_pwd_match')||'Les mots de passe ne correspondent pas'); return; }
   if(pwd.length < 6){ showError(err, t('err_pwd_short')||'Le mot de passe doit contenir au moins 6 caractères'); return; }
   if(!sb){ showError(err, 'Supabase non configuré'); return; }
-  setLoading(btn, true, 'Mise à jour…');
+  setLoading(btn, true, t('au.updating'));
   err.classList.remove('show');
   try {
     var { error } = await sb.auth.updateUser({ password: pwd });
     if(error) throw error;
-    setLoading(btn, false, 'Confirmer →');
+    setLoading(btn, false, t('au.confirmer'));
     showToast(t('toast_pwd_updated')||'✅ Mot de passe mis à jour avec succès');
     document.getElementById('auth-new-pwd').style.display = 'none';
     _passwordRecoveryActive = false;
     await checkSession();
   } catch(e){
-    showError(err, e.message || 'Erreur lors de la mise à jour');
-    setLoading(btn, false, 'Confirmer →');
+    showError(err, e.message || t('au.err_update'));
+    setLoading(btn, false, t('au.confirmer'));
   }
 };
 
@@ -4429,7 +4490,7 @@ function _resetAuthUI(){
       scr.querySelectorAll('input').forEach(function(i){ if(i.type==='checkbox'||i.type==='radio') i.checked=false; else i.value=''; i.classList&&i.classList.remove('fld-err'); });
       scr.querySelectorAll('.auth-error').forEach(function(e){ e.classList.remove('show'); e.textContent=''; });
     }
-    var bo=document.getElementById('btn-otp'); if(bo){ bo.disabled=false; bo.textContent='Confirmer'; }
+    var bo=document.getElementById('btn-otp'); if(bo){ bo.disabled=false; bo.textContent=t('au.confirm'); }
     var be=document.getElementById('btn-email-submit'); if(be){ be.disabled=false; }
     if(window.toggleLoginPwd) toggleLoginPwd(false);
     if(typeof _showRegStep==='function') _showRegStep(1);
@@ -11405,9 +11466,9 @@ window.showLandingAuth = function(mode){
     var b = document.getElementById(id);
     if(b){
       b.disabled = false;
-      if(id==='btn-email-submit') b.textContent = _authCurrentMode==='register' ? t('auth_create')||'Créer le compte →' : t('auth_continue')||'Continuer →';
-      if(id==='btn-phone-submit') b.textContent = 'Envoyer le code →';
-      if(id==='btn-otp') b.textContent = 'Confirmer';
+      if(id==='btn-email-submit') b.textContent = (window._loginPwdMode ? t('au.login_btn') : t('au.recevoir_un_code'));
+      if(id==='btn-phone-submit') b.textContent = t('au.send_code');
+      if(id==='btn-otp') b.textContent = t('au.confirm');
     }
   });
   setTimeout(function(){
@@ -11425,9 +11486,10 @@ window.showLandingAuth = function(mode){
     var k = reg.classList.contains('active') ? (drv && drv.classList.contains('active') ? 'driver' : 'client') : 'login';
     msgs.forEach(function(m){ m.classList.toggle('on', m.getAttribute('data-au') === k); });
     var side=document.getElementById('au-side'); if(side){ side.classList.toggle('is-login', k==='login'); [].forEach.call(side.querySelectorAll('.au-side-img img'),function(i){ i.classList.toggle('on', i.getAttribute('data-au')===k); }); }
-    if(k === 'login'){ eye.textContent = 'Connexion'; ttl.innerHTML = 'Bon <em>retour</em>.'; }
-    else { eye.textContent = k === 'driver' ? 'Inscription partenaire' : 'Inscription'; ttl.innerHTML = 'Cr\u00e9er un <em>compte</em>.'; }
+    if(k === 'login'){ eye.textContent = t('au.head_login'); ttl.innerHTML = t('au.head_login_t'); }
+    else { eye.textContent = k === 'driver' ? t('au.head_reg_driver') : t('au.head_reg'); ttl.innerHTML = t('au.head_reg_t'); }
   }
+  window._auSideSync = sync;
   var mo = new MutationObserver(sync);
   [reg, drv].forEach(function(el){ if(el) mo.observe(el, { attributes:true, attributeFilter:['class'] }); });
   sync();
@@ -11455,27 +11517,36 @@ document.getElementById('screen-landing') && (function(){
   function prog(el){ var r = el.getBoundingClientRect(), t = el.offsetHeight - innerHeight; return t > 0 ? clamp(-r.top / t) : 0; }
 
   // cities marquee
-  var cities = ['Bruxelles','Anvers','Gand','Li\u00e8ge','Bruges','Namur','Charleroi','Mons','Louvain','Luxembourg'];
-  var ch = cities.map(function(c){ return '<span class="ld-city">'+c+'</span>'; }).join('');
-  $('ld-cities').innerHTML = ch + ch;
+  function setCities(){
+    var cities = t('ld.cities').split('|');
+    var ch = cities.map(function(c){ return '<span class="ld-city">'+c+'</span>'; }).join('');
+    $('ld-cities').innerHTML = ch + ch;
+  }
+  setCities();
 
   // classes tabs
-  var CLS = [
-    { c:'Economy', m:'Toyota Prius, Skoda Octavia ou similaire', pax:3, bag:3, d:"Un voyage pour tous les budgets : le m\u00eame chauffeur v\u00e9rifi\u00e9 et le m\u00eame prix fixe, au tarif le plus doux." },
-    { c:'Business', m:'Mercedes Classe E, BMW S\u00e9rie 5 ou similaire', pax:3, bag:3, d:"La r\u00e9f\u00e9rence pour les rendez-vous d'affaires et les transferts a\u00e9roport. Discr\u00e8te, confortable, toujours impeccable." },
-    { c:'Premi\u00e8re', m:'Mercedes Classe S, BMW S\u00e9rie 7 ou similaire', pax:3, bag:3, d:"L'espace arri\u00e8re d'un salon et un silence de cabine, pour les occasions qui comptent." },
-    { c:'Van', m:'Mercedes Classe V', pax:7, bag:7, d:"Pour les familles, les \u00e9quipes et les valises nombreuses \u2014 sans renoncer au confort." },
-    { c:'Autocar', m:'Minibus et autocars de 16 \u00e0 50 places', pax:50, bag:50, d:"Pour les groupes, s\u00e9minaires et \u00e9v\u00e9nements : un seul v\u00e9hicule, un seul chauffeur, tout le monde ensemble." }
-  ];
+  // classes : nom, modèles et description traduits (ld.cls<n>_*)
+  var CLS = [ { c:'Economy', pax:3, bag:3 }, { c:'Business', pax:3, bag:3 }, { c:null, pax:3, bag:3 }, { c:'Van', pax:7, bag:7 }, { c:null, pax:50, bag:50 } ];
   var tabs = [].slice.call($('ld-cls-tabs').children), imgs = [].slice.call($('ld-cls-img').children), info = $('ld-cls-info');
+  var curCls = 0;
   function setCls(k){
-    var c = CLS[k];
+    curCls = k;
+    var c = { c: CLS[k].c || t('ld.cls'+k+'_name'), m: t('ld.cls'+k+'_models'), d: t('ld.cls'+k+'_desc'), pax: CLS[k].pax, bag: CLS[k].bag };
     tabs.forEach(function(t,i){ t.classList.toggle('on', i===k); });
     imgs.forEach(function(t,i){ t.classList.toggle('on', i===k); });
-    info.innerHTML = '<div class="ld-fade"><h3 class="ld-serif">'+c.c+'</h3><div class="models">'+c.m+'</div><div class="ld-cls-specs"><div><b>'+c.pax+'</b><span>passagers max.</span></div><div><b>'+c.bag+'</b><span>bagages</span></div></div></div><p class="ld-fade" style="animation-delay:.08s">'+c.d+'</p>';
+    info.innerHTML = '<div class="ld-fade"><h3 class="ld-serif">'+c.c+'</h3><div class="models">'+c.m+'</div><div class="ld-cls-specs"><div><b>'+c.pax+'</b><span>'+t('ld.pax_max')+'</span></div><div><b>'+c.bag+'</b><span>'+t('ld.bags')+'</span></div></div></div><p class="ld-fade" style="animation-delay:.08s">'+c.d+'</p>';
   }
   tabs.forEach(function(t,i){ t.onclick = function(){ setCls(i); }; });
   setCls(0);
+  // changement de langue : contenus construits en JS
+  window._i18nRefresh = function(){
+    setCities(); setCls(curCls);
+    if(window._auSideSync) window._auSideSync();
+    var _p = !!window._loginPwdMode;
+    var _b = document.getElementById('btn-email-submit'); if(_b && !_b.disabled) _b.textContent = _p ? t('au.login_btn') : t('au.recevoir_un_code');
+    var _l = document.getElementById('login-mode-link'); if(_l) _l.textContent = _p ? t('au.code_instead') : t('au.login_with_pwd');
+    var _r = document.getElementById('btn-reg-submit'); if(_r && !_r.disabled) _r.textContent = t('au.recevoir_un_code');
+  };
 
   // booking widget
   var mode = 'trajet';
@@ -11497,7 +11568,7 @@ document.getElementById('screen-landing') && (function(){
     el.addEventListener('input', function(e){ if(e.isTrusted && e.inputType) el.dataset.typed='1'; });
     [0, 300, 1200, 3000].forEach(function(ms){ setTimeout(clr, ms); });
   });
-  var d = $('ld-date'); if(d && !d.value){ var t = new Date(Date.now()+864e5); d.value = t.toISOString().slice(0,10); }
+  var d = $('ld-date'); if(d && !d.value){ var _tm = new Date(Date.now()+864e5); d.value = _tm.toISOString().slice(0,10); }
   $('ld-book-go').onclick = function(){
     try{ sessionStorage.setItem('bleenr_landing_draft', JSON.stringify({ mode:mode, from:$('ld-from').value, to:$('ld-to').value, duration:$('ld-dur').value, date:$('ld-date').value, time:$('ld-time').value })); }catch(e){}
     _ldDemo({ mode:mode, from:$('ld-from').value, to:$('ld-to').value, dur:$('ld-dur').value, durTxt:$('ld-dur').selectedOptions[0] ? $('ld-dur').selectedOptions[0].textContent : '', date:$('ld-date').value, time:$('ld-time').value });
@@ -11525,88 +11596,88 @@ document.getElementById('screen-landing') && (function(){
     var short = function(a){ return String(a).split(',')[0].trim(); };
     var dt = f.date ? new Date(f.date + 'T12:00:00') : new Date(Date.now() + 864e5);
     var tm = E(f.time || '09:00');
-    var dLong = dt.toLocaleDateString('fr-BE', { weekday:'short', day:'numeric', month:'short' }).replace('.', '');
+    var dLong = dt.toLocaleDateString(_i18nLocale(), { weekday:'short', day:'numeric', month:'short' }).replace('.', '');
     dLong = dLong.charAt(0).toUpperCase() + dLong.slice(1);
-    var dDay = dt.getDate(), dMon = dt.toLocaleDateString('fr-BE', { month:'short' }).replace('.', '').toUpperCase().slice(0, 3);
+    var dDay = dt.getDate(), dMon = dt.toLocaleDateString(_i18nLocale(), { month:'short' }).replace('.', '').toUpperCase().slice(0, 3);
     var dFr = ('0' + dDay).slice(-2) + '/' + ('0' + (dt.getMonth() + 1)).slice(-2) + '/' + dt.getFullYear();
-    var hrs = parseInt(f.dur, 10) || 3, durTxt = E(f.durTxt || (hrs + ' heures'));
+    var hrs = parseInt(f.dur, 10) || 3, durTxt = E(f.durTxt || t('ld.n_hours', { n:hrs }));
     var p1 = heure ? hrs * 59.9 : 68.9, p2 = heure ? hrs * 64.5 : 74.2;
-    var eur = function(n){ return n.toFixed(2).replace('.', ',') + ' €'; };
+    var eur = function(n){ return n.toLocaleString(_i18nLocale(), { minimumFractionDigits:2, maximumFractionDigits:2 }) + ' €'; };
     var code = 'BLAB-' + (1026000 + Math.floor(Math.random() * 900));
     var logo = (document.querySelector('.sidebar-logo img') || {}).src || '';
-    var dest = heure ? 'Mise à disposition · ' + durTxt : E(to);
+    var dest = heure ? t('dm.disposal') + ' · ' + durTxt : E(to);
     var trajet = heure ? E(short(from)) + ' · ' + durTxt : E(short(from)) + ' → ' + E(short(to));
 
     var side = '<div class="ldm-side"><div class="ldm-logo">' + (logo ? '<img src="' + logo + '" alt="Bleenr">' : '<b style="font-size:28px;color:#1B5E3B">Bleenr</b>') + '</div>'
-      + '<div class="ldm-user"><div class="a">J</div><div><b>Julie</b><small>CLIENT</small></div></div><div class="ldm-sep"></div>'
-      + '<div class="ldm-new">' + I('plus') + 'Nouvelle demande</div>'
-      + '<div class="ldm-nv on">' + I('grid') + 'Tableau de bord</div><div class="ldm-nv">' + I('list') + 'Mes demandes</div><div class="ldm-nv">' + I('cal') + 'Calendrier</div><div class="ldm-nv">' + I('doc') + 'Factures</div>'
-      + '<div class="ldm-help"><b>' + I('help') + 'Aide &amp; support</b>Besoin d\'aide ? <u>info@bleenr.com</u></div>'
-      + '<div class="ldm-out">' + I('out') + 'Déconnexion</div><div class="ldm-lang"><span>FR</span><span>EN</span><span>ES</span></div></div>';
+      + '<div class="ldm-user"><div class="a">J</div><div><b>Julie</b><small>' + t('dm.client_badge') + '</small></div></div><div class="ldm-sep"></div>'
+      + '<div class="ldm-new">' + I('plus') + '' + t('dm.new_request') + '</div>'
+      + '<div class="ldm-nv on">' + I('grid') + '' + t('dm.dashboard') + '</div><div class="ldm-nv">' + I('list') + '' + t('dm.my_requests') + '</div><div class="ldm-nv">' + I('cal') + '' + t('dm.calendar') + '</div><div class="ldm-nv">' + I('doc') + '' + t('dm.invoices') + '</div>'
+      + '<div class="ldm-help"><b>' + I('help') + '' + t('dm.help') + '</b>' + t('dm.help_q') + '<u>info@bleenr.com</u></div>'
+      + '<div class="ldm-out">' + I('out') + '' + t('dm.logout') + '</div><div class="ldm-lang">' + [currentLang.toUpperCase()].concat(['FR','EN','ES'].filter(function(x){ return x !== currentLang.toUpperCase(); })).map(function(x){ return '<span>' + x + '</span>'; }).join('') + '</div></div>';
     var stat = function(ic, bg, col, k, v, hl){ return '<div class="ldm-stat' + (hl ? ' hl' : '') + '"><div class="i" style="background:' + bg + ';color:' + col + '">' + I(ic) + '</div><div class="k">' + k + '</div><div class="v">' + v + '</div></div>'; };
-    var row = function(pill, prix){ return '<div class="ldm-row"><div class="d"><small>' + dMon + '</small><b>' + dDay + '</b></div><div class="ldm-tag">' + (heure ? 'Dispo' : 'A→B') + '</div>'
-      + '<div class="c"><small>ORIGINE</small><div>' + E(from) + '</div></div><div class="c"><small>DESTINATION</small><div>' + dest + '</div></div>'
-      + '<div class="c"><small>STATUT</small>' + pill + '</div><div class="c p"><small>PRIX</small><div>' + prix + '</div></div><div style="color:#6B7A70">' + I('chev') + '</div></div>'; };
-    var main = function(o){ return '<div class="ldm-main"><div class="ldm-ttl"><div class="ldm-ic">' + I('grid') + '</div><div><h3>Tableau de bord</h3><p>Aperçu de vos activités</p></div></div>'
+    var row = function(pill, prix){ return '<div class="ldm-row"><div class="d"><small>' + dMon + '</small><b>' + dDay + '</b></div><div class="ldm-tag">' + (heure ? t('dm.dispo_tag') : 'A→B') + '</div>'
+      + '<div class="c"><small>' + t('dm.origin') + '</small><div>' + E(from) + '</div></div><div class="c"><small>' + t('dm.destination') + '</small><div>' + dest + '</div></div>'
+      + '<div class="c"><small>' + t('dm.status') + '</small>' + pill + '</div><div class="c p"><small>' + t('dm.price') + '</small><div>' + prix + '</div></div><div style="color:#6B7A70">' + I('chev') + '</div></div>'; };
+    var main = function(o){ return '<div class="ldm-main"><div class="ldm-ttl"><div class="ldm-ic">' + I('grid') + '</div><div><h3>' + t('dm.dashboard') + '</h3><p>' + t('dm.overview') + '</p></div></div>'
       + '<div class="ldm-bell">' + I('bell') + (o.bell ? '<em>' + o.bell + '</em>' : '') + '</div>'
-      + '<div class="ldm-stats">' + stat('check', '#E3F1E8', '#1B5E3B', 'CONFIRMÉES / TERMINÉES', o.done) + stat('clock', '#FFF3DC', '#2B2B2B', 'EN ATTENTE', o.wait, o.hl === 'wait')
-      + stat('msg', '#E8F0FB', '#2B2B2B', 'OFFRES REÇUES', o.offers, o.hl === 'offers') + stat('eur', '#FDE8E6', '#C0392B', 'TOTAL PAYÉ', o.paid) + '</div>'
-      + '<div class="ldm-rh"><b>' + I('clip') + 'Demandes récentes</b>' + (o.row ? '<span>Voir tout →</span>' : '') + '</div>'
-      + (o.row || '<div class="ldm-empty">Aucune demande</div>') + '</div>'; };
+      + '<div class="ldm-stats">' + stat('check', '#E3F1E8', '#1B5E3B', t('dm.st_done'), o.done) + stat('clock', '#FFF3DC', '#2B2B2B', t('dm.st_wait'), o.wait, o.hl === 'wait')
+      + stat('msg', '#E8F0FB', '#2B2B2B', t('dm.st_offers'), o.offers, o.hl === 'offers') + stat('eur', '#FDE8E6', '#C0392B', t('dm.st_paid'), o.paid) + '</div>'
+      + '<div class="ldm-rh"><b>' + I('clip') + '' + t('dm.recent') + '</b>' + (o.row ? '<span>' + t('dm.see_all') + '</span>' : '') + '</div>'
+      + (o.row || '<div class="ldm-empty">' + t('dm.none') + '</div>') + '</div>'; };
     var drawer = function(head, body, foot){ return '<div class="ldm-drw"><div class="ldm-dh">' + head + '<div class="x">✕</div></div><div class="ldm-db">' + body + '</div>' + (foot || '') + '</div>'; };
-    var offer = function(best, model, cls, stars, avis, price, opts, msg){ return '<div class="ldm-of' + (best ? ' best' : '') + '">' + (best ? '<div class="bp">MEILLEUR PRIX</div>' : '')
-      + '<div class="ldm-oh"><div class="vi">' + I('car') + '</div><div><b>' + model + '</b><div class="m"><span class="cl">' + cls + '</span><span class="st">★ ' + stars + '</span>(' + avis + ')</div></div><div class="pr">' + eur(price) + '<small>TVAC</small></div></div>'
+    var offer = function(best, model, cls, stars, avis, price, opts, msg){ return '<div class="ldm-of' + (best ? ' best' : '') + '">' + (best ? '<div class="bp">' + t('dm.best_price') + '</div>' : '')
+      + '<div class="ldm-oh"><div class="vi">' + I('car') + '</div><div><b>' + model + '</b><div class="m"><span class="cl">' + cls + '</span><span class="st">★ ' + stars + '</span>(' + avis + ')</div></div><div class="pr">' + eur(price) + '<small>' + t('dm.vat_incl') + '</small></div></div>'
       + '<div class="ldm-opts">' + opts.map(function(x){ return '<span>' + x + '</span>'; }).join('') + '</div>'
       + '<div class="ldm-msg">' + I('msg', 'width:16px;height:16px') + msg + '</div>'
-      + '<div class="ft"><span>Détails du véhicule ⌄</span><span class="ch">Choisir</span></div></div>'; };
+      + '<div class="ft"><span>' + t('dm.vehicle_details') + '</span><span class="ch">' + t('dm.choose') + '</span></div></div>'; };
 
-    var formBody = '<div class="ldm-lb" style="margin-top:0">Type de course</div><div class="ldm-types"><div' + (heure ? '' : ' class="on"') + '>A → B</div><div' + (heure ? ' class="on"' : '') + '>Disposition</div><div>Mixte</div></div>'
-      + '<div class="ldm-lb">Départ <i>*</i></div><div class="ldm-in">' + E(from) + '</div>'
-      + (heure ? '<div class="ldm-lb">Durée <i>*</i></div><div class="ldm-in">' + durTxt + '</div>' : '<div class="ldm-lb">Arrivée <i>*</i></div><div class="ldm-in">' + E(to) + '</div>')
-      + '<div class="ldm-g2"><div><div class="ldm-lb">Date <i>*</i></div><div class="ldm-in">' + dFr + '</div></div><div><div class="ldm-lb">Heure <i>*</i></div><div class="ldm-in">' + tm + '</div></div></div>'
-      + '<div class="ldm-g2"><div><div class="ldm-lb">Passagers</div><div class="ldm-in">1</div></div><div><div class="ldm-lb">Véhicule</div><div class="ldm-in">Business</div></div></div>'
-      + '<div class="ldm-lb">Instructions</div><div class="ldm-in ph" style="height:62px">Bagages, enfants, accès PMR…</div>'
-      + '<div class="ldm-pax"><small>INFORMATIONS DU PASSAGER</small><b>Julie Martin</b><span>0470 12 34 56</span></div>';
-    var offersBody = '<div class="ldm-sum"><div class="ldm-chips"><span class="ldm-ch d">' + I('cal', 'width:15px;height:15px') + dLong + ' &nbsp;|&nbsp; ' + I('clock', 'width:15px;height:15px') + tm + '</span><span class="ldm-ch">' + I('user', 'width:15px;height:15px') + '1 passager</span><span class="ldm-ch">' + I('car', 'width:15px;height:15px') + 'Business</span></div>'
+    var formBody = '<div class="ldm-lb" style="margin-top:0">' + t('dm.ride_type') + '</div><div class="ldm-types"><div' + (heure ? '' : ' class="on"') + '>A → B</div><div' + (heure ? ' class="on"' : '') + '>' + t('dm.disposition') + '</div><div>' + t('dm.mixed') + '</div></div>'
+      + '<div class="ldm-lb">' + t('dm.from') + ' <i>*</i></div><div class="ldm-in">' + E(from) + '</div>'
+      + (heure ? '<div class="ldm-lb">' + t('dm.duration') + ' <i>*</i></div><div class="ldm-in">' + durTxt + '</div>' : '<div class="ldm-lb">' + t('dm.to') + ' <i>*</i></div><div class="ldm-in">' + E(to) + '</div>')
+      + '<div class="ldm-g2"><div><div class="ldm-lb">' + t('dm.date') + ' <i>*</i></div><div class="ldm-in">' + dFr + '</div></div><div><div class="ldm-lb">' + t('dm.time') + ' <i>*</i></div><div class="ldm-in">' + tm + '</div></div></div>'
+      + '<div class="ldm-g2"><div><div class="ldm-lb">' + t('dm.passengers') + '</div><div class="ldm-in">1</div></div><div><div class="ldm-lb">' + t('dm.vehicle') + '</div><div class="ldm-in">Business</div></div></div>'
+      + '<div class="ldm-lb">' + t('dm.instructions') + '</div><div class="ldm-in ph" style="height:62px">' + t('dm.instr_ph') + '</div>'
+      + '<div class="ldm-pax"><small>' + t('dm.pax_info') + '</small><b>Julie Martin</b><span>0470 12 34 56</span></div>';
+    var offersBody = '<div class="ldm-sum"><div class="ldm-chips"><span class="ldm-ch d">' + I('cal', 'width:15px;height:15px') + dLong + ' &nbsp;|&nbsp; ' + I('clock', 'width:15px;height:15px') + tm + '</span><span class="ldm-ch">' + I('user', 'width:15px;height:15px') + t('dm.one_pax') + '</span><span class="ldm-ch">' + I('car', 'width:15px;height:15px') + 'Business</span></div>'
       + '<div class="ldm-rt">' + I('pin', 'width:16px;height:16px') + E(short(from)) + (heure ? ' · ' + durTxt : ' <span style="color:#6B7A70">→</span> ' + E(short(to))) + '</div></div>'
-      + '<div class="ldm-flt"><div class="t"><span>Toutes</span><span>⚡ Électrique</span><span>Hybride</span></div><div class="s">Prix ↑</div></div>'
-      + offer(true, 'Mercedes-Benz Classe E', 'BUSINESS', '5,0', '2 avis', p1, ['Hybride', 'Wi-Fi', 'Eau incluse'], 'Je vous attends devant l\'entrée principale !')
-      + offer(false, 'Mercedes-Benz Classe V', 'VAN', '5,0', '1 avis', p2, ['Hybride', 'Wi-Fi', 'Eau incluse', 'Snacks'], 'Je vous propose un van pour le prix d\'un véhicule business');
-    var modal = '<div class="ldm-veil"><div class="ldm-mod"><div class="ldm-mh"><div class="ok">' + I('ok') + '</div><b>Paiement confirmé</b><p>Votre course est réservée.</p></div><div class="ldm-mb">'
-      + '<div class="ldm-li"><span>Réservation</span><code>' + code + '</code></div><div class="ldm-li"><span>Date</span><b>' + dDay + ' ' + dMon.toLowerCase() + '. · ' + tm + '</b></div>'
-      + '<div class="ldm-li"><span>Trajet</span><b>' + trajet + '</b></div><div class="ldm-li"><span>Montant payé</span><b>' + eur(p1) + ' TVAC</b></div>'
-      + '<p>Un e-mail de confirmation vous a été envoyé avec le détail de votre réservation.</p><div class="ldm-mbt"><div>Mes demandes</div><div>Continuer</div></div></div></div></div>';
+      + '<div class="ldm-flt"><div class="t"><span>' + t('dm.f_all') + '</span><span>⚡ ' + t('dm.f_elec') + '</span><span>' + t('dm.f_hybrid') + '</span></div><div class="s">' + t('dm.sort_price') + '</div></div>'
+      + offer(true, 'Mercedes-Benz Classe E', 'BUSINESS', '5,0', t('dm.reviews2'), p1, t('dm.opts1').split('|'), t('dm.msg1'))
+      + offer(false, 'Mercedes-Benz Classe V', 'VAN', '5,0', t('dm.reviews1'), p2, t('dm.opts2').split('|'), t('dm.msg2'));
+    var modal = '<div class="ldm-veil"><div class="ldm-mod"><div class="ldm-mh"><div class="ok">' + I('ok') + '</div><b>' + t('dm.paid_t') + '</b><p>' + t('dm.paid_s') + '</p></div><div class="ldm-mb">'
+      + '<div class="ldm-li"><span>' + t('dm.booking') + '</span><code>' + code + '</code></div><div class="ldm-li"><span>' + t('dm.date_l') + '</span><b>' + dDay + ' ' + dMon.toLowerCase() + '. · ' + tm + '</b></div>'
+      + '<div class="ldm-li"><span>' + t('dm.trip') + '</span><b>' + trajet + '</b></div><div class="ldm-li"><span>' + t('dm.amount_paid') + '</span><b>' + eur(p1) + ' ' + t('dm.vat_incl') + '</b></div>'
+      + '<p>' + t('dm.mail_sent') + '</p><div class="ldm-mbt"><div>' + t('dm.my_requests') + '</div><div>' + t('dm.continue') + '</div></div></div></div></div>';
 
-    var tripBody = '<div class="ldm-trip"><small>COURSE CONFIRMÉE · ' + code + '</small><b>Bon voyage, Julie !</b><p>' + dLong + ' à ' + tm + ' · ' + trajet + '</p></div>'
-      + '<div class="ldm-vch"><div class="vi">' + I('doc') + '</div><div><b>Voucher de transport</b><span>À présenter à votre chauffeur · PDF</span></div><div class="dl">' + I('dl') + 'Télécharger</div></div>'
-      + '<div class="ldm-blk"><div class="vi">' + I('user') + '</div><div><b>Thomas M.</b> · votre chauffeur<br><span>Il vous attend au point de départ à l\'heure prévue</span></div><div style="margin-left:auto;color:#1B5E3B">' + I('phone') + '</div></div>'
-      + '<div class="ldm-blk"><div class="vi">' + I('car') + '</div><div><b>Mercedes-Benz Classe E</b><span class="ldm-plate">1-ABC-234</span><br><span>Noire · Business</span></div></div>'
-      + '<div class="ldm-steps2"><div><b>Avant la course</b>Détails envoyés par e-mail</div><div><b>Le jour J</b>Alerte « chauffeur en route »</div><div><b>Après la course</b>Facture et avis</div></div>';
-    var base = { done:23, wait:0, offers:0, paid:'1 489,30 €' };
+    var tripBody = '<div class="ldm-trip"><small>' + t('dm.confirmed_k') + '' + code + '</small><b>' + t('dm.bon_voyage') + '</b><p>' + dLong + ' ' + t('dm.at') + ' ' + tm + ' · ' + trajet + '</p></div>'
+      + '<div class="ldm-vch"><div class="vi">' + I('doc') + '</div><div><b>' + t('dm.voucher_t') + '</b><span>' + t('dm.voucher_s') + '</span></div><div class="dl">' + I('dl') + '' + t('dm.download') + '</div></div>'
+      + '<div class="ldm-blk"><div class="vi">' + I('user') + '</div><div><b>Thomas M.</b> · ' + t('dm.your_driver') + '<br><span>' + t('dm.driver_waits') + '</span></div><div style="margin-left:auto;color:#1B5E3B">' + I('phone') + '</div></div>'
+      + '<div class="ldm-blk"><div class="vi">' + I('car') + '</div><div><b>Mercedes-Benz Classe E</b><span class="ldm-plate">1-ABC-234</span><br><span>' + t('dm.black') + ' · Business</span></div></div>'
+      + '<div class="ldm-steps2"><div><b>' + t('dm.step1_t') + '</b>' + t('dm.step1_s') + '</div><div><b>' + t('dm.step2_t') + '</b>' + t('dm.step2_s') + '</div><div><b>' + t('dm.step3_t') + '</b>' + t('dm.step3_s') + '</div></div>';
+    var base = { done:23, wait:0, offers:0, paid:eur(1489.3) };
     var mk = function(o){ var x = {}; for(var k in base) x[k] = base[k]; for(var k2 in o) x[k2] = o[k2]; return x; };
     var screens = [
-      { t:'Votre demande', c:'Vous indiquez votre trajet, la date et la gamme de véhicule, puis vous publiez.',
-        h:'<div class="ldm">' + side + main(mk({})) + drawer('Nouvelle demande', formBody, '<div class="ldm-df"><span class="ldm-b">Annuler</span><span class="ldm-b g">Publier →</span></div>') + '</div>' },
-      { t:'Demande en attente', c:'Votre demande part aux chauffeurs et flottes vérifiés. Vous suivez tout depuis votre tableau de bord.',
-        h:'<div class="ldm">' + side + main(mk({ wait:1, bell:2, hl:'wait', row:row('<span class="ldm-pill w">● En attente</span>', '---') })) + '</div>' },
-      { t:'Offres reçues', c:'Les offres arrivent : prix fixe TVAC, véhicule, avis et message du chauffeur.',
-        h:'<div class="ldm">' + side + main(mk({ offers:2, bell:4, hl:'offers', row:row('<span class="ldm-pill b">● 2 offres</span>', 'Voir offres') })) + drawer(I('back') + code + ' · 2 offres reçues', offersBody) + '</div>' },
-      { t:'Paiement', c:'Vous choisissez l\'offre qui vous convient et payez en ligne : la course est réservée.',
-        h:'<div class="ldm"><div class="ldm-blur" style="display:flex">' + side + main(mk({ done:24, paid:'1 558,20 €', row:row('<span class="ldm-pill g">● Confirmée</span>', eur(p1)) })) + '</div>' + modal + '</div>' },
-      { t:'Bon voyage', c:'Téléchargez votre voucher de transport et attendez votre chauffeur : il vous prévient quand il est en route.',
-        h:'<div class="ldm">' + side + main(mk({ done:24, paid:'1 558,20 €', row:row('<span class="ldm-pill g">● Confirmée</span>', eur(p1)) })) + drawer(I('back') + code + ' · Confirmée', tripBody) + '</div>' }
+      { t:t('dm.s1_t'), c:t('dm.s1_c'),
+        h:'<div class="ldm">' + side + main(mk({})) + drawer(t('dm.new_request'), formBody, '<div class="ldm-df"><span class="ldm-b">' + t('dm.cancel') + '</span><span class="ldm-b g">' + t('dm.publish') + '</span></div>') + '</div>' },
+      { t:t('dm.s2_t'), c:t('dm.s2_c'),
+        h:'<div class="ldm">' + side + main(mk({ wait:1, bell:2, hl:'wait', row:row('<span class="ldm-pill w">● ' + t('dm.pill_wait') + '</span>', '---') })) + '</div>' },
+      { t:t('dm.s3_t'), c:t('dm.s3_c'),
+        h:'<div class="ldm">' + side + main(mk({ offers:2, bell:4, hl:'offers', row:row('<span class="ldm-pill b">● ' + t('dm.pill_offers') + '</span>', t('dm.see_offers')) })) + drawer(I('back') + code + ' · ' + t('dm.offers_received'), offersBody) + '</div>' },
+      { t:t('dm.s4_t'), c:t('dm.s4_c'),
+        h:'<div class="ldm"><div class="ldm-blur" style="display:flex">' + side + main(mk({ done:24, paid:eur(1558.2), row:row('<span class="ldm-pill g">● ' + t('dm.pill_confirmed') + '</span>', eur(p1)) })) + '</div>' + modal + '</div>' },
+      { t:t('dm.s5_t'), c:t('dm.s5_c'),
+        h:'<div class="ldm">' + side + main(mk({ done:24, paid:eur(1558.2), row:row('<span class="ldm-pill g">● ' + t('dm.pill_confirmed') + '</span>', eur(p1)) })) + drawer(I('back') + code + ' · ' + t('dm.pill_confirmed'), tripBody) + '</div>' }
     ];
 
     var old = document.getElementById('ld-demo'); if(old) old.remove();
     var o = document.createElement('div');
     o.id = 'ld-demo'; o.className = 'ldd'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true');
-    o.innerHTML = '<button class="ldd-x" aria-label="Fermer">✕</button>'
-      + '<div class="ldd-head"><div class="ld-eye">Aperçu · données de démonstration</div><h2 class="ld-serif">Voici la suite de <em>votre course</em></h2><p>Votre demande est prête. Créez votre compte gratuit pour la publier et recevoir les offres de chauffeurs vérifiés.</p></div>'
+    o.innerHTML = '<button class="ldd-x" aria-label="' + t('dm.close') + '">✕</button>'
+      + '<div class="ldd-head"><div class="ld-eye">' + t('dm.ov_eye') + '</div><h2 class="ld-serif">' + t('dm.ov_title') + '</h2><p>' + t('dm.ov_lead') + '</p></div>'
       + '<div class="ldd-steps">' + screens.map(function(s, i){ return '<button class="ldd-st" data-i="' + i + '"><span>' + (i + 1) + '</span>' + s.t + '</button>'; }).join('') + '</div>'
-      + '<div class="ldd-stage"><button class="ldd-nav p" aria-label="Précédent">‹</button><div class="ldd-win"><div class="ldd-bar"><i></i><i></i><i></i><b>bleenr.com</b></div><div class="ldd-vp"><div class="ldd-scale">'
-      + screens.map(function(s){ return '<div class="ldd-scr">' + s.h + '</div>'; }).join('') + '</div></div></div><button class="ldd-nav n" aria-label="Suivant">›</button></div>'
+      + '<div class="ldd-stage"><button class="ldd-nav p" aria-label="' + t('dm.prev') + '">‹</button><div class="ldd-win"><div class="ldd-bar"><i></i><i></i><i></i><b>bleenr.com</b></div><div class="ldd-vp"><div class="ldd-scale">'
+      + screens.map(function(s){ return '<div class="ldd-scr">' + s.h + '</div>'; }).join('') + '</div></div></div><button class="ldd-nav n" aria-label="' + t('dm.next') + '">›</button></div>'
       + '<div class="ldd-cap"></div>'
-      + '<div class="ldd-foot"><button class="ld-btn" id="ld-demo-go">Créer un compte &rarr;</button><p>Gratuit et sans engagement. Déjà client ? <a id="ld-demo-login">Se connecter</a></p></div>';
+      + '<div class="ldd-foot"><button class="ld-btn" id="ld-demo-go">' + t('dm.create_account') + '</button><p>' + t('dm.free_already') + ' <a id="ld-demo-login">' + t('dm.login') + '</a></p></div>';
     L.appendChild(o);
 
     var vp = o.querySelector('.ldd-vp'), sc = o.querySelector('.ldd-scale'), scr = o.querySelectorAll('.ldd-scr'), sts = o.querySelectorAll('.ldd-st'), cap = o.querySelector('.ldd-cap');
