@@ -47,9 +47,16 @@ function layout(title: string, intro: string, card = "", cta?: { label: string; 
   return mailLayout({ title, intro, card, cta, note, footer: FOOT });
 }
 
+// Le lien ouvre le site, qui vérifie lui-même le jeton (verifyOtp) : si le serveur est indisponible,
+// l'utilisateur voit un message clair au lieu d'une page d'erreur technique.
 function verifyUrl(d: EmailData, hash: string, type: string) {
   const redirect = d.redirect_to || d.site_url || "";
-  return `${SB_URL}/auth/v1/verify?token=${encodeURIComponent(hash)}&type=${encodeURIComponent(type)}&redirect_to=${encodeURIComponent(redirect)}`;
+  if (!/^https?:\/\//.test(redirect)) {
+    return `${SB_URL}/auth/v1/verify?token=${encodeURIComponent(hash)}&type=${encodeURIComponent(type)}&redirect_to=${encodeURIComponent(redirect)}`;
+  }
+  const [base, frag] = redirect.split("#");
+  const sep = base.includes("?") ? "&" : "?";
+  return `${base}${sep}th=${encodeURIComponent(hash)}&tt=${encodeURIComponent(type)}${frag ? "#" + frag : ""}`;
 }
 
 // Contenu selon le type d'e-mail

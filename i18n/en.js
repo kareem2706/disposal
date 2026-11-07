@@ -637,6 +637,7 @@
   "au.err_company_required": "Company name required",
   "au.err_email_invalid": "Invalid e-mail address",
   "au.err_email_pwd_required": "Email and password required",
+  "au.err_link_expired": "This link is no longer valid (expired or already used). Please request a new one.",
   "au.err_no_account": "No account with this address. Create an account in the “Sign up” tab.",
   "au.err_rate": "Too many requests: please wait a minute before asking for a new code.",
   "au.err_send": "Error while sending",

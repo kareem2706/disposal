@@ -1519,9 +1519,9 @@ option[hidden]{display:none;}
 function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.innerWidth; }
 </script>
 <!-- Traductions (i18n/fr.js = référence, en.js, es.js) — augmenter ?v= à chaque modification -->
-<script src="i18n/fr.js?v=4"></script>
-<script src="i18n/en.js?v=4"></script>
-<script src="i18n/es.js?v=4"></script>
+<script src="i18n/fr.js?v=5"></script>
+<script src="i18n/en.js?v=5"></script>
+<script src="i18n/es.js?v=5"></script>
 <script>window.initGooglePlaces=window.initGooglePlaces||function(){if(window._gpReady)window._gpReady();};window._gpReady=null;</script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places,routes&language=fr&loading=async&callback=initGooglePlaces" async defer></script>
 </head>
@@ -3758,6 +3758,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // et on affiche un message clair au lieu d'un bouton qui tourne indéfiniment.
 var _netWarnAt = 0;
 function _netWarn(k){
+  var _au = document.getElementById('screen-auth'); if(_au && _au.classList.contains('active')) return;   // écran de connexion : message sous le formulaire
   var now = Date.now(); if(now - _netWarnAt < 8000) return; _netWarnAt = now;
   try{ showToast('⚠️ ' + t(k || 'net.unreachable')); }catch(e){}
 }
@@ -3770,7 +3771,15 @@ function _sbFetch(input, init){
   if(init.signal){ if(init.signal.aborted) ctl.abort(); else init.signal.addEventListener('abort', function(){ ctl.abort(); }); }
   return fetch(input, Object.assign({}, init, { signal: ctl.signal })).then(function(r){
     clearTimeout(tm);
-    if(r.status === 502 || r.status === 503 || r.status === 504) _netWarn();
+    if(r.status >= 500){
+      _netWarn();
+      // page d'erreur HTML (Cloudflare 52x, maintenance…) : jamais affichée telle quelle
+      var ct = (r.headers.get('content-type') || '').toLowerCase();
+      if(ct.indexOf('json') < 0){
+        var m = t('net.unreachable');
+        return new Response(JSON.stringify({ code:r.status, error:'server_unavailable', error_code:'server_unavailable', error_description:m, msg:m, message:m }), { status:r.status, headers:{ 'Content-Type':'application/json' } });
+      }
+    }
     return r;
   }, function(e){
     clearTimeout(tm);
@@ -3779,8 +3788,18 @@ function _sbFetch(input, init){
     var er = new Error(t(timedOut ? 'net.timeout' : 'net.unreachable')); er.name = 'NetworkError'; throw er;
   });
 }
+// Le serveur répond-il ? (avant d'envoyer l'utilisateur vers une page du serveur : Google, Microsoft…)
+async function _sbReachable(){
+  try{
+    var ctl = new AbortController(), tm = setTimeout(function(){ ctl.abort(); }, 6000);
+    var r = await fetch((window._sbUrl || SB_URL) + '/auth/v1/health', { headers:{ apikey:(window._sbKey || SB_KEY) }, signal:ctl.signal });
+    clearTimeout(tm);
+    return r.status < 500;
+  }catch(e){ return false; }
+}
 function initSupabase(u,k){
   if(sb)return;
+  window._sbUrl = u || SB_URL; window._sbKey = k || SB_KEY;
   sb=window.supabase.createClient(u||SB_URL,k||SB_KEY,{auth:{storageKey:'disposal-auth',autoRefreshToken:true,persistSession:true,detectSessionInUrl:true},global:{fetch:_sbFetch}});
   // Jeton de session courant : utilisé pour appeler les Edge Functions au nom de l'utilisateur
   try{
@@ -3834,6 +3853,29 @@ async function checkSession(){
       if(event==='SIGNED_OUT'){if(window._closeAllOverlays)_closeAllOverlays();currentUser=null;currentProfile=null;currentRole='client';_entering=false;_passwordRecoveryActive=false;showScreen('landing');}
     });
   }
+  // Lien reçu par e-mail (mot de passe oublié, changement d'adresse, invitation) : ?th=<jeton>&tt=<type>
+  try{
+    var _q=new URLSearchParams(location.search), _th=_q.get('th'), _tt=_q.get('tt');
+    if(_th && /^(recovery|email_change|invite|signup|magiclink|email)$/.test(_tt||'')){
+      history.replaceState(null,'',location.pathname+location.hash);
+      if(_tt==='recovery') _passwordRecoveryActive=true;
+      var _vr=await sb.auth.verifyOtp({ token_hash:_th, type:_tt });
+      if(_vr.error){
+        _passwordRecoveryActive=false;
+        var _ve=String(_vr.error.code||_vr.error.error_code||'');
+        _showAuthProblem(_ve==='server_unavailable'||_vr.error.name==='NetworkError'||_vr.error.status>=500 ? t('net.unreachable') : t('au.err_link_expired'));
+        _initialCheckDone=true; return;
+      }
+      if(_tt==='recovery' && _vr.data && _vr.data.session){
+        currentUser=_vr.data.session.user; _initialCheckDone=true;
+        var _l4=document.getElementById('app-loader'); if(_l4) _l4.style.display='none';
+        showScreen('auth');
+        document.getElementById('auth-main').style.display='none';
+        document.getElementById('auth-new-pwd').style.display='block';
+        return;
+      }
+    }
+  }catch(e){ console.warn('lien e-mail', e); }
   try {
     console.log('[checkSession] getting session...');
     const { data: { session } } = await sb.auth.getSession();
@@ -4286,6 +4328,12 @@ window.ssoAuth = async function(provider){
     }
   }catch(e){}
 
+  if(!(await _sbReachable())){
+    document.getElementById('auth-main').style.display = 'block';
+    document.getElementById('auth-sso').style.display = 'none';
+    var _eo = document.getElementById('auth-err-email'); if(_eo) showError(_eo, t('net.unreachable')); else showToast('⚠️ ' + t('net.unreachable'));
+    return;
+  }
   const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.origin + window.location.pathname, ...(provider==='azure' ? {scopes:'email profile openid'} : {}) }});
   if(error){
     document.getElementById('auth-main').style.display = 'block';
@@ -4360,7 +4408,9 @@ window.sendLoginCode=async function(){
   setLoading(btn,false,t('au.recevoir_un_code'));
   if(error){
     var m=error.message||'';
-    if(/signups? not allowed|not found|user not found/i.test(m)) showError(err,t('au.err_no_account'));
+    var _ec=String(error.code||error.error_code||'');
+    if(_ec==='server_unavailable' || error.name==='NetworkError' || error.status>=500) showError(err,t('net.unreachable'));
+    else if(/signups? not allowed|not found|user not found|otp_disabled|signup_disabled|user_not_found/i.test(m+' '+_ec)) showError(err,t('au.err_no_account'));
     else if(/rate|security purposes|seconds/i.test(m)) showError(err,t('au.err_rate'));
     else showError(err,m);
     return;

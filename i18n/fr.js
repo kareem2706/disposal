@@ -637,6 +637,7 @@
   "au.err_company_required": "Nom de société requis",
   "au.err_email_invalid": "Adresse e-mail invalide",
   "au.err_email_pwd_required": "Email et mot de passe requis",
+  "au.err_link_expired": "Ce lien n’est plus valable (expiré ou déjà utilisé). Demandez-en un nouveau.",
   "au.err_no_account": "Aucun compte avec cette adresse. Créez un compte dans l’onglet « Inscription ».",
   "au.err_rate": "Trop de demandes : patientez une minute avant de redemander un code.",
   "au.err_send": "Erreur lors de l'envoi",
