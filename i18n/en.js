@@ -970,6 +970,8 @@
   "md.une_seule_demande_pour_tous": "One request for all rides",
   "md.veuillez_indiquer_la_communication_exacte": "⚠️ Please use the <strong>exact payment reference</strong> for your transfer so that your booking can be identified. Your booking will be confirmed as soon as payment is received.",
   "md.virement_bancaire": "Bank transfer",
+  "net.timeout": "The server isn't responding. Check your internet connection and try again in a few moments.",
+  "net.unreachable": "Can't reach the server. Check your internet connection and try again in a few moments.",
   "pf.language": "Language",
   "pf.language_hint": "Language of the app, e-mails and documents. Saved immediately.",
   "rides": "My requests"

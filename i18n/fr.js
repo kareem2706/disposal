@@ -970,6 +970,8 @@
   "md.une_seule_demande_pour_tous": "Une seule demande pour tous les trajets",
   "md.veuillez_indiquer_la_communication_exacte": "⚠️ Veuillez indiquer la <strong>communication exacte</strong> lors de votre virement afin que votre réservation soit identifiée. Votre réservation sera confirmée dès réception du paiement.",
   "md.virement_bancaire": "Virement bancaire",
+  "net.timeout": "Le serveur ne répond pas. Vérifiez votre connexion internet et réessayez dans quelques instants.",
+  "net.unreachable": "Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez dans quelques instants.",
   "pf.language": "Langue",
   "pf.language_hint": "Langue de l’application, des e-mails et des documents. Enregistrée immédiatement.",
   "rides": "Mes demandes"

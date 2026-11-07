@@ -1519,9 +1519,9 @@ option[hidden]{display:none;}
 function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.innerWidth; }
 </script>
 <!-- Traductions (i18n/fr.js = référence, en.js, es.js) — augmenter ?v= à chaque modification -->
-<script src="i18n/fr.js?v=3"></script>
-<script src="i18n/en.js?v=3"></script>
-<script src="i18n/es.js?v=3"></script>
+<script src="i18n/fr.js?v=4"></script>
+<script src="i18n/en.js?v=4"></script>
+<script src="i18n/es.js?v=4"></script>
 <script>window.initGooglePlaces=window.initGooglePlaces||function(){if(window._gpReady)window._gpReady();};window._gpReady=null;</script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places,routes&language=fr&loading=async&callback=initGooglePlaces" async defer></script>
 </head>
@@ -3754,9 +3754,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
+// Réseau : si le serveur ne répond pas après quelques secondes (coupure, maintenance…), on abandonne la requête
+// et on affiche un message clair au lieu d'un bouton qui tourne indéfiniment.
+var _netWarnAt = 0;
+function _netWarn(k){
+  var now = Date.now(); if(now - _netWarnAt < 8000) return; _netWarnAt = now;
+  try{ showToast('⚠️ ' + t(k || 'net.unreachable')); }catch(e){}
+}
+function _sbFetch(input, init){
+  init = init || {};
+  var url = String((input && input.url) || input || '');
+  var ms = /\/storage\/|\/functions\//.test(url) ? 60000 : 10000;   // envois de fichiers / IA : plus long
+  var ctl = new AbortController(), timedOut = false;
+  var tm = setTimeout(function(){ timedOut = true; ctl.abort(); }, ms);
+  if(init.signal){ if(init.signal.aborted) ctl.abort(); else init.signal.addEventListener('abort', function(){ ctl.abort(); }); }
+  return fetch(input, Object.assign({}, init, { signal: ctl.signal })).then(function(r){
+    clearTimeout(tm);
+    if(r.status === 502 || r.status === 503 || r.status === 504) _netWarn();
+    return r;
+  }, function(e){
+    clearTimeout(tm);
+    if(!timedOut && init.signal && init.signal.aborted) throw e;   // annulation voulue : pas de message
+    _netWarn(timedOut ? 'net.timeout' : 'net.unreachable');
+    var er = new Error(t(timedOut ? 'net.timeout' : 'net.unreachable')); er.name = 'NetworkError'; throw er;
+  });
+}
 function initSupabase(u,k){
   if(sb)return;
-  sb=window.supabase.createClient(u||SB_URL,k||SB_KEY,{auth:{storageKey:'disposal-auth',autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
+  sb=window.supabase.createClient(u||SB_URL,k||SB_KEY,{auth:{storageKey:'disposal-auth',autoRefreshToken:true,persistSession:true,detectSessionInUrl:true},global:{fetch:_sbFetch}});
   // Jeton de session courant : utilisé pour appeler les Edge Functions au nom de l'utilisateur
   try{
     sb.auth.getSession().then(function(r){ window._sbToken = r&&r.data&&r.data.session ? r.data.session.access_token : null; });

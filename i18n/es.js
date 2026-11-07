@@ -970,6 +970,8 @@
   "md.une_seule_demande_pour_tous": "Una sola solicitud para todos los trayectos",
   "md.veuillez_indiquer_la_communication_exacte": "⚠️ Indique el <strong>concepto exacto</strong> en su transferencia para que podamos identificar su reserva. Su reserva se confirmará en cuanto recibamos el pago.",
   "md.virement_bancaire": "Transferencia bancaria",
+  "net.timeout": "El servidor no responde. Compruebe su conexión a internet e inténtelo de nuevo en unos instantes.",
+  "net.unreachable": "No se puede conectar con el servidor. Compruebe su conexión a internet e inténtelo de nuevo en unos instantes.",
   "pf.language": "Idioma",
   "pf.language_hint": "Idioma de la aplicación, los e-mails y los documentos. Se guarda al instante.",
   "rides": "Mis solicitudes"
