@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page introuvable — Bleenr</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="{{url}}assets/icons/favicon-32.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px;background:#10261A;color:#F3EFE6;font-family:'DM Sans',system-ui,sans-serif;text-align:center}
+  img{height:30px;margin-bottom:48px}
+  .n{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(90px,22vw,150px);line-height:1;color:#96D6AA;margin:0}
+  h1{font-family:'Cormorant Garamond',Georgia,serif;font-weight:400;font-size:clamp(28px,6vw,40px);margin:10px 0 12px}
+  p{color:#C9C4B8;max-width:420px;line-height:1.6;margin:0 auto 32px}
+  a.btn{display:inline-block;background:#96D6AA;color:#10261A;text-decoration:none;font-weight:600;padding:14px 26px;border-radius:12px}
+  a.btn:hover{background:#B4E4C2}
+  .s{margin-top:22px;font-size:13.5px}
+  .s a{color:#C9C4B8}
+</style>
+</head>
+<body>
+  <a href="{{url}}"><img src="{{url}}logo_text_light.png" alt="Bleenr"></a>
+  <p class="n">404</p>
+  <h1>Cette page n'existe pas.</h1>
+  <p>Le lien est peut-être incomplet ou la page a été déplacée. Revenez à l'accueil pour réserver votre chauffeur.</p>
+  <a class="btn" href="{{url}}">Retour à l'accueil</a>
+  <div class="s">Besoin d'aide ? <a href="mailto:{{company.email}}">{{company.email}}</a></div>
+</body>
+</html>

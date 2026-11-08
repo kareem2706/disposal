@@ -20,6 +20,9 @@ js/               Code de l'application, assemblé dans l'ordre des noms de fich
 core/             Logique partagée avec l'app iOS (TypeScript) : trajets mixtes, notes, bagages, gammes, dates
                   + tests (core.test.ts). Exposée sur le site en global « BleenrCore ».
 i18n/             Traductions (fr = référence, en, es)
+legal/            Mentions légales, conditions générales, politique de confidentialité
+site.json         Coordonnées de la société et adresse du site : reportées partout via {{…}} à la construction
+404.html, robots.txt, sitemap.xml, manifest.webmanifest, favicon.ico, assets/icons/, assets/og-image.jpg
 assets/           Images
 supabase/         Base de données (SQL) et fonctions serveur (Edge Functions) — non publié sur le site
 build.mjs         Construction du site dans _site/

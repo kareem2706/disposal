@@ -3,7 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Bleenr — Chauffeurs Privés</title>
+<title>Bleenr — Chauffeurs privés en Belgique</title>
+<meta name="description" content="Réservez un chauffeur privé en Belgique : publiez votre trajet, recevez les offres de chauffeurs et de flottes vérifiés, choisissez. Le prix est fixé avant le départ.">
+<link rel="canonical" href="{{url}}">
+<meta name="theme-color" content="#1B5E3B">
+<!-- Aperçu lors d'un partage (WhatsApp, LinkedIn, Facebook…) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Bleenr">
+<meta property="og:locale" content="fr_BE">
+<meta property="og:url" content="{{url}}">
+<meta property="og:title" content="Bleenr — Chauffeurs privés en Belgique">
+<meta property="og:description" content="Publiez votre trajet, recevez les offres de chauffeurs vérifiés, choisissez. Le prix est fixé avant le départ.">
+<meta property="og:image" content="{{url}}assets/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Bleenr — Arrivez à votre façon.">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Icônes -->
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <!-- Supabase JS SDK -->
@@ -207,8 +228,9 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div><h5 data-i18n="ld.services">Services</h5><button data-i18n="ld.transferts_aeroport" data-ld-go="ld-services">Transferts a&eacute;roport</button><button data-i18n="ld.mise_a_disposition" data-ld-go="ld-services">Mise &agrave; disposition</button><button data-i18n="ld.ville_a_ville" data-ld-go="ld-services">Ville &agrave; ville</button><button data-i18n="ld.entreprises" data-ld-go="ld-services">Entreprises</button></div>
         <div><h5 data-i18n="ld.chauffeurs">Chauffeurs</h5><button data-i18n="ld.devenir_partenaire" onclick="showLandingAuth('register')">Devenir partenaire</button><button data-i18n="ld.espace_chauffeur" onclick="showLandingAuth('login')">Espace chauffeur</button></div>
         <div><h5 data-i18n="ld.compte">Compte</h5><button data-i18n="ld.creer_un_compte" onclick="showLandingAuth('register')">Cr&eacute;er un compte</button><button data-i18n="ld.connexion" onclick="showLandingAuth('login')">Connexion</button></div>
+        <div><h5>Bleenr</h5><a data-i18n="ld.mentions_legales" href="legal/mentions-legales.html">Mentions l&eacute;gales</a><a data-i18n="ld.conditions_generales" href="legal/conditions.html">Conditions g&eacute;n&eacute;rales</a><a data-i18n="ld.confidentialite" href="legal/confidentialite.html">Confidentialit&eacute;</a><a data-i18n="ld.contact" href="mailto:{{company.email}}">Contact</a></div>
       </div>
-      <div class="ld-foot-b"><span data-i18n="ld.2026_disposal_srl_bleenr_com">&copy; 2026 DISPOSAL SRL &mdash; bleenr.com</span><span data-i18n="ld.bruxelles_belgique">Bruxelles, Belgique</span></div>
+      <div class="ld-foot-b"><span>&copy; {{year}} {{company.name}} &mdash; TVA {{company.vat}}</span><span>{{company.street}}, {{company.postal}} {{company.city}} &middot; <a href="mailto:{{company.email}}">{{company.email}}</a></span></div>
     </div>
   </footer>
 
@@ -363,7 +385,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <div id="panel-phone" style="display:none;"></div>
       <div id="panel-email" style="display:none;"></div>
 
-      <p data-i18n-html="au.en_continuant_vous_acceptez_nos" style="text-align:center;font-size:11px;color:#aaa;margin-top:16px;line-height:1.6;">En continuant, vous acceptez nos <a href="#" style="color:var(--green);text-decoration:underline;">Conditions d'utilisation</a> et notre <a href="#" style="color:var(--green);text-decoration:underline;">Politique de confidentialité</a>.</p>
+      <p data-i18n-html="au.en_continuant_vous_acceptez_nos" style="text-align:center;font-size:11px;color:#aaa;margin-top:16px;line-height:1.6;">En continuant, vous acceptez nos <a href="legal/conditions.html" target="_blank" style="color:var(--green);text-decoration:underline;">Conditions d'utilisation</a> et notre <a href="legal/confidentialite.html" target="_blank" style="color:var(--green);text-decoration:underline;">Politique de confidentialité</a>.</p>
     </div>
 
     <!-- Step 2: OTP -->

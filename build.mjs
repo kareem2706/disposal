@@ -29,8 +29,21 @@ const core = buildSync({ entryPoints: [path.join(root, 'core', 'index.ts')], bun
 if (/^\s*["']use strict/.test(core)) throw new Error('core: directive use strict non retirée');
 fs.writeFileSync(path.join(out, 'app.js'), ('// ── core (core/*.ts, partagé avec l’app iOS) ──\n' + core + concat('js', '.js')).replaceAll('__V__', ver));
 fs.writeFileSync(path.join(out, 'admin.js'), concat(path.join('js', 'admin'), '.js').replaceAll('__V__', ver));
-fs.writeFileSync(path.join(out, 'index.html'), fs.readFileSync(path.join(root, 'index.html'), 'utf8').replaceAll('__V__', ver));
-for (const p of ['assets', 'i18n', 'logo.png', 'logo_text.png', 'logo_text_light.png']) {
+// Informations de la société / adresse du site (site.json) : {{url}}, {{company.name}}, {{company.vat}}…
+const site = JSON.parse(fs.readFileSync(path.join(root, 'site.json'), 'utf8'));
+const fill = (txt, file) => txt.replaceAll('__V__', ver).replace(/\{\{\s*([\w.]+)\s*\}\}/g, (m, key) => {
+  const v = key.split('.').reduce((o, k) => (o == null ? undefined : o[k]), site);
+  if (v == null) throw new Error(file + ' : valeur inconnue {{' + key + '}} (site.json)');
+  return String(v);
+});
+const page = (src, dst = src) => {
+  fs.mkdirSync(path.dirname(path.join(out, dst)), { recursive: true });
+  fs.writeFileSync(path.join(out, dst), fill(fs.readFileSync(path.join(root, src), 'utf8'), src));
+};
+page('index.html');
+for (const f of ['404.html', 'robots.txt', 'sitemap.xml', 'manifest.webmanifest']) page(f);
+for (const f of fs.readdirSync(path.join(root, 'legal'))) page(path.join('legal', f));
+for (const p of ['assets', 'i18n', 'logo.png', 'logo_text.png', 'logo_text_light.png', 'favicon.ico']) {
   if (fs.existsSync(path.join(root, p))) fs.cpSync(path.join(root, p), path.join(out, p), { recursive: true });
 }
 console.log('Site construit dans _site/ (version ' + ver + ')');

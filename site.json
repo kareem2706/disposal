@@ -1,0 +1,16 @@
+{
+  "_note": "Informations de la société et adresse du site : modifiées ici, elles sont reportées partout ({{…}}) à la construction du site (build.mjs).",
+  "url": "https://kareem2706.github.io/disposal/",
+  "company": {
+    "name": "Bleenr",
+    "street": "Langestraat 84",
+    "postal": "1730",
+    "city": "Asse",
+    "country": "Belgique",
+    "vat": "BE0544.927.291",
+    "bce": "0544.927.291",
+    "email": "info@bleenr.com"
+  },
+  "legal_updated": "8 novembre 2026",
+  "year": "2026"
+}
