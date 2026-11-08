@@ -1,11 +1,13 @@
 // ── INIT ──────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
+// _onReady : aussi quand app.js est chargé à la demande, après DOMContentLoaded (js/landing/00-boot.js)
+_onReady(async () => {
+  window._appLoaded = true;
   try{ setLang(currentLang, { noSave:true }); }catch(e){ console.warn('i18n init', e); }
   // Initialise stripe fee label from constant so it's always in sync
   var _feeEl = document.getElementById('stripe-fee-label');
   if(_feeEl){ _feeEl.textContent = 'Des frais supplémentaires peuvent s\'appliquer'; }
 
-  if(localStorage.getItem(DEMO_MODE_KEY)==='1'){initDemoMode();return;}
+  if(localStorage.getItem(DEMO_MODE_KEY)==='1'){initDemoMode();window._appReadyResolve();return;}
 
   var _safetyTimer = setTimeout(function(){
     var _ls=document.getElementById('app-loader');
@@ -32,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     var _lErr=document.getElementById('app-loader');if(_lErr)_lErr.style.display='none';
     showScreen('landing');
   }
+  window._appReadyResolve();
   document.addEventListener('click', e => {
     const panel = document.getElementById('notif-panel');
     const btn = document.getElementById('notif-btn');

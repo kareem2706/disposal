@@ -211,7 +211,7 @@ function showToast(msg){
 }
 
 // Set today's date as default and minimum for ride form
-window.addEventListener('load', () => {
+_onLoad(() => {   // aussi quand app.js est chargé après « load »
   var td = todayStr();
   ['ride-date','disp-date','sub-date','sub-disp-date'].forEach(function(id){
     var dt = document.getElementById(id);

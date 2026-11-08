@@ -12,7 +12,10 @@ css/              Styles, assemblés dans l'ordre des noms de fichiers
   03-responsive.css   adaptations mobile
   04-landing.css      page d'accueil
   05-components.css   thème et composants (fiches, calendrier, pastilles…)
-js/               Code de l'application, assemblé dans l'ordre des noms de fichiers
+js/landing/       Page d'accueil → landing.js (toujours chargé, avec le core) : démarrage (_loadApp, _onReady),
+                  configuration, traductions, adresses Google, animations et démo de la landing
+js/               Code de l'application → app.js : chargé tout de suite si une session existe (ou démo,
+                  retour de paiement / connexion), sinon à la demande (« Se connecter », « Créer un compte »…)
   01-payment-return.js … 25-invoices-passengers.js   (un fichier par domaine : connexion, courses,
                                         offres, missions, documents, calendrier, fleet…)
   admin/          Administration → admin.js, chargé seulement quand un admin ouvre une page d'admin

@@ -1,7 +1,8 @@
 // Construction du site : assemble les sources en un site statique dans _site/
 //   css/*.css  → app.css   (dans l'ordre des noms de fichiers)
 //   core/*.ts  → BleenrCore (logique partagée avec l'app iOS), placé en tête de app.js
-//   js/*.js    → app.js    (idem : un seul script, comme avant le découpage)
+//   js/landing/*.js → landing.js (page d'accueil, toujours chargée, avec le core)
+//   js/*.js    → app.js    (l'application : tout de suite si session, sinon à la demande)
 //   js/admin/*.js → admin.js (chargé à la demande, seulement quand un admin ouvre une page d'admin)
 //   index.html → index.html (?v=__V__ remplacé par la version, pour vider le cache des navigateurs)
 // Seuls les fichiers du site sont publiés (pas supabase/, ni les sources).
@@ -27,7 +28,9 @@ const core = buildSync({ entryPoints: [path.join(root, 'core', 'index.ts')], bun
   // « use strict » d'esbuild retiré : en tête de app.js il rendrait TOUT le script strict (changement de comportement)
   .replace(/^\s*["']use strict["'];?\s*/, '');
 if (/^\s*["']use strict/.test(core)) throw new Error('core: directive use strict non retirée');
-fs.writeFileSync(path.join(out, 'app.js'), ('// ── core (core/*.ts, partagé avec l’app iOS) ──\n' + core + concat('js', '.js')).replaceAll('__V__', ver));
+// landing.js : core + page d'accueil (toujours chargé) ; app.js : l'application (chargée tout de suite ou à la demande)
+fs.writeFileSync(path.join(out, 'landing.js'), ('// ── core (core/*.ts, partagé avec l’app iOS) ──\n' + core + concat(path.join('js', 'landing'), '.js')).replaceAll('__V__', ver));
+fs.writeFileSync(path.join(out, 'app.js'), concat('js', '.js').replaceAll('__V__', ver));
 fs.writeFileSync(path.join(out, 'admin.js'), concat(path.join('js', 'admin'), '.js').replaceAll('__V__', ver));
 // Informations de la société / adresse du site (site.json) : {{url}}, {{company.name}}, {{company.vat}}…
 const site = JSON.parse(fs.readFileSync(path.join(root, 'site.json'), 'utf8'));

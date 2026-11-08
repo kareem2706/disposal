@@ -1915,14 +1915,18 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 
 <div class="toast" id="toast"></div>
 <!-- Scripts en fin de page : la page d'accueil s'affiche sans les attendre -->
-<!-- Supabase JS SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
-<script>if(!window.supabase) document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"><\/script>');</script>
-<!-- Traductions (i18n/fr.js = référence, en.js, es.js) — ?v=__V__ est remplacé à chaque mise en ligne -->
+<!-- Traductions (i18n/fr.js = référence ; en / es chargées si besoin) -->
 <script src="i18n/fr.js?v=__V__"></script>
-<script src="i18n/en.js?v=__V__"></script>
-<script src="i18n/es.js?v=__V__"></script>
-<script src="app.js?v=__V__"></script>
+<!-- Page d'accueil (toujours) : démarrage, traductions, adresses Google, animations — js/landing/ -->
+<script src="landing.js?v=__V__"></script>
+<!-- Application (js/*.js) : tout de suite si une session existe (ou démo, retour de paiement…), sinon à la demande -->
+<script>
+if(!document.documentElement.classList.contains('boot-landing')){
+  document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"><\/script>'
+    + '<script src="i18n/en.js?v=__V__"><\/script><script src="i18n/es.js?v=__V__"><\/script>'
+    + '<script src="app.js?v=__V__"><\/script>');
+}
+</script>
 <!-- Stripe.js (non bloquant : le paiement passe par Stripe Checkout) -->
 <script src="https://js.stripe.com/v3/" async></script>
 

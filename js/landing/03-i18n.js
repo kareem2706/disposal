@@ -135,6 +135,8 @@ function applyI18n(root){
 
 window.setLang = function(l, opt){
   if(['fr','en','es'].indexOf(l) < 0) l = 'fr';
+  // Dictionnaire pas encore chargé (page d'accueil seule) : on le charge puis on applique
+  if(!(window.I18N && window.I18N[l])){ _i18nLoad(l).then(function(){ setLang(l, opt); }, function(){}); return; }
   var changed = l !== currentLang;
   currentLang = l;
   try{ localStorage.setItem('disposal_lang', l); }catch(e){}
