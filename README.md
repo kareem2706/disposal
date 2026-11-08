@@ -39,12 +39,12 @@ cd _site && python3 -m http.server 8000   # puis http://localhost:8000
 
 Chaque envoi sur `main` lance GitHub Actions (`.github/workflows/static.yml`) :
 `npm ci`, `npm test` (si un test échoue, rien n'est publié), `npm run build`, puis publication de `_site/`.
+Les `?v=__V__` de `index.html` sont remplacés par la version (commit) : plus besoin de les augmenter à la main.
 
 ## Core partagé avec l'app iOS
 
 `core/` est la seule source de vérité. Après une modification : `npm test` ici, puis dans le dépôt
 `bleenr-chauffeur` : `node scripts/sync-core.mjs` (recopie dans `src/core/`).
-Les `?v=__V__` de `index.html` sont remplacés par la version (commit) : plus besoin de les augmenter à la main.
 
 ## Sécurité
 
