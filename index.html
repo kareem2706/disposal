@@ -26,14 +26,30 @@
 <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-<!-- Supabase JS SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
-<script>if(!window.supabase) document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"><\/script>');</script>
-<script src="https://cdn.jsdelivr.net/npm/@capacitor/core@7.6.9/dist/capacitor.js"></script>
-<!-- Stripe.js -->
-<script src="https://js.stripe.com/v3/"></script>
+<!-- Capacitor : seulement dans l'app native (le pont natif définit window.Capacitor avant la page) -->
+<script>if(window.Capacitor) document.write('<script src="https://cdn.jsdelivr.net/npm/@capacitor/core@7.6.9/dist/capacitor.js"><\/script>');</script>
 <link rel="stylesheet" href="app.css?v=__V__">
+<script>
+// Visiteur sans session : la page d'accueil s'affiche tout de suite, sans attendre le code de l'application
+// (traduite dès son affichage si la langue n'est pas le français, voir le script après #screen-landing).
+// Sinon (session enregistrée, démo, retour de paiement / connexion) : écran de chargement comme avant.
+(function(){
+  try{
+    var ls=window.localStorage, ok=['fr','en','es'], l=null;
+    try{ l=ls.getItem('disposal_lang'); }catch(e){}
+    if(ok.indexOf(l)<0){ var n=String((navigator.languages&&navigator.languages[0])||navigator.language||'fr').slice(0,2).toLowerCase(); l=ok.indexOf(n)>=0?n:'fr'; }
+    window._bootLang=l;
+    if(!ls.getItem('disposal-auth') && ls.getItem('disposal_demo')!=='1'
+       && !/[?&](payment|th|tt|code|error|session_id)=/.test(location.search)
+       && !/access_token|error|^#course\//.test(location.hash)){
+      document.documentElement.classList.add('boot-landing');
+      if(l!=='fr') document.write('<script src="i18n/'+l+'.js?v=__V__"><\/script>');
+    }
+  }catch(e){}
+})();
+</script>
 <script>
 // iPad : même affichage que sur iPhone (on force les règles CSS « mobile »)
 (function(){
@@ -59,10 +75,6 @@
 // Largeur « logique » : sur iPad on se comporte comme sur iPhone
 function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.innerWidth; }
 </script>
-<!-- Traductions (i18n/fr.js = référence, en.js, es.js) — ?v=__V__ est remplacé à chaque mise en ligne -->
-<script src="i18n/fr.js?v=__V__"></script>
-<script src="i18n/en.js?v=__V__"></script>
-<script src="i18n/es.js?v=__V__"></script>
 <script>window.initGooglePlaces=window.initGooglePlaces||function(){if(window._gpReady)window._gpReady();};window._gpReady=null;</script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places,routes&language=fr&loading=async&callback=initGooglePlaces" async defer></script>
 </head>
@@ -86,7 +98,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 
   <section class="ld-hero">
     <div class="ld-hero-bg" id="ld-hero-bg">
-      <div class="ld-img"><div class="ld-ph"><span>Photo hero &mdash; chauffeur ouvrant la porti&egrave;re, de nuit</span></div><img src="assets/landing/hero.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+      <div class="ld-img"><div class="ld-ph"><span>Photo hero &mdash; chauffeur ouvrant la porti&egrave;re, de nuit</span></div><img fetchpriority="high" src="assets/landing/hero.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
     </div>
     <div class="ld-hero-scrim"></div>
     <div class="ld-wrap ld-hero-in">
@@ -126,11 +138,11 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div class="ld-rail" id="ld-rail"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
       </div>
       <div class="ld-story-r">
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 01 &mdash; r&eacute;servation sur ordinateur</span></div><img src="assets/story/01-approche.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 02 &mdash; chauffeurs recevant la demande</span></div><img src="assets/story/02-portiere.jpg?v=5" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 03 &mdash; accueil devant l'h&ocirc;tel</span></div><img src="assets/story/03-installation.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 04 &mdash; le trajet</span></div><img src="assets/story/04-fermeture.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 05 &mdash; la berline s'&eacute;loigne, feux arri&egrave;re allum&eacute;s</span></div><img src="assets/story/05-depart.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
+        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 01 &mdash; r&eacute;servation sur ordinateur</span></div><img loading="lazy" decoding="async" src="assets/story/01-approche.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
+        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 02 &mdash; chauffeurs recevant la demande</span></div><img loading="lazy" decoding="async" src="assets/story/02-portiere.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
+        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 03 &mdash; accueil devant l'h&ocirc;tel</span></div><img loading="lazy" decoding="async" src="assets/story/03-installation.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
+        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 04 &mdash; le trajet</span></div><img loading="lazy" decoding="async" src="assets/story/04-fermeture.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
+        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 05 &mdash; la berline s'&eacute;loigne, feux arri&egrave;re allum&eacute;s</span></div><img loading="lazy" decoding="async" src="assets/story/05-depart.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
         <div class="ld-card on"><div data-i18n="ld.course_publiee" class="k">Course publi&eacute;e</div><div data-i18n="ld.bruxelles_zaventem" class="v">Bruxelles &rarr; Zaventem</div><div data-i18n="ld.ce_soir_19_40_business" class="s">Ce soir, 19:40 &middot; Business</div></div>
         <div class="ld-card"><div data-i18n="ld.offres_recues" class="k">Offres re&ccedil;ues</div><div data-i18n="ld.5_chauffeurs" class="v">5 chauffeurs</div><div data-i18n="ld.comparez_prix_vehicule_et_avis" class="s">Comparez prix, v&eacute;hicule et avis</div></div>
         <div class="ld-card"><div data-i18n="ld.chauffeur_confirme" class="k">Chauffeur confirm&eacute;</div><div data-i18n="ld.mercedes_classe_e" class="v">Mercedes Classe E</div><div data-i18n="ld.profil_verifie_licence_et_assurance" class="s">Profil v&eacute;rifi&eacute; &middot; licence et assurance</div></div>
@@ -149,11 +161,11 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         </div>
       </div>
       <div class="ld-track" id="ld-track">
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; terminal d'a&eacute;roport</span></div><img src="assets/landing/service-aeroport.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">01</span><h3 data-i18n="ld.transferts_aeroport" class="ld-serif">Transferts a&eacute;roport</h3><p data-i18n="ld.zaventem_charleroi_schiphol_ou_roissy">Zaventem, Charleroi, Schiphol ou Roissy : le chauffeur vous attend &agrave; l'heure convenue, bagages compris.</p></div></article>
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; chauffeur attendant devant un h&ocirc;tel</span></div><img src="assets/landing/service-heure.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">02</span><h3 data-i18n="ld.mise_a_disposition" class="ld-serif">Mise &agrave; disposition</h3><p data-i18n="ld.un_chauffeur_a_vos_cotes">Un chauffeur &agrave; vos c&ocirc;t&eacute;s pour quelques heures ou une journ&eacute;e enti&egrave;re, pour encha&icirc;ner les rendez-vous.</p></div></article>
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; berline sur autoroute</span></div><img src="assets/landing/service-ville.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">03</span><h3 data-i18n="ld.ville_a_ville" class="ld-serif">Ville &agrave; ville</h3><p data-i18n="ld.bruxellesanvers_liege_paris_ou_amsterdam">Bruxelles&ndash;Anvers, Li&egrave;ge, Paris ou Amsterdam : porte &agrave; porte, sans correspondance.</p></div></article>
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; arriv&eacute;e &agrave; une soir&eacute;e</span></div><img src="assets/landing/service-evenement.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">04</span><h3 data-i18n="ld.evenements" class="ld-serif">&Eacute;v&eacute;nements</h3><p data-i18n="ld.mariages_galas_seminaires_plusieurs_vehicules">Mariages, galas, s&eacute;minaires : plusieurs v&eacute;hicules coordonn&eacute;s pour tous vos invit&eacute;s.</p></div></article>
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; passager d'affaires &agrave; l'arri&egrave;re</span></div><img src="assets/landing/service-entreprise.jpg?v=3" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">05</span><h3 data-i18n="ld.entreprises" class="ld-serif">Entreprises</h3><p data-i18n="ld.compte_societe_avec_numero_de">Compte soci&eacute;t&eacute; avec num&eacute;ro de TVA, factures automatiques et historique de toutes les courses.</p></div></article>
+        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; terminal d'a&eacute;roport</span></div><img loading="lazy" decoding="async" src="assets/landing/service-aeroport.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">01</span><h3 data-i18n="ld.transferts_aeroport" class="ld-serif">Transferts a&eacute;roport</h3><p data-i18n="ld.zaventem_charleroi_schiphol_ou_roissy">Zaventem, Charleroi, Schiphol ou Roissy : le chauffeur vous attend &agrave; l'heure convenue, bagages compris.</p></div></article>
+        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; chauffeur attendant devant un h&ocirc;tel</span></div><img loading="lazy" decoding="async" src="assets/landing/service-heure.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">02</span><h3 data-i18n="ld.mise_a_disposition" class="ld-serif">Mise &agrave; disposition</h3><p data-i18n="ld.un_chauffeur_a_vos_cotes">Un chauffeur &agrave; vos c&ocirc;t&eacute;s pour quelques heures ou une journ&eacute;e enti&egrave;re, pour encha&icirc;ner les rendez-vous.</p></div></article>
+        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; berline sur autoroute</span></div><img loading="lazy" decoding="async" src="assets/landing/service-ville.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">03</span><h3 data-i18n="ld.ville_a_ville" class="ld-serif">Ville &agrave; ville</h3><p data-i18n="ld.bruxellesanvers_liege_paris_ou_amsterdam">Bruxelles&ndash;Anvers, Li&egrave;ge, Paris ou Amsterdam : porte &agrave; porte, sans correspondance.</p></div></article>
+        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; arriv&eacute;e &agrave; une soir&eacute;e</span></div><img loading="lazy" decoding="async" src="assets/landing/service-evenement.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">04</span><h3 data-i18n="ld.evenements" class="ld-serif">&Eacute;v&eacute;nements</h3><p data-i18n="ld.mariages_galas_seminaires_plusieurs_vehicules">Mariages, galas, s&eacute;minaires : plusieurs v&eacute;hicules coordonn&eacute;s pour tous vos invit&eacute;s.</p></div></article>
+        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; passager d'affaires &agrave; l'arri&egrave;re</span></div><img loading="lazy" decoding="async" src="assets/landing/service-entreprise.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">05</span><h3 data-i18n="ld.entreprises" class="ld-serif">Entreprises</h3><p data-i18n="ld.compte_societe_avec_numero_de">Compte soci&eacute;t&eacute; avec num&eacute;ro de TVA, factures automatiques et historique de toutes les courses.</p></div></article>
         <div style="flex:0 0 40px"></div>
       </div>
     </div>
@@ -167,11 +179,11 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       </div>
       <div class="ld-cls-body ld-rv">
         <div class="ld-cls-img" id="ld-cls-img">
-          <div class="ld-img on"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Economy</span></div><img src="assets/landing/classe-lowcost.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
-          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Business</span></div><img src="assets/landing/classe-business.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
-          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Premi&egrave;re</span></div><img src="assets/landing/classe-premiere-dz.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/landing/classe-premiere.png';}else this.style.display='none'"></div>
-          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; van</span></div><img src="assets/landing/classe-van-dz.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/landing/classe-van.png';}else this.style.display='none'"></div>
-          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; autocar</span></div><img src="assets/landing/classe-autocar.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+          <div class="ld-img on"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Economy</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-lowcost.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Business</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-business.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Premi&egrave;re</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-premiere-dz.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/landing/classe-premiere.webp';}else this.style.display='none'"></div>
+          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; van</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-van-dz.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/landing/classe-van.webp';}else this.style.display='none'"></div>
+          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; autocar</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-autocar.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
         </div>
         <div class="ld-cls-info" id="ld-cls-info"></div>
       </div>
@@ -193,7 +205,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 
   <section class="ld-drv" id="ld-drivers">
     <div class="ld-wrap ld-drv-grid">
-      <div class="ld-drv-img" id="ld-drv-img"><div class="ld-par" id="ld-drv-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; chauffeur au volant, lumi&egrave;re naturelle</span></div><img src="assets/landing/chauffeur.png" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
+      <div class="ld-drv-img" id="ld-drv-img"><div class="ld-par" id="ld-drv-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; chauffeur au volant, lumi&egrave;re naturelle</span></div><img loading="lazy" decoding="async" src="assets/landing/chauffeur.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
       <div>
         <span data-i18n="ld.chauffeurs_flottes_partenaires" class="ld-eye ld-rv" style="color:var(--lmi)">Chauffeurs &amp; flottes partenaires</span>
         <h2 data-i18n-html="ld.de_l_autre_cotede_la" class="ld-serif ld-rv">De l'autre c&ocirc;t&eacute;<br>de la <em>vitre</em>.</h2>
@@ -236,12 +248,29 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 
 </div>
 
+<script>
+// Accueil affiché avant le code de l'application : textes traduits tout de suite (même règles que applyI18n)
+(function(){
+  try{
+    var l=window._bootLang, D=window.I18N&&window.I18N[l];
+    if(!l||l==='fr'||!D||!document.documentElement.classList.contains('boot-landing')) return;
+    var root=document.getElementById('screen-landing');
+    var one=function(attr,get,set){ [].forEach.call(root.querySelectorAll('['+attr+']'),function(el){
+      var k=el.getAttribute(attr), v=D[k]; if(!k||v==null) return;
+      var o='_i18nFr_'+attr; if(el[o]==null) el[o]=get(el); set(el,v); }); };
+    one('data-i18n',function(e){return e.textContent;},function(e,v){e.textContent=v;});
+    one('data-i18n-html',function(e){return e.innerHTML;},function(e,v){e.innerHTML=v;});
+    one('data-i18n-ph',function(e){return e.getAttribute('placeholder')||'';},function(e,v){e.setAttribute('placeholder',v);});
+    document.documentElement.lang=l;
+  }catch(e){}
+})();
+</script>
 <div id="screen-auth" class="screen">
   <div id="auth-blob1"></div>
   <div id="auth-blob2"></div>
   <div id="auth-blob3"></div>
   <aside class="au-side is-login" id="au-side">
-    <div class="au-side-img"><img data-au="client" src="assets/auth/client.png" alt=""><img data-au="driver" src="assets/auth/fleet.png" alt=""></div>
+    <div class="au-side-img"><img loading="lazy" decoding="async" data-au="client" src="assets/auth/client.webp" alt=""><img loading="lazy" decoding="async" data-au="driver" src="assets/auth/fleet.webp" alt=""></div>
     <div class="au-side-scrim"></div>
     <div class="au-side-top"><img src="logo_text_light.png" alt="Bleenr"><button data-i18n="au.retour_a_l_accueil" class="au-back" onclick="showScreen('landing')">&larr; Retour &agrave; l'accueil</button></div>
     <div>
@@ -1885,7 +1914,17 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 
 
 <div class="toast" id="toast"></div>
+<!-- Scripts en fin de page : la page d'accueil s'affiche sans les attendre -->
+<!-- Supabase JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script>if(!window.supabase) document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"><\/script>');</script>
+<!-- Traductions (i18n/fr.js = référence, en.js, es.js) — ?v=__V__ est remplacé à chaque mise en ligne -->
+<script src="i18n/fr.js?v=__V__"></script>
+<script src="i18n/en.js?v=__V__"></script>
+<script src="i18n/es.js?v=__V__"></script>
 <script src="app.js?v=__V__"></script>
+<!-- Stripe.js (non bloquant : le paiement passe par Stripe Checkout) -->
+<script src="https://js.stripe.com/v3/" async></script>
 
 
 

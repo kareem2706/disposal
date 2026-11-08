@@ -1,5 +1,6 @@
 // ── SCREENS ───────────────────────────────────────────
 function showScreen(name){
+  document.documentElement.classList.remove('boot-landing');
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name)?.classList.add('active');
 }

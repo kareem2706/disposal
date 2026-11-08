@@ -23,6 +23,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);-web
 /* ═══ SCREENS ═══ */
 .screen{display:none!important;}
 .screen.active{display:flex!important;}
+/* Accueil affiché avant le chargement du code (classe posée dans <head>, retirée par showScreen) */
+html.boot-landing #screen-landing{display:flex!important;}html.boot-landing #app-loader{display:none!important;}
 #screen-app{flex-direction:row;min-height:100vh;width:100%;}
 
 /* ═══ CONFIG SCREEN ═══ */
