@@ -1276,7 +1276,9 @@ option[hidden]{display:none;}
 .trip-card.clk:hover{border-color:#CDBDF0;}
 .evr-kv span.mx-tp{display:inline-flex;height:auto;min-width:0;margin:0;vertical-align:baseline;background:#FCFCFB;color:var(--ink2);}
 .evr-kv span.mx-tp:has(b:empty){display:none;}
-.evr-kv span.tc-right{margin-left:auto;background:none;border:none;padding:0;display:inline-flex;align-items:center;}
+.tc-st{display:inline-flex;align-items:center;}
+.tc-st>span{padding:2px 8px 2px 6px!important;font-size:11px!important;gap:4px!important;font-weight:600!important;}
+.tc-st svg{width:10px;height:10px;}
 .evr-tot{display:flex;align-items:center;gap:10px;font-weight:500!important;background:#F3F8F4;color:#1B5E3B;border-radius:12px;padding:11px 14px;font-size:13.5px;font-weight:600;margin-top:4px;}
 .ev-menu{position:relative;}
 .ev-dots{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--sand3);background:#fff;color:var(--ink2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
@@ -7700,9 +7702,9 @@ function _tripCardHtml(o){
     ? '<div><i style="background:#E09A2B"></i><span>'+esc(cleanAddr(o.from||'')||'\u2014')+'</span></div>'
     : '<div><i style="background:#4E8F69"></i><span>'+esc(cleanAddr(o.from||'')||'\u2014')+'</span></div>'+(o.to?'<div><i style="background:#D8705F"></i><span>'+esc(cleanAddr(o.to))+'</span></div>':'');
   return '<div class="evr-trip trip-card'+(o.attrs?' clk':'')+'"'+(o.attrs||'')+'>'
-    +'<div class="evr-th">'+(o.n?'<span class="n">'+o.n+'</span>':'')+'<span>'+(o.disp?'Mise \u00e0 disposition':'Transfert simple')+'</span><span class="dt">'+esc(dt)+'</span></div>'
+    +'<div class="evr-th">'+(o.n?'<span class="n">'+o.n+'</span>':'')+'<span>'+(o.disp?'Mise \u00e0 disposition':'Transfert simple')+'</span>'+(o.right?'<span class="tc-st">'+String(o.right).replace(/[\u25cf\u2022]\s*/,'')+'</span>':'')+'<span class="dt">'+esc(dt)+'</span></div>'
     +'<div class="evr-rt">'+rt+'</div>'
-    +'<div class="evr-kv">'+kv.join('')+(o.right?'<span class="tc-right">'+o.right+'</span>':'')+'</div>'
+    +'<div class="evr-kv">'+kv.join('')+'</div>'
     +(o.note?'<div class="mx-note"><span>'+t('app.instructions_2')+' </span>'+esc(o.note)+'</div>':'')
     +'</div>';
 }
