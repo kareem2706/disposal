@@ -301,11 +301,7 @@ window.editRide = async function(rideId){
 
 
 // ══ BAGAGES : grandes valises / bagages cabine (sacs) ══
-function _lugTxt(L, S, short){
-  L=parseInt(L,10)||0; S=parseInt(S,10)||0; if(!L&&!S) return '';
-  if(short) return L+' + '+S;
-  return [L?L+' valise'+(L>1?'s':''):'', S?S+' sac'+(S>1?'s':''):''].filter(Boolean).join(' · ');
-}
+function _lugTxt(L, S, short){ return BleenrCore.luggageText(L, S, short); }   // core/format.ts
 function _lugInput(id, cls){
   return '<div class="lug-st"><button type="button" tabindex="-1" aria-label="'+t('app.retirer')+'" onclick="_lugInc(this,-1)">−</button><input '+(id?'id="'+id+'" ':'')+'class="lug-in'+(cls?' '+cls:'')+'" type="number" min="0" max="20" value="0" inputmode="numeric"><button type="button" tabindex="-1" aria-label="'+t('app.ajouter_2')+'" onclick="_lugInc(this,1)">+</button></div>';
 }

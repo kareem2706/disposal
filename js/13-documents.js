@@ -257,7 +257,7 @@ function _addrNameHtml(a){
   if(ps.length<2) return '<b class="seg-nm">'+_rdEsc(ps[0]||a)+'</b>';
   return '<b class="seg-nm">'+_rdEsc(ps[0])+'</b><span class="seg-ad">'+_rdEsc(ps.slice(1).join(', '))+'</span>';
 }
-function _rdTag(n,t){ return (((n||'').match(new RegExp('\\|'+t+':([^|]+)'))||[])[1]||'').trim(); }
+function _rdTag(n,t){ return BleenrCore.noteTag(n,t); }   // core/notes.ts
 function _rdFleetHtml(fd, opt){
   opt=opt||{};
   var v=fd.veh, d=fd.drv;

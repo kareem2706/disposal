@@ -36,9 +36,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install
+        run: npm ci
+      - name: Test (core)
+        # Si un test échoue, rien n'est mis en ligne
+        run: npm test
       - name: Build
-        # Assemble css/*.css → app.css, js/*.js → app.js, et publie uniquement les fichiers du site dans _site/
-        run: node build.mjs
+        # core/*.ts → BleenrCore, css/*.css → app.css, js/*.js → app.js ; publie uniquement les fichiers du site dans _site/
+        run: npm run build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

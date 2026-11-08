@@ -1,10 +1,6 @@
 // ── UTILS ─────────────────────────────────────────────
 // Strip accidental "HH:MM:" prefix that can appear in from_address for mixed rides
-function cleanAddr(addr){
-  if(!addr) return addr;
-  // Remove leading "HH:MM:" pattern e.g. "00:Gare du Midi" → "Gare du Midi"
-  return addr.replace(/^\d{1,2}:\d{2}:/, '').trim();
-}
+function cleanAddr(addr){ return BleenrCore.cleanAddr(addr); }   // core/notes.ts
 
 function formatDate(d){
   if(!d) return '—';

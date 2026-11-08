@@ -863,58 +863,8 @@ function populateOfferVehicles(requestedClass, pax){
   if(matching.length===1)sel.value=matching[0].id;
 }
 
-function parseMixedNotes(notes){
-  if(!notes||notes.indexOf('Mixte:')<0)return[];
-  // Split on ' | ' but notes format: "Mixte: SEG1 | SEG2 | ..."
-  // Each SEG: "A>B@HH:MM:from>to(dur)|d:DATE|p:PAX|v:VEH"
-  // We need to split segments properly — they are joined with ' | '
-  // but the |d:|p:|v: are part of the same segment
-  var raw=notes.replace(/^Mixte:\s*/,'');
-  // Tags de la course (|pax: |tel: |flight: |train: …) : ne font pas partie du dernier segment
-  raw=raw.replace(/\|[a-z_]{3,}:[^|]*/g,'');
-  // Split on pattern that starts a new segment type (A>B or Disposition)
-  var segs=raw.split(/\s*\|\s*(?=A>B|Disposition)/);
-  return segs.map(function(s){
-    s=s.trim();
-    // Extract date, pax, vehicle suffixes: |d:DATE|p:PAX|v:VEH
-    var date='',pax='',veh='';
-    var dm=s.match(/\|d:([^|]+)/); if(dm){date=dm[1].trim();s=s.replace(dm[0],'');}
-    var fl='',trn='';
-    var flm=s.match(/\|fl:([^|]*)/); if(flm){fl=flm[1].trim();s=s.replace(flm[0],'');}
-    var trm=s.match(/\|tr:([^|]*)/); if(trm){trn=trm[1].trim();s=s.replace(trm[0],'');}
-    var pn='',pt='';
-    var pnm=s.match(/\|pn:([^|]*)/); if(pnm){pn=pnm[1].trim();s=s.replace(pnm[0],'');}
-    var ptm=s.match(/\|pt:([^|]*)/); if(ptm){pt=ptm[1].trim();s=s.replace(ptm[0],'');}
-    var fl2='',trn2='';
-    var flm2=s.match(/\|fl2:([^|]*)/); if(flm2){fl2=flm2[1].trim();s=s.replace(flm2[0],'');}
-    var trm2=s.match(/\|tr2:([^|]*)/); if(trm2){trn2=trm2[1].trim();s=s.replace(trm2[0],'');}
-    var lgm=s.match(/\|lg:([^|]*)/); var lugL=0, lugS=0; if(lgm){ var _lg=lgm[1].split('/'); lugL=parseInt(_lg[0],10)||0; lugS=parseInt(_lg[1],10)||0; s=s.replace(lgm[0],''); }
-    var nm=s.match(/\|n:([^|]*)/);  var segNote=''; if(nm){segNote=nm[1].trim();s=s.replace(nm[0],'');}
-    var pm=s.match(/\|p:([^|]+)/); if(pm){pax=pm[1].trim();s=s.replace(pm[0],'');}
-    var vm=s.match(/\|v:([^|]+)/); if(vm){veh=vm[1].trim();s=s.replace(vm[0],'');}
-    s=s.trim();
-    // Extract time: type@HH:MM:rest  e.g. "A>B@08:00:Rue Fontainas>Rue Neuve"
-    var time='',typeRaw='';
-    var atIdx=s.indexOf('@');
-    if(atIdx>0){
-      typeRaw=s.slice(0,atIdx).trim();
-      var afterAt=s.slice(atIdx+1);
-      // Time is HH:MM = 5 chars, then colon separator
-      // afterAt = "08:00:address"
-      var colonAfterTime=afterAt.indexOf(':',5); // find : after position 5 (after "HH:MM")
-      if(colonAfterTime>0){
-        time=afterAt.slice(0,colonAfterTime).trim();   // "08:00"
-        s=typeRaw+':'+afterAt.slice(colonAfterTime+1); // "A>B:Rue Fontainas>Rue Neuve"
-      }
-    }
-    var ci=s.indexOf(':');if(ci<0)return null;
-    var type=s.slice(0,ci).trim(),rest=s.slice(ci+1).trim();
-    var dur='',durm=rest.match(/\(([^)]+)\)/);
-    if(durm){dur=durm[1];rest=rest.replace(durm[0],'').trim();}
-    var pts=rest.split('>');
-    return{type:type,time:time,from:(pts[0]||'').trim(),to:(pts[1]||'').trim(),dur:dur,date:date,pax:pax,veh:veh,note:segNote,flight:fl,train:trn,flight2:fl2,train2:trn2,paxName:pn,paxTel:pt,lugL:lugL,lugS:lugS};
-  }).filter(Boolean);
-}
+// Trajets d'une course mixte : logique partagée site / app iOS (core/notes.ts)
+function parseMixedNotes(notes){ return BleenrCore.parseMixedNotes(notes); }
 
 // Prominent status badge for the ride detail title bar
 function _statusBadge(status, offerCount){

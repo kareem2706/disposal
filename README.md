@@ -15,6 +15,8 @@ css/              Styles, assemblés dans l'ordre des noms de fichiers
 js/               Code de l'application, assemblé dans l'ordre des noms de fichiers
   01-payment-return.js … 25-admin.js   (un fichier par domaine : connexion, courses,
                                         offres, missions, documents, calendrier, fleet, admin…)
+core/             Logique partagée avec l'app iOS (TypeScript) : trajets mixtes, notes, bagages, gammes, dates
+                  + tests (core.test.ts). Exposée sur le site en global « BleenrCore ».
 i18n/             Traductions (fr = référence, en, es)
 assets/           Images
 supabase/         Base de données (SQL) et fonctions serveur (Edge Functions) — non publié sur le site
@@ -27,14 +29,21 @@ compte et les fonctions restent globales (elles sont appelées depuis les `oncli
 ## Construire / tester en local
 
 ```
-node build.mjs          # crée _site/ (app.css, app.js, index.html, assets, i18n)
+npm install             # une seule fois (esbuild, typescript)
+npm test                # tests du core
+npm run build           # crée _site/ (app.css, app.js, index.html, assets, i18n)
 cd _site && python3 -m http.server 8000   # puis http://localhost:8000
 ```
 
 ## Mise en ligne
 
 Chaque envoi sur `main` lance GitHub Actions (`.github/workflows/static.yml`) :
-`node build.mjs` puis publication de `_site/` sur GitHub Pages.
+`npm ci`, `npm test` (si un test échoue, rien n'est publié), `npm run build`, puis publication de `_site/`.
+
+## Core partagé avec l'app iOS
+
+`core/` est la seule source de vérité. Après une modification : `npm test` ici, puis dans le dépôt
+`bleenr-chauffeur` : `node scripts/sync-core.mjs` (recopie dans `src/core/`).
 Les `?v=__V__` de `index.html` sont remplacés par la version (commit) : plus besoin de les augmenter à la main.
 
 ## Sécurité
