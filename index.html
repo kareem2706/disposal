@@ -603,7 +603,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
   /* Date, passagers et classe sur une seule ligne */
   .modal-overlay.rd-panel .rmc-wrap{flex-direction:row!important;align-items:center!important;flex-wrap:nowrap!important;gap:4px!important;min-width:0;}
   .modal-overlay.rd-panel .rmc-wrap>div:first-child>span,.modal-overlay.rd-panel .rmc-row>span{font-size:11px!important;padding:5px 6px!important;gap:3px!important;border-radius:8px!important;letter-spacing:-.01em;}
-  .modal-overlay.rd-panel .rmc-row{flex-wrap:nowrap!important;gap:4px!important;}
+  .modal-overlay.rd-panel .rmc-row{flex-wrap:wrap!important;gap:4px!important;}
   .modal-overlay.rd-panel .rmc-wrap svg{width:12px;height:12px;}
   /* Contenu, carte et pied de page dans un seul défilement : plus de grand vide avant la carte */
   .modal-overlay.rd-panel .modal{overflow-y:auto;-webkit-overflow-scrolling:touch;}
@@ -6605,19 +6605,14 @@ function _rideMetaChips(r){
   var _evLine=r.event_name?(r.event_kind==='mixed'?'<div class="rd-evline" style="color:#2F5FA8;">'+t('app.trajet_mixte_2')+' '+_rdEsc(r.event_name)+'</div>':'<div class="rd-evline">'+_rdEsc(r.event_name)+'</div>'):'';
   var _fl=_rdTag(r.notes,'flight'), _tr=_rdTag(r.notes,'train');
   var tsoft='display:inline-flex;align-items:center;gap:6px;background:#FCFCFB;color:var(--ink);border:1px solid #F0EEE9;border-radius:9px;padding:5px 10px;font-size:13px;font-weight:400;white-space:nowrap;';
-  var _nMain=chips.length;   // date + passagers + gamme ; vol / train puis bagages sur la 2e ligne
   if(_fl) chips.push('<span style="'+tsoft+'">'+ico('<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>')+'Vol '+_rdEsc(_fl.toUpperCase())+'</span>');
   if(_tr) chips.push('<span style="'+tsoft+'">'+ico('<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8.5 14h.01M15.5 14h.01M9 17l-2 4M15 17l2 4"/>')+'Train '+_rdEsc(_tr.toUpperCase())+'</span>');
-  // 2e ligne : vol / train d'abord, puis les bagages
+  // Puis vol / train, puis les bagages
   var _lg=_lugTxt(r.luggage_large, r.luggage_small);
   if(_lg) chips.push('<span style="'+soft+'">'+ico('<rect x="6" y="7" width="12" height="13" rx="2"/><path d="M9 7V4h6v3M10 11v5M14 11v5"/>')+_lg+'</span>');
   if(!chips.length) return _evLine;
-  var first=r.ride_date?chips.shift():'';
-  var _main=chips.slice(0,_nMain-(first?1:0)), _trans=chips.slice(_nMain-(first?1:0));
-  return _evLine+'<div class="rmc-wrap v2">'
-    +'<div class="rmc-row">'+(first||'')+_main.join('')+'</div>'
-    +(_trans.length?'<div class="rmc-row">'+_trans.join('')+'</div>':'')
-    +'</div>';
+  // Une seule ligne : vol / train et bagages suivent les autres pastilles, retour à la ligne si la place manque
+  return _evLine+'<div class="rmc-wrap v2"><div class="rmc-row">'+chips.join('')+'</div></div>';
 }
 function _openRideDetailImpl(el){
   var r;
