@@ -12010,12 +12010,30 @@ window.showPaymentResult=function(type,title,msg){
   document.getElementById('payment-result-msg').textContent=msg;openModal('m-payment-result');
 };
 
+// Calendrier : un trajet mixte est découpé en ses trajets (chacun à sa date / heure) ;
+// pastille bleue = trajet mixte, violette = événement
+function _calExpand(rides){
+  var out=[];
+  (rides||[]).forEach(function(r){
+    var segs=r.trip_type==='mixed'?parseMixedNotes(r.notes||''):[];
+    if(!segs.length){ out.push(r); return; }
+    segs.forEach(function(sg,i){ var isD=sg.type.toLowerCase().indexOf('disp')>=0;
+      out.push(Object.assign({},r,{ ride_date:sg.date||r.ride_date, ride_time:sg.time||(i===0?r.ride_time:''), from_address:sg.from||r.from_address,
+        to_address:isD?'':(sg.to||''), trip_type:isD?'disposal':'ab', vehicle_type:sg.veh||r.vehicle_type, _segN:i+1, _segTot:segs.length, _orig:r })); });
+  });
+  return out;
+}
+function _calKindDot(r){
+  var c=(r._segN||r.trip_type==='mixed'||r.event_kind==='mixed')?'#3B7DD8':(r.event_name&&r.event_kind!=='mixed')?'#8E6AD8':'';
+  return c?'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+c+';margin-right:4px;vertical-align:1px;flex-shrink:0;"></span>':'';
+}
+function _calKindColor(r){ return (r._segN||r.trip_type==='mixed'||r.event_kind==='mixed')?'#3B7DD8':(r.event_name&&r.event_kind!=='mixed')?'#8E6AD8':''; }
 function _buildCalCell(ds,isT,calRides,calView){
   var day=parseInt(ds.split('-')[2]);
   var rides=calRides.filter(function(r){return r.ride_date===ds;});
   var sc={waiting:'#F0D080',offers:'#90C4F8',confirmed:'#6FCF97',active:'#27AE60',done:'#E0E0E0',cancelled:'#FFAAAA',personal:'#D8C4F0'};
   var sl={waiting:'Attente',offers:'Offres',confirmed:'Confirmée',active:'Active',done:'Terminée',cancelled:'Annulée',personal:'Personnelle'};
-  var tl=function(r){if(r.status==='personal'){var lbl=r.notes?r.notes.split(' — ')[0]:null;return lbl||r.from_address||'Mission';}return r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';};
+  var tl=function(r){if(r.status==='personal'){var lbl=r.notes?r.notes.split(' — ')[0]:null;return lbl||r.from_address||'Mission';}return r._segN?'Trajet '+r._segN+'/'+r._segTot:r.trip_type==='disposal'?'Disp.':r.trip_type==='mixed'?'Mixte':'A→B';};
   var cellH=calView==='week'?'140px':'72px';
   var maxR=calView==='week'?rides.length:2;
   var p=[];
@@ -12024,7 +12042,7 @@ function _buildCalCell(ds,isT,calRides,calView){
   p.push('<span style="font-size:12px;font-weight:'+(isT?'700':'500')+';color:'+(isT?'var(--green)':'var(--ink)')+';">'+day+'</span>');
   if(rides.length>2&&calView==='month')p.push('<span class="cal-mb" data-ds="'+ds+'" style="font-size:9px;color:var(--blue);cursor:pointer;font-weight:600;">+'+rides.length+' '+t('app.sem')+'</span>');
   p.push('</div>');
-  rides.slice(0,maxR).forEach(function(r){var enc=encodeURIComponent(JSON.stringify(r));var timeStr=r.ride_time?r.ride_time.slice(0,5)+' ':'';p.push('<div class="cal-rp" data-enc="'+enc+'" style="background:'+(sc[r.status]||'#EEE')+';border-radius:4px;padding:2px 5px;font-size:9.5px;font-weight:600;color:#1A2E1A;margin-bottom:2px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+timeStr+tl(r)+' \u2022 '+(sl[r.status]||r.status)+'</div>');});
+  rides.slice(0,maxR).forEach(function(r){var enc=encodeURIComponent(JSON.stringify(r));var timeStr=r.ride_time?r.ride_time.slice(0,5)+' ':'';p.push('<div class="cal-rp" data-enc="'+enc+'" style="background:'+(sc[r.status]||'#EEE')+';border-radius:4px;padding:2px 5px;font-size:9.5px;font-weight:600;color:#1A2E1A;margin-bottom:2px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_calKindDot(r)+timeStr+tl(r)+' \u2022 '+(sl[r.status]||r.status)+'</div>');});
   if(rides.length>2&&calView==='month')p.push('<div class="cal-mb" data-ds="'+ds+'" style="font-size:9px;color:var(--blue);cursor:pointer;">'+t('app.voir_tout')+'</div>');
   p.push('</div>');return p.join('');
 }
@@ -12050,10 +12068,10 @@ function _renderCalGridMobile(grid,titleEl,calYear,calMonth,calView,calWS,calRid
       if(!rides.length) html+='<div style="font-size:12px;color:var(--ink4);padding-top:8px;">—</div>';
       rides.forEach(function(r){
         var enc=encodeURIComponent(JSON.stringify(r));
-        var lbl=r.status==='personal'?((r.notes?r.notes.split(' — ')[0]:null)||'Mission'):(r.trip_type==='disposal'?'Disposition':r.trip_type==='mixed'?'Mixte':'A → B');
+        var lbl=r.status==='personal'?((r.notes?r.notes.split(' — ')[0]:null)||'Mission'):(r._segN?'Trajet '+r._segN+'/'+r._segTot:r.trip_type==='disposal'?'Disposition':r.trip_type==='mixed'?'Mixte':'A → B');
         var rt=r.status==='personal'?(r.from_address||''):((r.from_address||'').split(',')[0]+(r.to_address?' → '+r.to_address.split(',')[0]:''));
         html+='<div class="cal-rp" data-enc="'+enc+'" style="background:'+(_CAL_SC[r.status]||'#EEE')+';border-radius:8px;padding:7px 10px;margin-bottom:5px;cursor:pointer;color:#1A2E1A;">'
-          +'<div style="font-size:12.5px;font-weight:700;">'+(r.ride_time?r.ride_time.slice(0,5)+' · ':'')+lbl+' · '+(_CAL_SL[r.status]||r.status)+'</div>'
+          +'<div style="font-size:12.5px;font-weight:700;">'+_calKindDot(r)+(r.ride_time?r.ride_time.slice(0,5)+' · ':'')+lbl+' · '+(_CAL_SL[r.status]||r.status)+'</div>'
           +(rt?'<div style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+rt+'</div>':'')
         +'</div>';
       });
@@ -12071,7 +12089,7 @@ function _renderCalGridMobile(grid,titleEl,calYear,calMonth,calView,calWS,calRid
       var ds2=calYear+'-'+pad(calMonth+1)+'-'+pad(day);
       var isT2=td.getFullYear()===calYear&&td.getMonth()===calMonth&&td.getDate()===day;
       var rs=calRides.filter(function(r){return r.ride_date===ds2;});
-      var dots=rs.slice(0,4).map(function(r){return '<span style="width:6px;height:6px;border-radius:50%;background:'+(r.status==='done'?'#BDBDBD':(_CAL_SC[r.status]||'#CCC'))+';display:inline-block;"></span>';}).join('');
+      var dots=rs.slice(0,4).map(function(r){return '<span style="width:6px;height:6px;border-radius:50%;background:'+(r.status==='done'?'#BDBDBD':(_calKindColor(r)||_CAL_SC[r.status]||'#CCC'))+';display:inline-block;"></span>';}).join('');
       html+='<div class="cal-mb" data-ds="'+ds2+'" style="min-height:46px;border-radius:8px;border:1px solid '+(isT2?'transparent':'var(--sand3)')+';background:'+(isT2?'var(--green-bg)':'#FCFCFC')+';display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;">'
         +'<span style="font-size:13px;font-weight:'+(isT2?'700':'500')+';color:'+(isT2?'var(--green)':'var(--ink)')+';">'+day+'</span>'
         +'<span style="display:flex;gap:2px;height:6px;align-items:center;">'+dots+(rs.length>4?'<span style="font-size:9px;color:var(--ink3);">+</span>':'')+'</span>'
@@ -12081,7 +12099,7 @@ function _renderCalGridMobile(grid,titleEl,calYear,calMonth,calView,calWS,calRid
   }
   grid.innerHTML=html;
   grid.onclick=function(e){
-    var rp=e.target.closest('.cal-rp');if(rp){try{var r=JSON.parse(decodeURIComponent(rp.dataset.enc));var tmp=document.createElement('div');tmp.dataset.ride=JSON.stringify(r).replace(/'/g,"&#39;");openRideDetail(tmp);}catch(ex){}return;}
+    var rp=e.target.closest('.cal-rp');if(rp){try{var r=JSON.parse(decodeURIComponent(rp.dataset.enc));r=r._orig||r;var tmp=document.createElement('div');tmp.dataset.ride=JSON.stringify(r).replace(/'/g,"&#39;");openRideDetail(tmp);}catch(ex){}return;}
     var mb=e.target.closest('.cal-mb');if(mb&&viewFn){viewFn('week',mb.dataset.ds);}
   };
 }
@@ -12091,6 +12109,7 @@ function _renderCalGrid(gridId,titleId,calYear,calMonth,calView,calWS,calRides,p
   var MN=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
   var DN=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
   var td=new Date();
+  calRides=_calExpand(calRides);
   var html='',grid=document.getElementById(gridId),titleEl=document.getElementById(titleId);
   if(!grid||!titleEl)return;
   var _viewFn=setViewFn||(gridId==='d-cal-grid'?window.dCalView:window.calSetView);
@@ -12117,7 +12136,7 @@ function _renderCalGrid(gridId,titleId,calYear,calMonth,calView,calWS,calRides,p
   grid.innerHTML=html;
   grid.onclick=function(e){
     var mb=e.target.closest('.cal-mb');if(mb){_viewFn('week',mb.dataset.ds);return;}
-    var rp=e.target.closest('.cal-rp');if(rp){try{var r=JSON.parse(decodeURIComponent(rp.dataset.enc));var tmp=document.createElement('div');tmp.dataset.ride=JSON.stringify(r).replace(/'/g,"&#39;");openRideDetail(tmp);}catch(ex){}}
+    var rp=e.target.closest('.cal-rp');if(rp){try{var r=JSON.parse(decodeURIComponent(rp.dataset.enc));r=r._orig||r;var tmp=document.createElement('div');tmp.dataset.ride=JSON.stringify(r).replace(/'/g,"&#39;");openRideDetail(tmp);}catch(ex){}}
   };
 }
 
