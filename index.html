@@ -1271,6 +1271,12 @@ option[hidden]{display:none;}
 .evr-kv span{background:#FCFCFB;border:1px solid #F0EEE9;border-radius:20px;padding:4px 10px;font-size:12.5px;color:var(--ink2);}
 .evr-kv span b{color:var(--ink);font-weight:600;}
 @media(max-width:600px){ .evr-th{flex-wrap:wrap;} .evr-th .dt{margin-left:30px;width:100%;font-size:12.5px;} .evr-th .ty{white-space:nowrap;} }
+.trip-card{margin-bottom:0;}
+.trip-card.clk{cursor:pointer;transition:border-color .15s;}
+.trip-card.clk:hover{border-color:#CDBDF0;}
+.evr-kv span.mx-tp{display:inline-flex;height:auto;min-width:0;margin:0;vertical-align:baseline;background:#FCFCFB;color:var(--ink2);}
+.evr-kv span.mx-tp:has(b:empty){display:none;}
+.evr-kv span.tc-right{margin-left:auto;background:none;border:none;padding:0;display:inline-flex;align-items:center;}
 .evr-tot{display:flex;align-items:center;gap:10px;font-weight:500!important;background:#F3F8F4;color:#1B5E3B;border-radius:12px;padding:11px 14px;font-size:13.5px;font-weight:600;margin-top:4px;}
 .ev-menu{position:relative;}
 .ev-dots{width:40px;height:40px;border-radius:50%;border:1px solid #E4E1D9;background:#fff;color:var(--ink2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
@@ -6735,16 +6741,9 @@ function _openRideDetailImpl(el){
     var _days=mixedSegs.map(function(x){ return x.date||r.ride_date||''; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
     var _last=null;
     mixedSegs.forEach(function(s,i){
-      var sd=s.date||r.ride_date||'', isD=s.type.toLowerCase().indexOf('disp')>=0;
-      if(_days.length>1 && sd!==_last){ _last=sd; mixedBody+='<div class="ev-day">'+_rdEsc(_dl(sd))+'</div>'; }
-      // N° · type (pastille) · heure · gamme · trajet ; en dessous : passagers et vol / train
-      var ttl=[s.time, _clsN(s.veh), isD?_sh(s.from):_sh(s.from)+' \u2192 '+_sh(s.to)].filter(Boolean).join(' \u00b7 ');
-      var sub=[s.pax?(s.pax+' passager'+(String(s.pax)==='1'?'':'s')):'', s.flight?'Vol '+s.flight:'', s.flight2?'Vol '+s.flight2:'', s.train?'Train '+s.train:'', s.train2?'Train '+s.train2:''].filter(Boolean).join(' \u00b7 ');
-      mixedBody+='<div class="ev-sub mx-sub"><span class="n">'+(i+1)+'</span><div style="flex:1;min-width:0;">'
-        +'<div style="font-weight:600;font-size:14px;">'+_mxTypePill(isD,s.dur,s.from,s.to)+_rdEsc(ttl)+'</div>'
-        +(sub?'<div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+_rdEsc(sub)+'</div>':'')
-        +(s.note?'<div class="mx-note"><span>'+t('app.instructions_2')+' </span>'+_rdEsc(s.note)+'</div>':'')
-        +'</div></div>';
+      var isD=s.type.toLowerCase().indexOf('disp')>=0;
+      mixedBody+=_tripCardHtml({ n:i+1, disp:isD, date:s.date||r.ride_date, time:s.time, from:s.from, to:s.to, dur:s.dur, veh:s.veh, pax:s.pax,
+        lug:_lugTxt(s.lugL,s.lugS), fl:[s.flight,s.flight2], trn:[s.train,s.train2], contact:[s.paxName,s.paxTel].filter(Boolean).join(' \u00b7 '), note:s.note });
     });
     body+='<div class="mx-list">'+mixedBody+'</div>';
     _mxFillKm();
@@ -7678,22 +7677,42 @@ function _mxFillKm(){
   }, 50);
 }
 // Trajet mixte : liste des trajets (même présentation que la fiche), réutilisée dans les offres et le paiement
+// Carte d'un trajet (trajet mixte / événement) : même présentation que le récapitulatif
+//   en-tête « N · Type » + date · heure, puis départ (pastille verte) et arrivée (rouge) ; mise à disposition : pastille orange
+function _tripCardHtml(o){
+  var esc=_rdEsc;
+  var fd=function(x){ if(!x) return ''; var v=new Date(x+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short',year:'numeric'}).replace(/\./g,''); return v.charAt(0).toUpperCase()+v.slice(1); };
+  var cls=({lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus',any:'Toute gamme'})[o.veh]||o.veh||'';
+  var dur=o.dur?String(o.dur).replace(/h$/,''):'';
+  var dt=[fd(o.date), o.time?String(o.time).slice(0,5):''].filter(Boolean).join(' \u00b7 ');
+  var kv=[];
+  if(cls) kv.push('<span><b>'+esc(cls)+'</b></span>');
+  if(o.pax) kv.push('<span><b>'+esc(o.pax)+'</b> passager'+(String(o.pax)==='1'?'':'s')+'</span>');
+  if(o.disp && dur) kv.push('<span>Dur\u00e9e <b>'+esc(dur)+' h</b></span>');
+  if(!o.disp && o.from && o.to){ var k=_mxKmCache[o.from+'>'+o.to]; kv.push('<span class="mx-tp" data-from="'+esc(o.from)+'" data-to="'+esc(o.to)+'"><b class="km">'+(k?k+' km':'')+'</b></span>'); }
+  (o.fl||[]).filter(Boolean).forEach(function(x){ kv.push('<span>Vol <b>'+esc(String(x).toUpperCase())+'</b></span>'); });
+  (o.trn||[]).filter(Boolean).forEach(function(x){ kv.push('<span>Train <b>'+esc(String(x).toUpperCase())+'</b></span>'); });
+  if(o.lug) kv.push('<span><b>'+esc(o.lug)+'</b></span>');
+  if(o.contact) kv.push('<span>Contact <b>'+esc(o.contact)+'</b></span>');
+  if(o.code) kv.push('<span>'+esc(o.code)+'</span>');
+  var rt=o.disp
+    ? '<div><i style="background:#E09A2B"></i><span>'+esc(cleanAddr(o.from||'')||'\u2014')+'</span></div>'
+    : '<div><i style="background:#4E8F69"></i><span>'+esc(cleanAddr(o.from||'')||'\u2014')+'</span></div>'+(o.to?'<div><i style="background:#D8705F"></i><span>'+esc(cleanAddr(o.to))+'</span></div>':'');
+  return '<div class="evr-trip trip-card'+(o.attrs?' clk':'')+'"'+(o.attrs||'')+'>'
+    +'<div class="evr-th">'+(o.n?'<span class="n">'+o.n+'</span>':'')+'<span>'+(o.disp?'Mise \u00e0 disposition':'Transfert simple')+'</span><span class="dt">'+esc(dt)+'</span></div>'
+    +'<div class="evr-rt">'+rt+'</div>'
+    +'<div class="evr-kv">'+kv.join('')+(o.right?'<span class="tc-right">'+o.right+'</span>':'')+'</div>'
+    +(o.note?'<div class="mx-note"><span>'+t('app.instructions_2')+' </span>'+esc(o.note)+'</div>':'')
+    +'</div>';
+}
 function _mixListHtml(r, segsIn){
   var segs=segsIn||parseMixedNotes(r.notes||''); if(!segs.length) return '';
-  var sh=function(a){ return String(cleanAddr(a)||'').split(',')[0].trim(); };
-  var clsN=function(v){ return ({lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus',any:'Toute gamme'})[v]||v||''; };
-  var dl=function(x){ if(!x) return ''; var t2=new Date(x+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'long',day:'numeric',month:'long'}); return t2.charAt(0).toUpperCase()+t2.slice(1); };
-  var days=segs.map(function(x){ return x.date||r.ride_date||''; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
-  var last=null, h='';
+  var h='';
   segs.forEach(function(sg,i){
-    var sd=sg.date||r.ride_date||'', isD=sg.type.toLowerCase().indexOf('disp')>=0;
-    if(days.length>1 && sd!==last){ last=sd; h+='<div class="ev-day">'+_rdEsc(dl(sd))+'</div>'; }
-    var ttl=[sg.time, clsN(sg.veh), isD?sh(sg.from):sh(sg.from)+' \u2192 '+sh(sg.to)].filter(Boolean).join(' \u00b7 ');
-    var sub=[sg.pax?(sg.pax+' passager'+(String(sg.pax)==='1'?'':'s')):'', _lugTxt(sg.lugL,sg.lugS), sg.flight?'Vol '+sg.flight:'', sg.flight2?'Vol '+sg.flight2:'', sg.train?'Train '+sg.train:'', sg.train2?'Train '+sg.train2:''].filter(Boolean).join(' \u00b7 ');
-    h+='<div class="ev-sub mx-sub"><span class="n">'+(i+1)+'</span><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:14px;">'+_mxTypePill(isD,sg.dur,sg.from,sg.to)+_rdEsc(ttl)+'</div>'
-      +'<div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+_rdEsc(sub)+'</div></div></div>';
+    var isD=sg.type.toLowerCase().indexOf('disp')>=0;
+    h+=_tripCardHtml({ n:i+1, disp:isD, date:sg.date||r.ride_date, time:sg.time, from:sg.from, to:sg.to, dur:sg.dur, veh:sg.veh, pax:sg.pax,
+      lug:_lugTxt(sg.lugL,sg.lugS), fl:[sg.flight,sg.flight2], trn:[sg.train,sg.train2] });
   });
-  if(days.length===1 && days[0]) h='<div class="ev-day">'+_rdEsc(dl(days[0]))+'</div>'+h;
   _mxFillKm();
   return '<div class="mx-list">'+h+'</div>';
 }
@@ -10655,7 +10674,7 @@ window._evShowRecap=function(d){
     var t=tr.t, disp=t.type==='disposal', nv=_evTotal(tr.c), st=_evSeats(tr.c);
     h+='<div class="evr-trip"><div class="evr-th"><span class="n">'+tr.i+'</span>'+_T('app.trajet')+' '+tr.i+' <span class="ty">· '+(disp?'Mise à disposition':'Transfert simple')+'</span><span class="dt">'+esc(fd(t.date))+' · '+esc(t.time)+'</span></div>'
       +'<div class="evr-rt">'+(disp
-        ?'<div><i style="background:#4E8F69"></i><span>'+esc(t.from)+'</span></div>'
+        ?'<div><i style="background:#E09A2B"></i><span>'+esc(t.from)+'</span></div>'
         :'<div><i style="background:#4E8F69"></i><span>'+esc(t.from)+'</span></div><div><i style="background:#D8705F"></i><span>'+esc(t.to)+'</span></div>')+'</div>'
       +'<div class="evr-kv"><span><b>'+esc(_evCntLabel(tr.c))+'</b></span>'
       +'<span>'+(tr.n?'<b>'+tr.n+'</b> '+_T('app.personne')+(tr.n>1?'s':''):(st.bus?'capacité selon le bus':_T('app.jusqua')+' <b>'+st.seats+'</b> '+_T('app.personnes')))+'</span>'
@@ -10696,7 +10715,7 @@ window._nrShowRecap=function(d){
     +'<div class="s">'+esc([trips.length>1?trips.length+' trajets':'', pn?(d.type==='mixed'?'contact : ':'passager : ')+pn+(pt?' · '+pt:''):(d.type==='mixed'&&trips.some(function(t){ return t.pname; })?'un contact par trajet':'')].filter(Boolean).join(' · ')||'Vérifiez les informations avant de publier.')+'</div></div>';
   trips.forEach(function(t,i){
     h+='<div class="evr-trip"><div class="evr-th">'+(trips.length>1?'<span class="n">'+(i+1)+'</span>'+_T('app.trajet')+' '+(i+1)+' <span class="ty">· '+(t.disp?'Mise à disposition':'Transfert simple')+'</span>':'<span>'+(t.disp?'Mise à disposition':'Transfert simple')+'</span>')+'<span class="dt">'+esc(fd(t.date))+(t.time?' · '+esc(t.time):'')+'</span></div>'
-      +'<div class="evr-rt"><div><i style="background:#4E8F69"></i><span>'+esc(t.from||'—')+'</span></div>'+(!t.disp&&t.to?'<div><i style="background:#D8705F"></i><span>'+esc(t.to)+'</span></div>':'')+'</div>'
+      +'<div class="evr-rt"><div><i style="background:'+(t.disp?'#E09A2B':'#4E8F69')+'"></i><span>'+esc(t.from||'—')+'</span></div>'+(!t.disp&&t.to?'<div><i style="background:#D8705F"></i><span>'+esc(t.to)+'</span></div>':'')+'</div>'
       +'<div class="evr-kv">'+chip('',cls(t.veh))+(t.pax?'<span><b>'+esc(t.pax)+'</b> '+_T('app.passager')+(String(t.pax)==='1'?'':'s')+'</span>':'')
       +(t.lug?'<span>'+_T('app.bagages')+' <b>'+esc(t.lug)+'</b></span>':'')
       +(t.disp&&t.dur?'<span>'+_T('app.duree')+' <b>'+esc(t.dur)+' h</b></span>':'')
@@ -10962,16 +10981,14 @@ window.openEventDetail=async function(id, silent){
     var _days=rides.map(function(r){ return r.ride_date||''; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
     var _lastDay=null;
     rides.forEach(function(r,i){
-      // Plusieurs dates : un sous-titre par jour
-      if(_days.length>1 && r.ride_date!==_lastDay){ _lastDay=r.ride_date; h+='<div class="ev-day">'+_rdEsc(_dl(r.ride_date))+'</div>'; }
-      var tr=r.trip_type==='disposal'?sh(r.from_address)+' · '+(((r.notes||'').match(/Durée:([^\s|,]+)/)||[])[1]||'disposition'):sh(r.from_address)+' → '+sh(r.to_address);
-      var pax=_rdTag(r.notes,'pax');
-      h+='<div class="ev-sub" onclick="_rdPushUnder(\'m-event\');openRideDetail(this)" data-ride=\''+JSON.stringify(r).replace(/'/g,'&#39;')+'\'>'
-        +'<span class="n">'+(i+1)+'</span><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+_rdEsc(cls(r.vehicle_type)+' · '+tr)+'</div>'
-        +'<div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+_rdEsc([String(r.ride_time||'').slice(0,5), (r.passengers||1)+' passager'+((r.passengers||1)>1?'s':''), pax, r.booking_code].filter(Boolean).join(' · '))+'</div></div>'
-        +getStatusPill(r.status, r._offerCount||0)
-        +'<svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="color:var(--ink4);flex-shrink:0;"><path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>';
+      var isD=r.trip_type==='disposal';
+      h+=_tripCardHtml({ n:i+1, disp:isD, date:r.ride_date, time:r.ride_time, from:r.from_address, to:isD?'':r.to_address,
+        dur:isD?(((r.notes||'').match(/Durée:([^\s|,]+)/)||[])[1]||''):'', veh:r.vehicle_type, pax:r.passengers||1,
+        lug:_lugTxt(r.luggage_large,r.luggage_small), fl:[_rdTag(r.notes,'flight')], trn:[_rdTag(r.notes,'train')],
+        contact:_rdTag(r.notes,'pax'), code:r.booking_code, right:getStatusPill(r.status, r._offerCount||0),
+        attrs:' onclick="_rdPushUnder(\'m-event\');openRideDetail(this)" data-ride=\''+JSON.stringify(r).replace(/'/g,'&#39;')+'\'' });
     });
+    _mxFillKm();
     if(!rides.length) h+='<div class="rd-muted">'+t('app.aucun_vehicule')+'</div>';
     if(body) body.innerHTML=h;
     window._evCur=ev; window._evRides=rides;
