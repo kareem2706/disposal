@@ -12026,10 +12026,11 @@ function _calExpand(rides){
   return out;
 }
 function _calKindDot(r){
-  var c=(r._segN||r.trip_type==='mixed'||r.event_kind==='mixed')?'#3B7DD8':(r.event_name&&r.event_kind!=='mixed')?'#8E6AD8':'';
+  var c=_calKindColor(r);
   return c?'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+c+';margin-right:4px;vertical-align:1px;flex-shrink:0;"></span>':'';
 }
-function _calKindColor(r){ return (r._segN||r.trip_type==='mixed'||r.event_kind==='mixed')?'#3B7DD8':(r.event_name&&r.event_kind!=='mixed')?'#8E6AD8':''; }
+function _calKindColor(r){ return (r._segN||r.trip_type==='mixed'||r.event_kind==='mixed')?'#3B7DD8':(r.event_name&&r.event_kind!=='mixed')?'#8E6AD8'
+  :(r.trip_type==='disposal'&&r.status!=='personal'&&r.status!=='done'&&r.status!=='cancelled')?'#E09A2B':''; }
 function _buildCalCell(ds,isT,calRides,calView){
   var day=parseInt(ds.split('-')[2]);
   var rides=calRides.filter(function(r){return r.ride_date===ds;});
