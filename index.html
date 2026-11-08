@@ -1449,6 +1449,7 @@ option[hidden]{display:none;}
 .rdv-hero:after{content:'';position:absolute;right:-36px;top:-36px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none;}
 .rdv-hero small{display:block;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.8;}
 .rdv-hero b{display:block;font-size:21px;font-weight:700;margin-top:8px;letter-spacing:-.01em;line-height:1.25;}
+.rdv-hero b:first-child{margin-top:0;}
 .rdv-hero p{font-size:13px;opacity:.9;margin-top:9px;line-height:1.5;}
 .rdv-vch{display:flex;align-items:center;gap:12px;border:1.5px dashed #B5D8C2;background:#F4FAF6;border-radius:12px;padding:11px 12px;}
 .rdv-vch .vi,.rdv-row .vi{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -7152,7 +7153,7 @@ function _openRideDetailImpl(el){
       var _dlIc='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>';
       var _docIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>';
       bodyElMain.insertAdjacentHTML('afterbegin',
-        '<div class="rdv-hero"><small>'+t('app.course_confirmee')+(r.booking_code?' \u00b7 '+_rdEsc(r.booking_code):'')+'</small><b>'+_rdEsc(_heroT)+'</b>'
+        '<div class="rdv-hero"><b>'+_rdEsc(_heroT)+'</b>'
           +'<p>'+_rdEsc([_rdD+(r.ride_time?' \u00e0 '+r.ride_time.slice(0,5):''), _trj].filter(Boolean).join(' \u00b7 '))+'</p></div>'
         +(r.change_state?'':'<div class="rdv-vch"><div class="vi">'+_docIc+'</div><div style="min-width:0"><div class="rdv-t">'+t('app.voucher_de_transport')+'</div><div class="rdv-s">'+t('app2.a_presenter_a_votre_chauffeur')+'</div></div>'
           +'<button class="rdv-dl" type="button" onclick="generateRideVoucher(\''+String(r.id).replace(/'/g,'')+'\')">'+_dlIc+'<span>'+t('app2.telecharger')+'</span></button></div>'));
