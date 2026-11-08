@@ -6663,7 +6663,7 @@ function _openRideDetailImpl(el){
     _dd=_dd?_dd.charAt(0).toUpperCase()+_dd.slice(1):'';
     var _ct=_rdTag(r.notes,'pax'), _per=mixedSegs.some(function(x){ return x.paxName; });
     _sub2=_rdEsc([_dd, mixedSegs.length+' trajet'+(mixedSegs.length>1?'s':''), _per?'un contact par trajet':(_ct?'contact : '+_ct:'')].filter(Boolean).join(' \u00b7 '));
-    if(titleEl){ titleEl.innerHTML='<span class="rd-hd2"><span class="rd-mxk">'+t('app.trajet_mixte')+'</span>'+(r.booking_code?'<b class="rd-hd2-code">'+_rdEsc(r.booking_code)+_subIc+'</b>':'')+'<span class="rd-hd2-sub">'+_sub2+'</span></span>'; }
+    if(titleEl){ titleEl.innerHTML='<span class="rd-hd2">'+(r.booking_code?'<b class="rd-hd2-code">'+_rdEsc(r.booking_code)+_subIc+'</b>':'')+'<span class="rd-hd2-sub">'+_sub2+'</span></span>'; }
   }
   var fullTitle = '<span class="rd-hd2">'+(r.booking_code?'<b class="rd-hd2-code">'+_rdEsc(r.booking_code)+_subIc+'</b>':'')+'<span class="rd-hd2-sub">'+_sub2+(r.booking_code?'':_subIc)+'</span></span>';
   if(titleEl && !(isMixed&&mixedSegs.length)) titleEl.innerHTML = fullTitle;
