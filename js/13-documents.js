@@ -291,6 +291,13 @@ async function _ridePrice(r){
   return { htva:p, pct:pct, tva:tva, tvac:_rptR2(p+tva) };
 }
 // Commission plateforme (%) définie dans Admin → Facturation, selon le pays de la flotte
+// Règles de facturation (Admin › Facturation) : core/billing.ts
+function _invCfg(s){
+  var cfg=BleenrCore.billingConfig(s||{}, TVA_RATE*100);
+  // Valeurs belges par défaut (anciens appels)
+  cfg.commRate=cfg.commFor('BE'); cfg.rc=cfg.rcFor('BE'); cfg.cVat=cfg.cVatFor('BE');
+  return cfg;
+}
 async function _commPct(country){ try{ return _invCfg(await _docBilling()).commFor(country); }catch(e){ return 10; } }
 async function _commPctForDriver(driverId){
   var c=null;
@@ -298,7 +305,7 @@ async function _commPctForDriver(driverId){
   else if(driverId && sb){ try{ c=((await sb.from('profiles').select('address_country').eq('id',driverId).maybeSingle()).data||{}).address_country; }catch(e){} }
   return _commPct(c);
 }
-function _pctTxt(v){ v=Math.round((parseFloat(v)||0)*100)/100; return String(v).replace('.',','); }
+function _pctTxt(v){ return BleenrCore.pctText(v); }   // core/billing.ts
 function _docBleenrParty(s){
   return { name:s.company_name||'Bleenr', l1:[s.street,s.box?'bte '+s.box:''].filter(Boolean).join(' '), l2:[s.postal_code,s.city].filter(Boolean).join(' '), l3:s.country||'', vat:s.vat_number||'', business:true };
 }

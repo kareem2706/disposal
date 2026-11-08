@@ -253,7 +253,7 @@ window._offerNetUpdate=function(){
   var box=document.getElementById('offer-net'), el=document.getElementById('offer-price'); if(!box||!el) return;
   var p=parseFloat(String(el.value).replace(',','.'));
   if(!(p>0) || _offerCommRate==null){ box.style.display='none'; return; }
-  var comm=Math.round(p*_offerCommRate)/100, net=Math.round((p-comm)*100)/100;
+  var _on=BleenrCore.offerNet(p,_offerCommRate), comm=_on.commission, net=_on.net;   // core/billing.ts
   var f=function(v){ return v.toFixed(2).replace('.',',')+' €'; };
   box.innerHTML=t('app.vous_recevrez')+' <b style="color:var(--green);font-size:15px;">'+f(net)+' HTVA</b>'
     +'<div style="font-size:12px;color:var(--ink3);">'+f(p)+' − commission Bleenr '+_pctTxt(_offerCommRate)+' % ('+f(comm)+')</div>';

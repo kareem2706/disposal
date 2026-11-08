@@ -423,12 +423,8 @@ async function loadDriverDashboard(){
   });
   // Revenue = HTVA of done missions (excl. refunded) minus the platform commission (Admin → Facturation)
   const _cRate = (await _commPct(currentProfile && currentProfile.address_country)) / 100;
-  const revenueNet = monthMissions.reduce(function(a,r){
-    if(r.payment_method==='refunded') return a; // refunded ride: don't count
-    if(r.is_subcontract) return a; // sous-traitance : non comptée dans les revenus
-    var htva = _rideHtva(r); // sous-traitance : prix déjà HTVA
-    return a + htva * (1 - _cRate); // net after platform commission
-  },0);
+  // Remboursées et sous-traitances non comptées (core/billing.ts)
+  const revenueNet = monthMissions.reduce(function(a,r){ return a + BleenrCore.rideNetRevenue(r, _cRate*100); },0);
   // Tendance des revenus par rapport au mois précédent (même calcul)
   var _pm=new Date(now.getFullYear(), now.getMonth()-1, 1);
   var _revPrev = missions.filter(function(r){

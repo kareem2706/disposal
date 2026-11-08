@@ -359,12 +359,7 @@ window.switchAdminClientTab=function(tab,btn){
 
 // ── ADMIN: FACTURATION ───────────────────────────────
 // Single row in billing_settings (id = 1)
-var _BILLING_COUNTRIES=[
-  ['BE','Belgique'],['FR','France'],['NL','Pays-Bas'],['LU','Luxembourg'],['DE','Allemagne'],
-  ['ES','Espagne'],['IT','Italie'],['PT','Portugal'],['AT','Autriche'],['IE','Irlande'],
-  ['DK','Danemark'],['SE','Su\u00e8de'],['FI','Finlande'],['PL','Pologne'],['CZ','Tch\u00e9quie'],
-  ['GR','Gr\u00e8ce'],['CH','Suisse'],['GB','Royaume-Uni'],['MC','Monaco']
-];
+var _BILLING_COUNTRIES=BleenrCore.BILLING_COUNTRIES;   // core/billing.ts
 function _billingEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
 function _billingCountryOpts(sel){
   return _BILLING_COUNTRIES.map(function(c){return '<option value="'+c[0]+'"'+(c[0]===sel?' selected':'')+'>'+c[1]+'</option>';}).join('');
@@ -410,14 +405,8 @@ window.addBillingVatRow=function(){ addBillingRow('vat'); };
 window.addBillingRefundRow=function(){ addBillingRow('refund'); };
 
 // Per-country platform settings, with fallback on the former single values (Belgium)
-function _billingPlatVatList(s){
-  if(Array.isArray(s.vat_rates_carrier_platform)&&s.vat_rates_carrier_platform.length) return s.vat_rates_carrier_platform;
-  return [{country:'BE', rate:s.vat_rate_carrier_platform!=null?s.vat_rate_carrier_platform:'', reverse_charge:!!s.vat_reverse_charge_carrier_platform}];
-}
-function _billingCommList(s){
-  if(Array.isArray(s.commission_rates)&&s.commission_rates.length) return s.commission_rates;
-  return [{country:'BE', rate:s.platform_commission_rate!=null?s.platform_commission_rate:''}];
-}
+function _billingPlatVatList(s){ return BleenrCore.platformVatList(s); }   // core/billing.ts
+function _billingCommList(s){ return BleenrCore.commissionList(s); }   // core/billing.ts
 
 // Capacités en bagages par gamme (conseil affiché dans les formulaires de demande)
 function _lugAdminCombo(l, sm){
@@ -859,35 +848,6 @@ var _BLEENR_LOGO='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWgAAABWBAMAAAAQ
 //   prestation : the fleet invoices the client (one invoice per fleet + client + month)
 //   commission : Bleenr invoices the fleet (one invoice per fleet + month)
 
-// Settings derived from Admin → Facturation
-function _invCfg(s){
-  s=s||{};
-  var vatClient=Array.isArray(s.vat_rates_client_carrier)?s.vat_rates_client_carrier:[];
-  var vatPlat=(typeof _billingPlatVatList==='function')?_billingPlatVatList(s):[];
-  var comm=(typeof _billingCommList==='function')?_billingCommList(s):[];
-  // Country name (e.g. "Belgique") or code -> code ; unknown -> BE
-  var codeOf=function(countryName){
-    if(countryName && typeof _BILLING_COUNTRIES!=='undefined'){
-      var m=_BILLING_COUNTRIES.find(function(c){ return c[1].toLowerCase()===String(countryName).toLowerCase() || c[0]===countryName; });
-      if(m) return m[0];
-    }
-    return 'BE';
-  };
-  var pick=function(list,country){ var code=codeOf(country); return list.find(function(r){return r.country===code;})||list.find(function(r){return r.country==='BE';})||list[0]||null; };
-  var cfg={
-    // VAT client -> carrier, by the fleet's country
-    vatFor: function(country){ var h=pick(vatClient,country); return h?parseFloat(h.rate):TVA_RATE*100; },
-    // Commission %, by the fleet's country
-    commFor: function(country){ var h=pick(comm,country); return h&&h.rate!==''&&h.rate!=null?parseFloat(h.rate):10; },
-    // Reverse charge on the commission invoice, by the fleet's country
-    rcFor: function(country){ var h=pick(vatPlat,country); return !!(h&&h.reverse_charge); },
-    // VAT carrier -> Bleenr, by the fleet's country (0 when reverse charge)
-    cVatFor: function(country){ var h=pick(vatPlat,country); if(!h) return 21; return h.reverse_charge?0:(h.rate!==''&&h.rate!=null?parseFloat(h.rate):21); }
-  };
-  // Belgian defaults (kept for older callers)
-  cfg.commRate=cfg.commFor('BE'); cfg.rc=cfg.rcFor('BE'); cfg.cVat=cfg.cVatFor('BE');
-  return cfg;
-}
 
 // Identity of the parties. RPC invoice_parties lets a client read its fleets (and vice-versa) despite RLS.
 async function _invPeople(ids){

@@ -100,17 +100,8 @@ function _clientRideMenu(rId, canEdit, canCancel, extra){
 }
 document.addEventListener('click',function(e){ if(!e.target.closest('.ft-menu')) document.querySelectorAll('.ft-menu.open').forEach(function(m){m.classList.remove('open');}); });
 // « En chemin » : au plus tôt 4 h avant le départ, et jamais pendant une modification de prix en attente
-function _onWayLock(r){
-  if(r.on_way_at || r.status!=='confirmed') return '';
-  if(r.change_state==='supplement') return 'En attente du paiement du client';
-  if(r.change_state) return 'Modification à traiter';
-  if(!r.ride_date) return '';
-  var st=new Date(r.ride_date+'T'+String(r.ride_time||'00:00').slice(0,5)+':00'), from=new Date(st.getTime()-4*3600000);
-  if(new Date()>=from) return '';
-  var hm=String(from.getHours()).padStart(2,'0')+':'+String(from.getMinutes()).padStart(2,'0');
-  var same=from.toDateString()===new Date().toDateString();
-  return 'En chemin dès '+(same?'':String(from.getDate()).padStart(2,'0')+'/'+String(from.getMonth()+1).padStart(2,'0')+' ')+hm;
-}
+// « En chemin » bloqué (4 h avant, supplément à payer, modification à traiter) : core/status.ts
+function _onWayLock(r){ return BleenrCore.onWayLock(r); }
 function _missionStepBtn(r){
   var id=String(r.id).replace(/'/g,'');
   var b=function(step,label){ return '<button class="btn btn-green ms-btn" style="margin-left:8px;" onclick="missionStep(\''+id+'\',\''+step+'\',this)">'+label+'</button>'; };
