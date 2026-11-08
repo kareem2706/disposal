@@ -3374,7 +3374,7 @@ window._payPopup=function(o){
     +'<div style="padding:18px 24px 0;font-size:14px;color:#3F4A44;line-height:1.55;text-align:center;">'+esc(o.msg||'')+'</div>'
     +'<div style="padding:20px 24px 22px;display:flex;gap:10px;">'
       +'<button data-act="rides" style="flex:1;padding:12px;background:#fff;color:#1B5E3B;border:1.5px solid #CFE3D6;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Mes demandes</button>'
-      +'<button data-act="close" style="flex:1;padding:12px;background:#1B5E3B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">'+esc(o.ok||'Fermer')+'</button>'
+      +'<button data-act="close" style="flex:1;padding:12px;background:'+((o.tone==='error'||o.tone==='cancel')?'#A8322A':'#1B5E3B')+';color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">'+esc(o.ok||'Fermer')+'</button>'
     +'</div></div>';
   ov.addEventListener('click',function(e){
     var b=e.target.closest('button[data-act]'); if(!b) return;
