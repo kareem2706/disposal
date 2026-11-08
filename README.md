@@ -13,8 +13,10 @@ css/              Styles, assemblés dans l'ordre des noms de fichiers
   04-landing.css      page d'accueil
   05-components.css   thème et composants (fiches, calendrier, pastilles…)
 js/               Code de l'application, assemblé dans l'ordre des noms de fichiers
-  01-payment-return.js … 25-admin.js   (un fichier par domaine : connexion, courses,
-                                        offres, missions, documents, calendrier, fleet, admin…)
+  01-payment-return.js … 25-invoices-passengers.js   (un fichier par domaine : connexion, courses,
+                                        offres, missions, documents, calendrier, fleet…)
+  admin/          Administration → admin.js, chargé seulement quand un admin ouvre une page d'admin
+                  (fonction _withAdmin dans 09-navigation-pages.js)
 core/             Logique partagée avec l'app iOS (TypeScript) : trajets mixtes, notes, bagages, gammes, dates
                   + tests (core.test.ts). Exposée sur le site en global « BleenrCore ».
 i18n/             Traductions (fr = référence, en, es)
@@ -25,6 +27,9 @@ build.mjs         Construction du site dans _site/
 
 Les fichiers de `js/` forment **un seul script** une fois assemblés (`app.js`) : l'ordre des fichiers
 compte et les fonctions restent globales (elles sont appelées depuis les `onclick` du HTML).
+Le code de `js/admin/` ne doit être appelé que depuis les pages d'admin, ou via `_withAdmin(function(){ … })`.
+Remarque : `admin.js` reste un fichier public (site statique) ; la sécurité de l'admin repose sur le serveur
+(RLS et fonctions `api_*` qui vérifient le rôle), pas sur le fait de cacher ce fichier.
 
 ## Construire / tester en local
 

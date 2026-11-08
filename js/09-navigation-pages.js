@@ -22,9 +22,20 @@ window.showPage = function(pageId){
 };
 
 // ── PAGE DATA ─────────────────────────────────────────
+// Code de l'administration (admin.js) : chargé seulement quand un admin ouvre une page d'admin
+var _adminP=null;
+function _withAdmin(fn){
+  if(!_adminP) _adminP=new Promise(function(res,rej){
+    if(window._adminLoaded) return res();
+    var s=document.createElement('script'); s.src='admin.js?v=__V__';
+    s.onload=function(){ res(); }; s.onerror=function(){ _adminP=null; rej(new Error('admin.js introuvable')); };
+    document.head.appendChild(s);
+  });
+  return _adminP.then(fn);
+}
 async function loadPageData(pageId){
   _loadRefundRules();
-  if(currentUser?.email===ADMIN_EMAIL) _refreshAdminFleetsBadge();
+  if(currentUser?.email===ADMIN_EMAIL) _withAdmin(function(){ _refreshAdminFleetsBadge(); });
   switch(pageId){
     case 'dashboard':     await loadClientDashboard(); break;
     case 'rides':         await loadRides(); break;
@@ -36,17 +47,17 @@ async function loadPageData(pageId){
     case 'calendar':    loadCalendar(); break;
     case 'd-calendar':  loadDriverCalendar(); break;
     case 'profile':       loadProfileForm(); break;
-    case 'admin-fleets':   await loadAdminFleets(); break;
-    case 'admin-clients':  await loadAdminClients(); break;
-    case 'admin-dashboard': await loadAdminDashboard(); break;
+    case 'admin-fleets':   await _withAdmin(function(){ return loadAdminFleets(); }); break;
+    case 'admin-clients':  await _withAdmin(function(){ return loadAdminClients(); }); break;
+    case 'admin-dashboard': await _withAdmin(function(){ return loadAdminDashboard(); }); break;
     case 'passengers':    await loadPassengersList(); break;
     case 'd-invoices':    await loadDriverInvoices(); break;
-    case 'admin-rides':    await loadAdminRides(); break;
-    case 'admin-billing':  await loadAdminBilling(); break;
-    case 'admin-reports':  await loadAdminReports(); break;
-    case 'admin-issues':   await loadAdminIssues(); break;
-    case 'admin-campaigns': await loadAdminCampaigns(); break;
-    case 'admin-settings': await loadAdminSettings(); break;
+    case 'admin-rides':    await _withAdmin(function(){ return loadAdminRides(); }); break;
+    case 'admin-billing':  await _withAdmin(function(){ return loadAdminBilling(); }); break;
+    case 'admin-reports':  await _withAdmin(function(){ return loadAdminReports(); }); break;
+    case 'admin-issues':   await _withAdmin(function(){ return loadAdminIssues(); }); break;
+    case 'admin-campaigns': await _withAdmin(function(){ return loadAdminCampaigns(); }); break;
+    case 'admin-settings': await _withAdmin(function(){ return loadAdminSettings(); }); break;
   }
 }
 

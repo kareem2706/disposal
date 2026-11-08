@@ -2,6 +2,7 @@
 //   css/*.css  → app.css   (dans l'ordre des noms de fichiers)
 //   core/*.ts  → BleenrCore (logique partagée avec l'app iOS), placé en tête de app.js
 //   js/*.js    → app.js    (idem : un seul script, comme avant le découpage)
+//   js/admin/*.js → admin.js (chargé à la demande, seulement quand un admin ouvre une page d'admin)
 //   index.html → index.html (?v=__V__ remplacé par la version, pour vider le cache des navigateurs)
 // Seuls les fichiers du site sont publiés (pas supabase/, ni les sources).
 // Usage : npm run build   (GitHub Actions le lance à chaque envoi sur main, après npm test)
@@ -26,7 +27,8 @@ const core = buildSync({ entryPoints: [path.join(root, 'core', 'index.ts')], bun
   // « use strict » d'esbuild retiré : en tête de app.js il rendrait TOUT le script strict (changement de comportement)
   .replace(/^\s*["']use strict["'];?\s*/, '');
 if (/^\s*["']use strict/.test(core)) throw new Error('core: directive use strict non retirée');
-fs.writeFileSync(path.join(out, 'app.js'), '// ── core (core/*.ts, partagé avec l’app iOS) ──\n' + core + concat('js', '.js'));
+fs.writeFileSync(path.join(out, 'app.js'), ('// ── core (core/*.ts, partagé avec l’app iOS) ──\n' + core + concat('js', '.js')).replaceAll('__V__', ver));
+fs.writeFileSync(path.join(out, 'admin.js'), concat(path.join('js', 'admin'), '.js').replaceAll('__V__', ver));
 fs.writeFileSync(path.join(out, 'index.html'), fs.readFileSync(path.join(root, 'index.html'), 'utf8').replaceAll('__V__', ver));
 for (const p of ['assets', 'i18n', 'logo.png', 'logo_text.png', 'logo_text_light.png']) {
   if (fs.existsSync(path.join(root, p))) fs.cpSync(path.join(root, p), path.join(out, p), { recursive: true });

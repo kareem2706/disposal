@@ -54,7 +54,7 @@ async function _rdDeepLink(){
     var q=sb.from('rides').select('*'); q=/^[0-9a-f-]{36}$/i.test(code)?q.eq('id',code):q.eq('booking_code',code);
     var r=(await q.maybeSingle()).data; if(!r) return;
     var fake=document.createElement('div'); fake.dataset.ride=JSON.stringify(r).replace(/'/g,"&#39;");
-    if(currentRole==='admin' && typeof arOpenDetail==='function') arOpenDetail(fake); else openRideDetail(fake);
+    if(currentRole==='admin') await _withAdmin(function(){ arOpenDetail(fake); }); else openRideDetail(fake);
   }catch(e){ console.warn('[deep link]', e); }
 }
 // Footers rebuilt while a modal is open (e.g. after rating) get tagged too

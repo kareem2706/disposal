@@ -1,3 +1,4 @@
+// ── Administration (chargé seulement pour l’admin, voir _withAdmin) — extrait de l’ancien js/08-admin-campaigns.js ──
 // ── ADMIN : CAMPAGNES E-MAIL ─────────────────────────────────────
 // Envoi par l'Edge Function « campaign » (admin uniquement, désinscrits exclus par le serveur).
 var _cmp={ aud:'clients', people:{clients:null,fleets:null}, sel:{clients:{},fleets:{}}, previewT:null };
@@ -156,23 +157,3 @@ async function loadAdminCampaigns(){
   await _cmpAudience(_cmp.aud);
   _cmpHistory();
 }
-
-// Tri des listes de courses : la plus récente (date / heure de la course) en haut
-function _byNewest(a,b){
-  var ka=(a.ride_date||'')+' '+String(a.ride_time||'').slice(0,5)+' '+(a.created_at||'');
-  var kb=(b.ride_date||'')+' '+String(b.ride_time||'').slice(0,5)+' '+(b.created_at||'');
-  return kb.localeCompare(ka);
-}
-
-// Retour du lien « Se désinscrire » d'une campagne
-(function(){
-  try{
-    var q=new URLSearchParams(location.search), u=q.get('unsubscribed');
-    if(u===null) return;
-    history.replaceState(null,'',location.pathname+location.hash);
-    setTimeout(function(){
-      if(typeof showToast==='function') showToast(u==='1'?'✅ Vous êtes désinscrit des offres et nouveautés Bleenr':'Lien de désinscription invalide ou expiré');
-    }, 1200);
-  }catch(e){}
-})();
-
