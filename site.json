@@ -1,6 +1,5 @@
 {
-  "_note": "Informations de la société et adresse du site : modifiées ici, elles sont reportées partout ({{…}}) à la construction du site (build.mjs).",
-  "url": "https://kareem2706.github.io/disposal/",
+  "_note": "Informations de la société et environnements (production / développement) : reportés partout ({{…}}) à la construction du site (build.mjs). La clé Supabase « anon » est publique ; ne jamais mettre ici une clé secrète.",
   "company": {
     "name": "Bleenr",
     "street": "Langestraat 84",
@@ -12,5 +11,17 @@
     "email": "info@bleenr.com"
   },
   "legal_updated": "8 novembre 2026",
-  "year": "2026"
+  "year": "2026",
+  "envs": {
+    "prod": {
+      "url": "https://kareem2706.github.io/disposal/",
+      "supabase_url": "https://tuzfoqdxmxzjjhvlxsgb.supabase.co",
+      "supabase_anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1emZvcWR4bXh6ampodmx4c2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzIyNDcsImV4cCI6MjA5MDAwODI0N30.xJU8CmI0KGiEl-YA87Rtv8yrrFkPU8_dAlUrY85DDzs"
+    },
+    "dev": {
+      "url": "https://dev.bleenr.com/",
+      "supabase_url": "",
+      "supabase_anon_key": ""
+    }
+  }
 }

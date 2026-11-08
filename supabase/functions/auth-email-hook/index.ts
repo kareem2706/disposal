@@ -12,7 +12,7 @@
 // Déployer SANS vérification JWT (c'est Supabase Auth qui appelle la fonction, signature vérifiée ci-dessous).
 
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
-import { codeCard, mailLayout } from "../_shared/mail.ts";
+import { codeCard, devRedirect, mailLayout } from "../_shared/mail.ts";
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("MAIL_FROM") ?? "Bleenr <noreply@bleenr.com>";
@@ -104,7 +104,7 @@ async function send(to: string, subject: string, html: string) {
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: FROM, to: [to], subject, html }),
+    body: JSON.stringify((() => { const d = devRedirect(to, subject); return { from: FROM, to: [d.to], subject: d.subject, html }; })()),
   });
   if (!r.ok) throw new Error("Resend " + r.status + " : " + (await r.text()));
 }

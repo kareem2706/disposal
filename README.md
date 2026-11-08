@@ -46,6 +46,11 @@ npm run build           # crée _site/ (app.css, app.js, index.html, assets, i18
 cd _site && python3 -m http.server 8000   # puis http://localhost:8000
 ```
 
+## Environnements
+
+Production (branche `main`) et développement (autres branches) : voir **DEV.md**.
+Adresse et clé publique Supabase de chaque environnement : `site.json › envs`.
+
 ## Mise en ligne
 
 Chaque envoi sur `main` lance GitHub Actions (`.github/workflows/static.yml`) :

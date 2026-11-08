@@ -158,3 +158,10 @@ export function codeCard(code: string, caption = "") {
       ${caption ? `<div style="font-family:${FONT};font-size:13px;color:${INK3};margin-top:8px;">${caption}</div>` : ""}
     </div>`);
 }
+
+// Environnement de développement : secret MAIL_REDIRECT_ALL = une adresse → TOUS les e-mails lui sont envoyés,
+// le destinataire réel est indiqué dans l'objet. Non défini (production) : rien ne change.
+export function devRedirect(to: string, subject: string): { to: string; subject: string } {
+  const all = (Deno.env.get("MAIL_REDIRECT_ALL") ?? "").trim();
+  return all ? { to: all, subject: "[DEV → " + to + "] " + subject } : { to, subject };
+}

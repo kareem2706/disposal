@@ -203,7 +203,7 @@ window._confirmNoShow=async function(btn){
 };
 // E-mail « No Show » ; si le modèle n'existe pas encore dans la fonction send-mail, on envoie le texte via le modèle « note du chauffeur »
 function _sendNoShowMail(clientId, data){
-  var post=function(type, d){ return fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/send-mail',{
+  var post=function(type, d){ return fetch(SB_URL+'/functions/v1/send-mail',{
     method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+(window._sbToken||SB_KEY),'apikey':SB_KEY},
     body:JSON.stringify({ type:type, to_user_ids:[clientId], data:d }) }); };
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'||!clientId) return;

@@ -3,7 +3,7 @@
 window.sendMail = function(type, to, data){
   if(!to || localStorage.getItem(DEMO_MODE_KEY)==='1') return Promise.resolve();
   // Same call pattern as create-checkout (plain fetch + explicit headers)
-  return fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/send-mail',{
+  return fetch(SB_URL+'/functions/v1/send-mail',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+(window._sbToken||SB_KEY),'apikey':SB_KEY},
     body:JSON.stringify({ type: type, to: to, data: data || {} })
@@ -22,7 +22,7 @@ window.sendMailToUsers = function(type, userIds, data){
   if(localStorage.getItem(DEMO_MODE_KEY)==='1') return Promise.resolve();
   var ids = (Array.isArray(userIds)?userIds:[userIds]).filter(function(x,i,a){ return x && a.indexOf(x)===i; });
   if(!ids.length) return Promise.resolve();
-  return fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/send-mail',{
+  return fetch(SB_URL+'/functions/v1/send-mail',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+(window._sbToken||SB_KEY),'apikey':SB_KEY},
     body:JSON.stringify({ type: type, to_user_ids: ids, data: data || {} })
@@ -167,7 +167,7 @@ window._notifyMarketplaceDrivers = function(rideData){
     delete base.price;      // drivers must not see the client price
   }
   delete base.passenger;  // nor the passenger identity before accepting
-  return fetch('https://tuzfoqdxmxzjjhvlxsgb.supabase.co/functions/v1/send-mail',{
+  return fetch(SB_URL+'/functions/v1/send-mail',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+(window._sbToken||SB_KEY),'apikey':SB_KEY},
     body:JSON.stringify({ type:'new_marketplace_ride', broadcast:'verified_drivers', ride_id: rideData.id, exclude_user_id: isSub ? rideData.client_id : undefined, data: base })

@@ -12,7 +12,7 @@
 //  • le destinataire est lu dans auth.users, pas dans profiles (modifiable).
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { box, callout, infoGrid, mailLayout, type MailOpts, steps, tripCard } from "../_shared/mail.ts";
+import { box, callout, infoGrid, mailLayout, type MailOpts, steps, tripCard, devRedirect } from "../_shared/mail.ts";
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("MAIL_FROM") ?? "Bleenr <noreply@bleenr.com>";
@@ -84,7 +84,7 @@ async function sendOne(to: string, type: string, data: Record<string, string>) {
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: FROM, to: [to], subject: subject.replace(/&[a-z#0-9]+;/gi, " "), html }),
+    body: JSON.stringify((() => { const d = devRedirect(to, subject.replace(/&[a-z#0-9]+;/gi, " ")); return { from: FROM, to: [d.to], subject: d.subject, html }; })()),
   });
   const res = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(res?.message ?? "Échec de l'envoi");

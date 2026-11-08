@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+{{env_head}}
 <title>Bleenr — Chauffeurs privés en Belgique</title>
 <meta name="description" content="Réservez un chauffeur privé en Belgique : publiez votre trajet, recevez les offres de chauffeurs et de flottes vérifiés, choisissez. Le prix est fixé avant le départ.">
 <link rel="canonical" href="{{url}}">
@@ -78,7 +79,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 <script>window.initGooglePlaces=window.initGooglePlaces||function(){if(window._gpReady)window._gpReady();};window._gpReady=null;</script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places,routes&language=fr&loading=async&callback=initGooglePlaces" async defer></script>
 </head>
-<body>
+<body>{{env_badge}}
 <div id="app-loader" style="position:fixed;inset:0;background:#fff;z-index:99999;display:flex;align-items:center;justify-content:center;"><div style="font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:.18em;text-transform:uppercase;color:#1d1d1f;opacity:.6;">Bleenr</div></div>
 
 <!-- ══ SCREEN: AUTH ═══════════════════════════════════════ -->

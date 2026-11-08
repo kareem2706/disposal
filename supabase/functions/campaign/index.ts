@@ -16,7 +16,7 @@
 // paragraphes, les liens https et {prenom} sont mis en forme (aucun HTML injecté).
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
-import { mailLayout } from "../_shared/mail.ts";
+import { mailLayout, devRedirect } from "../_shared/mail.ts";
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("MAIL_FROM") ?? "Bleenr <noreply@bleenr.com>";
@@ -131,9 +131,10 @@ Deno.serve(async (req) => {
     for (let i = 0; i < list.length; i += 100) {
       const batch = await Promise.all(list.slice(i, i + 100).map(async (r) => {
         const unsub = await unsubUrl(r.id);
+        const d = devRedirect(r.email, (action === "test" ? "[TEST] " : "") + c.subject.replace(/\{prenom\}/g, r.first_name || ""));
         return {
-          from: FROM, to: [r.email],
-          subject: (action === "test" ? "[TEST] " : "") + c.subject.replace(/\{prenom\}/g, r.first_name || ""),
+          from: FROM, to: [d.to],
+          subject: d.subject,
           html: render(c, r.first_name || "", unsub),
           headers: { "List-Unsubscribe": `<${unsub}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
         };

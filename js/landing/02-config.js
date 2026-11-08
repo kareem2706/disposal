@@ -1,6 +1,7 @@
 // ── CONFIG ────────────────────────────────────────────
-const SB_URL='https://tuzfoqdxmxzjjhvlxsgb.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1emZvcWR4bXh6ampodmx4c2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzIyNDcsImV4cCI6MjA5MDAwODI0N30.xJU8CmI0KGiEl-YA87Rtv8yrrFkPU8_dAlUrY85DDzs';
+// Adresse et clé publique Supabase de l'environnement (production ou développement) : site.json › envs, injectées par build.mjs
+const SB_URL=BLEENR_ENV.supabaseUrl;
+const SB_KEY=BLEENR_ENV.supabaseAnonKey;
 const DEMO_MODE_KEY='disposal_demo';
 const STRIPE_FEE_MULTIPLIER = 1.029; // 1 + 2.9% Stripe fee
 const TVA_RATE = BleenrCore.TVA_RATE; // TVA rate applied to payments (core/billing.ts)
