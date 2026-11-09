@@ -979,5 +979,20 @@
   "net.unreachable": "Can't reach the server. Check your internet connection and try again in a few moments.",
   "pf.language": "Language",
   "pf.language_hint": "Language of the app, e-mails and documents. Saved immediately.",
-  "rides": "My requests"
+  "rides": "My requests",
+  "st.title": "Automatic payouts",
+  "st.intro": "Automatically receive the payment for each ride in your bank account the day after the mission (price incl. VAT minus the Bleenr commission). Secure sign-up with Stripe, about 5 minutes.",
+  "st.activate": "Enable automatic payouts",
+  "st.incomplete": "Your Stripe sign-up is not finished.",
+  "st.continue": "Continue sign-up",
+  "st.pending": "Stripe is checking your details. Payouts will start once approved; until then, your rides are paid by bank transfer.",
+  "st.complete": "Complete my details",
+  "st.active": "Active since {date}: every completed ride is paid out automatically.",
+  "st.dashboard": "Open my Stripe dashboard",
+  "st.recent": "Latest payouts",
+  "st.paid": "Paid",
+  "st.failed": "Pending",
+  "st.reversed": "Reversed",
+  "st.manual": "Rides before activation are still paid by bank transfer.",
+  "st.back_ok": "Stripe sign-up saved"
 };

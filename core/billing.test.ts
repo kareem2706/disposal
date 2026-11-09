@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { billingConfig, countryCode, offerNet, rideHtva, rideNetRevenue, pctText, onWayLock, inProgress, missionStage } from './index';
+import { billingConfig, countryCode, offerNet, rideHtva, rideNetRevenue, pctText, onWayLock, inProgress, missionStage, ridePayout } from './index';
 
 const S = {
   vat_rates_client_carrier: [{ country: 'BE', rate: 6 }, { country: 'FR', rate: 10 }],
@@ -81,4 +81,17 @@ test('inProgress / missionStage', () => {
   assert.equal(missionStage({ status: 'confirmed', on_way_at: 'x' }), 1);
   assert.equal(missionStage({ status: 'active', on_way_at: 'x', pickup_at: 'y' }), 2);
   assert.equal(missionStage({ status: 'done' }), 3);
+});
+
+test('ridePayout : prestation TVAC − commission TVAC (comme la facture de commission)', () => {
+  const cfg = billingConfig(S);
+  // BE : 106 € TVAC → 100 HTVA ; commission 15 % = 15 + TVA 21 % = 18,15 → 87,85
+  assert.deepEqual(ridePayout({ final_price: 106 }, cfg, 'Belgique'), { htva: 100, prestationTvac: 106, commissionTvac: 18.15, net: 87.85 });
+  // NL : autoliquidation → commission sans TVA (15 % via la ligne BE de repli)
+  assert.equal(ridePayout({ final_price: 106 }, cfg, 'NL').net, 91);
+  // arrondis au centime : 85,40 € TVAC → 80,57 HTVA
+  const p = ridePayout({ final_price: 85.4 }, cfg, 'BE');
+  assert.equal(p.htva, 80.57); assert.equal(p.net, Math.round((p.prestationTvac - p.commissionTvac) * 100) / 100);
+  assert.equal(ridePayout({ final_price: 106, is_subcontract: true }, cfg, 'BE').net, 0);
+  assert.equal(ridePayout({ final_price: null }, cfg, 'BE').net, 0);
 });

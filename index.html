@@ -1057,6 +1057,17 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div id="pf-bank-err" class="auth-error"></div>
           <button data-i18n="ap.enregistrer" class="btn btn-primary btn-full" onclick="saveBankInfo()">Enregistrer</button>
         </div>
+        <!-- Versements automatiques (Stripe Connect Express) : rempli par _stripeRender (js/24-fleet.js) -->
+        <div id="pf-stripe-card" class="card" style="padding:24px;margin-bottom:16px;display:none;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+            <div data-i18n="st.title" style="font-weight:600;font-size:13.5px;">Versements automatiques</div>
+            <span id="pf-stripe-pill" class="st-pill"></span>
+          </div>
+          <div id="pf-stripe-body" style="font-size:12.5px;color:var(--ink3);line-height:1.55;"></div>
+          <div id="pf-stripe-err" class="auth-error"></div>
+          <div id="pf-stripe-actions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;"></div>
+          <div id="pf-stripe-list" style="margin-top:14px;"></div>
+        </div>
         <!-- Compte : e-mail de connexion -->
         <div id="pf-account-card" class="card" style="padding:24px;margin-bottom:16px;">
           <div data-i18n="ap.compte" style="font-weight:600;margin-bottom:14px;font-size:13.5px;">Compte</div>

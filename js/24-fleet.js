@@ -1,6 +1,6 @@
 // ── Profil flotte : onglets Société / Compte / Notifications / Documents / Flotte ──
 var _PF_TABS_DRIVER=[
-  {k:'company', l:'Société',        cards:[['pf-identity-card','pf-bank-card']]},
+  {k:'company', l:'Société',        cards:[['pf-identity-card','pf-bank-card'],'pf-stripe-card']},
   {k:'account', l:'Compte',         cards:['pf-account-card']},
   {k:'notif',   l:'Notifications',  cards:['pf-notif-card']},
   {k:'docs',    l:'Documents',      cards:['pf-docs-card']},
@@ -91,8 +91,101 @@ var _fleetDrivers=[];
 
 async function loadFleetProfile(){
   if(!sb||!currentUser)return;
-  await Promise.all([loadFleetDocs(), loadFleetVehicles(), loadFleetDriversList()]);
+  await Promise.all([loadFleetDocs(), loadFleetVehicles(), loadFleetDriversList(), loadStripeStatus()]);
 }
+
+// ═══════════════════════════════════════════════════════════════
+// VERSEMENTS AUTOMATIQUES — Stripe Connect Express (supabase/stripe_connect.sql, fonction stripe-connect)
+// La flotte s'inscrit chez Stripe ; chaque course terminée lui est ensuite virée par le serveur.
+// ═══════════════════════════════════════════════════════════════
+// Retour de l'inscription Stripe : ?stripe=return (terminé ou interrompu) | ?stripe=refresh (lien expiré)
+var _stripeBack=(function(){
+  try{
+    var q=new URLSearchParams(location.search), v=q.get('stripe');
+    if(!v) return null;
+    q.delete('stripe');
+    history.replaceState(null,'',location.pathname+(q.toString()?'?'+q.toString():'')+location.hash);
+    return v==='refresh'?'refresh':'return';
+  }catch(e){ return null; }
+})();
+if(_stripeBack){
+  (window._appReady||Promise.resolve()).then(function(){
+    var n=0, iv=setInterval(function(){
+      if(++n>40){ clearInterval(iv); return; }
+      if(currentRole!=='driver' || !document.getElementById('screen-app')?.classList.contains('active')) return;
+      clearInterval(iv);
+      showPage('profile'); _pfShowTab('company');
+      if(_stripeBack==='refresh') stripeOnboard(); else showToast('✅ '+t('st.back_ok'));
+      setTimeout(function(){ document.getElementById('pf-stripe-card')?.scrollIntoView({behavior:'smooth',block:'center'}); }, 400);
+    }, 250);
+  });
+}
+
+var _stripeState=null;
+async function loadStripeStatus(){
+  var card=document.getElementById('pf-stripe-card');
+  if(!card || currentRole!=='driver' || localStorage.getItem(DEMO_MODE_KEY)==='1'){ if(card) card.style.display='none'; return; }
+  card.style.display='';
+  var row=null, pays=[];
+  try{
+    var r1=await sb.from('fleet_stripe').select('account_id,details_submitted,payouts_enabled,payouts_since').eq('driver_id',currentUser.id).maybeSingle();
+    if(r1.error){ card.style.display='none'; return; }   // stripe_connect.sql pas encore exécuté
+    row=r1.data;
+    // Inscription en cours : l'état est relu chez Stripe (au retour de l'inscription notamment)
+    if(row && !row.payouts_enabled){
+      var st=await _callEdge('stripe-connect',{action:'status'});
+      if(!st.error){ var r2=await sb.from('fleet_stripe').select('account_id,details_submitted,payouts_enabled,payouts_since').eq('driver_id',currentUser.id).maybeSingle(); row=r2.data||row; }
+    }
+    if(row && row.payouts_enabled){
+      var r3=await sb.from('ride_payouts').select('ride_id,amount,status,updated_at').eq('driver_id',currentUser.id).order('updated_at',{ascending:false}).limit(5);
+      pays=r3.data||[];
+    }
+  }catch(e){ console.warn('stripe status', e); }
+  _stripeState=row;
+  _stripeRender(row, pays);
+}
+
+function _stripeRender(row, pays){
+  var body=document.getElementById('pf-stripe-body'), act=document.getElementById('pf-stripe-actions'),
+      pill=document.getElementById('pf-stripe-pill'), list=document.getElementById('pf-stripe-list');
+  if(!body) return;
+  var state=!row?'none':row.payouts_enabled?'active':row.details_submitted?'pending':'incomplete';
+  var btn=function(label, fn, primary){ return '<button class="btn '+(primary?'btn-primary':'btn-secondary')+'" onclick="'+fn+'()">'+label+'</button>'; };
+  pill.className='st-pill st-'+state;
+  pill.textContent=state==='active'?'Stripe ✓':state==='pending'?'Stripe…':'';
+  if(state==='none'){ body.textContent=t('st.intro'); act.innerHTML=btn(t('st.activate'),'stripeOnboard',true); }
+  else if(state==='incomplete'){ body.textContent=t('st.incomplete')+' '+t('st.intro'); act.innerHTML=btn(t('st.continue'),'stripeOnboard',true); }
+  else if(state==='pending'){ body.textContent=t('st.pending'); act.innerHTML=btn(t('st.complete'),'stripeOnboard',true)+btn(t('st.dashboard'),'stripeDashboard'); }
+  else {
+    var d=row.payouts_since?new Date(row.payouts_since).toLocaleDateString(_i18nLocale()):'';
+    body.textContent=t('st.active',{date:d})+' '+t('st.manual');
+    act.innerHTML=btn(t('st.dashboard'),'stripeDashboard',true);
+  }
+  var money=function(v){ return (Math.round((+v||0)*100)/100).toLocaleString(_i18nLocale(),{style:'currency',currency:'EUR'}); };
+  list.innerHTML=(pays&&pays.length)?'<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;">'+t('st.recent')+'</div>'
+    +pays.map(function(p){ return '<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line,#ECECE8);font-size:13px;">'
+      +'<span>'+new Date(p.updated_at).toLocaleDateString(_i18nLocale())+'</span>'
+      +'<span style="color:var(--ink3)">'+t('st.'+(p.status==='paid'?'paid':p.status==='reversed'?'reversed':'failed'))+'</span>'
+      +'<b>'+money(p.amount)+'</b></div>'; }).join(''):'';
+}
+
+window.stripeOnboard=async function(){
+  var err=document.getElementById('pf-stripe-err'); if(err) err.classList.remove('show');
+  var b=document.querySelector('#pf-stripe-actions .btn-primary'); if(b){ b.disabled=true; b.dataset.l=b.textContent; b.textContent='…'; }
+  var d=await _callEdge('stripe-connect',{action:'onboard', returnUrl:location.origin+location.pathname});
+  if(d.url){ location.href=d.url; return; }
+  if(b){ b.disabled=false; b.textContent=b.dataset.l||b.textContent; }
+  if(err){ err.textContent=d.error||'Erreur'; err.classList.add('show'); }
+};
+window.stripeDashboard=async function(){
+  var err=document.getElementById('pf-stripe-err'); if(err) err.classList.remove('show');
+  // Fenêtre ouverte tout de suite (sinon bloquée comme pop-up), puis dirigée vers Stripe
+  var w=window.open('','_blank');
+  var d=await _callEdge('stripe-connect',{action:'dashboard'});
+  if(d.url){ if(w) w.location=d.url; else location.href=d.url; return; }
+  if(w) w.close();
+  if(err){ err.textContent=d.error||'Erreur'; err.classList.add('show'); }
+};
 
 // ── Upload helper ──
 var _bucketChecked=false;

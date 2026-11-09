@@ -979,5 +979,20 @@
   "net.unreachable": "No se puede conectar con el servidor. Compruebe su conexión a internet e inténtelo de nuevo en unos instantes.",
   "pf.language": "Idioma",
   "pf.language_hint": "Idioma de la aplicación, los e-mails y los documentos. Se guarda al instante.",
-  "rides": "Mis solicitudes"
+  "rides": "Mis solicitudes",
+  "st.title": "Pagos automáticos",
+  "st.intro": "Reciba automáticamente el pago de cada servicio en su cuenta bancaria al día siguiente de la misión (precio con IVA menos la comisión de Bleenr). Registro seguro con Stripe, unos 5 minutos.",
+  "st.activate": "Activar los pagos automáticos",
+  "st.incomplete": "Su registro en Stripe no está terminado.",
+  "st.continue": "Continuar el registro",
+  "st.pending": "Stripe está verificando sus datos. Los pagos empezarán tras la validación; mientras tanto, sus servicios se pagan por transferencia.",
+  "st.complete": "Completar mis datos",
+  "st.active": "Activos desde el {date}: cada servicio terminado se le paga automáticamente.",
+  "st.dashboard": "Abrir mi espacio Stripe",
+  "st.recent": "Últimos pagos",
+  "st.paid": "Pagado",
+  "st.failed": "Pendiente",
+  "st.reversed": "Anulado",
+  "st.manual": "Los servicios anteriores a la activación se siguen pagando por transferencia.",
+  "st.back_ok": "Registro en Stripe guardado"
 };

@@ -979,5 +979,20 @@
   "net.unreachable": "Connexion au serveur impossible. Vérifiez votre connexion internet et réessayez dans quelques instants.",
   "pf.language": "Langue",
   "pf.language_hint": "Langue de l’application, des e-mails et des documents. Enregistrée immédiatement.",
-  "rides": "Mes demandes"
+  "rides": "Mes demandes",
+  "st.title": "Versements automatiques",
+  "st.intro": "Recevez automatiquement le paiement de chaque course sur votre compte bancaire, le lendemain de la mission (prix TVAC moins la commission Bleenr). Inscription sécurisée par Stripe, environ 5 minutes.",
+  "st.activate": "Activer les versements automatiques",
+  "st.incomplete": "Votre inscription Stripe n'est pas terminée.",
+  "st.continue": "Continuer l'inscription",
+  "st.pending": "Stripe vérifie vos informations. Les versements démarreront dès la validation ; en attendant, vos courses sont payées par virement.",
+  "st.complete": "Compléter mes informations",
+  "st.active": "Actifs depuis le {date} : chaque course terminée vous est versée automatiquement.",
+  "st.dashboard": "Ouvrir mon espace Stripe",
+  "st.recent": "Derniers versements",
+  "st.paid": "Versé",
+  "st.failed": "En attente",
+  "st.reversed": "Annulé",
+  "st.manual": "Les courses antérieures à l'activation restent payées par virement.",
+  "st.back_ok": "Inscription Stripe enregistrée"
 };

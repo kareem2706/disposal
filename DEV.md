@@ -88,6 +88,8 @@ Secrets (Edge Functions › Secrets du **dev**) — valeurs de test :
 | `NOTIFY_HOOK_SECRET` | valeur affichée à l'étape 3 |
 | `SEND_EMAIL_HOOK_SECRET` | celle du hook « Send Email » du dev |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | clés **test** Stripe (`sk_test_…`, webhook vers le dev) |
+| `STRIPE_CONNECT_WEBHOOK_SECRET` | secret du webhook « Comptes connectés » (test) |
+| `PAYOUT_DELAY_HOURS` | délai avant versement aux flottes (ex. `0` pour tester) |
 | `RESEND_API_KEY`, `MAIL_FROM` | même clé ; expéditeur `Bleenr DEV <noreply@bleenr.com>` |
 | `MAIL_REDIRECT_ALL` | ton adresse : **tous** les e-mails du dev t'arrivent (destinataire réel indiqué dans l'objet) |
 | `ANTHROPIC_API_KEY`, `AERODATABOX_KEY` | mêmes clés (ou laisser vide pour désactiver) |

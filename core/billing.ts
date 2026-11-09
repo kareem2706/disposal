@@ -116,3 +116,23 @@ export function pctText(v: unknown): string {
   const n = Math.round((parseFloat(String(v)) || 0) * 100) / 100;
   return String(n).replace('.', ',');
 }
+
+const r2 = (v: number) => Math.round(((v || 0) + Number.EPSILON) * 100) / 100;
+
+/**
+ * Versement d'une course à la flotte (Stripe Connect), mêmes règles et arrondis que la facture de
+ * commission (Admin › Facturation) : prestation TVAC − commission Bleenr TVAC.
+ * Sous-traitance ou prix vide : rien à verser.
+ */
+export function ridePayout(
+  r: { final_price?: number | string | null; is_subcontract?: boolean | null },
+  cfg: BillingConfig,
+  fleetCountry?: string | null,
+): { htva: number; prestationTvac: number; commissionTvac: number; net: number } {
+  if (!r || r.is_subcontract) return { htva: 0, prestationTvac: 0, commissionTvac: 0, net: 0 };
+  const htva = r2(rideHtva(r));
+  const prestationTvac = r2(htva + r2(htva * cfg.vatFor(fleetCountry) / 100));
+  const cHt = r2(htva * cfg.commFor(fleetCountry) / 100);
+  const commissionTvac = r2(cHt + r2(cHt * cfg.cVatFor(fleetCountry) / 100));
+  return { htva, prestationTvac, commissionTvac, net: Math.max(0, r2(prestationTvac - commissionTvac)) };
+}

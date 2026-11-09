@@ -8,10 +8,14 @@
 //   car Stripe n'envoie pas de jeton Supabase. La signature Stripe la remplace.
 //
 // Événements à cocher dans Stripe : checkout.session.completed,
-// checkout.session.async_payment_succeeded, checkout.session.expired
+// checkout.session.async_payment_succeeded, checkout.session.expired, transfer.reversed
+//
+// Stripe Connect (stripe_connect.sql) : 2e destination de webhook « Comptes connectés » vers cette même
+// fonction, événement account.updated, son secret dans STRIPE_CONNECT_WEBHOOK_SECRET.
 
 import Stripe from "npm:stripe@14.25.0";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import { syncAccount } from "../_shared/stripe_connect.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
   apiVersion: "2023-10-16",
@@ -23,6 +27,7 @@ const admin = createClient(
   { auth: { persistSession: false } },
 );
 const WEBHOOK_SECRET = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "";
+const CONNECT_WEBHOOK_SECRET = Deno.env.get("STRIPE_CONNECT_WEBHOOK_SECRET") ?? "";
 const crypto = Stripe.createSubtleCryptoProvider();
 
 // ── Logique commune avec verify-checkout (garder les deux copies identiques) ──
@@ -69,11 +74,12 @@ Deno.serve(async (req: Request) => {
 
   const sig = req.headers.get("stripe-signature") ?? "";
   const raw = await req.text();
-  let event: Stripe.Event;
-  try {
-    event = await stripe.webhooks.constructEventAsync(raw, sig, WEBHOOK_SECRET, undefined, crypto);
-  } catch (e) {
-    console.warn("signature invalide", e);
+  let event: Stripe.Event | null = null;
+  for (const secret of [WEBHOOK_SECRET, CONNECT_WEBHOOK_SECRET].filter(Boolean)) {
+    try { event = await stripe.webhooks.constructEventAsync(raw, sig, secret, undefined, crypto); break; } catch (_) { /* secret suivant */ }
+  }
+  if (!event) {
+    console.warn("signature invalide");
     return new Response("Signature invalide", { status: 400 });
   }
 
@@ -84,6 +90,17 @@ Deno.serve(async (req: Request) => {
       case "checkout.session.async_payment_succeeded": {
         const r = await settleSession(s);
         console.log(event.type, s.id, JSON.stringify(r));
+        break;
+      }
+      case "account.updated": {
+        const acc = event.data.object as Stripe.Account;
+        const st = await syncAccount(admin, acc);
+        console.log(event.type, acc.id, JSON.stringify(st && { payouts_enabled: st.payouts_enabled }));
+        break;
+      }
+      case "transfer.reversed": {
+        const tr = event.data.object as Stripe.Transfer;
+        await admin.from("ride_payouts").update({ status: "reversed", updated_at: new Date().toISOString() }).eq("transfer_id", tr.id);
         break;
       }
       case "checkout.session.expired":
