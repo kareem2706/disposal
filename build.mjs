@@ -14,16 +14,16 @@ import { execSync } from 'node:child_process';
 
 const root = path.dirname(new URL(import.meta.url).pathname);
 const out = path.join(root, '_site');
-let ver = (process.env.CF_PAGES_COMMIT_SHA || process.env.GITHUB_SHA || '').slice(0, 8);
+let ver = (process.env.WORKERS_CI_COMMIT_SHA || process.env.CF_PAGES_COMMIT_SHA || process.env.GITHUB_SHA || '').slice(0, 8);
 if (!ver) { try { ver = execSync('git rev-parse --short=8 HEAD', { cwd: root }).toString().trim(); } catch { ver = String(Date.now()); } }
 
 const concat = (dir, ext) => fs.readdirSync(path.join(root, dir)).filter((f) => f.endsWith(ext)).sort()
   .map((f) => fs.readFileSync(path.join(root, dir, f), 'utf8')).join('');
 
 // ── Environnement : production (branche main) ou développement (toute autre branche) ──
-//   BLEENR_ENV=prod|dev force le choix ; sinon branche Cloudflare Pages / GitHub / git locale.
+//   BLEENR_ENV=prod|dev force le choix ; sinon branche Cloudflare (Workers / Pages) / GitHub / git locale.
 const site = JSON.parse(fs.readFileSync(path.join(root, 'site.json'), 'utf8'));
-let branch = process.env.CF_PAGES_BRANCH || process.env.GITHUB_REF_NAME || '';
+let branch = process.env.WORKERS_CI_BRANCH || process.env.CF_PAGES_BRANCH || process.env.GITHUB_REF_NAME || '';
 if (!branch) { try { branch = execSync('git rev-parse --abbrev-ref HEAD', { cwd: root }).toString().trim(); } catch { branch = 'main'; } }
 const envName = process.env.BLEENR_ENV || (branch === 'main' ? 'prod' : 'dev');
 const env = site.envs[envName];

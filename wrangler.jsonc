@@ -1,0 +1,14 @@
+// Cloudflare Workers (site statique) : publie le dossier _site construit par « npm run build »
+// Réglages Cloudflare › Worker « bleenr » › Settings › Build :
+//   Build command  : npm test && npm run build
+//   Deploy command : npx wrangler deploy
+{
+  "name": "bleenr",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./_site",
+    // Page inconnue → 404.html (avec le statut 404)
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  }
+}
