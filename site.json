@@ -16,12 +16,14 @@
     "prod": {
       "url": "https://www.bleenr.com/",
       "supabase_url": "https://tuzfoqdxmxzjjhvlxsgb.supabase.co",
-      "supabase_anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1emZvcWR4bXh6ampodmx4c2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzIyNDcsImV4cCI6MjA5MDAwODI0N30.xJU8CmI0KGiEl-YA87Rtv8yrrFkPU8_dAlUrY85DDzs"
+      "supabase_anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1emZvcWR4bXh6ampodmx4c2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzIyNDcsImV4cCI6MjA5MDAwODI0N30.xJU8CmI0KGiEl-YA87Rtv8yrrFkPU8_dAlUrY85DDzs",
+      "google_client_id": ""
     },
     "dev": {
       "url": "https://dev.bleenr.com/",
       "supabase_url": "https://bvkdolyczdqjbwntrsxj.supabase.co",
-      "supabase_anon_key": "sb_publishable_KVj9gSzaM9p195RAqbI07w_s-IDHt-2"
+      "supabase_anon_key": "sb_publishable_KVj9gSzaM9p195RAqbI07w_s-IDHt-2",
+      "google_client_id": ""
     }
   }
 }

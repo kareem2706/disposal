@@ -3,6 +3,7 @@ function showScreen(name){
   document.documentElement.classList.remove('boot-landing');
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + name)?.classList.add('active');
+  if(name==='auth' && window._gisMount) _gisMount();
 }
 
 // ── CONFIG ────────────────────────────────────────────
@@ -281,13 +282,7 @@ window.submitPhone = async function(){
   }
 };
 
-window.ssoAuth = async function(provider){
-  if(localStorage.getItem(DEMO_MODE_KEY) === '1'){ enterApp(); return; }
-  if(!sb){ showToast('Supabase non configuré'); return; }
-
-  document.getElementById('auth-main').style.display = 'none';
-  document.getElementById('auth-sso').style.display = 'block';
-  document.getElementById('sso-msg').textContent = t('au.redirect_to', { provider: provider==='azure' ? 'Microsoft' : provider.charAt(0).toUpperCase() + provider.slice(1) });
+function _ssoKeepRole(){
   // OAuth sign-up: the provider returns no role, so keep the choice made on the register screen
   try{
     if(_authCurrentMode==='register'){
@@ -303,6 +298,16 @@ window.ssoAuth = async function(provider){
       localStorage.removeItem('bleenr_pending_role');
     }
   }catch(e){}
+}
+
+window.ssoAuth = async function(provider){
+  if(localStorage.getItem(DEMO_MODE_KEY) === '1'){ enterApp(); return; }
+  if(!sb){ showToast('Supabase non configuré'); return; }
+
+  document.getElementById('auth-main').style.display = 'none';
+  document.getElementById('auth-sso').style.display = 'block';
+  document.getElementById('sso-msg').textContent = t('au.redirect_to', { provider: provider==='azure' ? 'Microsoft' : provider.charAt(0).toUpperCase() + provider.slice(1) });
+  _ssoKeepRole();
 
   if(!(await _sbReachable())){
     document.getElementById('auth-main').style.display = 'block';

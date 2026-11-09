@@ -35,7 +35,7 @@ const isProd = envName === 'prod';
 // Développement : bandeau « DEV » et pages exclues des moteurs de recherche
 site.env_head = isProd ? '' : '<meta name="robots" content="noindex,nofollow"><style>#bleenr-env{position:fixed;left:10px;bottom:10px;z-index:2147483647;background:#C77A10;color:#fff;font:700 11px/1 system-ui,sans-serif;letter-spacing:.08em;padding:6px 9px;border-radius:7px;box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none}</style>';
 site.env_badge = isProd ? '' : '<div id="bleenr-env">DEV · ' + branch.replace(/[<>&"]/g, '') + '</div>';
-const envJs = 'var BLEENR_ENV=' + JSON.stringify({ name: envName, siteUrl: env.url, supabaseUrl: env.supabase_url, supabaseAnonKey: env.supabase_anon_key }) + ';\n';
+const envJs = 'var BLEENR_ENV=' + JSON.stringify({ name: envName, siteUrl: env.url, supabaseUrl: env.supabase_url, supabaseAnonKey: env.supabase_anon_key, googleClientId: env.google_client_id || '' }) + ';\n';
 
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
