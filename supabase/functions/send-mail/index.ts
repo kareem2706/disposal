@@ -16,7 +16,7 @@ import { box, callout, infoGrid, mailLayout, type MailOpts, steps, tripCard, dev
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("MAIL_FROM") ?? "Bleenr <noreply@bleenr.com>";
-const APP_URL = Deno.env.get("APP_URL") ?? "https://bleenr.com";
+const APP_URL = Deno.env.get("APP_URL") ?? "https://www.bleenr.com";
 const ADMIN_EMAIL = "kb@bleenr.com";
 const admin = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",

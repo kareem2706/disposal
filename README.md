@@ -53,7 +53,7 @@ Adresse et clé publique Supabase de chaque environnement : `site.json › envs`
 
 ## Mise en ligne
 
-Le site est hébergé par **Cloudflare** (Worker « bleenr », `wrangler.jsonc`) sur **https://bleenr.com**.
+Le site est hébergé par **Cloudflare** (Worker « bleenr », `wrangler.jsonc`) sur **https://www.bleenr.com**.
 Chaque envoi sur `main` lance la construction Cloudflare : `npm test && npm run build` (si un test échoue,
 rien n'est publié), puis `npx wrangler deploy` publie `_site/`.
 L'ancienne adresse GitHub Pages (`kareem2706.github.io/disposal`) ne fait plus que rediriger vers bleenr.com

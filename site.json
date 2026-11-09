@@ -14,7 +14,7 @@
   "year": "2026",
   "envs": {
     "prod": {
-      "url": "https://bleenr.com/",
+      "url": "https://www.bleenr.com/",
       "supabase_url": "https://tuzfoqdxmxzjjhvlxsgb.supabase.co",
       "supabase_anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR1emZvcWR4bXh6ampodmx4c2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0MzIyNDcsImV4cCI6MjA5MDAwODI0N30.xJU8CmI0KGiEl-YA87Rtv8yrrFkPU8_dAlUrY85DDzs"
     },
