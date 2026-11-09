@@ -1,6 +1,6 @@
 // ── Profil flotte : onglets Société / Compte / Notifications / Documents / Flotte ──
 var _PF_TABS_DRIVER=[
-  {k:'company', l:'Société',        cards:[['pf-identity-card','pf-bank-card'],'pf-stripe-card']},
+  {k:'company', l:'Société',        cards:[['pf-identity-card','pf-stripe-card']]},
   {k:'account', l:'Compte',         cards:['pf-account-card']},
   {k:'notif',   l:'Notifications',  cards:['pf-notif-card']},
   {k:'docs',    l:'Documents',      cards:['pf-docs-card']},

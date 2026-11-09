@@ -446,3 +446,4 @@ option[hidden]{display:none;}
 .st-pill:empty{display:none}
 .st-pill.st-active{background:#E3F2E8;color:#1B5E3B}
 .st-pill.st-pending{background:#FFF1DC;color:#9A5B00}
+#pf-stripe-list:empty{display:none}
