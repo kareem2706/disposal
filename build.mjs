@@ -14,7 +14,7 @@ import { execSync } from 'node:child_process';
 
 const root = path.dirname(new URL(import.meta.url).pathname);
 const out = path.join(root, '_site');
-let ver = process.env.GITHUB_SHA ? process.env.GITHUB_SHA.slice(0, 8) : '';
+let ver = (process.env.CF_PAGES_COMMIT_SHA || process.env.GITHUB_SHA || '').slice(0, 8);
 if (!ver) { try { ver = execSync('git rev-parse --short=8 HEAD', { cwd: root }).toString().trim(); } catch { ver = String(Date.now()); } }
 
 const concat = (dir, ext) => fs.readdirSync(path.join(root, dir)).filter((f) => f.endsWith(ext)).sort()
