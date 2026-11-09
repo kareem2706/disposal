@@ -994,5 +994,10 @@
   "st.failed": "Pending",
   "st.reversed": "Reversed",
   "st.manual": "Rides before activation are still paid by bank transfer.",
-  "st.back_ok": "Stripe sign-up saved"
+  "st.back_ok": "Stripe sign-up saved",
+  "st.banner_title": "Enable automatic payouts",
+  "st.banner_text": "To make offers and receive payment for your rides, create your Stripe account (about 5 minutes). Without an active Stripe account, you cannot make offers.",
+  "st.banner_pending": "Stripe is checking your details: you will be able to make offers as soon as your account is approved.",
+  "st.banner_btn": "Create my Stripe account",
+  "st.required": "Enable automatic payouts (Stripe account) to make offers and receive your payments."
 };

@@ -200,7 +200,7 @@ window.submitOffer = async function(){
 
   } catch(e){
     console.error('submitOffer error:', e);
-    showError(err, e.message || 'Erreur lors de la soumission');
+    showError(err, _stripeErr(e) || e.message || 'Erreur lors de la soumission');
     setLoading(btn, false, t('app.soumettre'));
   }
 };;;

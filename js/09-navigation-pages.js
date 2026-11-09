@@ -490,16 +490,56 @@ async function _renderDriverVerifyBanner(){
       if(fv) currentProfile.fleet_verified=fv.fleet_verified;
     }catch(e){}
   }
-  if(currentProfile.fleet_verified==='validated'){ el.style.display='none'; el.innerHTML=''; return; }
-  el.innerHTML='<div style="display:flex;align-items:flex-start;gap:14px;padding:16px 18px;margin-bottom:18px;border-radius:14px;background:var(--amber-bg);border:1px solid rgba(180,120,20,.25);">'
+  // Compte Stripe (versements automatiques) : obligatoire pour faire une offre (stripe_connect.sql)
+  await _loadFleetStripeOk();
+  var html='';
+  if(currentProfile.fleet_verified!=='validated')
+    html+=_fleetBanner(t('app2.votre_compte_nest_pas_encore'), t('app2.pour_recevoir_des_demandes_vous'), t('app2.completer_mon_profil'), "showPage('profile')");
+  if(_fleetStripeOk===false)
+    html+=_fleetBanner(t('st.banner_title'), _fleetStripePending?t('st.banner_pending'):t('st.banner_text'), t(_fleetStripePending?'st.complete':'st.banner_btn'), "_goStripeProfile()");
+  if(!html){ el.style.display='none'; el.innerHTML=''; return; }
+  el.innerHTML=html;
+  el.style.display='block';
+}
+function _fleetBanner(title, text, btnLabel, onclick){
+  return '<div style="display:flex;align-items:flex-start;gap:14px;padding:16px 18px;margin-bottom:18px;border-radius:14px;background:var(--amber-bg);border:1px solid rgba(180,120,20,.25);">'
     +'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/></svg>'
     +'<div style="flex:1;min-width:0;">'
-      +'<div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px;">'+t('app2.votre_compte_nest_pas_encore')+'</div>'
-      +'<div style="font-size:13px;color:var(--ink2);line-height:1.55;">'+t('app2.pour_recevoir_des_demandes_vous')+'</div>'
+      +'<div style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:4px;">'+title+'</div>'
+      +'<div style="font-size:13px;color:var(--ink2);line-height:1.55;">'+text+'</div>'
     +'</div>'
-    +'<button class="btn btn-primary btn-sm" style="flex-shrink:0;align-self:center;" onclick="showPage(\'profile\')">'+t('app2.completer_mon_profil')+'</button>'
+    +'<button class="btn btn-primary btn-sm" style="flex-shrink:0;align-self:center;" onclick="'+onclick+'">'+btnLabel+'</button>'
     +'</div>';
-  el.style.display='block';
+}
+// null = inconnu (table absente, démo, admin) : rien n'est bloqué côté site, le serveur reste juge
+var _fleetStripeOk=null, _fleetStripePending=false;
+async function _loadFleetStripeOk(){
+  if(!sb || !currentUser?.id || currentRole!=='driver' || currentUser.email===ADMIN_EMAIL || localStorage.getItem(DEMO_MODE_KEY)==='1'){ _fleetStripeOk=null; return; }
+  try{
+    var r=await sb.from('fleet_stripe').select('payouts_enabled,details_submitted').eq('driver_id',currentUser.id).maybeSingle();
+    if(r.error){ _fleetStripeOk=null; return; }
+    _fleetStripeOk=!!(r.data&&r.data.payouts_enabled);
+    _fleetStripePending=!!(r.data&&r.data.details_submitted&&!r.data.payouts_enabled);
+  }catch(e){ _fleetStripeOk=null; }
+}
+window._goStripeProfile=function(){
+  showPage('profile');
+  setTimeout(function(){ if(typeof _pfShowTab==='function') _pfShowTab('company'); document.getElementById('pf-stripe-card')?.scrollIntoView({behavior:'smooth',block:'center'}); }, 300);
+};
+// Avant une offre / une sous-traitance : compte Stripe actif requis
+function _stripeGate(){
+  if(_fleetStripeOk!==false) return true;
+  showToast('⚠️ '+t('st.required'));
+  _goStripeProfile();
+  return false;
+}
+// Message d'erreur du serveur « STRIPE_REQUIRED: … » → texte lisible + accès au profil
+function _stripeErr(e){
+  var m=String((e&&e.message)||e||'');
+  if(m.indexOf('STRIPE_REQUIRED')<0) return null;
+  _fleetStripeOk=false;
+  setTimeout(_goStripeProfile, 1200);
+  return t('st.required');
 }
 
 // Rides currently in progress (pick-up done) — shown apart from the other requests

@@ -994,5 +994,10 @@
   "st.failed": "En attente",
   "st.reversed": "Annulé",
   "st.manual": "Les courses antérieures à l'activation restent payées par virement.",
-  "st.back_ok": "Inscription Stripe enregistrée"
+  "st.back_ok": "Inscription Stripe enregistrée",
+  "st.banner_title": "Activez les versements automatiques",
+  "st.banner_text": "Pour faire des offres et recevoir le paiement de vos courses, créez votre compte Stripe (environ 5 minutes). Sans compte Stripe actif, vous ne pouvez pas faire d'offre.",
+  "st.banner_pending": "Stripe vérifie vos informations : vous pourrez faire des offres dès que votre compte sera validé.",
+  "st.banner_btn": "Créer mon compte Stripe",
+  "st.required": "Activez les versements automatiques (compte Stripe) pour faire une offre et recevoir vos paiements."
 };

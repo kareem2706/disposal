@@ -260,6 +260,7 @@ window._offerNetUpdate=function(){
   box.style.display='block';
 };
 window.openOfferModal = function(rideId, summary, rideObj){
+  if(!_stripeGate()) return;
   _offerCommRate=null;
   _commPct(currentProfile&&currentProfile.address_country).then(function(p){
     var n=document.getElementById('offer-comm-note'); if(n) n.textContent='Le prix inclut la commission de la plateforme ('+_pctTxt(p)+' %)';

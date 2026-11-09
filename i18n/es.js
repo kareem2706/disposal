@@ -994,5 +994,10 @@
   "st.failed": "Pendiente",
   "st.reversed": "Anulado",
   "st.manual": "Los servicios anteriores a la activación se siguen pagando por transferencia.",
-  "st.back_ok": "Registro en Stripe guardado"
+  "st.back_ok": "Registro en Stripe guardado",
+  "st.banner_title": "Active los pagos automáticos",
+  "st.banner_text": "Para hacer ofertas y recibir el pago de sus servicios, cree su cuenta Stripe (unos 5 minutos). Sin una cuenta Stripe activa, no puede hacer ofertas.",
+  "st.banner_pending": "Stripe está verificando sus datos: podrá hacer ofertas en cuanto se valide su cuenta.",
+  "st.banner_btn": "Crear mi cuenta Stripe",
+  "st.required": "Active los pagos automáticos (cuenta Stripe) para hacer ofertas y recibir sus pagos."
 };

@@ -411,6 +411,7 @@ window._detailOffer = function(btn){
 
 window.acceptSubcontract = async function(rideId){
   if(!sb||!currentUser){ showToast(t('app.non_connecte')); return; }
+  if(!_stripeGate()) return;
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
     showToast(t('app.course_sous_traitee_acceptee'));
     return;
@@ -424,7 +425,8 @@ window.acceptSubcontract = async function(rideId){
     if(typeof loadDriverDashboard==='function') await loadDriverDashboard();
     if(typeof loadMarketplace==='function') await loadMarketplace();
   } catch(e){
-    showToast(t('app.erreur_2')+(e.message||e));
+    var _se=_stripeErr(e);
+    showToast(_se ? '⚠️ '+_se : t('app.erreur_2')+(e.message||e));
   }
 };
 
