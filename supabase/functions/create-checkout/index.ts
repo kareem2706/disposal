@@ -7,6 +7,18 @@
 import Stripe from "npm:stripe@14.25.0";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
+// Adresse de retour après paiement : celle demandée par le site si elle fait partie des adresses du site
+// (APP_URL, APP_URLS séparées par des virgules, bleenr.com, ancienne adresse GitHub), sinon APP_URL.
+function returnBase(asked0: unknown): string {
+  const clean = (u: string) => u.replace(/[?#].*$/, "").replace(/\/+$/, "");
+  const app = clean(Deno.env.get("APP_URL") || "https://bleenr.com");
+  const allowed = [app, ...(Deno.env.get("APP_URLS") || "").split(",").map((x) => clean(x.trim())).filter(Boolean),
+    "https://bleenr.com", "https://www.bleenr.com", "https://dev.bleenr.com", "https://kareem2706.github.io/disposal"];
+  const asked = clean(String(asked0 || ""));
+  // Correspondance exacte ou sous-chemin (« https://bleenr.com/… ») : jamais « https://bleenr.com.evil.com »
+  return asked && allowed.some((a) => asked === a || asked.startsWith(a + "/")) ? asked : app;
+}
+
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
   apiVersion: "2023-10-16",
   httpClient: Stripe.createFetchHttpClient(),
@@ -43,9 +55,7 @@ Deno.serve(async (req: Request) => {
     const { rideId, offerId } = body;
     const kind = body.kind === "supplement" ? "supplement" : "offer";
     if (!rideId || (kind === "offer" && !offerId)) return json({ error: "Paramètres manquants" }, 400);
-    const APP_URL0 = (Deno.env.get("APP_URL") || "https://kareem2706.github.io/disposal").replace(/\/+$/, "");
-    const asked0 = String((body as any).returnUrl || "").replace(/[?#].*$/, "").replace(/\/+$/, "");
-    const origin0 = asked0 && asked0.startsWith(APP_URL0) ? asked0 : APP_URL0;
+    const origin0 = returnBase((body as any).returnUrl);
 
     // ── Supplément demandé par le chauffeur après une modification (mission_changes.sql) ──
     if (kind === "supplement") {
@@ -111,9 +121,7 @@ Deno.serve(async (req: Request) => {
     if (!(unitAmount > 0)) return json({ error: "Montant invalide" }, 400);
 
     // Adresse de retour : celle de l'app (l'en-tête Origin ne contient pas le chemin /disposal)
-    const APP_URL = (Deno.env.get("APP_URL") || "https://kareem2706.github.io/disposal").replace(/\/+$/, "");
-    const asked = String((body as any).returnUrl || "").replace(/[?#].*$/, "").replace(/\/+$/, "");
-    const origin = asked && asked.startsWith(APP_URL) ? asked : APP_URL;
+    const origin = returnBase((body as any).returnUrl);
     // 5) Une seule session de paiement ouverte par course :
     //    les précédentes sont expirées ; si l'une a déjà été payée, on refuse.
     const { data: prev } = await admin.from("ride_checkouts")
