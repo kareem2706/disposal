@@ -31,26 +31,32 @@ Rien ne change pour les utilisateurs (mêmes e-mails, mêmes notifications).
 
 ## 3. Copier la structure de la production vers le dev
 
-Il faut **Docker Desktop** démarré (le CLI Supabase s'en sert pour `db dump`). Dans le dossier `disposal` :
+Sans Docker : avec les outils PostgreSQL en ligne de commande.
 
-```cmd
-supabase link --project-ref tuzfoqdxmxzjjhvlxsgb
-supabase db dump -f supabase\schema.sql
-supabase db dump --data-only -f supabase\seed_config.sql --schema public --table public.billing_settings
+1. Installer **PostgreSQL 17** depuis [enterprisedb.com](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)
+   (Windows) et, à l'écran des composants, ne cocher que **Command Line Tools**.
+2. Dans Supabase (projet de production) › bouton **Connect** › **Session pooler** : copier la chaîne de connexion
+   et y mettre le mot de passe de la base (Settings › Database › « Reset database password » s'il est perdu ;
+   éviter les caractères spéciaux comme `@`, `#`, `/`).
+3. Dans PowerShell, dossier `disposal` :
+
+```powershell
+$pg = "C:\Program Files\PostgreSQL\17\bin"
+$prod = "postgresql://postgres.tuzfoqdxmxzjjhvlxsgb:MOT_DE_PASSE@aws-0-XXXX.pooler.supabase.com:5432/postgres"
+& "$pg\pg_dump.exe" $prod --schema-only --schema=public --no-owner -f supabase\schema.sql
+& "$pg\pg_dump.exe" $prod --data-only --table=public.billing_settings --column-inserts --no-owner -f supabase\seed_config.sql
 ```
 
-- `schema.sql` : tables, règles de sécurité (RLS), fonctions, déclencheurs — **sans aucune donnée client**.
+- `schema.sql` : tables, règles de sécurité (RLS), fonctions, déclencheurs, droits — **sans aucune donnée client**.
 - `seed_config.sql` : uniquement les réglages de facturation (taux, délais).
 
-Puis appliquer au projet de dev (remplacer `bvkdolyczdqjbwntrsxj` et le mot de passe) :
+4. Appliquer au projet de dev (chaîne « Session pooler » du projet **bleenr-dev**) :
 
-```cmd
-supabase link --project-ref bvkdolyczdqjbwntrsxj
-psql "postgresql://postgres:MOT_DE_PASSE@db.bvkdolyczdqjbwntrsxj.supabase.co:5432/postgres" -f supabase\schema.sql
-psql "postgresql://postgres:MOT_DE_PASSE@db.bvkdolyczdqjbwntrsxj.supabase.co:5432/postgres" -f supabase\seed_config.sql
+```powershell
+$dev = "postgresql://postgres.bvkdolyczdqjbwntrsxj:MOT_DE_PASSE_DEV@aws-0-XXXX.pooler.supabase.com:5432/postgres"
+& "$pg\psql.exe" $dev -v ON_ERROR_STOP=0 -f supabase\schema.sql
+& "$pg\psql.exe" $dev -f supabase\seed_config.sql
 ```
-
-Sans `psql` : ouvrir les deux fichiers et les coller dans le SQL Editor du projet de dev.
 
 Ensuite, toujours dans le SQL Editor **du dev** :
 
