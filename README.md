@@ -29,6 +29,7 @@ site.json         Coordonnées de la société et adresse du site : reportées p
 assets/           Images
 supabase/         Base de données (SQL) et fonctions serveur (Edge Functions) — non publié sur le site
 build.mjs         Construction du site dans _site/
+worker.js         Worker Cloudflare : sert _site/ et reçoit le retour de la connexion Google (/auth/google)
 ```
 
 Les fichiers de `js/` forment **un seul script** une fois assemblés (`app.js`) : l'ordre des fichiers

@@ -5,8 +5,12 @@
 {
   "name": "bleenr",
   "compatibility_date": "2026-10-01",
+  // worker.js : retour de la connexion Google (/auth/google) ; tout le reste = fichiers du site
+  "main": "worker.js",
   "assets": {
     "directory": "./_site",
+    "binding": "ASSETS",
+    "run_worker_first": ["/auth/*"],
     // Page inconnue → 404.html (avec le statut 404)
     "not_found_handling": "404-page",
     "html_handling": "auto-trailing-slash"

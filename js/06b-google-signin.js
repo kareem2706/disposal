@@ -1,6 +1,8 @@
 // ── Connexion Google sur le site (Google Identity Services) ──
 // Google affiche « Bleenr / www.bleenr.com » au lieu de l'adresse technique Supabase.
 // Le bouton officiel Google est posé, invisible, sur nos boutons « Google » : le design ne change pas.
+// Tout se passe dans la même fenêtre : Google renvoie le jeton à /auth/google (worker.js), qui revient
+// sur la page avec #gcred=<jeton> ; _gisReturn() le lit, l'efface et ouvre la session.
 // Google renvoie un jeton d'identité signé ; c'est Supabase (serveur) qui le vérifie et ouvre la session.
 // Si le script Google ne charge pas (bloqueur, réseau, app Capacitor), nos boutons gardent l'ancienne
 // connexion par redirection (ssoAuth('google')).
@@ -31,13 +33,13 @@ async function _gisInit(){
   var dig = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
   var hashed = Array.from(new Uint8Array(dig), function(b){ return b.toString(16).padStart(2, '0'); }).join('');
   _gis.nonce = raw;
+  try{ sessionStorage.setItem('bleenr_gis_nonce', raw); }catch(e){}
   google.accounts.id.initialize({
     client_id: BLEENR_ENV.googleClientId,
-    callback: _gisCallback,
     nonce: hashed,
     auto_select: false,
-    cancel_on_tap_outside: true,
-    ux_mode: 'popup'
+    ux_mode: 'redirect',
+    login_uri: location.origin + '/auth/google'
   });
 }
 
@@ -56,6 +58,15 @@ function _gisRender(btn){
   google.accounts.id.renderButton(inner, { type: 'standard', size: 'large', width: rw, text: 'continue_with', shape: 'rectangular' });
 }
 
+// Le clic tombe dans le cadre Google : la page perd le focus juste avant de partir chez Google.
+// On mémorise alors le rôle choisi à l'inscription (client / chauffeur), comme pour ssoAuth.
+window.addEventListener('blur', function(){
+  setTimeout(function(){
+    var a = document.activeElement;
+    if(a && a.tagName === 'IFRAME' && a.closest && a.closest('.gis-ov')) _ssoKeepRole();
+  }, 0);
+});
+
 window._gisMount = async function(){
   if(!_gisEnabled()) return;
   try{
@@ -72,24 +83,19 @@ window._gisMount = async function(){
   });
 };
 
-async function _gisCallback(resp){
-  var nonce = _gis.nonce;
-  if(!sb){ showToast('Supabase non configuré'); return; }
-  _ssoKeepRole();
-  document.getElementById('auth-main').style.display = 'none';
-  document.getElementById('auth-sso').style.display = 'block';
-  document.getElementById('sso-msg').textContent = t('au.redirect_to', { provider: 'Google' });
+// Retour de Google (#gcred=<jeton>) : jeton effacé de l'adresse, puis vérifié par Supabase avec le nonce
+_onReady(async function _gisReturn(){
+  var m = /[#&]gcred=([\w.-]+)/.exec(location.hash);
+  if(!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  var nonce = '';
+  try{ nonce = sessionStorage.getItem('bleenr_gis_nonce') || ''; sessionStorage.removeItem('bleenr_gis_nonce'); }catch(e){}
   _loginInProgress = true;
-  var res = await sb.auth.signInWithIdToken({ provider: 'google', token: resp.credential, nonce: nonce });
-  if(res.error){
-    _loginInProgress = false;
-    try{ await _gisInit(); }catch(e){}
-    document.getElementById('auth-main').style.display = 'block';
-    document.getElementById('auth-sso').style.display = 'none';
-    showToast(t('au.error_prefix') + res.error.message);
-    return;
-  }
-  // Session enregistrée : on recharge comme au retour d'une connexion par redirection
-  // (même chemin : rôle choisi à l'inscription, profil, entrée dans l'application)
+  var _l = document.getElementById('app-loader'); if(_l) _l.style.display = '';
+  await window._appReady;
+  if(_l) _l.style.display = '';
+  var res = sb ? await sb.auth.signInWithIdToken({ provider: 'google', token: m[1], nonce: nonce }) : { error: { message: 'Supabase non configuré' } };
+  if(res.error){ _loginInProgress = false; _showAuthProblem(t('au.error_prefix') + res.error.message); return; }
+  // Session ouverte : rechargement, même chemin qu'un retour de connexion par redirection
   location.replace(location.pathname + location.search);
-}
+});

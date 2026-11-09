@@ -44,7 +44,7 @@
     window._bootLang=l;
     if(!ls.getItem('disposal-auth') && ls.getItem('disposal_demo')!=='1'
        && !/[?&](payment|th|tt|code|error|session_id)=/.test(location.search)
-       && !/access_token|error|^#course\//.test(location.hash)){
+       && !/access_token|error|gcred=|^#course\//.test(location.hash)){
       document.documentElement.classList.add('boot-landing');
       if(l!=='fr') document.write('<script src="i18n/'+l+'.js?v=__V__"><\/script>');
     }
