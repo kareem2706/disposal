@@ -42,12 +42,12 @@ supabase db dump --data-only -f supabase\seed_config.sql --schema public --table
 - `schema.sql` : tables, règles de sécurité (RLS), fonctions, déclencheurs — **sans aucune donnée client**.
 - `seed_config.sql` : uniquement les réglages de facturation (taux, délais).
 
-Puis appliquer au projet de dev (remplacer `REF_DEV` et le mot de passe) :
+Puis appliquer au projet de dev (remplacer `bvkdolyczdqjbwntrsxj` et le mot de passe) :
 
 ```cmd
-supabase link --project-ref REF_DEV
-psql "postgresql://postgres:MOT_DE_PASSE@db.REF_DEV.supabase.co:5432/postgres" -f supabase\schema.sql
-psql "postgresql://postgres:MOT_DE_PASSE@db.REF_DEV.supabase.co:5432/postgres" -f supabase\seed_config.sql
+supabase link --project-ref bvkdolyczdqjbwntrsxj
+psql "postgresql://postgres:MOT_DE_PASSE@db.bvkdolyczdqjbwntrsxj.supabase.co:5432/postgres" -f supabase\schema.sql
+psql "postgresql://postgres:MOT_DE_PASSE@db.bvkdolyczdqjbwntrsxj.supabase.co:5432/postgres" -f supabase\seed_config.sql
 ```
 
 Sans `psql` : ouvrir les deux fichiers et les coller dans le SQL Editor du projet de dev.
@@ -70,8 +70,8 @@ Ensuite, toujours dans le SQL Editor **du dev** :
 ## 5. Fonctions serveur du dev
 
 ```cmd
-supabase functions deploy --project-ref REF_DEV
-supabase functions deploy auth-email-hook --no-verify-jwt --project-ref REF_DEV
+supabase functions deploy --project-ref bvkdolyczdqjbwntrsxj
+supabase functions deploy auth-email-hook --no-verify-jwt --project-ref bvkdolyczdqjbwntrsxj
 ```
 
 Secrets (Edge Functions › Secrets du **dev**) — valeurs de test :

@@ -20,8 +20,8 @@
     },
     "dev": {
       "url": "https://dev.bleenr.com/",
-      "supabase_url": "",
-      "supabase_anon_key": ""
+      "supabase_url": "https://bvkdolyczdqjbwntrsxj.supabase.co",
+      "supabase_anon_key": "sb_publishable_KVj9gSzaM9p195RAqbI07w_s-IDHt-2"
     }
   }
 }
