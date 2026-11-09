@@ -20,7 +20,7 @@ import { mailLayout, devRedirect } from "../_shared/mail.ts";
 
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("MAIL_FROM") ?? "Bleenr <noreply@bleenr.com>";
-const APP_URL = (Deno.env.get("APP_URL") ?? "https://kareem2706.github.io/disposal").replace(/\/+$/, "");
+const APP_URL = (Deno.env.get("APP_URL") ?? "https://bleenr.com").replace(/\/+$/, "");
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ADMIN_EMAIL = "kb@bleenr.com";

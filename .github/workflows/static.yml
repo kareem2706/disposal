@@ -1,4 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Ancienne adresse GitHub Pages → redirection vers bleenr.com (le site est publié par Cloudflare)
 name: Deploy static content to Pages
 
 on:
@@ -36,18 +36,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install
-        run: npm ci
-      - name: Test (core)
-        # Si un test échoue, rien n'est mis en ligne
-        run: npm test
-      - name: Build
-        # core/*.ts → BleenrCore, css/*.css → app.css, js/*.js → app.js ; publie uniquement les fichiers du site dans _site/
-        run: npm run build
+      - name: Build redirect
+        # Le site est maintenant sur bleenr.com (Cloudflare) : l'ancienne adresse ne fait que rediriger
+        run: node scripts/gh-redirect.mjs
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '_site'
+          path: '_redirect'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
