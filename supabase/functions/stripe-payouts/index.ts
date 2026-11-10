@@ -79,9 +79,12 @@ Deno.serve(async (req: Request) => {
     } catch (e) {
       const msg = String((e as any)?.code ?? "") + " " + String((e as any)?.message ?? e);
       console.warn("payout", r.ride_id, msg);
-      await save({ status: "failed", error: msg.trim().slice(0, 300) });
-      // Solde insuffisant : inutile d'essayer les suivantes maintenant
-      if (/balance_insufficient|insufficient/i.test(msg)) break;
+      // Solde insuffisant = argent du client pas encore disponible chez Stripe (jusqu'à 7 jours) :
+      // ce n'est pas un échec, on ne compte pas l'essai et on réessaie à l'heure suivante
+      const waiting = /balance_insufficient|insufficient/i.test(msg);
+      await save({ status: "failed", error: (waiting ? "en attente des fonds Stripe : " : "") + msg.trim().slice(0, 280),
+                   attempts: waiting ? (prev?.attempts ?? 0) : attempts });
+      if (waiting) break;   // inutile d'essayer les suivantes maintenant
     }
   }
   console.log("stripe-payouts", JSON.stringify({ candidates: (list ?? []).length, paid: done.length }));
