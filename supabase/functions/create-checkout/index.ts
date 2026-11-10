@@ -68,6 +68,9 @@ Deno.serve(async (req: Request) => {
         line_items: [{ price_data: { currency: "eur", product_data: { name: `Supplément course Bleenr ${r.booking_code ?? String(rideId).slice(0, 8)}` },
           unit_amount: Math.round(amt * 100) }, quantity: 1 }],
         metadata: { rideId, kind: "supplement", userId: user.id },
+        // Description du paiement dans Stripe (Transactions) : l'identifiant de la course
+        payment_intent_data: { description: `${r.booking_code ?? String(rideId).slice(0, 8)} (supplément)`,
+          metadata: { rideId, kind: "supplement", bookingCode: r.booking_code ?? "" } },
         success_url: `${origin0}/?payment=success&ride=${rideId}&supp=1&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin0}/?payment=cancel&t=${Date.now()}`,   // URL unique : jamais servie depuis le cache du navigateur
       });
@@ -143,6 +146,9 @@ Deno.serve(async (req: Request) => {
         quantity: 1,
       }],
       metadata: { rideId, offerId, userId: user.id },
+      // Description du paiement dans Stripe (Transactions) : l'identifiant de la course
+      payment_intent_data: { description: ride.booking_code ?? String(rideId).slice(0, 8),
+        metadata: { rideId, offerId, bookingCode: ride.booking_code ?? "" } },
       success_url:
         `${origin}/?payment=success&ride=${rideId}&offer=${offerId}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?payment=cancel&t=${Date.now()}`,   // URL unique : jamais servie depuis le cache du navigateur
