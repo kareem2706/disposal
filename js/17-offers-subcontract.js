@@ -273,7 +273,7 @@ function _renderNewRidePaxCard(sid, editing){
     +sel
     +'<div style="margin-bottom:10px;"><label style="'+lbl+'">Nom &amp; Prénom</label><input id="'+sid+'-pax-name" type="text" value="'+esc(n)+'" placeholder="Marie Dupont" style="'+inp+'"></div>'
     +'<div><label style="'+lbl+'">'+_T('app.telephone')+'</label><input id="'+sid+'-pax-tel" type="tel" value="'+esc(t)+'" placeholder="+32 470 12 34 56" style="'+inp+'"></div>'
-    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">'
+    +'<div style="display:flex;gap:8px;justify-content:flex-start;margin-top:12px;">'
       +'<button type="button" class="btn btn-secondary btn-sm" id="'+sid+'-pax-cancel">'+_T('app.annuler')+'</button>'
       +'<button type="button" class="btn btn-green btn-sm" id="'+sid+'-pax-ok">'+_T('app.enregistrer')+'</button>'
     +'</div>'
