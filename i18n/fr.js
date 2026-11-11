@@ -999,5 +999,18 @@
   "st.banner_text": "Pour faire des offres et recevoir le paiement de vos courses, créez votre compte Stripe (environ 5 minutes). Sans compte Stripe actif, vous ne pouvez pas faire d'offre.",
   "st.banner_pending": "Stripe vérifie vos informations : vous pourrez faire des offres dès que votre compte sera validé.",
   "st.banner_btn": "Créer mon compte Stripe",
-  "st.required": "Activez les versements automatiques (compte Stripe) pour faire une offre et recevoir vos paiements."
+  "st.required": "Activez les versements automatiques (compte Stripe) pour faire une offre et recevoir vos paiements.",
+  "ld.kicker": "Chauffeurs privés · Belgique",
+  "ld.voir_comment": "Voir comment ça marche",
+  "ld.chip_verified": "Chauffeur vérifié",
+  "ld.chip_fixed": "Prix fixe · accepté à la réservation",
+  "ld.story_title": "Cinq moments, <em>zéro surprise.</em>",
+  "ld.band": "Prix fixe — Chauffeurs vérifiés — Vous choisissez — Prix fixe —",
+  "ld.publier_un_trajet": "Publier un trajet →",
+  "ld.demander_classe": "Demander cette classe →",
+  "ld.nouvelle_demande": "Nouvelle demande",
+  "ld.offer_business": "Berline Business",
+  "ld.offer_van": "Van 7 places",
+  "ld.verified_fixed": "Chauffeur vérifié · prix fixe",
+  "ld.fleet_fixed": "Flotte vérifiée · prix fixe"
 };

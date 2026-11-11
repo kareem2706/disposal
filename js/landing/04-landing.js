@@ -6,26 +6,25 @@ window.showLandingAuth = function(mode){
   _loadApp().then(function(){ if(window.showLandingAuth !== stub) window.showLandingAuth(mode); });
 };
 
-// Landing (Signature) — scroll story, services track, classes, reveals
+// Landing (thème 11/2026) — hero 3D, carrousel des 5 étapes piloté par le défilement, accordéon des classes,
+// effets liés au défilement (variables CSS --sp, --hp, --p, --e : voir css/04-landing.css)
 document.getElementById('screen-landing') && (function(){
   var L = document.getElementById('screen-landing');
   var $ = function(id){ return document.getElementById(id); };
-  var nav = $('ld-nav'), heroBg = $('ld-hero-bg');
-  var story = $('ld-story'), clock = $('ld-clock');
+  var nav = $('ld-nav'), hero = $('ld-hero');
+  var story = $('ld-story');
   var chaps = [].slice.call(story.querySelectorAll('.ld-chap'));
-  var frames = [].slice.call(story.querySelectorAll('.ld-frame'));
-  var pars = frames.map(function(f){ return f.querySelector('.ld-par'); });
-  var cards = [].slice.call(story.querySelectorAll('.ld-card'));
-  var bars = [].slice.call(story.querySelectorAll('.ld-rail b'));
-  var svc = $('ld-services'), track = $('ld-track'), count = $('ld-svc-count');
-  var svcPars = [].slice.call(track.querySelectorAll('.ld-par'));
-  var drvImg = $('ld-drv-img'), drvPar = $('ld-drv-par');
+  var cfCards = [].slice.call(story.querySelectorAll('.ld-cf-card'));
+  var cfBar = $('ld-cf-bar');
+  var sps = [].slice.call(L.querySelectorAll('[data-sp]'));
   var rvs = [].slice.call(L.querySelectorAll('.ld-rv'));
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var N = chaps.length, S = svcPars.length, cur = -1;
+  var canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
+  var N = chaps.length, cur = -1;
 
   function clamp(v){ return v < 0 ? 0 : v > 1 ? 1 : v; }
-  function prog(el){ var r = el.getBoundingClientRect(), t = el.offsetHeight - innerHeight; return t > 0 ? clamp(-r.top / t) : 0; }
+  function viewH(){ return L.clientHeight || innerHeight; }
+  function prog(el){ var r = el.getBoundingClientRect(), t = el.offsetHeight - viewH(); return t > 0 ? clamp(-r.top / t) : 0; }
 
   // cities marquee
   function setCities(){
@@ -35,23 +34,36 @@ document.getElementById('screen-landing') && (function(){
   }
   setCities();
 
-  // classes tabs
-  // classes : nom, modèles et description traduits (ld.cls<n>_*)
+  // classes : panneaux en accordéon ; nom, modèles et description traduits (ld.cls<n>_*)
   var CLS = [ { c:'Economy', pax:3, bag:3 }, { c:'Business', pax:3, bag:3 }, { c:null, pax:3, bag:3 }, { c:'Van', pax:7, bag:7 }, { c:null, pax:50, bag:50 } ];
-  var tabs = [].slice.call($('ld-cls-tabs').children), imgs = [].slice.call($('ld-cls-img').children), info = $('ld-cls-info');
-  var curCls = 0;
+  var accPs = [].slice.call($('ld-acc').children);
+  var curCls = 1;
+  function fillCls(){
+    accPs.forEach(function(p, k){
+      var name = CLS[k].c || t('ld.cls'+k+'_name');
+      p.querySelector('.ld-acc-v').textContent = name;
+      p.setAttribute('aria-label', name);
+      p.querySelector('.ld-acc-info').innerHTML = '<h3>'+name+'</h3><div class="models">'+t('ld.cls'+k+'_models')+'</div>'
+        + '<div class="specs"><span><b>'+CLS[k].pax+'</b>'+t('ld.pax_max')+'</span><span><b>'+CLS[k].bag+'</b>'+t('ld.bags')+'</span></div>'
+        + '<p>'+t('ld.cls'+k+'_desc')+'</p><button type="button" class="ld-btn lime">'+t('ld.demander_classe')+'</button>';
+    });
+  }
   function setCls(k){
     curCls = k;
-    var c = { c: CLS[k].c || t('ld.cls'+k+'_name'), m: t('ld.cls'+k+'_models'), d: t('ld.cls'+k+'_desc'), pax: CLS[k].pax, bag: CLS[k].bag };
-    tabs.forEach(function(t,i){ t.classList.toggle('on', i===k); });
-    imgs.forEach(function(t,i){ t.classList.toggle('on', i===k); });
-    info.innerHTML = '<div class="ld-fade"><h3 class="ld-serif">'+c.c+'</h3><div class="models">'+c.m+'</div><div class="ld-cls-specs"><div><b>'+c.pax+'</b><span>'+t('ld.pax_max')+'</span></div><div><b>'+c.bag+'</b><span>'+t('ld.bags')+'</span></div></div></div><p class="ld-fade" style="animation-delay:.08s">'+c.d+'</p>';
+    accPs.forEach(function(p, i){
+      p.classList.toggle('on', i===k); p.setAttribute('aria-expanded', i===k ? 'true' : 'false');
+      var b = p.querySelector('.ld-btn'); if(b) b.tabIndex = i===k ? 0 : -1;
+    });
   }
-  tabs.forEach(function(t,i){ t.onclick = function(){ setCls(i); }; });
-  setCls(0);
+  accPs.forEach(function(p, i){
+    p.addEventListener('click', function(e){ if(e.target.closest('.ld-btn')){ showLandingAuth('register'); return; } setCls(i); });
+    if(canHover) p.addEventListener('pointerenter', function(){ setCls(i); });
+    p.addEventListener('keydown', function(e){ if((e.key==='Enter' || e.key===' ') && e.target===p){ e.preventDefault(); setCls(i); } });
+  });
+  fillCls(); setCls(1);
   // changement de langue : contenus construits en JS
   window._i18nRefresh = function(){
-    setCities(); setCls(curCls);
+    setCities(); fillCls(); setCls(curCls);
     if(window._auSideSync) window._auSideSync();
     var _p = !!window._loginPwdMode;
     var _b = document.getElementById('btn-email-submit'); if(_b && !_b.disabled) _b.textContent = _p ? t('au.login_btn') : t('au.recevoir_un_code');
@@ -216,58 +228,82 @@ document.getElementById('screen-landing') && (function(){
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ o.classList.add('in'); fit(); }); });
   }
 
+  // « Recevoir des offres » du hero : amène à la carte de réservation
+  $('ld-hero-go').onclick = function(){
+    var f = $('ld-from');
+    try{ f.scrollIntoView({ behavior:'smooth', block:'center' }); }catch(e){}
+    setTimeout(function(){ f.focus({ preventScroll:true }); }, 350);
+  };
+
+  // carte de réservation : inclinaison 3D qui suit la souris (au repos pendant la saisie)
+  if(!reduced && canHover){
+    var tiltEl = $('ld-book-tilt'), tRaf = 0;
+    var tiltTo = function(rx, ry){ tiltEl.style.setProperty('--rx', rx.toFixed(2)+'deg'); tiltEl.style.setProperty('--ry', ry.toFixed(2)+'deg'); };
+    hero.addEventListener('pointermove', function(e){
+      if(tRaf) return;
+      tRaf = requestAnimationFrame(function(){
+        tRaf = 0;
+        if(tiltEl.querySelector('input:focus,select:focus')){ tiltTo(0, 0); return; }
+        var r = hero.getBoundingClientRect();
+        tiltTo(-((e.clientY - r.top) / r.height - 0.5) * 10, ((e.clientX - r.left) / r.width - 0.5) * 14);
+      });
+    });
+    hero.addEventListener('pointerleave', function(){ tiltTo(0, 0); });
+    tiltEl.addEventListener('focusin', function(e){ if(/^(INPUT|SELECT)$/.test(e.target.tagName)) tiltTo(0, 0); });
+  }
+
   // in-page links
   [].slice.call(L.querySelectorAll('[data-ld-go]')).forEach(function(b){
-    b.onclick = function(){ var t = $(b.getAttribute('data-ld-go')); if(t) L.scrollTo({ top: t.offsetTop - (t.id==='ld-services' ? 0 : 60), behavior:'smooth' }); };   // « Services » : section épinglée, elle a déjà sa marge sous la barre
+    b.onclick = function(){ var t = $(b.getAttribute('data-ld-go')); if(t) L.scrollTo({ top: t.offsetTop - (t.id==='ld-story' ? 0 : 60), behavior:'smooth' }); };   // les 5 étapes : section épinglée, plein écran
   });
 
+  // les 5 étapes : carrousel 3D (la photo active au centre, les autres pivotent sur les côtés)
   function setChap(i){
     if(i === cur) return; cur = i;
-    chaps.forEach(function(c,j){ c.classList.toggle('on', j===i); c.classList.toggle('past', j<i); });
-    cards.forEach(function(c,j){ c.classList.toggle('on', j===i); });
-    clock.textContent = chaps[i].getAttribute('data-t');
+    chaps.forEach(function(c,j){ c.classList.toggle('on', j===i); });
+    cfCards.forEach(function(c,j){
+      var o = j - i, a = Math.abs(o);
+      c.style.transform = 'translateX(calc(-50% + '+(o*62)+'%)) translateZ('+(-a*260)+'px) rotateY('+(-o*32)+'deg)';
+      c.style.opacity = a > 2 ? 0 : (a === 0 ? 1 : a === 1 ? 0.7 : 0.3);
+      c.style.zIndex = 10 - a;
+      c.tabIndex = a > 2 ? -1 : 0;
+    });
+    cfBar.style.transform = 'scaleX('+((i+1)/N)+')';
   }
+  // clic sur une photo ou une flèche : on fait défiler la page jusqu'à l'étape (le défilement reste le seul pilote)
+  function goChap(i){
+    i = Math.max(0, Math.min(N-1, i));
+    var range = story.offsetHeight - viewH();
+    if(reduced || range <= 0){ setChap(i); return; }
+    L.scrollTo({ top: story.offsetTop + range * ((i + 0.5) / N), behavior:'smooth' });
+  }
+  cfCards.forEach(function(c,j){ c.onclick = function(){ goChap(j); }; });
+  $('ld-cf-prev').onclick = function(){ goChap(cur - 1); };
+  $('ld-cf-next').onclick = function(){ goChap(cur + 1); };
 
   var ticking = false;
   function frame(){
     ticking = false;
-    var top = L.scrollTop || window.scrollY || 0, vh = innerHeight;
+    var top = L.scrollTop || 0, vh = viewH();
     nav.classList.toggle('solid', top > vh * 0.7);
     rvs.forEach(function(el){ if(!el.classList.contains('in') && el.getBoundingClientRect().top < vh * 0.9) el.classList.add('in'); });
+    L.style.setProperty('--sp', clamp(top / Math.max(1, L.scrollHeight - vh)).toFixed(4));
     if(reduced) return;
-    if(top < vh * 1.2) heroBg.style.transform = 'translateY('+(top*0.3)+'px) scale('+(1+top*0.0002)+')';
-
+    if(top < vh * 1.4) L.style.setProperty('--hp', clamp(top / (hero.offsetHeight || vh)).toFixed(3));
+    // --p : traversée de l'écran (0 → 1) ; --e : entrée dans l'écran (0 → 1)
+    sps.forEach(function(el){
+      var r = el.getBoundingClientRect();
+      if(r.bottom < -300 || r.top > vh + 300) return;
+      el.style.setProperty('--p', clamp((vh - r.top) / (vh + r.height)).toFixed(3));
+      el.style.setProperty('--e', clamp((vh - r.top) / (vh * 0.5)).toFixed(3));
+    });
     var sr = story.getBoundingClientRect();
-    if(sr.bottom > 0 && sr.top < vh){
-      var f = prog(story) * N;
-      setChap(Math.min(N-1, Math.floor(f)));
-      bars.forEach(function(b,i){ b.style.transform = 'scaleX('+clamp(f-i)+')'; });
-      frames.forEach(function(fr,i){
-        var rev = i===0 ? 1 : clamp((f - i + 0.35) / 0.35), loc = f - i;
-        fr.style.clipPath = 'inset('+((1-rev)*100)+'% 0 0 0)';
-        var q = clamp((loc + 0.4) / 1.4);
-        pars[i].style.transform = 'translateY('+(2 - q*4)+'%) scale('+(1.04 - q*0.04)+')';
-      });
-    }
-
-    var vr = svc.getBoundingClientRect();
-    if(vr.bottom > 0 && vr.top < vh){
-      var tp = clamp((prog(svc) - 0.05) / 0.9);
-      var max = Math.max(0, track.scrollWidth - innerWidth + 80);
-      track.style.transform = 'translateX('+(-tp*max)+'px)';
-      var n = Math.min(S, Math.floor(tp*(S-1) + 1.5));
-      count.textContent = ('0'+n).slice(-2) + ' / ' + ('0'+S).slice(-2);
-      svcPars.forEach(function(p,i){ p.style.transform = 'translateX('+Math.max(-3.5, Math.min(3.5, (tp*(S-1)-i)*-3))+'%)'; });
-    }
-
-    var dr = drvImg.getBoundingClientRect();
-    if(dr.bottom > 0 && dr.top < vh) drvPar.style.transform = 'translateY('+((dr.top + dr.height/2 - vh/2) * -0.12)+'px)';
+    if(sr.bottom > 0 && sr.top < vh) setChap(Math.min(N-1, Math.floor(prog(story) * N)));
   }
   function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(frame); } }
 
-  frames.forEach(function(fr,i){ fr.style.zIndex = i; var im = fr.querySelector('img'), ph = fr.querySelector('.ld-ph'); if(im && ph && im.complete && im.naturalWidth) ph.style.display = 'none'; });
+  [].slice.call(L.querySelectorAll('.ld-img')).forEach(function(w){ var im = w.querySelector('img'), ph = w.querySelector('.ld-ph'); if(im && ph && im.complete && im.naturalWidth) ph.style.display = 'none'; });
   L.addEventListener('scroll', onScroll, { passive:true });
-  window.addEventListener('scroll', onScroll, { passive:true });
   window.addEventListener('resize', onScroll, { passive:true });
   setChap(0); frame();
   if(reduced) rvs.forEach(function(el){ el.classList.add('in'); });

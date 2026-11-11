@@ -97,138 +97,156 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     </div>
   </nav>
 
-  <section class="ld-hero">
+  <div class="ld-bar" aria-hidden="true"></div>
+
+  <section class="ld-hero" id="ld-hero">
     <div class="ld-hero-bg" id="ld-hero-bg">
-      <div class="ld-img"><div class="ld-ph"><span>Photo hero &mdash; chauffeur ouvrant la porti&egrave;re, de nuit</span></div><img fetchpriority="high" src="assets/landing/hero.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+      <div class="ld-img ld-kb"><div class="ld-ph"><span>Photo hero &mdash; chauffeur ouvrant la porti&egrave;re, de nuit</span></div><img fetchpriority="high" src="assets/landing/hero.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
     </div>
     <div class="ld-hero-scrim"></div>
-    <div class="ld-wrap ld-hero-in">
-      <h1 data-i18n-html="ld.arriveza_votre_facon" class="ld-serif">Arrivez<br><em>&agrave; votre fa&ccedil;on.</em></h1>
-      <p data-i18n="ld.publiez_votre_trajet_recevez_les" class="ld-hero-lead">Publiez votre trajet, recevez les offres de chauffeurs et de flottes v&eacute;rifi&eacute;s, choisissez. Le prix est fix&eacute; avant le d&eacute;part.</p>
-      <div class="ld-book">
-        <div class="ld-book-tabs">
-          <button data-i18n="ld.aller_simple" class="ld-book-tab on" data-ld-mode="trajet">Aller simple</button>
-          <button data-i18n="ld.a_l_heure" class="ld-book-tab" data-ld-mode="heure">&Agrave; l'heure</button>
+    <div class="ld-wrap ld-hero-in" id="ld-hero-in">
+      <div class="ld-hero-txt">
+        <span class="ld-kick ld-up"><i></i><span data-i18n="ld.kicker">Chauffeurs priv&eacute;s &middot; Belgique</span></span>
+        <h1 data-i18n-html="ld.arriveza_votre_facon" class="ld-h ld-up d1">Arrivez<br><em>&agrave; votre fa&ccedil;on.</em></h1>
+        <p data-i18n="ld.publiez_votre_trajet_recevez_les" class="ld-hero-lead ld-up d2">Publiez votre trajet, recevez les offres de chauffeurs et de flottes v&eacute;rifi&eacute;s, choisissez. Le prix est fix&eacute; avant le d&eacute;part.</p>
+        <div class="ld-hero-cta ld-up d3">
+          <button data-i18n="ld.recevoir_des_offres" type="button" class="ld-btn lime" id="ld-hero-go">Recevoir des offres &rarr;</button>
+          <button data-i18n="ld.voir_comment" type="button" class="ld-btn ghost" data-ld-go="ld-story">Voir comment &ccedil;a marche</button>
         </div>
-        <!-- formulaire séparé : le gestionnaire de mots de passe du navigateur n'y place plus l'e-mail de connexion -->
-        <form class="ld-book-row" autocomplete="off" onsubmit="return false">
-          <div class="ld-field"><label data-i18n="ld.depart">D&eacute;part</label><input data-i18n-ph="ld.adresse_gare_aeroport" id="ld-from" name="ld-trip-start" autocomplete="off" readonly data-ro="1" placeholder="Adresse, gare, a&eacute;roport"></div>
-          <div class="ld-field" id="ld-to-wrap"><label data-i18n="ld.arrivee">Arriv&eacute;e</label><input data-i18n-ph="ld.destination" id="ld-to" name="ld-trip-end" autocomplete="off" readonly data-ro="1" placeholder="Destination"></div>
-          <div class="ld-field" id="ld-dur-wrap" style="display:none"><label data-i18n="ld.duree">Dur&eacute;e</label><select id="ld-dur"><option data-i18n="ld.2_heures" value="2">2 heures</option><option data-i18n="ld.3_heures" value="3" selected>3 heures</option><option data-i18n="ld.6_heures" value="6">6 heures</option><option data-i18n="ld.journee_10_h" value="10">Journ&eacute;e &middot; 10 h</option></select></div>
-          <div class="ld-field"><label data-i18n="ld.date">Date</label><input id="ld-date" type="date"></div>
-          <div class="ld-field"><label data-i18n="ld.heure">Heure</label><input id="ld-time" type="time" value="09:00"></div>
-          <button data-i18n="ld.recevoir_des_offres" type="button" class="ld-btn" id="ld-book-go">Recevoir des offres &rarr;</button>
-        </form>
-        <div data-i18n="ld.gratuit_et_sans_engagement_vous" class="ld-book-note">Gratuit et sans engagement &mdash; vous acceptez l'offre qui vous convient.</div>
+      </div>
+      <div class="ld-book-3d ld-up d4">
+        <div class="ld-book-tilt" id="ld-book-tilt">
+          <div class="ld-book">
+            <div class="ld-book-tabs">
+              <button data-i18n="ld.aller_simple" class="ld-book-tab on" data-ld-mode="trajet">Aller simple</button>
+              <button data-i18n="ld.a_l_heure" class="ld-book-tab" data-ld-mode="heure">&Agrave; l'heure</button>
+            </div>
+            <!-- formulaire séparé : le gestionnaire de mots de passe du navigateur n'y place plus l'e-mail de connexion -->
+            <form class="ld-book-row" autocomplete="off" onsubmit="return false">
+              <div class="ld-field"><label data-i18n="ld.depart" for="ld-from">D&eacute;part</label><input data-i18n-ph="ld.adresse_gare_aeroport" id="ld-from" name="ld-trip-start" autocomplete="off" readonly data-ro="1" placeholder="Adresse, gare, a&eacute;roport"></div>
+              <div class="ld-field" id="ld-to-wrap"><label data-i18n="ld.arrivee" for="ld-to">Arriv&eacute;e</label><input data-i18n-ph="ld.destination" id="ld-to" name="ld-trip-end" autocomplete="off" readonly data-ro="1" placeholder="Destination"></div>
+              <div class="ld-field" id="ld-dur-wrap" style="display:none"><label data-i18n="ld.duree" for="ld-dur">Dur&eacute;e</label><select id="ld-dur"><option data-i18n="ld.2_heures" value="2">2 heures</option><option data-i18n="ld.3_heures" value="3" selected>3 heures</option><option data-i18n="ld.6_heures" value="6">6 heures</option><option data-i18n="ld.journee_10_h" value="10">Journ&eacute;e &middot; 10 h</option></select></div>
+              <div class="ld-field half"><label data-i18n="ld.date" for="ld-date">Date</label><input id="ld-date" type="date"></div>
+              <div class="ld-field half"><label data-i18n="ld.heure" for="ld-time">Heure</label><input id="ld-time" type="time" value="09:00"></div>
+              <button data-i18n="ld.recevoir_des_offres" type="button" class="ld-btn" id="ld-book-go">Recevoir des offres &rarr;</button>
+            </form>
+            <div data-i18n="ld.gratuit_et_sans_engagement_vous" class="ld-book-note">Gratuit et sans engagement &mdash; vous acceptez l'offre qui vous convient.</div>
+          </div>
+          <div class="ld-chip c1" aria-hidden="true"><i><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></i><span data-i18n="ld.chip_verified">Chauffeur v&eacute;rifi&eacute;</span></div>
+          <div class="ld-chip c2" aria-hidden="true"><span data-i18n="ld.chip_fixed">Prix fixe &middot; accept&eacute; &agrave; la r&eacute;servation</span></div>
+        </div>
       </div>
     </div>
+    <div class="ld-cities" aria-hidden="true"><div class="ld-cities-t" id="ld-cities"></div></div>
   </section>
 
   <section class="ld-story" id="ld-story">
     <div class="ld-story-pin">
-      <div class="ld-story-l">
-        <span data-i18n="ld.une_course_bleenr_de_bout" class="ld-eye" style="color:rgba(169,212,176,.8)">Une course Bleenr, de bout en bout</span>
-        <div class="ld-clock" id="ld-clock">08:12</div>
-        <div class="ld-chaps">
-          <div class="ld-chap on" data-t="08:12"><span data-i18n="ld.01_reservation" class="ld-eye">01 &middot; R&eacute;servation</span><h3 data-i18n-html="ld.elle_a_reserve_ce_matin" class="ld-serif">Elle a r&eacute;serv&eacute; ce matin, <em>en une minute.</em></h3><p data-i18n="ld.adresse_de_depart_destination_heure">Adresse de d&eacute;part, destination, heure. Sa course est publi&eacute;e aux chauffeurs disponibles de la r&eacute;gion.</p></div>
-          <div class="ld-chap" data-t="08:26"><span data-i18n="ld.02_les_offres" class="ld-eye">02 &middot; Les offres</span><h3 data-i18n-html="ld.des_chauffeurs_repondent" class="ld-serif">Des chauffeurs <em>r&eacute;pondent.</em></h3><p data-i18n="ld.les_chauffeurs_et_flottes_disponibles">Les chauffeurs et flottes disponibles re&ccedil;oivent la demande sur leur t&eacute;l&eacute;phone et envoient leur offre. Elle compare et choisit.</p></div>
-          <div class="ld-chap" data-t="19:40"><span data-i18n="ld.03_l_accueil" class="ld-eye">03 &middot; L'accueil</span><h3 data-i18n-html="ld.il_l_attend_a_l" class="ld-serif">Il l'attend <em>&agrave; l'heure.</em></h3><p data-i18n="ld.devant_l_hotel_portiere_ouverte">Devant l'h&ocirc;tel, porti&egrave;re ouverte. Licence, assurance, contr&ocirc;le technique : chaque chauffeur partenaire est v&eacute;rifi&eacute;.</p></div>
-          <div class="ld-chap" data-t="19:42"><span data-i18n="ld.04_le_trajet" class="ld-eye">04 &middot; Le trajet</span><h3 data-i18n-html="ld.rien_a_expliquer" class="ld-serif">Rien &agrave; <em>expliquer.</em></h3><p data-i18n="ld.destination_horaire_preferences_tout_a">Destination, horaire, pr&eacute;f&eacute;rences : tout a &eacute;t&eacute; transmis avant son arriv&eacute;e. Pas de compteur, pas de surprise.</p></div>
-          <div class="ld-chap" data-t="20:05"><span data-i18n="ld.05_le_depart" class="ld-eye">05 &middot; Le d&eacute;part</span><h3 data-i18n-html="ld.en_route_rien_a_regler" class="ld-serif">En route. <em>Rien &agrave; r&eacute;gler.</em></h3><p data-i18n="ld.le_paiement_a_ete_securise">Le paiement a &eacute;t&eacute; s&eacute;curis&eacute; en ligne &agrave; la r&eacute;servation. Le re&ccedil;u l'attend d&eacute;j&agrave;. Bonne soir&eacute;e.</p></div>
-        </div>
-        <div class="ld-rail" id="ld-rail"><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i><i><b></b></i></div>
+      <span data-i18n="ld.une_course_bleenr_de_bout" class="ld-eye">Une course Bleenr, de bout en bout</span>
+      <h2 data-i18n-html="ld.story_title" class="ld-h">Cinq moments, <em>z&eacute;ro surprise.</em></h2>
+      <div class="ld-cf" id="ld-cf">
+        <button type="button" class="ld-cf-card" aria-label="01"><div class="ld-img"><div class="ld-ph"><span>Photo 01 &mdash; r&eacute;servation</span></div><img loading="lazy" decoding="async" src="assets/story/01-approche.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></button>
+        <button type="button" class="ld-cf-card" aria-label="02"><div class="ld-img"><div class="ld-ph"><span>Photo 02 &mdash; les offres</span></div><img loading="lazy" decoding="async" src="assets/story/02-portiere.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></button>
+        <button type="button" class="ld-cf-card" aria-label="03"><div class="ld-img"><div class="ld-ph"><span>Photo 03 &mdash; l'accueil</span></div><img loading="lazy" decoding="async" src="assets/story/03-installation.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></button>
+        <button type="button" class="ld-cf-card" aria-label="04"><div class="ld-img"><div class="ld-ph"><span>Photo 04 &mdash; le trajet</span></div><img loading="lazy" decoding="async" src="assets/story/04-fermeture.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></button>
+        <button type="button" class="ld-cf-card" aria-label="05"><div class="ld-img"><div class="ld-ph"><span>Photo 05 &mdash; le d&eacute;part</span></div><img loading="lazy" decoding="async" src="assets/story/05-depart.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></button>
       </div>
-      <div class="ld-story-r">
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 01 &mdash; r&eacute;servation sur ordinateur</span></div><img loading="lazy" decoding="async" src="assets/story/01-approche.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 02 &mdash; chauffeurs recevant la demande</span></div><img loading="lazy" decoding="async" src="assets/story/02-portiere.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 03 &mdash; accueil devant l'h&ocirc;tel</span></div><img loading="lazy" decoding="async" src="assets/story/03-installation.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 04 &mdash; le trajet</span></div><img loading="lazy" decoding="async" src="assets/story/04-fermeture.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-frame"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo 05 &mdash; la berline s'&eacute;loigne, feux arri&egrave;re allum&eacute;s</span></div><img loading="lazy" decoding="async" src="assets/story/05-depart.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
-        <div class="ld-card on"><div data-i18n="ld.course_publiee" class="k">Course publi&eacute;e</div><div data-i18n="ld.bruxelles_zaventem" class="v">Bruxelles &rarr; Zaventem</div><div data-i18n="ld.ce_soir_19_40_business" class="s">Ce soir, 19:40 &middot; Business</div></div>
-        <div class="ld-card"><div data-i18n="ld.offres_recues" class="k">Offres re&ccedil;ues</div><div data-i18n="ld.5_chauffeurs" class="v">5 chauffeurs</div><div data-i18n="ld.comparez_prix_vehicule_et_avis" class="s">Comparez prix, v&eacute;hicule et avis</div></div>
-        <div class="ld-card"><div data-i18n="ld.chauffeur_confirme" class="k">Chauffeur confirm&eacute;</div><div data-i18n="ld.mercedes_classe_e" class="v">Mercedes Classe E</div><div data-i18n="ld.profil_verifie_licence_et_assurance" class="s">Profil v&eacute;rifi&eacute; &middot; licence et assurance</div></div>
-        <div class="ld-card"><div data-i18n="ld.prix_fixe" class="k">Prix fixe</div><div data-i18n="ld.accepte_a_la_reservation" class="v">Accept&eacute; &agrave; la r&eacute;servation</div><div data-i18n="ld.aucun_supplement_en_route" class="s">Aucun suppl&eacute;ment en route</div></div>
-        <div class="ld-card"><div data-i18n="ld.en_route" class="k">En route</div><div data-i18n="ld.paiement_securise" class="v">Paiement s&eacute;curis&eacute;</div><div data-i18n="ld.recu_envoye_par_e_mail" class="s">Re&ccedil;u envoy&eacute; par e-mail</div></div>
+      <div class="ld-chaps">
+        <div class="ld-chap on"><span data-i18n="ld.01_reservation" class="ld-eye">01 &middot; R&eacute;servation</span><h3 data-i18n-html="ld.elle_a_reserve_ce_matin">Elle a r&eacute;serv&eacute; ce matin, <em>en une minute.</em></h3><p data-i18n="ld.adresse_de_depart_destination_heure">Adresse de d&eacute;part, destination, heure. Sa course est publi&eacute;e aux chauffeurs disponibles de la r&eacute;gion.</p></div>
+        <div class="ld-chap"><span data-i18n="ld.02_les_offres" class="ld-eye">02 &middot; Les offres</span><h3 data-i18n-html="ld.des_chauffeurs_repondent">Des chauffeurs <em>r&eacute;pondent.</em></h3><p data-i18n="ld.les_chauffeurs_et_flottes_disponibles">Les chauffeurs et flottes disponibles re&ccedil;oivent la demande sur leur t&eacute;l&eacute;phone et envoient leur offre. Elle compare et choisit.</p></div>
+        <div class="ld-chap"><span data-i18n="ld.03_l_accueil" class="ld-eye">03 &middot; L'accueil</span><h3 data-i18n-html="ld.il_l_attend_a_l">Il l'attend <em>&agrave; l'heure.</em></h3><p data-i18n="ld.devant_l_hotel_portiere_ouverte">Devant l'h&ocirc;tel, porti&egrave;re ouverte. Licence, assurance, contr&ocirc;le technique : chaque chauffeur partenaire est v&eacute;rifi&eacute;.</p></div>
+        <div class="ld-chap"><span data-i18n="ld.04_le_trajet" class="ld-eye">04 &middot; Le trajet</span><h3 data-i18n-html="ld.rien_a_expliquer">Rien &agrave; <em>expliquer.</em></h3><p data-i18n="ld.destination_horaire_preferences_tout_a">Destination, horaire, pr&eacute;f&eacute;rences : tout a &eacute;t&eacute; transmis avant son arriv&eacute;e. Pas de compteur, pas de surprise.</p></div>
+        <div class="ld-chap"><span data-i18n="ld.05_le_depart" class="ld-eye">05 &middot; Le d&eacute;part</span><h3 data-i18n-html="ld.en_route_rien_a_regler">En route. <em>Rien &agrave; r&eacute;gler.</em></h3><p data-i18n="ld.le_paiement_a_ete_securise">Le paiement a &eacute;t&eacute; s&eacute;curis&eacute; en ligne &agrave; la r&eacute;servation. Le re&ccedil;u l'attend d&eacute;j&agrave;. Bonne soir&eacute;e.</p></div>
+      </div>
+      <div class="ld-cf-ctl">
+        <button type="button" class="ld-cf-btn" id="ld-cf-prev" aria-label="&Eacute;tape pr&eacute;c&eacute;dente"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div class="ld-rail"><b id="ld-cf-bar"></b></div>
+        <button type="button" class="ld-cf-btn dk" id="ld-cf-next" aria-label="&Eacute;tape suivante"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
       </div>
     </div>
   </section>
 
   <section class="ld-svc" id="ld-services">
-    <div class="ld-svc-pin">
-      <div class="ld-wrap">
-        <div class="ld-svc-head">
-          <div><span data-i18n="ld.nos_services" class="ld-eye">Nos services</span><h2 data-i18n-html="ld.chaque_trajet_ason_chauffeur" class="ld-serif">Chaque trajet a<br>son <em>chauffeur</em>.</h2></div>
-          <span class="ld-svc-count" id="ld-svc-count">01 / 05</span>
-        </div>
+    <div class="ld-band" data-sp aria-hidden="true"><span data-i18n="ld.band">Prix fixe &mdash; Chauffeurs v&eacute;rifi&eacute;s &mdash; Vous choisissez &mdash; Prix fixe &mdash;</span></div>
+    <div class="ld-wrap">
+      <div class="ld-svc-head">
+        <div class="ld-rv"><span data-i18n="ld.nos_services" class="ld-eye">Nos services</span><h2 data-i18n-html="ld.chaque_trajet_ason_chauffeur" class="ld-h">Chaque trajet a<br>son <em>chauffeur</em>.</h2></div>
+        <button data-i18n="ld.publier_un_trajet" type="button" class="ld-btn ghost ld-rv" onclick="showLandingAuth('register')">Publier un trajet &rarr;</button>
       </div>
-      <div class="ld-track" id="ld-track">
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; terminal d'a&eacute;roport</span></div><img loading="lazy" decoding="async" src="assets/landing/service-aeroport.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">01</span><h3 data-i18n="ld.transferts_aeroport" class="ld-serif">Transferts a&eacute;roport</h3><p data-i18n="ld.zaventem_charleroi_schiphol_ou_roissy">Zaventem, Charleroi, Schiphol ou Roissy : le chauffeur vous attend &agrave; l'heure convenue, bagages compris.</p></div></article>
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; chauffeur attendant devant un h&ocirc;tel</span></div><img loading="lazy" decoding="async" src="assets/landing/service-heure.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">02</span><h3 data-i18n="ld.mise_a_disposition" class="ld-serif">Mise &agrave; disposition</h3><p data-i18n="ld.un_chauffeur_a_vos_cotes">Un chauffeur &agrave; vos c&ocirc;t&eacute;s pour quelques heures ou une journ&eacute;e enti&egrave;re, pour encha&icirc;ner les rendez-vous.</p></div></article>
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; berline sur autoroute</span></div><img loading="lazy" decoding="async" src="assets/landing/service-ville.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">03</span><h3 data-i18n="ld.ville_a_ville" class="ld-serif">Ville &agrave; ville</h3><p data-i18n="ld.bruxellesanvers_liege_paris_ou_amsterdam">Bruxelles&ndash;Anvers, Li&egrave;ge, Paris ou Amsterdam : porte &agrave; porte, sans correspondance.</p></div></article>
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; arriv&eacute;e &agrave; une soir&eacute;e</span></div><img loading="lazy" decoding="async" src="assets/landing/service-evenement.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">04</span><h3 data-i18n="ld.evenements" class="ld-serif">&Eacute;v&eacute;nements</h3><p data-i18n="ld.mariages_galas_seminaires_plusieurs_vehicules">Mariages, galas, s&eacute;minaires : plusieurs v&eacute;hicules coordonn&eacute;s pour tous vos invit&eacute;s.</p></div></article>
-        <article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; passager d'affaires &agrave; l'arri&egrave;re</span></div><img loading="lazy" decoding="async" src="assets/landing/service-entreprise.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div><div><span class="ld-svc-n">05</span><h3 data-i18n="ld.entreprises" class="ld-serif">Entreprises</h3><p data-i18n="ld.compte_societe_avec_numero_de">Compte soci&eacute;t&eacute; avec num&eacute;ro de TVA, factures automatiques et historique de toutes les courses.</p></div></article>
-        <div style="flex:0 0 40px"></div>
+      <div class="ld-svc-grid">
+        <div class="ld-fold" data-sp style="--i:0"><article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; terminal d'a&eacute;roport</span></div><img loading="lazy" decoding="async" src="assets/landing/service-aeroport.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div><div class="ld-svc-tx"><span class="ld-svc-n">01</span><h3 data-i18n="ld.transferts_aeroport">Transferts a&eacute;roport</h3><p data-i18n="ld.zaventem_charleroi_schiphol_ou_roissy">Zaventem, Charleroi, Schiphol ou Roissy : le chauffeur vous attend &agrave; l'heure convenue, bagages compris.</p></div></article></div>
+        <div class="ld-fold" data-sp style="--i:1"><article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; chauffeur attendant devant un h&ocirc;tel</span></div><img loading="lazy" decoding="async" src="assets/landing/service-heure.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div><div class="ld-svc-tx"><span class="ld-svc-n">02</span><h3 data-i18n="ld.mise_a_disposition">Mise &agrave; disposition</h3><p data-i18n="ld.un_chauffeur_a_vos_cotes">Un chauffeur &agrave; vos c&ocirc;t&eacute;s pour quelques heures ou une journ&eacute;e enti&egrave;re, pour encha&icirc;ner les rendez-vous.</p></div></article></div>
+        <div class="ld-fold" data-sp style="--i:2"><article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; berline sur autoroute</span></div><img loading="lazy" decoding="async" src="assets/landing/service-ville.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div><div class="ld-svc-tx"><span class="ld-svc-n">03</span><h3 data-i18n="ld.ville_a_ville">Ville &agrave; ville</h3><p data-i18n="ld.bruxellesanvers_liege_paris_ou_amsterdam">Bruxelles&ndash;Anvers, Li&egrave;ge, Paris ou Amsterdam : porte &agrave; porte, sans correspondance.</p></div></article></div>
+        <div class="ld-fold" data-sp style="--i:3"><article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; arriv&eacute;e &agrave; une soir&eacute;e</span></div><img loading="lazy" decoding="async" src="assets/landing/service-evenement.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div><div class="ld-svc-tx"><span class="ld-svc-n">04</span><h3 data-i18n="ld.evenements">&Eacute;v&eacute;nements</h3><p data-i18n="ld.mariages_galas_seminaires_plusieurs_vehicules">Mariages, galas, s&eacute;minaires : plusieurs v&eacute;hicules coordonn&eacute;s pour tous vos invit&eacute;s.</p></div></article></div>
+        <div class="ld-fold" data-sp style="--i:4"><article class="ld-svc-card"><div class="ld-svc-img"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; passager d'affaires &agrave; l'arri&egrave;re</span></div><img loading="lazy" decoding="async" src="assets/landing/service-entreprise.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div><div class="ld-svc-tx"><span class="ld-svc-n">05</span><h3 data-i18n="ld.entreprises">Entreprises</h3><p data-i18n="ld.compte_societe_avec_numero_de">Compte soci&eacute;t&eacute; avec num&eacute;ro de TVA, factures automatiques et historique de toutes les courses.</p></div></article></div>
       </div>
     </div>
   </section>
 
   <section class="ld-cls" id="ld-classes">
     <div class="ld-wrap">
-      <div class="ld-cls-top">
-        <div class="ld-rv"><span data-i18n="ld.la_flotte" class="ld-eye">La flotte</span><h2 data-i18n-html="ld.choisissez_votreclasse" class="ld-serif">Choisissez votre<br><em>classe</em>.</h2></div>
-        <div class="ld-cls-tabs" id="ld-cls-tabs"><button class="ld-cls-tab on" data-k="0">Economy</button><button class="ld-cls-tab" data-k="1">Business</button><button data-i18n="ld.premiere" class="ld-cls-tab" data-k="2">Premi&egrave;re</button><button class="ld-cls-tab" data-k="3">Van</button><button data-i18n="ld.autocar" class="ld-cls-tab" data-k="4">Autocar</button></div>
-      </div>
-      <div class="ld-cls-body ld-rv">
-        <div class="ld-cls-img" id="ld-cls-img">
-          <div class="ld-img on"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Economy</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-lowcost.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
-          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Business</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-business.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
-          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Premi&egrave;re</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-premiere-dz.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/landing/classe-premiere.webp';}else this.style.display='none'"></div>
-          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; van</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-van-dz.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/landing/classe-van.webp';}else this.style.display='none'"></div>
-          <div class="ld-img"><div class="ld-ph"><span>Photo &mdash; autocar</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-autocar.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div>
+      <div class="ld-cls-top ld-rv"><span data-i18n="ld.la_flotte" class="ld-eye">La flotte</span><h2 data-i18n-html="ld.choisissez_votreclasse" class="ld-h">Choisissez votre<br><em>classe</em>.</h2></div>
+      <div class="ld-fold" data-sp>
+        <div class="ld-acc" id="ld-acc">
+          <div class="ld-acc-p" role="button" tabindex="0" data-k="0"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Economy</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-lowcost.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div><span class="ld-acc-n">01</span><span class="ld-acc-v"></span><div class="ld-acc-info"></div></div>
+          <div class="ld-acc-p on" role="button" tabindex="0" data-k="1"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Business</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-business.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div><span class="ld-acc-n">02</span><span class="ld-acc-v"></span><div class="ld-acc-info"></div></div>
+          <div class="ld-acc-p" role="button" tabindex="0" data-k="2"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Premi&egrave;re</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-premiere-dz.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/landing/classe-premiere.webp';}else this.style.display='none'"></div><span class="ld-acc-n">03</span><span class="ld-acc-v"></span><div class="ld-acc-info"></div></div>
+          <div class="ld-acc-p" role="button" tabindex="0" data-k="3"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; van</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-van-dz.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/landing/classe-van.webp';}else this.style.display='none'"></div><span class="ld-acc-n">04</span><span class="ld-acc-v"></span><div class="ld-acc-info"></div></div>
+          <div class="ld-acc-p" role="button" tabindex="0" data-k="4"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; autocar</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-autocar.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div><span class="ld-acc-n">05</span><span class="ld-acc-v"></span><div class="ld-acc-info"></div></div>
         </div>
-        <div class="ld-cls-info" id="ld-cls-info"></div>
       </div>
     </div>
   </section>
 
   <section class="ld-inc">
     <div class="ld-wrap ld-inc-grid">
-      <div class="ld-inc-h"><span data-i18n="ld.dans_chaque_course" class="ld-eye">Dans chaque course</span><h2 data-i18n-html="ld.tout_est_clair_des_le" class="ld-serif">Tout est <em>clair</em>.<br>D&egrave;s le d&eacute;part.</h2></div>
       <div>
+        <div class="ld-inc-h ld-rv"><span data-i18n="ld.dans_chaque_course" class="ld-eye">Dans chaque course</span><h2 data-i18n-html="ld.tout_est_clair_des_le" class="ld-h">Tout est <em>clair</em>.<br>D&egrave;s le d&eacute;part.</h2></div>
         <div class="ld-inc-item ld-rv"><span class="n">01</span><div><h4 data-i18n="ld.prix_fixe">Prix fixe</h4><p data-i18n="ld.vous_acceptez_un_prix_a">Vous acceptez un prix &agrave; la r&eacute;servation. C'est celui que vous payez.</p></div></div>
         <div class="ld-inc-item ld-rv"><span class="n">02</span><div><h4 data-i18n="ld.chauffeurs_verifies">Chauffeurs v&eacute;rifi&eacute;s</h4><p data-i18n="ld.licence_assurance_et_controle_technique">Licence, assurance et contr&ocirc;le technique sont contr&ocirc;l&eacute;s pour chaque partenaire.</p></div></div>
         <div class="ld-inc-item ld-rv"><span class="n">03</span><div><h4 data-i18n="ld.vous_choisissez">Vous choisissez</h4><p data-i18n="ld.plusieurs_offres_un_comparatif_clair">Plusieurs offres, un comparatif clair : prix, v&eacute;hicule, avis des autres clients.</p></div></div>
         <div class="ld-inc-item ld-rv"><span class="n">04</span><div><h4 data-i18n="ld.paiement_securise">Paiement s&eacute;curis&eacute;</h4><p data-i18n="ld.carte_bancaire_en_ligne_recu">Carte bancaire en ligne, re&ccedil;u et facture envoy&eacute;s automatiquement.</p></div></div>
         <div class="ld-inc-item ld-rv"><span class="n">05</span><div><h4 data-i18n="ld.tout_est_transmis">Tout est transmis</h4><p data-i18n="ld.adresse_horaire_preferences_votre_chauffeur">Adresse, horaire, pr&eacute;f&eacute;rences : votre chauffeur sait tout avant d'arriver.</p></div></div>
       </div>
+      <div class="ld-inc-r" aria-hidden="true">
+        <div class="ld-of-3d">
+          <div class="ld-of-panel" data-sp>
+            <div class="ld-of-hd"><b data-i18n="ld.offres_recues">Offres re&ccedil;ues</b><span data-i18n="ld.bruxelles_zaventem">Bruxelles &rarr; Zaventem</span></div>
+            <div class="ld-of o1"><i></i><div><b data-i18n="ld.offer_business">Berline Business</b><span data-i18n="ld.verified_fixed">Chauffeur v&eacute;rifi&eacute; &middot; prix fixe</span></div></div>
+            <div class="ld-of o2"><i></i><div><b data-i18n="ld.mercedes_classe_e">Mercedes Classe E</b><span data-i18n="ld.verified_fixed">Chauffeur v&eacute;rifi&eacute; &middot; prix fixe</span></div><em><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></em></div>
+            <div class="ld-of o3"><i></i><div><b data-i18n="ld.offer_van">Van 7 places</b><span data-i18n="ld.fleet_fixed">Flotte v&eacute;rifi&eacute;e &middot; prix fixe</span></div></div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
   <section class="ld-drv" id="ld-drivers">
     <div class="ld-wrap ld-drv-grid">
-      <div class="ld-drv-img" id="ld-drv-img"><div class="ld-par" id="ld-drv-par"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; chauffeur au volant, lumi&egrave;re naturelle</span></div><img loading="lazy" decoding="async" src="assets/landing/chauffeur.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div></div>
+      <div class="ld-drv-ph" data-sp>
+        <div class="ld-drv-img" id="ld-drv-img"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; chauffeur au volant, lumi&egrave;re naturelle</span></div><img loading="lazy" decoding="async" src="assets/landing/chauffeur.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div></div>
+        <div class="ld-notif" aria-hidden="true"><i></i><div><small data-i18n="ld.nouvelle_demande">Nouvelle demande</small><b data-i18n="ld.bruxelles_zaventem">Bruxelles &rarr; Zaventem</b></div></div>
+      </div>
       <div>
-        <span data-i18n="ld.chauffeurs_flottes_partenaires" class="ld-eye ld-rv" style="color:var(--lmi)">Chauffeurs &amp; flottes partenaires</span>
-        <h2 data-i18n-html="ld.de_l_autre_cotede_la" class="ld-serif ld-rv">De l'autre c&ocirc;t&eacute;<br>de la <em>vitre</em>.</h2>
+        <span data-i18n="ld.chauffeurs_flottes_partenaires" class="ld-eye ld-rv">Chauffeurs &amp; flottes partenaires</span>
+        <h2 data-i18n-html="ld.de_l_autre_cotede_la" class="ld-h ld-rv">De l'autre c&ocirc;t&eacute;<br>de la <em>vitre</em>.</h2>
         <p data-i18n="ld.chauffeur_independant_ou_societe_de" class="lead ld-rv">Chauffeur ind&eacute;pendant ou soci&eacute;t&eacute; de transport, recevez des demandes de courses qualifi&eacute;es et faites vos offres.</p>
         <div class="ld-drv-list ld-rv">
           <div><b data-i18n="ld.vos_courses">Vos courses</b><span data-i18n="ld.consultez_les_demandes_et_repondez">Consultez les demandes et r&eacute;pondez uniquement &agrave; celles qui vous int&eacute;ressent.</span></div>
           <div><b data-i18n="ld.vos_prix">Vos prix</b><span data-i18n="ld.vous_fixez_le_montant_de">Vous fixez le montant de chaque offre.</span></div>
           <div><b data-i18n="ld.votre_agenda">Votre agenda</b><span data-i18n="ld.un_calendrier_clair_de_vos">Un calendrier clair de vos courses confirm&eacute;es, paiements suivis en ligne.</span></div>
         </div>
-        <button data-i18n="ld.proposer_mes_services" class="ld-btn light ld-rv" onclick="showLandingAuth('register')">Proposer mes services &rarr;</button>
+        <button data-i18n="ld.proposer_mes_services" class="ld-btn lime ld-rv" onclick="showLandingAuth('register')">Proposer mes services &rarr;</button>
       </div>
     </div>
   </section>
 
-  <div class="ld-cities"><div class="ld-cities-t" id="ld-cities"></div></div>
-
   <section class="ld-final">
     <div class="ld-wrap">
-      <h2 data-i18n-html="ld.votre_chauffeurvous_attend" class="ld-serif ld-rv">Votre chauffeur<br><em>vous attend.</em></h2>
+      <div class="ld-zoom" data-sp><h2 data-i18n-html="ld.votre_chauffeurvous_attend" class="ld-h">Votre chauffeur<br><em>vous attend.</em></h2></div>
       <p data-i18n="ld.rejoignez_bleenr_gratuit_sans_engagement" class="ld-rv">Rejoignez Bleenr. Gratuit, sans engagement.</p>
       <div class="ld-final-a ld-rv">
-        <button data-i18n="ld.creer_un_compte" class="ld-btn" onclick="showLandingAuth('register')">Cr&eacute;er un compte</button>
+        <button data-i18n="ld.creer_un_compte" class="ld-btn lime" onclick="showLandingAuth('register')">Cr&eacute;er un compte</button>
         <button data-i18n="ld.se_connecter" class="ld-btn ghost" onclick="showLandingAuth('login')">Se connecter</button>
       </div>
     </div>

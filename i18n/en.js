@@ -999,5 +999,18 @@
   "st.banner_text": "To make offers and receive payment for your rides, create your Stripe account (about 5 minutes). Without an active Stripe account, you cannot make offers.",
   "st.banner_pending": "Stripe is checking your details: you will be able to make offers as soon as your account is approved.",
   "st.banner_btn": "Create my Stripe account",
-  "st.required": "Enable automatic payouts (Stripe account) to make offers and receive your payments."
+  "st.required": "Enable automatic payouts (Stripe account) to make offers and receive your payments.",
+  "ld.kicker": "Private chauffeurs · Belgium",
+  "ld.voir_comment": "See how it works",
+  "ld.chip_verified": "Verified chauffeur",
+  "ld.chip_fixed": "Fixed price · agreed at booking",
+  "ld.story_title": "Five moments, <em>zero surprises.</em>",
+  "ld.band": "Fixed price — Verified chauffeurs — You choose — Fixed price —",
+  "ld.publier_un_trajet": "Post a ride →",
+  "ld.demander_classe": "Request this class →",
+  "ld.nouvelle_demande": "New request",
+  "ld.offer_business": "Business sedan",
+  "ld.offer_van": "7-seater van",
+  "ld.verified_fixed": "Verified chauffeur · fixed price",
+  "ld.fleet_fixed": "Verified fleet · fixed price"
 };

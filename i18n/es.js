@@ -999,5 +999,18 @@
   "st.banner_text": "Para hacer ofertas y recibir el pago de sus servicios, cree su cuenta Stripe (unos 5 minutos). Sin una cuenta Stripe activa, no puede hacer ofertas.",
   "st.banner_pending": "Stripe está verificando sus datos: podrá hacer ofertas en cuanto se valide su cuenta.",
   "st.banner_btn": "Crear mi cuenta Stripe",
-  "st.required": "Active los pagos automáticos (cuenta Stripe) para hacer ofertas y recibir sus pagos."
+  "st.required": "Active los pagos automáticos (cuenta Stripe) para hacer ofertas y recibir sus pagos.",
+  "ld.kicker": "Chóferes privados · Bélgica",
+  "ld.voir_comment": "Ver cómo funciona",
+  "ld.chip_verified": "Chófer verificado",
+  "ld.chip_fixed": "Precio fijo · aceptado al reservar",
+  "ld.story_title": "Cinco momentos, <em>cero sorpresas.</em>",
+  "ld.band": "Precio fijo — Chóferes verificados — Usted elige — Precio fijo —",
+  "ld.publier_un_trajet": "Publicar un trayecto →",
+  "ld.demander_classe": "Solicitar esta clase →",
+  "ld.nouvelle_demande": "Nueva solicitud",
+  "ld.offer_business": "Berlina Business",
+  "ld.offer_van": "Van de 7 plazas",
+  "ld.verified_fixed": "Chófer verificado · precio fijo",
+  "ld.fleet_fixed": "Flota verificada · precio fijo"
 };
