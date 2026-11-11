@@ -184,15 +184,34 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
   </section>
 
   <section class="ld-cls" id="ld-classes">
-    <div class="ld-wrap">
-      <div class="ld-cls-top ld-rv"><span data-i18n="ld.la_flotte" class="ld-eye">La flotte</span><h2 data-i18n-html="ld.choisissez_votreclasse" class="ld-h">Choisissez votre<br><em>classe</em>.</h2></div>
-      <div class="ld-fold" data-sp>
-        <div class="ld-acc" id="ld-acc">
-          <div class="ld-acc-p" role="button" tabindex="0" data-k="0"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Economy</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-lowcost.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div><span class="ld-acc-n">01</span><span class="ld-acc-v"></span><div class="ld-acc-info"></div></div>
-          <div class="ld-acc-p on" role="button" tabindex="0" data-k="1"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Business</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-business.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div><span class="ld-acc-n">02</span><span class="ld-acc-v"></span><div class="ld-acc-info"></div></div>
-          <div class="ld-acc-p" role="button" tabindex="0" data-k="2"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; v&eacute;hicule Premi&egrave;re</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-premiere-dz.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/landing/classe-premiere.webp';}else this.style.display='none'"></div><span class="ld-acc-n">03</span><span class="ld-acc-v"></span><div class="ld-acc-info"></div></div>
-          <div class="ld-acc-p" role="button" tabindex="0" data-k="3"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; van</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-van-dz.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='assets/landing/classe-van.webp';}else this.style.display='none'"></div><span class="ld-acc-n">04</span><span class="ld-acc-v"></span><div class="ld-acc-info"></div></div>
-          <div class="ld-acc-p" role="button" tabindex="0" data-k="4"><div class="ld-img"><div class="ld-ph"><span>Photo &mdash; autocar</span></div><img loading="lazy" decoding="async" src="assets/landing/classe-autocar.webp" alt="" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'"></div><span class="ld-acc-n">05</span><span class="ld-acc-v"></span><div class="ld-acc-info"></div></div>
+    <div class="ld-cls-pin">
+      <div class="ld-wrap ld-cls-grid">
+        <div class="ld-cls-txt">
+          <span data-i18n="ld.la_flotte" class="ld-eye">La flotte</span>
+          <h2 data-i18n-html="ld.choisissez_votreclasse" class="ld-h">Choisissez votre<br><em>classe</em>.</h2>
+          <div class="ld-cls-info" id="ld-cls-info" aria-live="polite"></div>
+          <div class="ld-cls-rail" id="ld-cls-rail">
+            <button type="button" data-k="0"></button><button type="button" data-k="1"></button><button type="button" data-k="2"></button><button type="button" data-k="3"></button><button type="button" data-k="4"></button>
+          </div>
+        </div>
+        <div class="ld-cls-stage" aria-hidden="true">
+          <!-- Véhicules en 2D (flat design), transformés l'un en l'autre au défilement : js/landing/04-landing.js › fleet -->
+          <svg id="ld-fleet" viewBox="0 22 800 274" preserveAspectRatio="xMidYMax meet">
+            <line class="ld-road" x1="0" y1="266" x2="800" y2="266"/>
+            <line class="ld-lane" id="lf-lane" x1="-40" y1="284" x2="840" y2="284"/>
+            <ellipse class="ld-shadow" id="lf-shadow" cx="400" cy="264" rx="300" ry="9"/>
+            <path class="ld-beam" id="lf-beam"/>
+            <circle class="lf-arch" id="lf-a1"/><circle class="lf-arch" id="lf-a2"/><circle class="lf-arch" id="lf-a3"/>
+            <path id="lf-body"/>
+            <rect id="lf-rock" rx="5"/>
+            <path class="lf-glass" id="lf-glass"/>
+            <g id="lf-pil"><line/><line/><line/><line/><line/></g>
+            <rect class="lf-head" id="lf-head" rx="4"/>
+            <rect class="lf-tail" id="lf-tail" rx="4"/>
+            <g class="lf-wheel" id="lf-w1"><circle class="t"/><circle class="r"/><circle class="s"/><circle class="h"/></g>
+            <g class="lf-wheel" id="lf-w2"><circle class="t"/><circle class="r"/><circle class="s"/><circle class="h"/></g>
+            <g class="lf-wheel" id="lf-w3"><circle class="t"/><circle class="r"/><circle class="s"/><circle class="h"/></g>
+          </svg>
         </div>
       </div>
     </div>

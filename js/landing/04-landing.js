@@ -6,7 +6,7 @@ window.showLandingAuth = function(mode){
   _loadApp().then(function(){ if(window.showLandingAuth !== stub) window.showLandingAuth(mode); });
 };
 
-// Landing (thème 11/2026) — hero 3D, carrousel des 5 étapes piloté par le défilement, accordéon des classes,
+// Landing (thème 11/2026) — hero 3D, carrousel des 5 étapes et véhicules (morphing 2D) pilotés par le défilement,
 // effets liés au défilement (variables CSS --sp, --hp, --p, --e : voir css/04-landing.css)
 document.getElementById('screen-landing') && (function(){
   var L = document.getElementById('screen-landing');
@@ -34,36 +34,112 @@ document.getElementById('screen-landing') && (function(){
   }
   setCities();
 
-  // classes : panneaux en accordéon ; nom, modèles et description traduits (ld.cls<n>_*)
+  // classes : véhicules en 2D (flat design) qui se transforment l'un en l'autre au défilement.
+  // Chaque véhicule a la même structure (carrosserie 14 points, vitres 4 points, 5 montants, 3 roues, phares) :
+  // le défilement interpole tous les nombres et les couleurs entre deux véhicules voisins.
   var CLS = [ { c:'Economy', pax:3, bag:3 }, { c:'Business', pax:3, bag:3 }, { c:null, pax:3, bag:3 }, { c:'Van', pax:7, bag:7 }, { c:null, pax:50, bag:50 } ];
-  var accPs = [].slice.call($('ld-acc').children);
-  var curCls = 1;
-  function fillCls(){
-    accPs.forEach(function(p, k){
-      var name = CLS[k].c || t('ld.cls'+k+'_name');
-      p.querySelector('.ld-acc-v').textContent = name;
-      p.setAttribute('aria-label', name);
-      p.querySelector('.ld-acc-info').innerHTML = '<h3>'+name+'</h3><div class="models">'+t('ld.cls'+k+'_models')+'</div>'
-        + '<div class="specs"><span><b>'+CLS[k].pax+'</b>'+t('ld.pax_max')+'</span><span><b>'+CLS[k].bag+'</b>'+t('ld.bags')+'</span></div>'
-        + '<p>'+t('ld.cls'+k+'_desc')+'</p><button type="button" class="ld-btn lime">'+t('ld.demander_classe')+'</button>';
-    });
+  var FLEET = [
+    { // Economy — compacte
+      body:[[165,248],[150,232],[150,180],[160,158],[215,140],[300,92],[360,84],[430,84],[470,92],[540,140],[610,150],[645,168],[650,222],[635,248]],
+      glass:[[232,142],[305,100],[462,100],[528,142]], pil:[395,395,395,395,395],
+      w1:[250,36], w2:[545,36], w3:[250,0], head:[622,166,22,10], tail:[150,170,10,16], col:'#6FA884', dark:'#4E8463' },
+    { // Business — berline
+      body:[[118,248],[100,230],[102,170],[118,152],[215,146],[300,98],[360,88],[440,88],[480,96],[555,146],[650,156],[695,170],[700,222],[682,248]],
+      glass:[[232,144],[305,104],[472,104],[540,144]], pil:[400,400,400,400,400],
+      w1:[215,38], w2:[580,38], w3:[215,0], head:[668,164,26,10], tail:[100,160,12,16], col:'#1B5E3B', dark:'#123F28' },
+    { // Première — grande berline
+      body:[[98,248],[80,230],[82,166],[98,148],[205,142],[300,94],[370,84],[460,84],[500,92],[575,142],[668,152],[715,166],[720,222],[702,248]],
+      glass:[[222,140],[305,100],[492,100],[560,140]], pil:[418,418,418,418,418],
+      w1:[200,40], w2:[600,40], w3:[200,0], head:[688,160,26,10], tail:[80,156,12,16], col:'#1C2420', dark:'#0B100D' },
+    { // Van
+      body:[[105,248],[95,232],[95,150],[100,80],[115,62],[200,56],[330,56],[450,56],[520,60],[610,128],[670,146],[700,166],[705,222],[690,248]],
+      glass:[[120,130],[122,74],[512,74],[590,130]], pil:[230,350,470,470,470],
+      w1:[205,38], w2:[575,38], w3:[205,0], head:[676,156,24,10], tail:[95,118,10,30], col:'#8E9C93', dark:'#6B7A70' },
+    { // Autocar
+      body:[[34,248],[30,236],[30,90],[34,46],[50,36],[200,34],[400,34],[600,34],[740,36],[762,60],[768,120],[770,170],[770,226],[760,248]],
+      glass:[[50,128],[50,52],[752,52],[762,128]], pil:[170,300,430,560,690],
+      w1:[170,40], w2:[620,40], w3:[262,40], head:[750,196,18,12], tail:[30,178,8,30], col:'#D6F27A', dark:'#A9C455' }
+  ];
+  var clsSec = $('ld-classes'), clsInfo = $('ld-cls-info');
+  var rail = [].slice.call($('ld-cls-rail').children);
+  var fq = -1, curCls = -1;
+  var F = {};
+  ['body','rock','glass','beam','shadow','lane','head','tail','a1','a2','a3','w1','w2','w3'].forEach(function(k){ F[k] = $('lf-'+k); });
+  var pils = [].slice.call($('lf-pil').children);
+  function lerp(a, b, t){ return a + (b - a) * t; }
+  function lerpA(a, b, t){ return a.map(function(v, i){ return Array.isArray(v) ? lerpA(v, b[i], t) : lerp(v, b[i], t); }); }
+  function lerpC(a, b, t){
+    var x = parseInt(a.slice(1), 16), y = parseInt(b.slice(1), 16);
+    var r = Math.round(lerp(x>>16, y>>16, t)), g = Math.round(lerp(x>>8&255, y>>8&255, t)), bl = Math.round(lerp(x&255, y&255, t));
+    return 'rgb('+r+','+g+','+bl+')';
   }
-  function setCls(k){
+  function pathOf(pts){ return 'M' + pts.map(function(p){ return p[0].toFixed(1)+' '+p[1].toFixed(1); }).join('L') + 'Z'; }
+  function setWheel(g, arch, w, col, ang){
+    var cx = w[0], r = w[1], cy = 264 - r, c = g.children;
+    g.style.display = r < 2 ? 'none' : ''; arch.style.display = r < 2 ? 'none' : '';
+    arch.setAttribute('cx', cx); arch.setAttribute('cy', cy); arch.setAttribute('r', r + 7); arch.setAttribute('fill', col);
+    c[0].setAttribute('cx', cx); c[0].setAttribute('cy', cy); c[0].setAttribute('r', r);
+    c[1].setAttribute('cx', cx); c[1].setAttribute('cy', cy); c[1].setAttribute('r', r * .58);
+    var rs = r * .4, per = 2 * Math.PI * rs / 5;
+    c[2].setAttribute('cx', cx); c[2].setAttribute('cy', cy); c[2].setAttribute('r', rs);
+    c[2].setAttribute('stroke-width', (r * .2).toFixed(1)); c[2].setAttribute('stroke-dasharray', (per * .45).toFixed(1)+' '+(per * .55).toFixed(1));
+    c[2].setAttribute('transform', 'rotate('+ang.toFixed(1)+' '+cx.toFixed(1)+' '+cy.toFixed(1)+')');
+    c[3].setAttribute('cx', cx); c[3].setAttribute('cy', cy); c[3].setAttribute('r', r * .16);
+  }
+  // q : 0 (Economy) → 4 (Autocar). Chaque véhicule reste un instant affiché avant de se transformer.
+  function drawFleet(q){
+    q = Math.max(0, Math.min(FLEET.length - 1, q));
+    if(Math.abs(q - fq) < 0.0005) return; fq = q;
+    var i = Math.min(FLEET.length - 2, Math.floor(q)), u = q - i;
+    var t = Math.max(0, Math.min(1, (u - 0.28) / 0.44)); t = t * t * (3 - 2 * t);
+    var A = FLEET[i], B = FLEET[i+1];
+    var body = lerpA(A.body, B.body, t), glass = lerpA(A.glass, B.glass, t), pil = lerpA(A.pil, B.pil, t);
+    var w1 = lerpA(A.w1, B.w1, t), w2 = lerpA(A.w2, B.w2, t), w3 = lerpA(A.w3, B.w3, t);
+    var hd = lerpA(A.head, B.head, t), tl = lerpA(A.tail, B.tail, t);
+    var col = lerpC(A.col, B.col, t), dark = lerpC(A.dark, B.dark, t);
+    F.body.setAttribute('d', pathOf(body)); F.body.setAttribute('fill', col); F.body.setAttribute('stroke', col);
+    F.glass.setAttribute('d', pathOf(glass));
+    var gy0 = Math.min(glass[1][1], glass[2][1]) - 4, gy1 = Math.max(glass[0][1], glass[3][1]) + 4;
+    pils.forEach(function(l, k){ l.setAttribute('x1', pil[k]); l.setAttribute('x2', pil[k]); l.setAttribute('y1', gy0); l.setAttribute('y2', gy1); l.setAttribute('stroke', col); });
+    F.rock.setAttribute('x', w1[0]); F.rock.setAttribute('width', Math.max(0, w2[0] - w1[0])); F.rock.setAttribute('y', 232); F.rock.setAttribute('height', 10); F.rock.setAttribute('fill', dark);
+    F.head.setAttribute('x', hd[0]); F.head.setAttribute('y', hd[1]); F.head.setAttribute('width', hd[2]); F.head.setAttribute('height', hd[3]);
+    F.tail.setAttribute('x', tl[0]); F.tail.setAttribute('y', tl[1]); F.tail.setAttribute('width', tl[2]); F.tail.setAttribute('height', tl[3]);
+    var bx = hd[0] + hd[2], by = hd[1] + hd[3] / 2;
+    F.beam.setAttribute('d', 'M'+bx+' '+(by-3)+'L'+(bx+110)+' '+(by-22)+'L'+(bx+110)+' '+(by+30)+'L'+bx+' '+(by+3)+'Z');
+    var x0 = body[1][0], x1 = body[12][0];
+    F.shadow.setAttribute('cx', (x0 + x1) / 2); F.shadow.setAttribute('rx', (x1 - x0) / 2 + 10);
+    var ang = q * 540;
+    setWheel(F.w1, F.a1, w1, dark, ang); setWheel(F.w2, F.a2, w2, dark, ang); setWheel(F.w3, F.a3, w3, dark, ang);
+    F.lane.setAttribute('stroke-dashoffset', (q * 320).toFixed(1));
+    var k = Math.round(q);
+    if(k !== curCls) showCls(k);
+  }
+  function clsName(k){ return CLS[k].c || t('ld.cls'+k+'_name'); }
+  function fillRail(){ rail.forEach(function(b, k){ b.textContent = clsName(k); }); }
+  function showCls(k){
     curCls = k;
-    accPs.forEach(function(p, i){
-      p.classList.toggle('on', i===k); p.setAttribute('aria-expanded', i===k ? 'true' : 'false');
-      var b = p.querySelector('.ld-btn'); if(b) b.tabIndex = i===k ? 0 : -1;
-    });
+    clsInfo.innerHTML = '<div class="in"><h3>'+clsName(k)+'</h3><div class="models">'+t('ld.cls'+k+'_models')+'</div>'
+      + '<div class="specs"><span><b>'+CLS[k].pax+'</b>'+t('ld.pax_max')+'</span><span><b>'+CLS[k].bag+'</b>'+t('ld.bags')+'</span></div>'
+      + '<p>'+t('ld.cls'+k+'_desc')+'</p><button type="button" class="ld-btn lime">'+t('ld.demander_classe')+'</button></div>';
+    rail.forEach(function(b, j){ b.classList.toggle('on', j===k); b.setAttribute('aria-pressed', j===k ? 'true' : 'false'); });
   }
-  accPs.forEach(function(p, i){
-    p.addEventListener('click', function(e){ if(e.target.closest('.ld-btn')){ showLandingAuth('register'); return; } setCls(i); });
-    if(canHover) p.addEventListener('pointerenter', function(){ setCls(i); });
-    p.addEventListener('keydown', function(e){ if((e.key==='Enter' || e.key===' ') && e.target===p){ e.preventDefault(); setCls(i); } });
-  });
-  fillCls(); setCls(1);
+  clsInfo.addEventListener('click', function(e){ if(e.target.closest('.ld-btn')) showLandingAuth('register'); });
+  // clic sur une classe : défilement jusqu'à ce véhicule (sans animation possible : affichage direct)
+  var fleetAnim = 0;
+  rail.forEach(function(b, k){ b.onclick = function(){
+    var range = clsSec.offsetHeight - viewH();
+    if(reduced || range <= 0){
+      var from = fq < 0 ? 0 : fq, t0 = performance.now();
+      cancelAnimationFrame(fleetAnim);
+      var step = function(now){ var u = Math.min(1, (now - t0) / 700); drawFleet(from + (k - from) * u); if(u < 1) fleetAnim = requestAnimationFrame(step); };
+      fleetAnim = requestAnimationFrame(step); return;
+    }
+    L.scrollTo({ top: clsSec.offsetTop + range * (k / (FLEET.length - 1)) * 0.94 + range * 0.03, behavior:'smooth' });
+  }; });
+  fillRail(); drawFleet(1);
   // changement de langue : contenus construits en JS
   window._i18nRefresh = function(){
-    setCities(); fillCls(); setCls(curCls);
+    setCities(); fillRail(); var _k = curCls; curCls = -1; showCls(_k);
     if(window._auSideSync) window._auSideSync();
     var _p = !!window._loginPwdMode;
     var _b = document.getElementById('btn-email-submit'); if(_b && !_b.disabled) _b.textContent = _p ? t('au.login_btn') : t('au.recevoir_un_code');
@@ -299,6 +375,8 @@ document.getElementById('screen-landing') && (function(){
     });
     var sr = story.getBoundingClientRect();
     if(sr.bottom > 0 && sr.top < vh) setChap(Math.min(N-1, Math.floor(prog(story) * N)));
+    var cr = clsSec.getBoundingClientRect();
+    if(cr.bottom > 0 && cr.top < vh) drawFleet(Math.max(0, Math.min(1, (prog(clsSec) - 0.03) / 0.94)) * (FLEET.length - 1));
   }
   function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(frame); } }
 
