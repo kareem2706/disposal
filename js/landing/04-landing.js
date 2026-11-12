@@ -166,7 +166,7 @@ document.getElementById('screen-landing') && (function(){
   var d = $('ld-date'); if(d && !d.value){ var _tm = new Date(Date.now()+864e5); d.value = _tm.toISOString().slice(0,10); }
   $('ld-book-go').onclick = function(){
     try{ sessionStorage.setItem('bleenr_landing_draft', JSON.stringify({ mode:mode, from:$('ld-from').value, to:$('ld-to').value, duration:$('ld-dur').value, date:$('ld-date').value, time:$('ld-time').value })); }catch(e){}
-    showLandingAuth('login');   // la demande est saisie après la connexion
+    _ldDemo({ mode:mode, from:$('ld-from').value, to:$('ld-to').value, dur:$('ld-dur').value, durTxt:$('ld-dur').selectedOptions[0] ? $('ld-dur').selectedOptions[0].textContent : '', date:$('ld-date').value, time:$('ld-time').value });
   };
 
   // Aperçu de l'application avec des données de test (aucune donnée n'est envoyée)
@@ -300,12 +300,8 @@ document.getElementById('screen-landing') && (function(){
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ o.classList.add('in'); fit(); }); });
   }
 
-  // « Recevoir des offres » du hero : amène à la carte de réservation
-  $('ld-hero-go').onclick = function(){
-    var f = $('ld-from');
-    try{ f.scrollIntoView({ behavior:'smooth', block:'center' }); }catch(e){}
-    setTimeout(function(){ f.focus({ preventScroll:true }); }, 350);
-  };
+  // « Recevoir des offres » du hero : même simulation que le bouton du formulaire (demande, offres, paiement…)
+  $('ld-hero-go').onclick = function(){ $('ld-book-go').click(); };
 
   // carte de réservation : inclinaison 3D qui suit la souris (au repos pendant la saisie)
   if(!reduced && canHover){
