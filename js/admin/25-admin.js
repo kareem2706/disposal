@@ -150,7 +150,7 @@ function _adminFleetEditForm(f){
       +'<div class="input-group"><label>Pays</label><select id="af-country" data-val="'+_afEsc(f.address_country)+'"></select></div>'
     +'</div>'
     +'<div id="af-err" class="auth-error" style="margin-bottom:10px;"></div>'
-    +'<div style="display:flex;gap:8px;justify-content:flex-start;">'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
       +'<button class="btn btn-secondary btn-sm" onclick="adminToggleFleetEdit(false)">Annuler</button>'
       +'<button class="btn btn-primary btn-sm" id="af-save" onclick="adminSaveFleetIdentity()">Enregistrer</button>'
     +'</div></div>';

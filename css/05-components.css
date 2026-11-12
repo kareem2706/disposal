@@ -448,16 +448,11 @@ option[hidden]{display:none;}
 .st-pill.st-active{background:#E3F2E8;color:#1B5E3B}
 .st-pill.st-pending{background:#FFF1DC;color:#9A5B00}
 #pf-stripe-list:empty{display:none}
-/* ═══ Pieds de fenêtre : tous les boutons alignés à gauche, ordinateur et mobile (11/11/2026) ═══
-   (remplace les anciens alignements à droite ; un montant/texte poussé à droite reste à droite) */
-.modal-ft,#m-new-ride .modal-ft,#m-ride-detail .modal-ft,.evx-ft,.chg-act,.cmp-actions,.ai-ft{justify-content:flex-start!important;}
-.modal-ft > .btn,.modal-ft > button,.modal-ft > div.ft-menu,.modal-ft > div.ev-menu,.modal-ft > #offer-btn-wrap,
-#m-ride-detail .modal-ft > .btn:not(.m-close-mob):last-child,.evx-ft > .btn,.chg-act > .btn,.cmp-actions > .btn,.ai-ft > .btn{margin-left:0!important;margin-right:0!important;order:0!important;}
-@media(max-width:900px){
-  .modal-ft > .btn,.modal-ft > button,.modal-ft > div.ft-menu,.modal-ft > div.ev-menu,.modal-ft > #offer-btn-wrap,
-  .modal-ft:not(:has(> div[style*="margin-right:auto"])):not(:has(> .ft-menu)) > .btn-green:last-child,
-  .modal-ft:not(:has(> div[style*="margin-right:auto"])):not(:has(> .ft-menu)) > .btn-primary:last-child{margin-left:0!important;margin-right:0!important;order:0!important;}
-}
+/* ═══ Pieds de fenêtre (12/11/2026) : boutons alignés à DROITE ; seul le menu « ⋯ » (actions) reste à gauche ═══ */
+.modal-ft,#m-new-ride .modal-ft,#m-ride-detail .modal-ft,.evx-ft,.chg-act,.cmp-actions,.ai-ft{justify-content:flex-end!important;}
+.modal-ft > div.ft-menu,.modal-ft > div.ev-menu,.evx-ft > div.ev-menu{margin-right:auto!important;margin-left:0!important;order:-1!important;}
+@media(max-width:900px){ .modal-ft{justify-content:flex-end!important;} }
+
 /* Sous-traitance : sélection des chauffeurs */
 .sub-aud{margin-top:8px;border:1.5px solid var(--sand3);border-radius:var(--r);padding:10px;background:#fff}
 .sub-aud input[type=search]{width:100%;box-sizing:border-box;border:1.5px solid var(--sand3);border-radius:8px;padding:8px 10px;font:inherit;font-size:13px}

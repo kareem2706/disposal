@@ -105,7 +105,7 @@ window.openVehGuide = function(){
           'font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;">&times;</button>'+
       '</div>'+
       '<div style="padding:6px 22px 16px;">'+rows+'</div>'+
-      '<div style="padding:12px 22px 18px;display:flex;justify-content:flex-start;">'+
+      '<div style="padding:12px 22px 18px;display:flex;justify-content:flex-end;">'+
         '<button type="button" id="vg-ok" style="background:#1B5E3B;color:#fff;border:none;'+
           'padding:9px 22px;border-radius:6px;cursor:pointer;font-size:13.5px;font-weight:500;'+
           'font-family:\'DM Sans\',sans-serif;">'+t('app.compris')+'</button>'+

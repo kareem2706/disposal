@@ -1486,10 +1486,10 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div id="payment-err-stripe" class="auth-error"></div>
       </div>
     </div>
-    <div class="modal-ft" style="display:flex;gap:8px;justify-content:flex-start;">
+    <div class="modal-ft" style="display:flex;gap:8px;justify-content:flex-end;">
       <button class="btn btn-close" id="payment-btn-back" style="display:none;" onclick="paymentGoBack()">&#8592; Retour</button>
-      <button class="btn btn-green" id="payment-btn-next" style="min-width:200px;">Payer par carte bancaire</button>
-      <button class="btn btn-green" id="payment-btn-confirm-bank" style="display:none;min-width:200px;" onclick="confirmPayment('bank_transfer')">Paiement effectu&eacute;</button>
+      <button class="btn btn-green" id="payment-btn-next" style="min-width:200px;margin-left:auto;">Payer par carte bancaire</button>
+      <button class="btn btn-green" id="payment-btn-confirm-bank" style="display:none;min-width:200px;margin-left:auto;" onclick="confirmPayment('bank_transfer')">Paiement effectu&eacute;</button>
     </div>
   </div>
 </div>
