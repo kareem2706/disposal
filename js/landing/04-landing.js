@@ -67,6 +67,19 @@ document.getElementById('screen-landing') && (function(){
     return 'rgb('+r+','+g+','+bl+')';
   }
   function pathOf(pts){ return 'M' + pts.map(function(p){ return p[0].toFixed(1)+' '+p[1].toFixed(1); }).join('L') + 'Z'; }
+  // Contour aux angles arrondis : chaque sommet est remplacé par une courbe de rayon rad (limité par les côtés)
+  function roundPath(pts, rad){
+    var n = pts.length, d = '';
+    for(var i = 0; i < n; i++){
+      var p = pts[i], a = pts[(i - 1 + n) % n], b = pts[(i + 1) % n];
+      var la = Math.hypot(p[0] - a[0], p[1] - a[1]) || 1, lb = Math.hypot(b[0] - p[0], b[1] - p[1]) || 1;
+      var ra = Math.min(rad, la * 0.5), rb = Math.min(rad, lb * 0.5);
+      var p1 = [p[0] + (a[0] - p[0]) * ra / la, p[1] + (a[1] - p[1]) * ra / la];
+      var p2 = [p[0] + (b[0] - p[0]) * rb / lb, p[1] + (b[1] - p[1]) * rb / lb];
+      d += (i ? 'L' : 'M') + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + 'Q' + p[0].toFixed(1) + ' ' + p[1].toFixed(1) + ' ' + p2[0].toFixed(1) + ' ' + p2[1].toFixed(1);
+    }
+    return d + 'Z';
+  }
   function setWheel(g, arch, w, col, ang){
     var cx = w[0], r = w[1], cy = 264 - r, c = g.children;
     g.style.display = r < 2 ? 'none' : ''; arch.style.display = r < 2 ? 'none' : '';
@@ -92,8 +105,8 @@ document.getElementById('screen-landing') && (function(){
     var w1 = lerpA(A.w1, B.w1, t), w2 = lerpA(A.w2, B.w2, t), w3 = lerpA(A.w3, B.w3, t);
     var hd = lerpA(A.head, B.head, t), tl = lerpA(A.tail, B.tail, t);
     var col = lerpC(A.col, B.col, t), dark = lerpC(A.dark, B.dark, t);
-    F.body.setAttribute('d', pathOf(body)); F.body.setAttribute('fill', col); F.body.setAttribute('stroke', col);
-    F.glass.setAttribute('d', pathOf(glass));
+    F.body.setAttribute('d', roundPath(body, 22)); F.body.setAttribute('fill', col); F.body.setAttribute('stroke', col);
+    F.glass.setAttribute('d', roundPath(glass, 12));
     var gys = glass.map(function(g){ return g[1]; }), gy0 = Math.min.apply(null, gys) - 4, gy1 = Math.max.apply(null, gys) + 4;
     pils.forEach(function(l, k){ l.setAttribute('x1', pil[k]); l.setAttribute('x2', pil[k]); l.setAttribute('y1', gy0); l.setAttribute('y2', gy1); l.setAttribute('stroke', col); });
     var sill = lerp(A.sill, B.sill, t), rx0 = w1[0] + w1[1] + 8, rx1 = w2[0] - w2[1] - 8;
