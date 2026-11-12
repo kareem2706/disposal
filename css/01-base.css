@@ -175,13 +175,3 @@ input.fld-err,select.fld-err,textarea.fld-err{border-color:#C0392B!important;box
 .au-points b{color:var(--lime)}
 .au-back:hover{border-color:var(--lime);color:var(--lime);background:rgba(214,242,122,.08)}
 .au-head h1 em{color:#1B5E3B;background:linear-gradient(transparent 62%,rgba(214,242,122,.75) 62%,rgba(214,242,122,.75) 88%,transparent 88%);padding:0 .06em}
-#screen-auth .auth-tab.active{color:var(--lime)}
-#screen-auth .btn-primary{background:var(--lime);color:#0E1410}
-#screen-auth .btn-primary:hover{background:#E6F8A6}
-#screen-auth .input-group:focus-within{border-color:#B9D65A;box-shadow:0 0 0 4px rgba(214,242,122,.35)}
-#screen-auth .sso-row:hover{border-color:#B9D65A}
-#screen-auth .role-opt.active{border-color:#0E1410;box-shadow:0 14px 30px -18px rgba(14,20,16,.45)}
-#screen-auth .role-opt.active .role-opt-icon{background:var(--lime);color:#0E1410}
-#screen-auth .role-opt:hover{border-color:#B9D65A}
-#screen-auth .otp-grid input:focus{border-color:#B9D65A;box-shadow:0 0 0 4px rgba(214,242,122,.35)}
-#screen-auth .lang-btn.active{background:var(--lime);color:#0E1410}
