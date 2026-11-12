@@ -6,6 +6,7 @@
 //     date, heure, adresses, gamme, passagers, passager / téléphone, note pour le chauffeur (notification seule, sans pastille)
 //   • « Demande annulée »   → chauffeurs ayant fait une offre + chauffeur attribué, quand la course passe à « cancelled »
 //   • « Offre acceptée »    → le chauffeur dont l'offre est retenue (course confirmée ou en attente de paiement)
+//   • Sous-traitance suivie → le donneur d'ordre : véhicule / chauffeur / note du sous-traitant, « En chemin », terminée
 // Les chauffeurs dont l'offre a été refusée (autre chauffeur retenu) ne reçoivent plus rien sur cette demande.
 // Pastille de l'icône : à chaque nouvelle demande, ou demande qui quitte la marketplace (annulée / attribuée),
 // chaque téléphone reçoit le nombre de demandes ouvertes sans offre de sa part (mise à jour silencieuse si besoin).
@@ -141,6 +142,30 @@ async function sendAll(msgs: any[]) {
   return { sent, dead };
 }
 
+// ── Suivi d'une sous-traitance : push au donneur d'ordre (client_id de la course) ──
+// • course (rides UPDATE) : note du sous-traitant, « En chemin », course terminée
+// • offre (SUB_ASSIGN, subcontract_push.sql) : véhicule / chauffeur changés
+async function pushPoster(rec: Ride, title: string, lead: string) {
+  if (!rec?.client_id) return 0;
+  const toks: any[] = await rest(`push_tokens?user_id=eq.${rec.client_id}&select=token,prefs`);
+  const msgs = toks.filter((t) => (t.prefs?.sub_update ?? true) !== false).map((t) => ({
+    to: t.token, title: `${title}${rec.booking_code ? " · " + rec.booking_code : ""}`,
+    body: [lead, route(rec), when(rec)].filter(Boolean).join("\n"),
+    sound: "default", data: { ride_id: rec.id, kind: "sub_update" }, channelId: "default",
+  }));
+  return msgs.length ? (await sendAll(msgs)).sent : 0;
+}
+async function subRideEvents(rec: Ride, old: Ride | null) {
+  if (!old || !rec?.is_subcontract || !rec.client_id || !rec.driver_id || rec.driver_id === rec.client_id) return 0;
+  if (rec.driver_id !== old.driver_id) return 0;   // acceptation : gérée ailleurs
+  let n = 0;
+  const nn = tag(rec.notes, "offer_note"), on = tag(old.notes, "offer_note");
+  if (nn && nn !== on) n += await pushPoster(rec, "Note du sous-traitant", "« " + nn.slice(0, 140) + " »");
+  if (rec.on_way_at && !old.on_way_at) n += await pushPoster(rec, "Sous-traitant en chemin", "Le chauffeur est parti : vous pouvez suivre la course.");
+  if (rec.status === "done" && old.status !== "done") n += await pushPoster(rec, "Sous-traitance terminée", "Le sous-traitant a terminé la course.");
+  return n;
+}
+
 // Secret partagé avec le déclencheur SQL (security_hardening.sql) : sans lui, l'appel est refusé.
 // Tant que NOTIFY_HOOK_SECRET n'est pas configuré, l'ancien comportement est conservé.
 const HOOK_SECRET = Deno.env.get("NOTIFY_HOOK_SECRET") ?? "";
@@ -157,7 +182,16 @@ Deno.serve(async (req) => {
   }
   try {
     const p = await req.json();
+    // Véhicule / chauffeur d'une sous-traitance modifiés par le sous-traitant
+    if (p.type === "SUB_ASSIGN") {
+      const ch: string[] = Array.isArray(p.changes) ? p.changes : [];
+      const a = p.assignment || {};
+      const lead = "Modifié : " + ch.join(" et ") + "." + [a.vehicle ? "\n🚘 " + a.vehicle : "", a.driver ? "\n👤 " + a.driver : ""].join("");
+      const sent = await pushPoster(p.record, "Sous-traitance mise à jour", lead);
+      return new Response(JSON.stringify({ kind: "sub_update", sent }), { status: 200 });
+    }
     const rec: Ride = p.record, old: Ride | null = p.old_record ?? null;
+    if (p.type === "UPDATE") await subRideEvents(rec, old).catch(() => 0);
     const kind = decide(p.type, rec, old);
     // La liste des demandes ouvertes a changé (nouvelle demande, demande annulée ou attribuée) → pastilles à jour
     const wasOpen = !!old && OPEN.includes(old.status), isOpen = !!rec && OPEN.includes(rec.status);
