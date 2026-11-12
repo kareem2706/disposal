@@ -379,3 +379,5 @@
 .ld-cities-t,.ld-kb,.ld-up,.ld-chip,.ld-of,.ld-of em,.ld-drv-img,.ld-kick i,.ld-notif i{animation:none!important}
 .ld-hero-bg,.ld-hero-in,.ld-fold,.ld-band,.ld-of-panel,.ld-drv-ph,.ld-zoom,.ld-book-tilt{transform:none!important;opacity:1!important}
 }
+/* Mobile : le formulaire de réservation suit juste après, seul « Voir comment ça marche » reste dans le haut de page */
+@media(max-width:900px){#ld-hero-go{display:none}}
