@@ -114,7 +114,7 @@ ${T.sections.map(([h, ps]) => `    <article><h2>${esc(h)}</h2>${ps.map((x) => `<
 <footer class="sx-foot"><div class="sx-w">
   <div class="sx-fg"><div><img src="/logo_text_light.png" alt="Bleenr" width="104" height="26"><p>${esc(C.tagline)}</p></div>
   <div class="sx-fl">${legalHref.map((h, i) => `<a href="/${h}">${esc(C.legal[i])}</a>`).join('')}<a href="mailto:${esc(co.email)}">${esc(co.email)}</a></div></div>
-  <div class="sx-fb">&copy; ${site.year} ${esc(co.name)} &mdash; ${l === 'en' ? 'VAT' : l === 'es' ? 'IVA' : 'TVA'} ${esc(co.vat)} &middot; ${esc(co.street)}, ${esc(co.postal)} ${esc(co.city)}</div>
+  <div class="sx-fb">&copy; ${site.year} Bleenr</div>
 </div></footer>
 </body>
 </html>
