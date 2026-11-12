@@ -133,7 +133,6 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
             <div data-i18n="ld.gratuit_et_sans_engagement_vous" class="ld-book-note">Gratuit et sans engagement &mdash; vous acceptez l'offre qui vous convient.</div>
           </div>
           <div class="ld-chip c1" aria-hidden="true"><i><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></i><span data-i18n="ld.chip_verified">Chauffeur v&eacute;rifi&eacute;</span></div>
-          <div class="ld-chip c2" aria-hidden="true"><span data-i18n="ld.chip_fixed">Prix fixe &middot; accept&eacute; &agrave; la r&eacute;servation</span></div>
         </div>
       </div>
     </div>
@@ -185,34 +184,38 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 
   <section class="ld-cls" id="ld-classes">
     <div class="ld-cls-pin">
-      <div class="ld-wrap ld-cls-grid">
+      <div class="ld-wrap ld-cls-in">
+      <div class="ld-cls-head">
+        <span data-i18n="ld.la_flotte" class="ld-eye">La flotte</span>
+        <h2 data-i18n-html="ld.choisissez_votreclasse" class="ld-h">Choisissez votre <em>classe</em>.</h2>
+      </div>
+      <div class="ld-cls-grid">
         <div class="ld-cls-txt">
-          <span data-i18n="ld.la_flotte" class="ld-eye">La flotte</span>
-          <h2 data-i18n-html="ld.choisissez_votreclasse" class="ld-h">Choisissez votre<br><em>classe</em>.</h2>
           <div class="ld-cls-info" id="ld-cls-info" aria-live="polite"></div>
           <div class="ld-cls-rail" id="ld-cls-rail">
             <button type="button" data-k="0"></button><button type="button" data-k="1"></button><button type="button" data-k="2"></button><button type="button" data-k="3"></button><button type="button" data-k="4"></button>
           </div>
         </div>
         <div class="ld-cls-stage" aria-hidden="true">
-          <!-- Véhicules en 2D (flat design), transformés l'un en l'autre au défilement : js/landing/04-landing.js › fleet -->
-          <svg id="ld-fleet" viewBox="0 22 800 274" preserveAspectRatio="xMidYMax meet">
-            <line class="ld-road" x1="0" y1="266" x2="800" y2="266"/>
-            <line class="ld-lane" id="lf-lane" x1="-40" y1="284" x2="840" y2="284"/>
+          <!-- Véhicules en 2D (flat design, d'après les photos des véhicules), transformés l'un en l'autre au défilement : js/landing/04-landing.js › FLEET -->
+          <svg id="ld-fleet" viewBox="40 -4 720 300" preserveAspectRatio="xMidYMax meet">
+            <line class="ld-road" x1="40" y1="266" x2="760" y2="266"/>
+            <line class="ld-lane" id="lf-lane" x1="40" y1="284" x2="760" y2="284"/>
             <ellipse class="ld-shadow" id="lf-shadow" cx="400" cy="264" rx="300" ry="9"/>
             <path class="ld-beam" id="lf-beam"/>
-            <circle class="lf-arch" id="lf-a1"/><circle class="lf-arch" id="lf-a2"/><circle class="lf-arch" id="lf-a3"/>
             <path id="lf-body"/>
-            <rect id="lf-rock" rx="5"/>
             <path class="lf-glass" id="lf-glass"/>
             <g id="lf-pil"><line/><line/><line/><line/><line/></g>
-            <rect class="lf-head" id="lf-head" rx="4"/>
-            <rect class="lf-tail" id="lf-tail" rx="4"/>
+            <rect class="lf-sill" id="lf-rock" rx="1.3"/>
+            <rect class="lf-head" id="lf-head" rx="3"/>
+            <rect class="lf-tail" id="lf-tail" rx="3"/>
+            <path class="lf-arch" id="lf-a1"/><path class="lf-arch" id="lf-a2"/><path class="lf-arch" id="lf-a3"/>
             <g class="lf-wheel" id="lf-w1"><circle class="t"/><circle class="r"/><circle class="s"/><circle class="h"/></g>
             <g class="lf-wheel" id="lf-w2"><circle class="t"/><circle class="r"/><circle class="s"/><circle class="h"/></g>
             <g class="lf-wheel" id="lf-w3"><circle class="t"/><circle class="r"/><circle class="s"/><circle class="h"/></g>
           </svg>
         </div>
+      </div>
       </div>
     </div>
   </section>

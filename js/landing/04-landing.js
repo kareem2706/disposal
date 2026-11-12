@@ -35,30 +35,23 @@ document.getElementById('screen-landing') && (function(){
   setCities();
 
   // classes : véhicules en 2D (flat design) qui se transforment l'un en l'autre au défilement.
-  // Chaque véhicule a la même structure (carrosserie 14 points, vitres 4 points, 5 montants, 3 roues, phares) :
+  // Chaque véhicule a la même structure (carrosserie 36 points, vitres 6 points, 5 montants, 3 roues, phares) :
   // le défilement interpole tous les nombres et les couleurs entre deux véhicules voisins.
   var CLS = [ { c:'Economy', pax:3, bag:3 }, { c:'Business', pax:3, bag:3 }, { c:null, pax:3, bag:3 }, { c:'Van', pax:7, bag:7 }, { c:null, pax:50, bag:50 } ];
+  // Silhouettes relevées sur les photos des véhicules (échelle commune : ~96 px par mètre, sol à y = 264).
+  // body : arrière-bas, 34 points du profil supérieur (de l'arrière vers l'avant), avant-bas ; glass : 6 points ;
+  // pil : montants (5, les inutiles superposés) ; w1/w2/w3 : roues [x, rayon] ; head/tail : feux [x, y, l, h] ; sill : ligne chromée
   var FLEET = [
-    { // Economy — compacte
-      body:[[165,248],[150,232],[150,180],[160,158],[215,140],[300,92],[360,84],[430,84],[470,92],[540,140],[610,150],[645,168],[650,222],[635,248]],
-      glass:[[232,142],[305,100],[462,100],[528,142]], pil:[395,395,395,395,395],
-      w1:[250,36], w2:[545,36], w3:[250,0], head:[622,166,22,10], tail:[150,170,10,16], col:'#6FA884', dark:'#4E8463' },
-    { // Business — berline
-      body:[[118,248],[100,230],[102,170],[118,152],[215,146],[300,98],[360,88],[440,88],[480,96],[555,146],[650,156],[695,170],[700,222],[682,248]],
-      glass:[[232,144],[305,104],[472,104],[540,144]], pil:[400,400,400,400,400],
-      w1:[215,38], w2:[580,38], w3:[215,0], head:[668,164,26,10], tail:[100,160,12,16], col:'#1B5E3B', dark:'#123F28' },
-    { // Première — grande berline
-      body:[[98,248],[80,230],[82,166],[98,148],[205,142],[300,94],[370,84],[460,84],[500,92],[575,142],[668,152],[715,166],[720,222],[702,248]],
-      glass:[[222,140],[305,100],[492,100],[560,140]], pil:[418,418,418,418,418],
-      w1:[200,40], w2:[600,40], w3:[200,0], head:[688,160,26,10], tail:[80,156,12,16], col:'#1C2420', dark:'#0B100D' },
-    { // Van
-      body:[[105,248],[95,232],[95,150],[100,80],[115,62],[200,56],[330,56],[450,56],[520,60],[610,128],[670,146],[700,166],[705,222],[690,248]],
-      glass:[[120,130],[122,74],[512,74],[590,130]], pil:[230,350,470,470,470],
-      w1:[205,38], w2:[575,38], w3:[205,0], head:[676,156,24,10], tail:[95,118,10,30], col:'#8E9C93', dark:'#6B7A70' },
-    { // Autocar
-      body:[[34,248],[30,236],[30,90],[34,46],[50,36],[200,34],[400,34],[600,34],[740,36],[762,60],[768,120],[770,170],[770,226],[760,248]],
-      glass:[[50,128],[50,52],[752,52],[762,128]], pil:[170,300,430,560,690],
-      w1:[170,40], w2:[620,40], w3:[262,40], head:[750,196,18,12], tail:[30,178,8,30], col:'#D6F27A', dark:'#A9C455' }
+    // Economy — Skoda Octavia Combi
+    {"body":[[178.6,237.6],[174.4,206.5],[175.4,202.9],[178.5,200.5],[183.5,162.1],[190.6,157.3],[199.5,151.3],[210.2,145.4],[222.7,132.2],[236.7,130.4],[252.3,128.0],[269.1,123.8],[287.2,124.4],[306.3,123.2],[326.2,122.6],[346.8,122.0],[367.9,122.0],[389.3,123.2],[410.7,125.0],[432.1,128.6],[453.2,135.8],[473.8,146.6],[493.7,158.5],[512.8,166.3],[530.9,167.5],[547.7,169.3],[563.3,172.3],[577.3,175.3],[589.8,179.5],[600.5,183.7],[609.4,187.9],[616.5,194.5],[621.5,211.9],[624.6,217.9],[625.6,218.5],[620.8,242.4]],"glass":[[225.3,163.3],[233.7,146.6],[250.5,134.6],[431.5,132.8],[463.2,147.8],[487.8,168.1]],"pil":[291.2,376.3,376.3,376.3,376.3],"w1":[277.5,33.6],"w2":[545.3,33.6],"w3":[277.5,0],"head":[584.9,194.5,30.0,6.0],"tail":[181.0,170.5,34.8,7.8],"sill":251.4,"col":"#151917","dark":"#070908"},
+    // Business — Mercedes Classe E
+    {"body":[[166.8,232.5],[162.4,197.9],[163.5,195.4],[166.7,186.6],[172.0,169.0],[179.4,157.6],[188.8,157.0],[200.1,155.1],[213.2,152.0],[228.0,146.9],[244.4,139.4],[262.2,132.5],[281.2,125.5],[301.3,121.1],[322.3,118.0],[344.0,116.7],[366.2,116.7],[388.7,118.0],[411.3,119.9],[433.8,125.5],[456.0,136.2],[477.7,148.8],[498.7,158.9],[518.8,159.5],[537.8,161.4],[555.6,163.3],[572.0,165.8],[586.8,168.3],[599.9,171.5],[611.2,175.3],[620.6,179.0],[628.0,183.4],[633.3,187.8],[636.5,196.7],[637.6,201.1],[631.3,246.4]],"glass":[[271.3,158.9],[286.4,141.3],[315.3,127.4],[418.6,126.2],[450.0,135.6],[490.3,158.9]],"pil":[384.6,384.6,384.6,384.6,384.6],"w1":[265.0,36.5],"w2":[567.1,36.5],"w3":[265.0,0],"head":[609.3,182.2,21.4,6.3],"tail":[171.8,165.8,31.5,7.6],"sill":241.3,"col":"#151917","dark":"#070908"},
+    // Première — Mercedes Classe S
+    {"body":[[155.4,241.0],[151.4,223.4],[152.5,199.0],[155.9,191.5],[161.4,178.0],[169.2,159.7],[179.0,157.0],[190.8,154.2],[204.6,152.2],[220.1,149.5],[237.2,141.4],[255.8,133.2],[275.7,125.8],[296.7,119.7],[318.7,117.0],[341.4,115.0],[364.6,115.0],[388.2,115.6],[411.8,118.3],[435.4,123.8],[458.6,134.6],[481.3,146.8],[503.3,160.3],[524.3,161.7],[544.2,163.7],[562.8,165.8],[579.9,167.8],[595.4,170.5],[609.2,173.9],[621.0,175.9],[630.8,180.0],[638.6,183.4],[644.1,186.1],[647.5,190.2],[648.6,192.9],[645.9,246.4]],"glass":[[266.5,159.7],[278.7,140.7],[305.8,124.4],[421.0,123.1],[453.5,134.6],[498.2,163.1]],"pil":[380.4,380.4,380.4,380.4,380.4],"w1":[260.4,35.2],"w2":[577.5,35.2],"w3":[260.4,0],"head":[617.5,188.1,28.5,6.8],"tail":[160.8,169.2,31.2,8.1],"sill":236.9,"col":"#151917","dark":"#070908"},
+    // Van — Mercedes Classe V
+    {"body":[[145.7,235.2],[142.2,218.3],[143.4,216.3],[146.9,206.7],[152.7,136.4],[160.7,92.2],[170.9,89.5],[183.2,87.9],[197.4,87.2],[213.5,86.4],[231.2,86.0],[250.5,85.6],[271.1,84.9],[292.9,84.5],[315.7,84.5],[339.2,84.1],[363.3,84.5],[387.7,84.9],[412.3,85.6],[436.7,86.8],[460.8,88.3],[484.3,93.3],[507.1,104.8],[528.9,117.9],[549.5,131.4],[568.8,142.1],[586.5,150.6],[602.6,155.6],[616.8,160.2],[629.1,164.8],[639.3,170.6],[647.3,182.1],[653.1,204.4],[656.6,235.6],[657.8,237.1],[654.7,240.9]],"glass":[[184.1,139.8],[189.5,105.2],[206.1,93.3],[440.6,94.1],[520.1,133.3],[531.7,151.4]],"pil":[308.7,427.1,427.1,427.1,427.1],"w1":[238.7,31.9],"w2":[581.6,31.9],"w3":[238.7,0],"head":[607.8,166.7,38.4,8.5],"tail":[150.3,146.7,9.2,26.9],"sill":235.9,"col":"#151917","dark":"#070908"},
+    // Autocar — Mercedes Sprinter
+    {"body":[[64.0,217.0],[64.0,201.0],[65.5,38.1],[70.1,19.4],[77.6,14.5],[88.1,8.3],[101.4,8.2],[117.3,8.1],[135.9,8.0],[156.8,7.8],[180.0,7.6],[205.1,7.4],[232.0,7.2],[260.4,7.0],[290.1,6.7],[320.8,6.6],[352.2,6.9],[384.0,7.2],[416.0,7.4],[447.8,7.7],[479.2,8.0],[509.9,8.2],[539.6,14.9],[568.0,35.8],[594.9,60.2],[620.0,84.5],[643.2,106.2],[664.1,123.9],[682.7,131.3],[698.6,137.7],[711.9,144.5],[722.4,150.1],[729.9,164.4],[734.5,190.8],[736.0,215.2],[735.1,229.4]],"glass":[[96.0,126.4],[97.7,60.7],[111.9,46.5],[523.8,48.3],[582.4,73.1],[619.7,124.6]],"pil":[214.9,346.3,499.0,499.0,499.0],"w1":[215.8,36.4],"w2":[646.3,36.4],"w3":[215.8,0],"head":[685.4,152.1,39.1,10.7],"tail":[65.8,122.9,14.2,53.3],"sill":223.2,"col":"#151917","dark":"#070908"}
   ];
   var clsSec = $('ld-classes'), clsInfo = $('ld-cls-info');
   var rail = [].slice.call($('ld-cls-rail').children);
@@ -77,14 +70,16 @@ document.getElementById('screen-landing') && (function(){
   function setWheel(g, arch, w, col, ang){
     var cx = w[0], r = w[1], cy = 264 - r, c = g.children;
     g.style.display = r < 2 ? 'none' : ''; arch.style.display = r < 2 ? 'none' : '';
-    arch.setAttribute('cx', cx); arch.setAttribute('cy', cy); arch.setAttribute('r', r + 7); arch.setAttribute('fill', col);
+    // passage de roue : demi-cercle sombre au-dessus de la roue
+    var R = r + 4;
+    arch.setAttribute('d', 'M'+(cx-R).toFixed(1)+' '+cy.toFixed(1)+'A'+R.toFixed(1)+' '+R.toFixed(1)+' 0 0 1 '+(cx+R).toFixed(1)+' '+cy.toFixed(1)+'Z'); arch.setAttribute('fill', col);
     c[0].setAttribute('cx', cx); c[0].setAttribute('cy', cy); c[0].setAttribute('r', r);
-    c[1].setAttribute('cx', cx); c[1].setAttribute('cy', cy); c[1].setAttribute('r', r * .58);
-    var rs = r * .4, per = 2 * Math.PI * rs / 5;
+    c[1].setAttribute('cx', cx); c[1].setAttribute('cy', cy); c[1].setAttribute('r', r * .66);
+    var rs = r * .42, per = 2 * Math.PI * rs / 6;
     c[2].setAttribute('cx', cx); c[2].setAttribute('cy', cy); c[2].setAttribute('r', rs);
-    c[2].setAttribute('stroke-width', (r * .2).toFixed(1)); c[2].setAttribute('stroke-dasharray', (per * .45).toFixed(1)+' '+(per * .55).toFixed(1));
+    c[2].setAttribute('stroke-width', (r * .3).toFixed(1)); c[2].setAttribute('stroke-dasharray', (per * .32).toFixed(1)+' '+(per * .68).toFixed(1));
     c[2].setAttribute('transform', 'rotate('+ang.toFixed(1)+' '+cx.toFixed(1)+' '+cy.toFixed(1)+')');
-    c[3].setAttribute('cx', cx); c[3].setAttribute('cy', cy); c[3].setAttribute('r', r * .16);
+    c[3].setAttribute('cx', cx); c[3].setAttribute('cy', cy); c[3].setAttribute('r', r * .13);
   }
   // q : 0 (Economy) → 4 (Autocar). Chaque véhicule reste un instant affiché avant de se transformer.
   function drawFleet(q){
@@ -99,14 +94,15 @@ document.getElementById('screen-landing') && (function(){
     var col = lerpC(A.col, B.col, t), dark = lerpC(A.dark, B.dark, t);
     F.body.setAttribute('d', pathOf(body)); F.body.setAttribute('fill', col); F.body.setAttribute('stroke', col);
     F.glass.setAttribute('d', pathOf(glass));
-    var gy0 = Math.min(glass[1][1], glass[2][1]) - 4, gy1 = Math.max(glass[0][1], glass[3][1]) + 4;
+    var gys = glass.map(function(g){ return g[1]; }), gy0 = Math.min.apply(null, gys) - 4, gy1 = Math.max.apply(null, gys) + 4;
     pils.forEach(function(l, k){ l.setAttribute('x1', pil[k]); l.setAttribute('x2', pil[k]); l.setAttribute('y1', gy0); l.setAttribute('y2', gy1); l.setAttribute('stroke', col); });
-    F.rock.setAttribute('x', w1[0]); F.rock.setAttribute('width', Math.max(0, w2[0] - w1[0])); F.rock.setAttribute('y', 232); F.rock.setAttribute('height', 10); F.rock.setAttribute('fill', dark);
+    var sill = lerp(A.sill, B.sill, t), rx0 = w1[0] + w1[1] + 8, rx1 = w2[0] - w2[1] - 8;
+    F.rock.setAttribute('x', rx0.toFixed(1)); F.rock.setAttribute('width', Math.max(0, rx1 - rx0).toFixed(1)); F.rock.setAttribute('y', (sill - 1.3).toFixed(1)); F.rock.setAttribute('height', 2.6);
     F.head.setAttribute('x', hd[0]); F.head.setAttribute('y', hd[1]); F.head.setAttribute('width', hd[2]); F.head.setAttribute('height', hd[3]);
     F.tail.setAttribute('x', tl[0]); F.tail.setAttribute('y', tl[1]); F.tail.setAttribute('width', tl[2]); F.tail.setAttribute('height', tl[3]);
     var bx = hd[0] + hd[2], by = hd[1] + hd[3] / 2;
     F.beam.setAttribute('d', 'M'+bx+' '+(by-3)+'L'+(bx+110)+' '+(by-22)+'L'+(bx+110)+' '+(by+30)+'L'+bx+' '+(by+3)+'Z');
-    var x0 = body[1][0], x1 = body[12][0];
+    var bxs = body.map(function(p){ return p[0]; }), x0 = Math.min.apply(null, bxs), x1 = Math.max.apply(null, bxs);
     F.shadow.setAttribute('cx', (x0 + x1) / 2); F.shadow.setAttribute('rx', (x1 - x0) / 2 + 10);
     var ang = q * 540;
     setWheel(F.w1, F.a1, w1, dark, ang); setWheel(F.w2, F.a2, w2, dark, ang); setWheel(F.w3, F.a3, w3, dark, ang);
@@ -170,7 +166,7 @@ document.getElementById('screen-landing') && (function(){
   var d = $('ld-date'); if(d && !d.value){ var _tm = new Date(Date.now()+864e5); d.value = _tm.toISOString().slice(0,10); }
   $('ld-book-go').onclick = function(){
     try{ sessionStorage.setItem('bleenr_landing_draft', JSON.stringify({ mode:mode, from:$('ld-from').value, to:$('ld-to').value, duration:$('ld-dur').value, date:$('ld-date').value, time:$('ld-time').value })); }catch(e){}
-    _ldDemo({ mode:mode, from:$('ld-from').value, to:$('ld-to').value, dur:$('ld-dur').value, durTxt:$('ld-dur').selectedOptions[0] ? $('ld-dur').selectedOptions[0].textContent : '', date:$('ld-date').value, time:$('ld-time').value });
+    showLandingAuth('login');   // la demande est saisie après la connexion
   };
 
   // Aperçu de l'application avec des données de test (aucune donnée n'est envoyée)

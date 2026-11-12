@@ -826,7 +826,7 @@
   "ld.chauffeurs_flottes_partenaires": "Chauffeurs & flottes partenaires",
   "ld.chauffeurs_prives_a_bruxelles_et": "Chauffeurs privés à Bruxelles et dans toute la Belgique.",
   "ld.chauffeurs_verifies": "Chauffeurs vérifiés",
-  "ld.choisissez_votreclasse": "Choisissez votre<br/><em>classe</em>.",
+  "ld.choisissez_votreclasse": "Choisissez votre <em>classe</em>.",
   "ld.cities": "Bruxelles|Anvers|Gand|Liège|Bruges|Namur|Charleroi|Mons|Louvain|Luxembourg",
   "ld.cls0_desc": "Un voyage pour tous les budgets : le même chauffeur vérifié et le même prix fixe, au tarif le plus doux.",
   "ld.cls0_models": "Toyota Prius, Skoda Octavia ou similaire",

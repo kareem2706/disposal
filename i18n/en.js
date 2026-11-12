@@ -826,7 +826,7 @@
   "ld.chauffeurs_flottes_partenaires": "Partner drivers & fleets",
   "ld.chauffeurs_prives_a_bruxelles_et": "Private drivers in Brussels and throughout Belgium.",
   "ld.chauffeurs_verifies": "Verified drivers",
-  "ld.choisissez_votreclasse": "Choose your<br/><em>class</em>.",
+  "ld.choisissez_votreclasse": "Choose your <em>class</em>.",
   "ld.cities": "Brussels|Antwerp|Ghent|Liège|Bruges|Namur|Charleroi|Mons|Leuven|Luxembourg",
   "ld.cls0_desc": "A ride for every budget: the same verified driver and the same fixed price, at the gentlest rate.",
   "ld.cls0_models": "Toyota Prius, Skoda Octavia or similar",

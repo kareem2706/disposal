@@ -826,7 +826,7 @@
   "ld.chauffeurs_flottes_partenaires": "Chóferes y flotas asociados",
   "ld.chauffeurs_prives_a_bruxelles_et": "Chóferes privados en Bruselas y en toda Bélgica.",
   "ld.chauffeurs_verifies": "Chóferes verificados",
-  "ld.choisissez_votreclasse": "Elija su<br/><em>clase</em>.",
+  "ld.choisissez_votreclasse": "Elija su <em>clase</em>.",
   "ld.cities": "Bruselas|Amberes|Gante|Lieja|Brujas|Namur|Charleroi|Mons|Lovaina|Luxemburgo",
   "ld.cls0_desc": "Un viaje para todos los presupuestos: el mismo chófer verificado y el mismo precio fijo, con la tarifa más económica.",
   "ld.cls0_models": "Toyota Prius, Skoda Octavia o similar",
