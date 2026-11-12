@@ -152,7 +152,7 @@
 .ld-nav .ld-logo{position:relative;height:26px}.ld-nav .ld-logo img{height:26px;width:auto;display:block;transition:opacity .3s}
 .ld-nav .ld-logo .dk{position:absolute;left:0;top:0;opacity:0}
 .ld-nav.solid .ld-logo .lt{opacity:0}.ld-nav.solid .ld-logo .dk{opacity:1}
-/* au défilement : logo noir, « r » citron vert (image dédiée) */
+.ld-nav .ld-logo .dk{filter:brightness(0)}   /* au défilement : logo entièrement noir */
 .ld-nav-r{display:flex;align-items:center;gap:26px;font-size:13.5px}
 .ld-nav-r .ln-link{background:none;border:none;color:inherit;font:inherit;cursor:pointer;padding:0}.ld-nav-r .ln-link:hover{opacity:.7}
 .ld-lang{display:flex;gap:2px;padding:2px;border-radius:999px;border:1px solid currentColor;border-color:color-mix(in srgb,currentColor 35%,transparent)}.ld-lang .lang-btn{flex:none;padding:4px 8px;border-radius:999px;font-size:11px;color:inherit;opacity:.75;background:transparent}.ld-lang .lang-btn.active{opacity:1;background:color-mix(in srgb,currentColor 18%,transparent);color:inherit}
