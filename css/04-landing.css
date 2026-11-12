@@ -450,3 +450,8 @@
 @media(max-width:900px){.ld-hero-in{opacity:calc((1 - var(--hp,0)) * 4);transform:translate3d(0,calc(var(--hp,0) * -40px),0)}}
 .is-safari .ld-book-tilt{transform:none!important;transform-style:flat}
 .is-safari .ld-book-3d{perspective:none}
+/* Simulation : étapes toutes de la même taille (grille, texte sur une ligne) */
+.ldd-steps{display:grid;grid-template-columns:repeat(auto-fit,192px);justify-content:center}
+.ldd-st{width:100%;justify-content:flex-start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ldd-st span{flex:0 0 auto}
+@media(max-width:700px){.ldd-steps{grid-template-columns:repeat(2,minmax(0,1fr));max-width:440px;margin:0 auto}}
