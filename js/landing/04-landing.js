@@ -194,7 +194,9 @@ document.getElementById('screen-landing') && (function(){
       car:'<path d="M5 16V12l2-5h10l2 5v4z"/><circle cx="8.5" cy="13.5" r=".8"/><circle cx="15.5" cy="13.5" r=".8"/><path d="M5 16v2M19 16v2"/>', user:'<circle cx="12" cy="8" r="4"/><path d="M5 20c1-4 4-6 7-6s6 2 7 6"/>',
       pin:'<path d="M12 21s-6-6-6-11a6 6 0 0 1 12 0c0 5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/>', ok:'<path d="M5 12.5l4.5 4.5L19 7.5"/>', back:'<path d="M15 6l-6 6 6 6"/>', arr:'<path d="M5 12h14M13 6l6 6-6 6"/>',
       bolt:'<path d="M13 3L5 14h6l-1 7 8-11h-6z"/>', wifi:'<path d="M4 9a12 12 0 0 1 16 0M7 12.5a7 7 0 0 1 10 0M10 16a3 3 0 0 1 4 0"/>', drop:'<path d="M12 4s5 6 5 10a5 5 0 0 1-10 0c0-4 5-10 5-10z"/>', eur:'<path d="M17 6.5A6 6 0 0 0 7.5 9M17 17.5A6 6 0 0 1 7.5 15M5 10.5h8M5 13.5h8"/>',
-      chev:'<path d="M9 6l6 6-6 6"/>', down:'<path d="M6 9l6 6 6-6"/>', dl:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', phone:'<path d="M6 4h4l2 5-2.5 1.5a11 11 0 0 0 4 4L15 12l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 4 6a2 2 0 0 1 2-2z"/>'
+      chev:'<path d="M9 6l6 6-6 6"/>', down:'<path d="M6 9l6 6 6-6"/>', up:'<path d="M6 15l6-6 6 6"/>', flag:'<path d="M6 21V4M6 4h11l-2 4 2 4H6"/>',
+      route:'<circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M7.5 16.5L16.5 7.5"/>', mix:'<circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="12" r="3"/><path d="M7.5 16.5l2.5-2.5M14 10l2.5-2.5"/>',
+      cars:'<path d="M2 15v-3l1.5-3.5h6L11 12v3zM13 15v-3l1.5-3.5h6L22 12v3z"/><path d="M3 15v1.5M10 15v1.5M14 15v1.5M21 15v1.5"/>', dl:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', phone:'<path d="M6 4h4l2 5-2.5 1.5a11 11 0 0 0 4 4L15 12l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 4 6a2 2 0 0 1 2-2z"/>'
     };
     var I = function(n, st){ return '<svg viewBox="0 0 24 24"' + (st ? ' style="' + st + '"' : '') + '>' + P[n] + '</svg>'; };
     var heure = f.mode === 'heure';
@@ -216,64 +218,97 @@ document.getElementById('screen-landing') && (function(){
     var dest = heure ? t('dm.disposal') + ' · ' + durTxt : E(to);
     var trajet = heure ? E(short(from)) + ' · ' + durTxt : E(short(from)) + ' → ' + E(short(to));
 
-    var side = '<div class="ldm-side"><div class="ldm-logo">' + (logo ? '<img src="' + logo + '" alt="Bleenr">' : '<b style="font-size:28px;color:#1B5E3B">Bleenr</b>') + '</div>'
-      + '<div class="ldm-user"><div class="a">J</div><div><b>Julie</b><small>' + t('dm.client_badge') + '</small></div></div><div class="ldm-sep"></div>'
+    var gare = /gare|station|bahnhof|train/i.test(from);
+    var navBadge = function(n){ return n ? '<em class="bd">' + n + '</em>' : ''; };
+    var side = function(on, badge){ var nv = function(k, ic, lbl, extra){ return '<div class="ldm-nv' + (on === k ? ' on' : '') + '">' + I(ic) + '<span>' + lbl + '</span>' + (extra || '') + '</div>'; };
+      return '<div class="ldm-side"><div class="ldm-logo">' + (logo ? '<img src="' + logo + '" alt="Bleenr">' : '<b style="font-size:28px;color:#1B5E3B">Bleenr</b>') + '<span class="ldm-badge">' + t('dm.client_badge') + '</span></div>'
+      + '<div class="ldm-user"><div class="a">J</div><b>Julie</b></div><div class="ldm-sep"></div>'
       + '<div class="ldm-new">' + I('plus') + '' + t('dm.new_request') + '</div>'
-      + '<div class="ldm-nv on">' + I('grid') + '' + t('dm.dashboard') + '</div><div class="ldm-nv">' + I('list') + '' + t('dm.my_requests') + '</div><div class="ldm-nv">' + I('cal') + '' + t('dm.calendar') + '</div><div class="ldm-nv">' + I('doc') + '' + t('dm.invoices') + '</div>'
+      + nv('dash', 'grid', t('dm.dashboard')) + nv('req', 'list', t('dm.my_requests'), navBadge(badge)) + nv('cal', 'cal', t('dm.calendar')) + nv('inv', 'doc', t('dm.invoices'))
       + '<div class="ldm-help"><b>' + I('help') + '' + t('dm.help') + '</b>' + t('dm.help_q') + '<u>info@bleenr.com</u></div>'
-      + '<div class="ldm-out">' + I('out') + '' + t('dm.logout') + '</div><div class="ldm-lang">' + [currentLang.toUpperCase()].concat(['FR','EN','ES'].filter(function(x){ return x !== currentLang.toUpperCase(); })).map(function(x){ return '<span>' + x + '</span>'; }).join('') + '</div></div>';
+      + '<div class="ldm-out">' + I('out') + '' + t('dm.logout') + '</div><div class="ldm-lang">' + [currentLang.toUpperCase()].concat(['FR','EN','ES'].filter(function(x){ return x !== currentLang.toUpperCase(); })).map(function(x){ return '<span>' + x + '</span>'; }).join('') + '</div></div>'; };
     var stat = function(ic, bg, col, k, v, hl){ return '<div class="ldm-stat' + (hl ? ' hl' : '') + '"><div class="i" style="background:' + bg + ';color:' + col + '">' + I(ic) + '</div><div class="k">' + k + '</div><div class="v">' + v + '</div></div>'; };
-    var row = function(pill, prix){ return '<div class="ldm-row"><div class="d"><small>' + dMon + '</small><b>' + dDay + '</b></div><div class="ldm-tag">' + (heure ? t('dm.dispo_tag') : 'A→B') + '</div>'
+    var row = function(pill, prix){ return '<div class="ldm-row"><div class="d"><small>' + dMon + '</small><b>' + dDay + '</b><i>' + tm + '</i></div><div class="ldm-tag">' + (heure ? t('dm.dispo_tag') : 'A→B') + '</div>'
       + '<div class="c"><small>' + t('dm.origin') + '</small><div>' + E(from) + '</div></div><div class="c"><small>' + t('dm.destination') + '</small><div>' + dest + '</div></div>'
       + '<div class="c"><small>' + t('dm.status') + '</small>' + pill + '</div><div class="c p"><small>' + t('dm.price') + '</small><div>' + prix + '</div></div><div style="color:#6B7A70">' + I('chev') + '</div></div>'; };
     var main = function(o){ return '<div class="ldm-main"><div class="ldm-ttl"><div class="ldm-ic">' + I('grid') + '</div><div><h3>' + t('dm.dashboard') + '</h3><p>' + t('dm.overview') + '</p></div></div>'
       + '<div class="ldm-bell">' + I('bell') + (o.bell ? '<em>' + o.bell + '</em>' : '') + '</div>'
-      + '<div class="ldm-stats">' + stat('check', '#E3F1E8', '#1B5E3B', t('dm.st_done'), o.done) + stat('clock', '#FFF3DC', '#2B2B2B', t('dm.st_wait'), o.wait, o.hl === 'wait')
-      + stat('msg', '#E8F0FB', '#2B2B2B', t('dm.st_offers'), o.offers, o.hl === 'offers') + stat('eur', '#FDE8E6', '#C0392B', t('dm.st_paid'), o.paid) + '</div>'
+      + '<div class="ldm-rh s"><b>' + t('dm.my_requests') + '</b><span>' + t('dm.see_all') + '</span></div>'
+      + '<div class="ldm-stats">' + stat('car', '#E3F1E8', '#1B5E3B', t('dm.st_done'), o.done) + stat('clock', '#FFF3DC', '#C98A00', t('dm.st_wait'), o.wait, o.hl === 'wait')
+      + stat('msg', '#E8F0FB', '#2456A6', t('dm.st_offers'), o.offers, o.hl === 'offers') + stat('eur', '#FDE8E6', '#C0392B', t('dm.st_paid'), o.paid) + '</div>'
       + '<div class="ldm-rh"><b>' + I('clip') + '' + t('dm.recent') + '</b>' + (o.row ? '<span>' + t('dm.see_all') + '</span>' : '') + '</div>'
       + (o.row || '<div class="ldm-empty">' + t('dm.none') + '</div>') + '</div>'; };
-    var drawer = function(head, body, foot){ return '<div class="ldm-drw"><div class="ldm-dh">' + head + '<div class="x">✕</div></div><div class="ldm-db">' + body + '</div>' + (foot || '') + '</div>'; };
-    var offer = function(best, model, cls, stars, avis, price, opts, msg){ return '<div class="ldm-of' + (best ? ' best' : '') + '">' + (best ? '<div class="bp">' + t('dm.best_price') + '</div>' : '')
+    // Page « Mes demandes » (onglets + filtres)
+    var reqPage = function(rowHtml){ return '<div class="ldm-main"><div class="ldm-ttl"><div class="ldm-ic">' + I('list') + '</div><div><h3>' + t('dm.my_requests') + '</h3></div></div>'
+      + '<div class="ldm-tabs"><span>' + t('dm.f_all') + '</span><span>' + t('dm.pill_wait') + '</span><span>' + t('dm.tab_offers') + '</span><span class="on">' + t('dm.pill_confirmed') + ' (1)</span><span>' + t('dm.tab_done') + '</span>'
+      + '<i class="f"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>' + t('dm.filters') + '</i></div>' + rowHtml + '</div>'; };
+    // Étapes de la demande (Type, Demande, Attente d'offres, Choix, Paiement)
+    var stepper = function(n){ return '<div class="ldm-stp">' + ['dm.stp_type','dm.stp_req','dm.stp_wait','dm.stp_choice','dm.stp_pay'].map(function(k, i){
+        var st = i + 1 < n ? 'dn' : (i + 1 === n ? 'on' : '');
+        return '<div class="' + st + '"><span>' + (i + 1 < n ? I('ok') : (i + 1)) + '</span><small>' + t(k) + '</small></div>'; }).join('') + '</div>'; };
+    var drawer = function(head, body, foot, opt){ opt = opt || {}; return '<div class="ldm-drw"><div class="ldm-dh' + (opt.center ? ' c' : '') + '">' + head + '<div class="x">✕</div></div>' + (opt.step ? stepper(opt.step) : '') + '<div class="ldm-db">' + body + '</div>' + (foot || '') + '</div>'; };
+    var vdet = String(t('dm.vehicle_details')).replace(/\s*⌄\s*$/, '');
+    var offer = function(best, open, model, cls, stars, avis, price, opts, brand, mdl, color){ return '<div class="ldm-of' + (best ? ' best' : '') + '">' + (best ? '<div class="bp">' + t('dm.best_price') + '</div>' : '')
       + '<div class="ldm-oh"><div class="vi">' + I('car') + '</div><div><b>' + model + '</b><div class="m"><span class="cl">' + cls + '</span><span class="st">★ ' + stars + '</span>(' + avis + ')</div></div><div class="pr">' + eur(price) + '<small>' + t('dm.vat_incl') + '</small></div></div>'
-      + '<div class="ldm-opts">' + opts.map(function(x){ return '<span>' + x + '</span>'; }).join('') + '</div>'
-      + '<div class="ldm-msg">' + I('msg', 'width:16px;height:16px') + msg + '</div>'
-      + '<div class="ft"><span>' + t('dm.vehicle_details') + '</span><span class="ch">' + t('dm.choose') + '</span></div></div>'; };
+      + (open ? '<div class="ldm-det"><div class="ldm-opts">' + opts.map(function(x){ return '<span>' + x + '</span>'; }).join('') + '</div>'
+        + '<div class="g"><div><small>' + t('dm.k_class') + '</small>' + cls + '</div><div><small>' + t('dm.k_brand') + '</small>' + brand + '</div><div><small>' + t('dm.k_model') + '</small>' + mdl + '</div><div><small>' + t('dm.k_year') + '</small>2025</div><div><small>' + t('dm.k_color') + '</small>' + color + '</div></div></div>' : '')
+      + '<div class="ft"><span>' + vdet + ' ' + I(open ? 'up' : 'down', 'width:14px;height:14px') + '</span><span class="ch">' + t('dm.choose') + '</span></div></div>'; };
 
-    var formBody = '<div class="ldm-lb" style="margin-top:0">' + t('dm.ride_type') + '</div><div class="ldm-types"><div' + (heure ? '' : ' class="on"') + '>A → B</div><div' + (heure ? ' class="on"' : '') + '>' + t('dm.disposition') + '</div><div>' + t('dm.mixed') + '</div></div>'
-      + '<div class="ldm-lb">' + t('dm.from') + ' <i>*</i></div><div class="ldm-in">' + E(from) + '</div>'
+    // 1 · Type de course
+    var tcard = function(on, ic, bg, col, tt, sub){ return '<div class="ldm-tc' + (on ? ' on' : '') + '"><div class="i" style="background:' + bg + ';color:' + col + '">' + I(ic) + '</div><div><b>' + tt + '</b><span>' + sub + '</span></div><em>' + I('chev') + '</em></div>'; };
+    var typeBody = '<p class="ldm-q">' + t('dm.q_type') + '</p>'
+      + tcard(!heure, 'route', '#E3F1E8', '#1B5E3B', t('dm.t_ab'), t('dm.t_ab_s')) + tcard(heure, 'clock', '#FFF3DC', '#C98A00', t('dm.disposal'), t('dm.t_disp_s'))
+      + tcard(false, 'mix', '#E8EEFB', '#3B5BA9', t('dm.t_mix'), t('dm.t_mix_s')) + tcard(false, 'cars', '#EFE8FB', '#6B4BB0', t('dm.t_ev'), t('dm.t_ev_s'));
+    // 2 · Formulaire
+    var stepperIn = function(n){ return '<div class="ldm-cnt"><span>−</span><b>' + n + '</b><span>+</span></div>'; };
+    var formBody = '<div class="ldm-lb" style="margin-top:0">' + t('dm.from') + ' <i>*</i></div><div class="ldm-in">' + E(from) + '</div>'
       + (heure ? '<div class="ldm-lb">' + t('dm.duration') + ' <i>*</i></div><div class="ldm-in">' + durTxt + '</div>' : '<div class="ldm-lb">' + t('dm.to') + ' <i>*</i></div><div class="ldm-in">' + E(to) + '</div>')
+      + (gare ? '<div class="ldm-lb">' + t('dm.train') + '</div><div class="ldm-in ph">' + t('dm.train_ph') + '</div><div class="ldm-hint">' + t('dm.train_hint') + '</div>' : '')
       + '<div class="ldm-g2"><div><div class="ldm-lb">' + t('dm.date') + ' <i>*</i></div><div class="ldm-in">' + dFr + '</div></div><div><div class="ldm-lb">' + t('dm.time') + ' <i>*</i></div><div class="ldm-in">' + tm + '</div></div></div>'
-      + '<div class="ldm-g2"><div><div class="ldm-lb">' + t('dm.passengers') + '</div><div class="ldm-in">1</div></div><div><div class="ldm-lb">' + t('dm.vehicle') + '</div><div class="ldm-in">Business</div></div></div>'
-      + '<div class="ldm-lb">' + t('dm.instructions') + '</div><div class="ldm-in ph" style="height:62px">' + t('dm.instr_ph') + '</div>'
-      + '<div class="ldm-pax"><small>' + t('dm.pax_info') + '</small><b>Julie Martin</b><span>0470 12 34 56</span></div>';
-    var offersBody = '<div class="ldm-sum"><div class="ldm-chips"><span class="ldm-ch d">' + I('cal', 'width:15px;height:15px') + dLong + ' &nbsp;|&nbsp; ' + I('clock', 'width:15px;height:15px') + tm + '</span><span class="ldm-ch">' + I('user', 'width:15px;height:15px') + t('dm.one_pax') + '</span><span class="ldm-ch">' + I('car', 'width:15px;height:15px') + 'Business</span></div>'
-      + '<div class="ldm-rt">' + I('pin', 'width:16px;height:16px') + E(short(from)) + (heure ? ' · ' + durTxt : ' <span style="color:#6B7A70">→</span> ' + E(short(to))) + '</div></div>'
+      + '<div class="ldm-g2"><div><div class="ldm-lb">' + t('dm.passengers') + '</div><div class="ldm-in sel">1</div></div><div><div class="ldm-lb">' + t('dm.vehicle') + '</div><div class="ldm-in sel">Business</div></div></div>'
+      + '<div class="ldm-g2"><div><div class="ldm-lb">' + t('dm.bags_big') + '</div>' + stepperIn(1) + '</div><div><div class="ldm-lb">' + t('dm.bags_cabin') + '</div>' + stepperIn(1) + '</div></div>'
+      + '<div class="ldm-lb">' + t('dm.instructions') + '</div><div class="ldm-in ph" style="height:52px">' + t('dm.instr_ph') + '</div>'
+      + '<div class="ldm-pax"><div class="h"><small>' + t('dm.pax_info') + '</small><span>✎ ' + t('dm.edit') + '</span></div><div class="r"><div class="vi">' + I('user') + '</div><b>Julie Martin</b><em>0470 12 34 56</em></div></div>';
+    // 4 · Offres
+    var place = function(k, a, ic, col){ var nm = short(a), rest = String(a).split(',').slice(1).join(',').trim();
+      return '<div class="pl"><span style="color:' + col + '">' + I(ic) + '</span><div><small>' + k + '</small><b>' + E(nm) + '</b>' + (rest ? '<i>' + E(rest) + '</i>' : '') + '</div></div>'; };
+    var offersBody = '<div class="ldm-chips"><span class="ldm-ch">' + I('cal', 'width:15px;height:15px') + dLong + ' &nbsp;|&nbsp; ' + I('clock', 'width:15px;height:15px') + tm + '</span><span class="ldm-ch">' + I('user', 'width:15px;height:15px') + t('dm.one_pax') + '</span><span class="ldm-ch">' + I('car', 'width:15px;height:15px') + 'Business</span></div>'
+      + '<div class="ldm-route">' + place(t('dm.from'), from, 'pin', '#1B5E3B') + (heure ? '<div class="pl"><span style="color:#C98A00">' + I('clock') + '</span><div><small>' + t('dm.disposal') + '</small><b>' + durTxt + '</b></div></div>' : place(t('dm.to'), to, 'flag', '#C0392B')) + '</div>'
       + '<div class="ldm-flt"><div class="t"><span>' + t('dm.f_all') + '</span><span>⚡ ' + t('dm.f_elec') + '</span><span>' + t('dm.f_hybrid') + '</span></div><div class="s">' + t('dm.sort_price') + '</div></div>'
-      + offer(true, 'Mercedes-Benz Classe E', 'BUSINESS', '5,0', t('dm.reviews2'), p1, t('dm.opts1').split('|'), t('dm.msg1'))
-      + offer(false, 'Mercedes-Benz Classe V', 'VAN', '5,0', t('dm.reviews1'), p2, t('dm.opts2').split('|'), t('dm.msg2'));
+      + offer(true, true, 'Mercedes-Benz Classe E', 'BUSINESS', '5,0', t('dm.reviews2'), p1, t('dm.opts2').split('|'), 'Mercedes-Benz', 'Classe E', t('dm.black'))
+      + offer(false, false, 'Mercedes-Benz Classe V', 'VAN', '5,0', t('dm.reviews1'), p2, [], 'Mercedes-Benz', 'Classe V', t('dm.black'));
+    // 5 · Paiement
     var modal = '<div class="ldm-veil"><div class="ldm-mod"><div class="ldm-mh"><div class="ok">' + I('ok') + '</div><b>' + t('dm.paid_t') + '</b><p>' + t('dm.paid_s') + '</p></div><div class="ldm-mb">'
       + '<div class="ldm-li"><span>' + t('dm.booking') + '</span><code>' + code + '</code></div><div class="ldm-li"><span>' + t('dm.date_l') + '</span><b>' + dDay + ' ' + dMon.toLowerCase() + '. · ' + tm + '</b></div>'
       + '<div class="ldm-li"><span>' + t('dm.trip') + '</span><b>' + trajet + '</b></div><div class="ldm-li"><span>' + t('dm.amount_paid') + '</span><b>' + eur(p1) + ' ' + t('dm.vat_incl') + '</b></div>'
       + '<p>' + t('dm.mail_sent') + '</p><div class="ldm-mbt"><div>' + t('dm.my_requests') + '</div><div>' + t('dm.continue') + '</div></div></div></div></div>';
-
-    var tripBody = '<div class="ldm-trip"><small>' + t('dm.confirmed_k') + '' + code + '</small><b>' + t('dm.bon_voyage') + '</b><p>' + dLong + ' ' + t('dm.at') + ' ' + tm + ' · ' + trajet + '</p></div>'
+    // 6 · Course confirmée
+    var tripHead = '<div class="ldm-th"><b>' + code + '</b><span>' + (heure ? t('dm.disposal') : t('dm.simple_ride')) + ' · ' + trajet + '</span></div><span class="ldm-pill g dk">' + I('ok', 'width:13px;height:13px') + ' ● ' + t('dm.pill_confirmed') + '</span>';
+    var tripBody = '<div class="ldm-trip"><b>' + t('dm.bon_voyage') + '</b><p>' + dLong + ' ' + t('dm.at') + ' ' + tm + ' · ' + E(short(from)) + (heure ? ' · ' + durTxt : ' → ' + E(short(to))) + '</p></div>'
       + '<div class="ldm-vch"><div class="vi">' + I('doc') + '</div><div><b>' + t('dm.voucher_t') + '</b><span>' + t('dm.voucher_s') + '</span></div><div class="dl">' + I('dl') + '' + t('dm.download') + '</div></div>'
-      + '<div class="ldm-blk"><div class="vi">' + I('user') + '</div><div><b>Thomas M.</b> · ' + t('dm.your_driver') + '<br><span>' + t('dm.driver_waits') + '</span></div><div style="margin-left:auto;color:#1B5E3B">' + I('phone') + '</div></div>'
-      + '<div class="ldm-blk"><div class="vi">' + I('car') + '</div><div><b>Mercedes-Benz Classe E</b><span class="ldm-plate">1-ABC-234</span><br><span>' + t('dm.black') + ' · Business</span></div></div>'
-      + '<div class="ldm-steps2"><div><b>' + t('dm.step1_t') + '</b>' + t('dm.step1_s') + '</div><div><b>' + t('dm.step2_t') + '</b>' + t('dm.step2_s') + '</div><div><b>' + t('dm.step3_t') + '</b>' + t('dm.step3_s') + '</div></div>';
-    var base = { done:23, wait:0, offers:0, paid:eur(1489.3) };
+      + '<div class="ldm-card"><small>' + t('dm.veh_driver') + '</small>'
+      + '<div class="ln"><div class="vi">' + I('user') + '</div><div><b>Thomas</b> · ' + t('dm.your_driver') + '<br><span>Elite Drive · ' + t('dm.driver_waits') + '</span></div><div class="ph">' + I('phone') + '</div></div>'
+      + '<div class="ln"><div class="vi">' + I('car') + '</div><div><b>Mercedes-Benz Classe E</b><span class="ldm-plate">T-XAL-805</span><br><span>' + t('dm.black') + ' · Business</span></div></div></div>'
+      + '<div class="ldm-card g"><small>' + t('dm.pax_info') + '</small><div class="ln"><div class="vi w">' + I('user') + '</div><b>Julie Martin</b><em>0470 12 34 56</em></div>'
+      + '<div class="nt"><small>' + t('dm.note_drv') + '</small><span>' + t('dm.no_note') + '</span></div></div>';
+    var tripFoot = '<div class="ldm-df sp"><span class="ldm-dots"><svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></span><span class="ldm-fn">' + t('dm.no_edit_48') + '</span></div>';
+
+    var base = { done:39, wait:0, offers:0, paid:eur(3879.6) };
     var mk = function(o){ var x = {}; for(var k in base) x[k] = base[k]; for(var k2 in o) x[k2] = o[k2]; return x; };
+    var back = I('back');
     var screens = [
+      { t:t('dm.s0_t'), c:t('dm.s0_c'),
+        h:'<div class="ldm">' + side('dash') + main(mk({})) + drawer(t('dm.new_request'), typeBody, '', { step:1 }) + '</div>' },
       { t:t('dm.s1_t'), c:t('dm.s1_c'),
-        h:'<div class="ldm">' + side + main(mk({})) + drawer(t('dm.new_request'), formBody, '<div class="ldm-df"><span class="ldm-b">' + t('dm.cancel') + '</span><span class="ldm-b g">' + t('dm.publish') + '</span></div>') + '</div>' },
+        h:'<div class="ldm">' + side('dash') + main(mk({})) + drawer(back + '<span class="tt">' + t('dm.new_request') + '</span>', formBody, '<div class="ldm-df"><span class="ldm-b g">' + t('dm.publish') + '</span></div>', { step:2, center:true }) + '</div>' },
       { t:t('dm.s2_t'), c:t('dm.s2_c'),
-        h:'<div class="ldm">' + side + main(mk({ wait:1, bell:2, hl:'wait', row:row('<span class="ldm-pill w">● ' + t('dm.pill_wait') + '</span>', '---') })) + '</div>' },
+        h:'<div class="ldm">' + side('dash', 1) + main(mk({ wait:1, bell:2, hl:'wait', row:row('<span class="ldm-pill w">● ' + t('dm.pill_wait') + '</span>', '---') })) + '</div>' },
       { t:t('dm.s3_t'), c:t('dm.s3_c'),
-        h:'<div class="ldm">' + side + main(mk({ offers:2, bell:4, hl:'offers', row:row('<span class="ldm-pill b">● ' + t('dm.pill_offers') + '</span>', t('dm.see_offers')) })) + drawer(I('back') + code + ' · ' + t('dm.offers_received'), offersBody) + '</div>' },
+        h:'<div class="ldm">' + side('dash', 1) + main(mk({ offers:2, bell:4, hl:'offers', row:row('<span class="ldm-pill b">● ' + t('dm.pill_offers') + '</span>', t('dm.see_offers')) })) + drawer(back + code + ' · ' + t('dm.offers_received'), offersBody, '', { step:4 }) + '</div>' },
       { t:t('dm.s4_t'), c:t('dm.s4_c'),
-        h:'<div class="ldm"><div class="ldm-blur" style="display:flex">' + side + main(mk({ done:24, paid:eur(1558.2), row:row('<span class="ldm-pill g">● ' + t('dm.pill_confirmed') + '</span>', eur(p1)) })) + '</div>' + modal + '</div>' },
+        h:'<div class="ldm"><div class="ldm-blur" style="display:flex">' + side('dash') + main(mk({ done:40, paid:eur(3879.6 + p1), row:row('<span class="ldm-pill g">● ' + t('dm.pill_confirmed') + '</span>', eur(p1)) })) + '</div>' + modal + '</div>' },
       { t:t('dm.s5_t'), c:t('dm.s5_c'),
-        h:'<div class="ldm">' + side + main(mk({ done:24, paid:eur(1558.2), row:row('<span class="ldm-pill g">● ' + t('dm.pill_confirmed') + '</span>', eur(p1)) })) + drawer(I('back') + code + ' · ' + t('dm.pill_confirmed'), tripBody) + '</div>' }
+        h:'<div class="ldm">' + side('req') + reqPage(row('<span class="ldm-pill g">● ' + t('dm.pill_confirmed') + '</span>', eur(p1))) + drawer(tripHead, tripBody, tripFoot) + '</div>' }
     ];
 
     var old = document.getElementById('ld-demo'); if(old) old.remove();
