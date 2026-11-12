@@ -476,7 +476,8 @@ function renderEventItem(g){
   var paid=rides.reduce(function(s,r){ return s+((['confirmed','active','done'].indexOf(r.status)>=0&&r.final_price)?parseFloat(r.final_price):0); },0);
   var pct=Math.round(conf/Math.max(rides.length,1)*100);
   var cx=rides.filter(function(r){ return r.status==='cancelled'; }).length, pctx=Math.round(cx/Math.max(rides.length,1)*100);
-  return '<div class="ride-card ev-card" onclick="openEventDetail(\''+String(g.id).replace(/'/g,'')+'\')">'
+  var _lst=rides[rides.length-1]||{};
+  return '<div class="ride-card ev-card" data-ev-kind="'+(g.kind==='mixed'?'mixed':'event')+'" data-ev-from="'+String(f.ride_date||'').slice(0,10)+'" data-ev-to="'+String(_lst.ride_date||'').slice(0,10)+'" onclick="openEventDetail(\''+String(g.id).replace(/'/g,'')+'\')">'
     +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+mon+'</div><div class="ride-card-date-day">'+day+'</div>'+(f.ride_time?'<div class="ride-card-date-time">'+String(f.ride_time).slice(0,5)+'</div>':'')+'</div>'
     +'<div style="display:flex;align-items:center;">'+(g.kind==='mixed'?'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:var(--blue-bg);color:var(--blue);padding:2px 7px;border-radius:20px;">'+t('app.mixte')+'</span>':'<span class="ev-tag">'+t('app.evenement')+'</span>')+'</div>'
     +'<div style="min-width:0;"><div class="ride-card-col-label">'+(g.kind==='mixed'?'Trajets':'Événement')+'</div><div class="ride-card-col-val" style="font-weight:700;">'+_rdEsc(g.name)+'</div></div>'
