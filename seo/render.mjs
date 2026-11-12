@@ -14,7 +14,7 @@ const bookHref = (p, l) => {
   if (p.prefill.to) q.set('to', p.prefill.to);
   if (p.prefill.mode) q.set('mode', p.prefill.mode);
   const s = q.toString();
-  return COMMON[l].home + (s ? '?' + s : '') + '#ld-hero';
+  return COMMON[l].home + (s ? '?' + s : '');   // le formulaire est en haut de l'accueil : pas d'ancre dans l'adresse
 };
 
 export function render(p, l, site) {

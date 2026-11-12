@@ -182,7 +182,7 @@ document.getElementById('screen-landing') && (function(){
     var _qs = new URLSearchParams(location.search), _pf = false;
     if(_qs.get('mode') === 'heure'){ var _hb = L.querySelector('[data-ld-mode="heure"]'); if(_hb) _hb.click(); _pf = true; }
     ['from','to'].forEach(function(k){ var v = _qs.get(k), el = $('ld-' + k); if(v && el){ el.value = v.slice(0, 200); el.dataset.typed = '1'; _pf = true; } });
-    if(_pf){ ['from','to','mode'].forEach(function(k){ _qs.delete(k); }); var _s = _qs.toString(); history.replaceState(history.state, '', location.pathname + (_s ? '?' + _s : '') + location.hash); }
+    if(_pf){ ['from','to','mode'].forEach(function(k){ _qs.delete(k); }); var _s = _qs.toString(); history.replaceState(history.state, '', location.pathname + (_s ? '?' + _s : '') + (location.hash === '#ld-hero' ? '' : location.hash)); }
   }catch(e){}
   $('ld-book-go').onclick = function(){
     try{ sessionStorage.setItem('bleenr_landing_draft', JSON.stringify({ mode:mode, from:$('ld-from').value, to:$('ld-to').value, duration:$('ld-dur').value, date:$('ld-date').value, time:$('ld-time').value })); }catch(e){}
