@@ -352,7 +352,10 @@ document.getElementById('screen-landing') && (function(){
   $('ld-hero-go').onclick = function(){ $('ld-book-go').click(); };
 
   // carte de réservation : inclinaison 3D qui suit la souris (au repos pendant la saisie)
-  if(!reduced && canHover){
+  // Safari (Mac) : un bloc flouté (backdrop-filter) dans un parent incliné en 3D est rendu en image floue → pas d'inclinaison sur Safari
+  var isSafari = /^((?!chrome|chromium|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent || '');
+  if(isSafari) document.documentElement.classList.add('is-safari');
+  if(!reduced && canHover && !isSafari){
     var tiltEl = $('ld-book-tilt'), tRaf = 0;
     var tiltTo = function(rx, ry){ tiltEl.style.setProperty('--rx', rx.toFixed(2)+'deg'); tiltEl.style.setProperty('--ry', ry.toFixed(2)+'deg'); };
     hero.addEventListener('pointermove', function(e){
