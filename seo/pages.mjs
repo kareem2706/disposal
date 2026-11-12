@@ -501,5 +501,112 @@ export const PAGES = [
         ['¿Cómo se paga?', 'Con tarjeta en línea, en una página de pago segura. El recibo y la factura se envían por correo electrónico.']
       ]
     }
+  },
+  // ───────────── Ville à ville / longue distance ─────────────
+  {
+    id: 'city', img: 'chauffeur.webp', prefill: {},
+    slug: { fr: 'chauffeur-prive-longue-distance', en: 'long-distance-chauffeur', es: 'chofer-larga-distancia' },
+    fr: {
+      title: 'Chauffeur privé ville à ville et longue distance | Bleenr',
+      desc: 'Trajets ville à ville et longue distance en chauffeur privé depuis la Belgique : Bruxelles, Anvers, Liège, Paris, Amsterdam, Lille… Offres de chauffeurs vérifiés, prix fixe.',
+      short: 'Ville à ville', eye: 'Ville à ville · longue distance',
+      h1: 'Chauffeur privé ville à ville et longue distance',
+      lead: 'Bruxelles–Anvers, Liège–Bruxelles, ou un trajet vers Paris, Lille ou Amsterdam : voyagez porte à porte avec un chauffeur vérifié, au prix accepté à l’avance.',
+      sections: [
+        ['Porte à porte, sans correspondance', ['Un trajet ville à ville en chauffeur privé vous évite les changements de train, les bagages à porter et les horaires imposés. Le chauffeur vous prend à l’adresse de votre choix et vous dépose directement à destination, à l’heure que vous avez fixée.', 'Le temps de route devient utile : vous pouvez travailler, téléphoner ou vous reposer à bord.']],
+        ['En Belgique et vers les pays voisins', ['Les trajets entre les villes belges se réservent de la même façon que vers Paris, Lille, Amsterdam, Rotterdam, Cologne ou Luxembourg. Vous indiquez le départ, l’arrivée, la date et la gamme de véhicule, et vous recevez les offres des chauffeurs et des flottes qui assurent ce trajet, avec un prix fixe TVA comprise.', 'Pour un groupe, un van accueille jusqu’à 7 passagers, et un minibus ou un autocar jusqu’à 50.']]
+      ],
+      faq: [
+        ['Puis-je réserver un chauffeur pour aller à l’étranger ?', 'Oui. Indiquez votre destination, par exemple Paris, Amsterdam ou Luxembourg : les chauffeurs qui assurent ce trajet vous envoient leur offre.'],
+        ['Le prix d’un long trajet est-il fixé à l’avance ?', 'Oui. Vous acceptez un prix fixe, TVA comprise, au moment de la réservation. Seule une modification de la course peut entraîner un changement de prix si nécessaire, que vous acceptez ou refusez.'],
+        ['Puis-je réserver l’aller et le retour ?', 'Oui. Publiez une demande pour chaque trajet, ou utilisez le trajet mixte pour enchaîner plusieurs trajets dans une même demande.']
+      ]
+    },
+    en: {
+      title: 'City-to-city and long-distance chauffeur | Bleenr',
+      desc: 'City-to-city and long-distance private chauffeur trips from Belgium: Brussels, Antwerp, Liège, Paris, Amsterdam, Lille… Offers from verified chauffeurs, fixed price.',
+      short: 'City to city', eye: 'City to city · long distance',
+      h1: 'City-to-city and long-distance chauffeur',
+      lead: 'Brussels–Antwerp, Liège–Brussels, or a trip to Paris, Lille or Amsterdam: travel door to door with a verified chauffeur at a price agreed in advance.',
+      sections: [
+        ['Door to door, no changes', ['A city-to-city trip with a private chauffeur spares you changing trains, carrying luggage and fixed timetables. The chauffeur picks you up at the address of your choice and drops you right at your destination, at the time you set.', 'Travel time becomes useful: you can work, make calls or rest on board.']],
+        ['Within Belgium and to neighbouring countries', ['Trips between Belgian cities are booked the same way as trips to Paris, Lille, Amsterdam, Rotterdam, Cologne or Luxembourg. Enter the pickup, drop-off, date and vehicle class, and receive offers from chauffeurs and fleets covering the trip, at a fixed price with VAT included.', 'For a group, a van seats up to 7 passengers, and a minibus or coach up to 50.']]
+      ],
+      faq: [
+        ['Can I book a chauffeur to go abroad?', 'Yes. Enter your destination, for example Paris, Amsterdam or Luxembourg: chauffeurs who cover the trip send you their offer.'],
+        ['Is the price of a long trip fixed in advance?', 'Yes. You accept a fixed price, VAT included, when you book. Only a change to the ride can lead to a price change if necessary, which you accept or decline.'],
+        ['Can I book the outward and return trips?', 'Yes. Post a request for each trip, or use a mixed trip to chain several legs in a single request.']
+      ]
+    },
+    es: {
+      title: 'Chófer privado de ciudad a ciudad y larga distancia | Bleenr',
+      desc: 'Trayectos de ciudad a ciudad y de larga distancia con chófer privado desde Bélgica: Bruselas, Amberes, Lieja, París, Ámsterdam, Lille… Ofertas de chóferes verificados, precio fijo.',
+      short: 'De ciudad a ciudad', eye: 'Ciudad a ciudad · larga distancia',
+      h1: 'Chófer privado de ciudad a ciudad y larga distancia',
+      lead: 'Bruselas–Amberes, Lieja–Bruselas, o un trayecto a París, Lille o Ámsterdam: viaje puerta a puerta con un chófer verificado, al precio acordado de antemano.',
+      sections: [
+        ['Puerta a puerta, sin transbordos', ['Un trayecto de ciudad a ciudad con chófer privado le evita cambiar de tren, cargar con el equipaje y depender de horarios. El chófer le recoge en la dirección que elija y le deja directamente en su destino, a la hora fijada.', 'El tiempo de viaje se vuelve útil: puede trabajar, llamar o descansar a bordo.']],
+        ['En Bélgica y hacia los países vecinos', ['Los trayectos entre ciudades belgas se reservan igual que hacia París, Lille, Ámsterdam, Róterdam, Colonia o Luxemburgo. Indique la salida, la llegada, la fecha y la gama de vehículo, y reciba las ofertas de chóferes y flotas que cubren el trayecto, con un precio fijo IVA incluido.', 'Para un grupo, una van admite hasta 7 pasajeros, y un minibús o autocar hasta 50.']]
+      ],
+      faq: [
+        ['¿Puedo reservar un chófer para ir al extranjero?', 'Sí. Indique su destino, por ejemplo París, Ámsterdam o Luxemburgo: los chóferes que cubren el trayecto le envían su oferta.'],
+        ['¿El precio de un trayecto largo se fija de antemano?', 'Sí. Acepta un precio fijo, IVA incluido, al reservar. Solo una modificación del trayecto puede conllevar un cambio de precio si es necesario, que usted acepta o rechaza.'],
+        ['¿Puedo reservar la ida y la vuelta?', 'Sí. Publique una solicitud para cada trayecto, o utilice el trayecto mixto para encadenar varios trayectos en una misma solicitud.']
+      ]
+    }
+  },
+
+  // ───────────── Entreprises ─────────────
+  {
+    id: 'biz', img: 'service-entreprise.webp', prefill: {},
+    slug: { fr: 'chauffeur-prive-entreprise', en: 'corporate-chauffeur', es: 'chofer-para-empresas' },
+    fr: {
+      title: 'Chauffeur privé pour entreprises | Bleenr',
+      desc: 'Bleenr pour les entreprises : réservez des chauffeurs privés pour vos clients et collaborateurs, suivez les trajets et recevez des factures simplifiées. Chauffeurs vérifiés.',
+      short: 'Entreprises', eye: 'Entreprises · clients et collaborateurs',
+      h1: 'Chauffeur privé pour les entreprises',
+      lead: 'Réservez en quelques minutes les déplacements de vos clients et de vos collaborateurs, suivez chaque trajet et retrouvez toutes vos factures au même endroit.',
+      sections: [
+        ['Réservez pour vos clients et collaborateurs', ['Accueil d’un client à l’aéroport, rendez-vous d’un dirigeant, déplacement d’une équipe ou invités d’un séminaire : vous publiez la demande depuis votre compte et indiquez le nom et le téléphone du passager. Le chauffeur reçoit ces informations avec la réservation, ainsi que vos instructions.', 'Vous comparez les offres de chauffeurs et de flottes vérifiés, puis choisissez selon le prix, le véhicule et les avis.']],
+        ['Suivi des trajets et factures simplifiées', ['Toutes les courses de votre entreprise sont réunies dans votre tableau de bord : à venir, en cours, terminées. Le jour J, vous suivez l’arrivée du chauffeur en direct et recevez les étapes de la course.', 'Chaque course payée génère automatiquement sa facture, envoyée par e-mail et disponible à tout moment dans votre espace. Plus besoin de réclamer des reçus ni de refaire les notes de frais.']]
+      ],
+      faq: [
+        ['Puis-je réserver un chauffeur pour un client ou un collaborateur ?', 'Oui. Lors de la demande, vous indiquez le nom et le téléphone du passager : ces informations sont transmises au chauffeur avec la réservation.'],
+        ['Comment suivre les trajets de mes passagers ?', 'Toutes vos courses sont réunies dans votre tableau de bord. Quand le chauffeur est en route, vous suivez son arrivée en direct.'],
+        ['Comment se passe la facturation ?', 'Chaque course payée génère automatiquement une facture, envoyée par e-mail et toujours disponible dans votre espace, rubrique Factures.']
+      ]
+    },
+    en: {
+      title: 'Corporate chauffeur service | Bleenr',
+      desc: 'Bleenr for businesses: book private chauffeurs for your clients and employees, track every ride and get simple invoicing. Verified chauffeurs.',
+      short: 'Businesses', eye: 'Businesses · clients and employees',
+      h1: 'Private chauffeur service for businesses',
+      lead: 'Book trips for your clients and employees in minutes, follow every ride and find all your invoices in one place.',
+      sections: [
+        ['Book for your clients and employees', ['Welcoming a client at the airport, an executive’s meeting, a team trip or seminar guests: post the request from your account and enter the passenger’s name and phone number. The chauffeur receives this information with the booking, along with your instructions.', 'Compare offers from verified chauffeurs and fleets, then choose by price, vehicle and reviews.']],
+        ['Ride tracking and simple invoicing', ['All your company’s rides are gathered in your dashboard: upcoming, in progress, completed. On the day, you follow the chauffeur’s arrival live and receive the ride’s milestones.', 'Every paid ride automatically generates its invoice, sent by e-mail and available at any time in your account. No more chasing receipts or redoing expense reports.']]
+      ],
+      faq: [
+        ['Can I book a chauffeur for a client or an employee?', 'Yes. When posting the request, enter the passenger’s name and phone number: this information is passed on to the chauffeur with the booking.'],
+        ['How do I follow my passengers’ rides?', 'All your rides are gathered in your dashboard. When the chauffeur is on the way, you follow their arrival live.'],
+        ['How does invoicing work?', 'Every paid ride automatically generates an invoice, sent by e-mail and always available in your account, under Invoices.']
+      ]
+    },
+    es: {
+      title: 'Chófer privado para empresas | Bleenr',
+      desc: 'Bleenr para empresas: reserve chóferes privados para sus clientes y colaboradores, siga los trayectos y reciba facturas simplificadas. Chóferes verificados.',
+      short: 'Empresas', eye: 'Empresas · clientes y colaboradores',
+      h1: 'Chófer privado para empresas',
+      lead: 'Reserve en minutos los desplazamientos de sus clientes y colaboradores, siga cada trayecto y encuentre todas sus facturas en un mismo lugar.',
+      sections: [
+        ['Reserve para sus clientes y colaboradores', ['Recibir a un cliente en el aeropuerto, la reunión de un directivo, el desplazamiento de un equipo o los invitados de un seminario: publique la solicitud desde su cuenta e indique el nombre y el teléfono del pasajero. El chófer recibe esta información con la reserva, junto con sus instrucciones.', 'Compare las ofertas de chóferes y flotas verificados y elija según el precio, el vehículo y las opiniones.']],
+        ['Seguimiento de trayectos y facturas simplificadas', ['Todos los trayectos de su empresa se reúnen en su panel: próximos, en curso, terminados. El día del trayecto, sigue en directo la llegada del chófer y recibe las etapas del servicio.', 'Cada trayecto pagado genera automáticamente su factura, enviada por correo electrónico y disponible en todo momento en su cuenta. Se acabó reclamar recibos o rehacer notas de gastos.']]
+      ],
+      faq: [
+        ['¿Puedo reservar un chófer para un cliente o un colaborador?', 'Sí. Al publicar la solicitud, indique el nombre y el teléfono del pasajero: esta información se transmite al chófer con la reserva.'],
+        ['¿Cómo sigo los trayectos de mis pasajeros?', 'Todos sus trayectos se reúnen en su panel. Cuando el chófer está en camino, sigue su llegada en directo.'],
+        ['¿Cómo funciona la facturación?', 'Cada trayecto pagado genera automáticamente una factura, enviada por correo electrónico y siempre disponible en su cuenta, en el apartado Facturas.']
+      ]
+    }
   }
 ];
