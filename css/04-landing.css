@@ -26,7 +26,7 @@
 .ldd-nav.p{left:-6px}.ldd-nav.n{right:-6px}
 .ldd-cap{text-align:center;color:rgba(245,241,232,.75);font-size:14.5px;margin-top:14px;min-height:22px;padding:0 16px}
 .ldd-foot{text-align:center;padding:16px 24px 50px}
-.ldd-foot .ld-btn{font-size:15px;padding:18px 38px}
+.ldd-foot .ld-btn{font-size:15px;padding:18px 38px;background:#D6F27A;color:#0E1410}.ldd-foot .ld-btn:hover{background:#E6F8A6}
 .ldd-foot p{margin-top:16px;font-size:13px;color:rgba(245,241,232,.6)}
 .ldd-foot a{color:var(--lmi)!important;cursor:pointer;text-decoration:underline!important}
 @media(max-width:700px){.ldd-head{padding-top:64px}.ldd-st{padding:6px 12px 6px 6px;font-size:12px}.ldd-nav{display:none}}
