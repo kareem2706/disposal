@@ -348,6 +348,8 @@ function renderMkItem(r,isSub,isMine){
   if(isSub && !isMine){
     var subPrice = r.final_price ? parseFloat(r.final_price).toFixed(0)+'€' : '';
     offerBtn='<button class="btn btn-green" style="min-width:160px;justify-content:center;" onclick="event.stopPropagation();acceptSubcontract(this.dataset.rid)" data-rid="'+r.id+'">Accepter'+(subPrice?' '+subPrice:'')+'</button>';
+  } else if(isMine && r.driver_id && (r.status==='confirmed'||r.status==='active')){
+    offerBtn='<button class="btn btn-green" style="min-width:120px;justify-content:center;" onclick="event.stopPropagation();openLiveTracking(\''+String(r.id).replace(/'/g,'')+'\')">'+t('app.suivre')+'</button>';
   } else if(!isSub && !isMine){
     var myOffer = _myOffers && _myOffers[r.id];
     if(myOffer){

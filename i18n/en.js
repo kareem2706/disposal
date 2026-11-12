@@ -474,6 +474,7 @@
   "app.statut": "Status",
   "app.statut_en_chemin_envoye_au": "✅ “On the way” status sent to the customer",
   "app.suite_a_votre_modification_il": "Following your change, they can no longer provide this ride.",
+  "app.sous_traitances_en_cours": "Subcontract(s) in progress",
   "app.suivre": "Follow",
   "app.suivre_en_direct": "Follow live",
   "app.supabase_non_configure": "Supabase not configured",

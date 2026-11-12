@@ -474,6 +474,7 @@
   "app.statut": "Statut",
   "app.statut_en_chemin_envoye_au": "✅ Statut « En chemin » envoyé au client",
   "app.suite_a_votre_modification_il": "Suite à votre modification, il ne peut plus assurer cette course.",
+  "app.sous_traitances_en_cours": "Sous-traitance(s) en cours",
   "app.suivre": "Suivre",
   "app.suivre_en_direct": "Suivre en direct",
   "app.supabase_non_configure": "Supabase non configuré",

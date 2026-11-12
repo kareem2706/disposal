@@ -112,4 +112,16 @@ end $$;
 revoke all on function public.api_subcontract_create(jsonb, uuid[]) from public, anon;
 grant execute on function public.api_subcontract_create(jsonb, uuid[]) to authenticated;
 
+-- Suivi en direct par la flotte qui a sous-traité (donneur d'ordre = client_id de la course) :
+-- lecture seule de la position du chauffeur, en plus des règles existantes (politiques cumulées).
+do $$
+begin
+  if to_regclass('public.ride_locations') is not null then
+    execute 'drop policy if exists ride_locations_poster_read on public.ride_locations';
+    execute $p$create policy ride_locations_poster_read on public.ride_locations for select to authenticated
+      using (exists (select 1 from public.rides r where r.id = ride_id and r.client_id = auth.uid()
+                     and coalesce(r.is_subcontract, false)))$p$;
+  end if;
+end $$;
+
 notify pgrst, 'reload schema';

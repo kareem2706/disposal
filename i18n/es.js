@@ -474,6 +474,7 @@
   "app.statut": "Estado",
   "app.statut_en_chemin_envoye_au": "✅ Estado «En camino» enviado al cliente",
   "app.suite_a_votre_modification_il": "Tras su modificación, ya no puede realizar este trayecto.",
+  "app.sous_traitances_en_cours": "Subcontrataciones en curso",
   "app.suivre": "Seguir",
   "app.suivre_en_direct": "Seguir en directo",
   "app.supabase_non_configure": "Supabase no configurado",

@@ -472,6 +472,16 @@ async function loadDriverDashboard(){
   var _drvInProgress = missions.filter(function(r){ return r.status==='active' || (r.status==='confirmed' && r.on_way_at); });
   _renderDriverActiveRides(_drvInProgress);
   _syncDriverTracking(_drvInProgress.filter(function(r){ return r.driver_id===uid; }));
+  // Sous-traitances publiées par cette flotte et en cours : suivi du sous-traitant
+  if(sb && uid && !localStorage.getItem(DEMO_MODE_KEY)){
+    sb.from('rides').select('*').eq('client_id', uid).eq('is_subcontract', true).in('status', ['confirmed','active']).neq('driver_id', uid)
+      .then(function(res){
+        var subs=(res.data||[]).filter(function(r){ return r.driver_id && (r.status==='active' || r.on_way_at); });
+        _renderDriverActiveRides(subs, 'driver-sub-follow', true);
+        var bx=document.getElementById('driver-sub-follow'), h=bx&&bx.querySelector('span[style*="font-weight:700"]');
+        if(h && subs.length) h.textContent=t('app.sous_traitances_en_cours');
+      }, function(){});
+  }
 
   var latestPending = pending.filter(_driverCanHandleRide).slice().sort(_byNewest);
   document.getElementById('driver-latest-requests').innerHTML = latestPending.length
