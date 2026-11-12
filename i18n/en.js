@@ -1025,5 +1025,7 @@
   "sub.aud_loading": "Loading…",
   "sub.aud_error": "List unavailable at the moment.",
   "sub.aud_nomatch": "No matching driver.",
-  "sub.aud_nobody": "No other approved driver yet."
+  "sub.aud_nobody": "No other approved driver yet.",
+  "ld.vos_sous_traitances": "Your subcontracting",
+  "ld.sous_traitez_vos_courses": "Subcontract your own rides to all drivers or to the ones you choose, and keep track of every mission."
 };

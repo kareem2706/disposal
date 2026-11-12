@@ -1025,5 +1025,7 @@
   "sub.aud_loading": "Cargando…",
   "sub.aud_error": "Lista no disponible por el momento.",
   "sub.aud_nomatch": "Ningún chófer coincide.",
-  "sub.aud_nobody": "Todavía no hay otros chóferes validados."
+  "sub.aud_nobody": "Todavía no hay otros chóferes validados.",
+  "ld.vos_sous_traitances": "Sus subcontrataciones",
+  "ld.sous_traitez_vos_courses": "Subcontrate sus propios servicios a todos los chóferes o a los que elija, y mantenga el seguimiento de cada misión."
 };

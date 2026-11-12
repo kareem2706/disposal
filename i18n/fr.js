@@ -1025,5 +1025,7 @@
   "sub.aud_loading": "Chargement…",
   "sub.aud_error": "Liste indisponible pour le moment.",
   "sub.aud_nomatch": "Aucun chauffeur ne correspond.",
-  "sub.aud_nobody": "Aucun autre chauffeur validé pour le moment."
+  "sub.aud_nobody": "Aucun autre chauffeur validé pour le moment.",
+  "ld.vos_sous_traitances": "Vos sous-traitances",
+  "ld.sous_traitez_vos_courses": "Sous-traitez vos propres courses à tous les chauffeurs ou à ceux que vous choisissez, et gardez le suivi de chaque mission."
 };
