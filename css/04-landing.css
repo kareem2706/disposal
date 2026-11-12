@@ -188,11 +188,11 @@
 .ld-hero-scrim{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(14,20,16,.92) 0%,rgba(14,20,16,.6) 48%,rgba(14,20,16,.3) 100%)}
 .ld-hero-in{position:relative;flex:1;display:flex;align-items:center;gap:56px;padding-top:110px;padding-bottom:56px;opacity:calc(1 - var(--hp,0) * 1.5);transform:translate3d(0,calc(var(--hp,0) * -90px),0)}
 .ld-hero-txt{flex:1 1 520px;min-width:0}
-.ld-kick{display:inline-flex;align-items:center;gap:10px;font-size:12.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--lime);margin-bottom:24px}
+.ld-kick{margin-top:0;font-family:inherit;line-height:1.3;display:inline-flex;align-items:center;gap:10px;font-size:12.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--lime);margin-bottom:24px}
 .ld-kick i{width:8px;height:8px;border-radius:50%;background:var(--lime);animation:ldPulse 2s ease-out infinite}
 @keyframes ldPulse{0%{box-shadow:0 0 0 0 rgba(214,242,122,.65)}100%{box-shadow:0 0 0 18px rgba(214,242,122,0)}}
-.ld-hero h1{font-size:clamp(52px,8vw,124px);line-height:.94;letter-spacing:-.035em}
-.ld-hero h1 em{color:var(--lime)}
+.ld-hero h2.ld-h{font-size:clamp(52px,8vw,124px);line-height:.94;letter-spacing:-.035em}
+.ld-hero h2.ld-h em{color:var(--lime)}
 .ld-hero-lead{font-size:18px;line-height:1.55;max-width:500px;margin-top:28px;color:#D9E0DB}
 .ld-hero-cta{display:flex;gap:14px;flex-wrap:wrap;margin-top:34px}
 /* apparition en cascade (opacité de départ non nulle : le titre reste compté comme affiché par les navigateurs) */

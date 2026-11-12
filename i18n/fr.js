@@ -1073,7 +1073,7 @@
   "st.banner_pending": "Stripe vérifie vos informations : vous pourrez faire des offres sur les courses clients dès que votre compte sera validé.",
   "st.banner_btn": "Créer mon compte Stripe",
   "st.required": "Activez les versements automatiques (compte Stripe) pour faire des offres sur les courses clients.",
-  "ld.kicker": "Chauffeurs privés · Belgique",
+  "ld.kicker": "Chauffeurs privés en Belgique",
   "ld.voir_comment": "Voir comment ça marche",
   "ld.chip_verified": "Chauffeur vérifié",
   "ld.chip_fixed": "Prix fixe · accepté à la réservation",

@@ -1073,7 +1073,7 @@
   "st.banner_pending": "Stripe está verificando sus datos: podrá hacer ofertas en los servicios de clientes en cuanto se valide su cuenta.",
   "st.banner_btn": "Crear mi cuenta Stripe",
   "st.required": "Active los pagos automáticos (cuenta Stripe) para hacer ofertas en los servicios de clientes.",
-  "ld.kicker": "Chóferes privados · Bélgica",
+  "ld.kicker": "Chóferes privados en Bélgica",
   "ld.voir_comment": "Ver cómo funciona",
   "ld.chip_verified": "Chófer verificado",
   "ld.chip_fixed": "Precio fijo · aceptado al reservar",

@@ -1073,7 +1073,7 @@
   "st.banner_pending": "Stripe is checking your details: you will be able to make offers on client rides as soon as your account is approved.",
   "st.banner_btn": "Create my Stripe account",
   "st.required": "Enable automatic payouts (Stripe account) to make offers on client rides.",
-  "ld.kicker": "Private chauffeurs · Belgium",
+  "ld.kicker": "Private chauffeurs in Belgium",
   "ld.voir_comment": "See how it works",
   "ld.chip_verified": "Verified chauffeur",
   "ld.chip_fixed": "Fixed price · agreed at booking",
