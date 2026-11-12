@@ -477,7 +477,7 @@ function renderEventItem(g){
   var pct=Math.round(conf/Math.max(rides.length,1)*100);
   var cx=rides.filter(function(r){ return r.status==='cancelled'; }).length, pctx=Math.round(cx/Math.max(rides.length,1)*100);
   return '<div class="ride-card ev-card" onclick="openEventDetail(\''+String(g.id).replace(/'/g,'')+'\')">'
-    +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+mon+'</div><div class="ride-card-date-day">'+day+'</div></div>'
+    +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+mon+'</div><div class="ride-card-date-day">'+day+'</div>'+(f.ride_time?'<div class="ride-card-date-time">'+String(f.ride_time).slice(0,5)+'</div>':'')+'</div>'
     +'<div style="display:flex;align-items:center;">'+(g.kind==='mixed'?'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:var(--blue-bg);color:var(--blue);padding:2px 7px;border-radius:20px;">'+t('app.mixte')+'</span>':'<span class="ev-tag">'+t('app.evenement')+'</span>')+'</div>'
     +'<div style="min-width:0;"><div class="ride-card-col-label">'+(g.kind==='mixed'?'Trajets':'Événement')+'</div><div class="ride-card-col-val" style="font-weight:700;">'+_rdEsc(g.name)+'</div></div>'
     +'<div style="min-width:0;"><div class="ride-card-col-label">'+t('app.vehicules')+'</div><div class="ride-card-col-val">'+_rdEsc(_evSummary(rides))+'</div></div>'

@@ -348,7 +348,7 @@ function renderMkItem(r,isSub,isMine){
   if(isSub && !isMine){
     var subPrice = r.final_price ? parseFloat(r.final_price).toFixed(0)+'€' : '';
     offerBtn='<button class="btn btn-green" style="min-width:160px;justify-content:center;" onclick="event.stopPropagation();acceptSubcontract(this.dataset.rid)" data-rid="'+r.id+'">Accepter'+(subPrice?' '+subPrice:'')+'</button>';
-  } else if(isMine && r.driver_id && (r.status==='confirmed'||r.status==='active')){
+  } else if(isMine && r.driver_id && (r.status==='confirmed'||r.status==='active') && (r.on_way_at||r.pickup_at||r.status==='active')){
     offerBtn='<button class="btn btn-green" style="min-width:120px;justify-content:center;" onclick="event.stopPropagation();openLiveTracking(\''+String(r.id).replace(/'/g,'')+'\')">'+t('app.suivre')+'</button>';
   } else if(!isSub && !isMine){
     var myOffer = _myOffers && _myOffers[r.id];
@@ -390,7 +390,7 @@ function renderMkItem(r,isSub,isMine){
   // Subcontract indicator for marketplace
   var mkSubBadge=(isSub||r.is_subcontract)?'<span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--amber-bg);color:var(--amber);margin-left:2px;flex-shrink:0;" title="'+t('app.sous_traitee')+'"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>':'';
   return '<div class="ride-card" onclick="openRideDetail(this)" data-ride=\''+safeR.replace(/\'/g,'&#39;')+'\'>'
-    +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+monStr+'</div><div class="ride-card-date-day">'+dayNum+'</div></div>'
+    +'<div class="ride-card-date-col"><div class="ride-card-date-month">'+monStr+'</div><div class="ride-card-date-day">'+dayNum+'</div>'+(r.ride_time?'<div class="ride-card-date-time">'+String(r.ride_time).slice(0,5)+'</div>':'')+'</div>'
     +'<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:'+tBg+';color:'+tColor+';padding:2px 7px;border-radius:20px;">'+tLabel+'</span>'+mkSubBadge+'</div>'
     +'<div><div class="ride-card-col-label">'+t('app.origine')+'</div><div class="ride-card-col-val">'+(cleanAddr(r.from_address)||'—')+'</div></div>'
     +'<div><div class="ride-card-col-label">'+t('app.destination')+'</div><div class="ride-card-col-val">'+(r.to_address||'—')+'</div></div>'

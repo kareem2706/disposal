@@ -24,6 +24,7 @@ body{background:var(--bg);}
 .ride-card-date-col{text-align:center;}
 .ride-card-date-month{font-size:10px;text-transform:uppercase;color:var(--ink4);font-weight:600;letter-spacing:.06em;}
 .ride-card-date-day{font-size:22px;font-weight:700;color:var(--ink);line-height:1;}
+.ride-card-date-time{font-size:11.5px;font-weight:600;color:var(--ink3);margin-top:4px;font-variant-numeric:tabular-nums;}
 .ride-card-col-label{font-size:9px;text-transform:uppercase;color:var(--ink4);letter-spacing:.08em;font-weight:600;margin-bottom:2px;}
 .ride-card-col-val{font-size:13.5px;font-weight:500;color:var(--ink);;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ride-card-arrow{color:var(--ink4);}

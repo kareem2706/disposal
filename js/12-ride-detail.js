@@ -978,7 +978,7 @@ function _openRideDetailImpl(el){
         ft=_rideActionsMenu(rId,_canAssign,_canNote)+'<span style="flex:1;"></span>'+closeBtn;
       }
       // Sous-traitance publiée par cette flotte : suivi en direct du sous-traitant
-      if(isOwnSub && r.driver_id && r.driver_id!==currentUser.id) ft+='<button class="btn btn-green" style="margin-left:8px;" onclick="closeModal(\'m-ride-detail\');openLiveTracking(\''+String(rId).replace(/'/g,'')+'\')">'+t('app.suivre_en_direct')+'</button>';
+      if(isOwnSub && r.driver_id && r.driver_id!==currentUser.id && (r.on_way_at||r.pickup_at||r.status==='active')) ft+='<button class="btn btn-green" style="margin-left:8px;" onclick="closeModal(\'m-ride-detail\');openLiveTracking(\''+String(rId).replace(/'/g,'')+'\')">'+t('app.suivre_en_direct')+'</button>';
     } else {
       // For subcontract rides (done/cancelled etc.) — show price left
       var subDonePrice = (r.is_subcontract && r.final_price)
