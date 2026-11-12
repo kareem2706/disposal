@@ -123,8 +123,8 @@ input.fld-err,select.fld-err,textarea.fld-err{border-color:#C0392B!important;box
 @keyframes auIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 #screen-auth .auth-logo{display:none}
 .au-head{margin-bottom:28px}
-.au-head h1{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:48px;line-height:1;letter-spacing:-.02em;margin-top:12px;color:#0E1410}
-.au-head h1 em{font-style:italic;color:#1B5E3B}
+.au-head h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:48px;line-height:1;letter-spacing:-.02em;margin-top:12px;color:#0E1410}
+.au-head h2 em{font-style:italic;color:#1B5E3B}
 .au-head .au-eye{color:#5A7A5A}
 #screen-auth .auth-tabs{display:flex;gap:4px;background:#ECE6D8;border:none;border-radius:100px;padding:4px;margin-bottom:26px!important;width:100%}
 #screen-auth .auth-tab{flex:1;padding:11px 16px;border:none;border-radius:100px;margin:0;font:500 13.5px 'DM Sans',sans-serif;color:#5A7A5A;background:transparent;transition:all .25s}
@@ -164,7 +164,7 @@ input.fld-err,select.fld-err,textarea.fld-err{border-color:#C0392B!important;box
 .au-side{flex:0 0 auto;min-height:0;height:38vh;padding:20px 20px 24px}
 .au-copy{min-height:0;height:100%}.au-msg p,.au-points{display:none}.au-msg h2{font-size:40px}
 .au-main{height:auto;overflow:visible;padding:32px 20px 48px}
-.au-head h1{font-size:38px}
+.au-head h2{font-size:38px}
 }
 
 /* ═══ Connexion / inscription : touches citron vert (thème de la landing, 11/2026) ═══ */
@@ -174,4 +174,4 @@ input.fld-err,select.fld-err,textarea.fld-err{border-color:#C0392B!important;box
 .au-points{border-top-color:rgba(214,242,122,.28)}
 .au-points b{color:var(--lime)}
 .au-back:hover{border-color:var(--lime);color:var(--lime);background:rgba(214,242,122,.08)}
-.au-head h1 em{color:#1B5E3B;background:linear-gradient(transparent 62%,rgba(214,242,122,.75) 62%,rgba(214,242,122,.75) 88%,transparent 88%);padding:0 .06em}
+.au-head h2 em{color:#1B5E3B;background:linear-gradient(transparent 62%,rgba(214,242,122,.75) 62%,rgba(214,242,122,.75) 88%,transparent 88%);padding:0 .06em}

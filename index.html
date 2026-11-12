@@ -9,6 +9,11 @@
 <link rel="canonical" href="{{url}}">
 <meta name="theme-color" content="#1B5E3B">
 <!-- Aperçu lors d'un partage (WhatsApp, LinkedIn, Facebook…) -->
+<!-- Données structurées pour les moteurs de recherche (entreprise, site, service, FAQ) -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"{{url}}#org","name":"{{company.name}}","url":"{{url}}","logo":"{{url}}assets/icons/icon-512.png","email":"{{company.email}}","vatID":"{{company.vat}}","address":{"@type":"PostalAddress","streetAddress":"{{company.street}}","postalCode":"{{company.postal}}","addressLocality":"{{company.city}}","addressCountry":"BE"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"{{url}}#site","name":"Bleenr","url":"{{url}}","inLanguage":["fr-BE","en","es"],"publisher":{"@id":"{{url}}#org"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TaxiService","@id":"{{url}}#service","name":"Bleenr — Chauffeurs privés en Belgique","serviceType":"Chauffeur privé, transfert aéroport, mise à disposition","description":"Publiez votre trajet, recevez les offres de chauffeurs et de flottes vérifiés, choisissez. Le prix est fixé avant le départ.","provider":{"@id":"{{url}}#org"},"url":"{{url}}","areaServed":[{"@type":"Country","name":"Belgique"},{"@type":"City","name":"Bruxelles"},{"@type":"City","name":"Anvers"},{"@type":"City","name":"Gand"},{"@type":"City","name":"Liège"},{"@type":"City","name":"Bruges"},{"@type":"City","name":"Namur"},{"@type":"City","name":"Charleroi"},{"@type":"City","name":"Mons"},{"@type":"City","name":"Louvain"}],"availableChannel":{"@type":"ServiceChannel","serviceUrl":"{{url}}"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","@id":"{{url}}#faq","inLanguage":"fr-BE","mainEntity":[{"@type":"Question","name":"Comment fonctionne Bleenr ?","acceptedAnswer":{"@type":"Answer","text":"Vous publiez votre trajet (départ, arrivée ou durée, date, heure, gamme de véhicule). Des chauffeurs et des flottes vérifiés vous envoient leurs offres. Vous comparez, choisissez et payez en ligne : votre course est réservée."}},{"@type":"Question","name":"Publier une demande est-il payant ?","acceptedAnswer":{"@type":"Answer","text":"Non. Publier une demande et recevoir des offres est gratuit et sans engagement. Vous ne payez que l'offre que vous acceptez."}},{"@type":"Question","name":"Le prix peut-il changer après la réservation ?","acceptedAnswer":{"@type":"Answer","text":"Non. Vous acceptez un prix fixe, TVA comprise, au moment de la réservation : c'est celui que vous payez. Seule une modification de la course demandée par vous peut entraîner un supplément, que vous acceptez ou refusez."}},{"@type":"Question","name":"Les chauffeurs sont-ils vérifiés ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Licence, assurance et contrôle technique sont contrôlés pour chaque chauffeur et chaque flotte partenaire avant qu'ils puissent faire des offres."}},{"@type":"Question","name":"Quels véhicules puis-je réserver ?","acceptedAnswer":{"@type":"Answer","text":"Cinq gammes : Economy, Business (Mercedes Classe E, BMW Série 5 ou similaire), Première (Mercedes Classe S, BMW Série 7 ou similaire), Van jusqu'à 7 passagers et Autocar pour les groupes de 16 à 50 personnes."}},{"@type":"Question","name":"Où Bleenr est-il disponible ?","acceptedAnswer":{"@type":"Answer","text":"Partout en Belgique : Bruxelles, Anvers, Gand, Liège, Bruges, Namur, Charleroi, Mons, Louvain… ainsi que les aéroports (Brussels Airport à Zaventem, Charleroi) et les gares."}},{"@type":"Question","name":"Comment se passe le paiement ?","acceptedAnswer":{"@type":"Answer","text":"Par carte bancaire en ligne, sur une page de paiement sécurisée. Le reçu et la facture vous sont envoyés automatiquement par e-mail."}}]}</script>
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Bleenr">
 <meta property="og:locale" content="fr_BE">
@@ -264,6 +269,22 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     </div>
   </section>
 
+  <!-- FAQ (texte repris dans les données structurées FAQPage du <head>) -->
+  <section class="ld-faq" id="ld-faq">
+    <div class="ld-wrap ld-faq-grid">
+      <div class="ld-faq-h"><span data-i18n="ld.faq_eye" class="ld-eye">Questions fr&eacute;quentes</span><h2 data-i18n-html="ld.faq_title" class="ld-h">Tout savoir <em>avant de r&eacute;server</em>.</h2></div>
+      <div class="ld-faq-l">
+        <details class="ld-faq-i" open><summary data-i18n="ld.faq_q1">Comment fonctionne Bleenr ?</summary><p data-i18n="ld.faq_a1">Vous publiez votre trajet (départ, arrivée ou durée, date, heure, gamme de véhicule). Des chauffeurs et des flottes vérifiés vous envoient leurs offres. Vous comparez, choisissez et payez en ligne : votre course est réservée.</p></details>
+        <details class="ld-faq-i"><summary data-i18n="ld.faq_q2">Publier une demande est-il payant ?</summary><p data-i18n="ld.faq_a2">Non. Publier une demande et recevoir des offres est gratuit et sans engagement. Vous ne payez que l'offre que vous acceptez.</p></details>
+        <details class="ld-faq-i"><summary data-i18n="ld.faq_q3">Le prix peut-il changer après la réservation ?</summary><p data-i18n="ld.faq_a3">Non. Vous acceptez un prix fixe, TVA comprise, au moment de la réservation : c'est celui que vous payez. Seule une modification de la course demandée par vous peut entraîner un supplément, que vous acceptez ou refusez.</p></details>
+        <details class="ld-faq-i"><summary data-i18n="ld.faq_q4">Les chauffeurs sont-ils vérifiés ?</summary><p data-i18n="ld.faq_a4">Oui. Licence, assurance et contrôle technique sont contrôlés pour chaque chauffeur et chaque flotte partenaire avant qu'ils puissent faire des offres.</p></details>
+        <details class="ld-faq-i"><summary data-i18n="ld.faq_q5">Quels véhicules puis-je réserver ?</summary><p data-i18n="ld.faq_a5">Cinq gammes : Economy, Business (Mercedes Classe E, BMW Série 5 ou similaire), Première (Mercedes Classe S, BMW Série 7 ou similaire), Van jusqu'à 7 passagers et Autocar pour les groupes de 16 à 50 personnes.</p></details>
+        <details class="ld-faq-i"><summary data-i18n="ld.faq_q6">Où Bleenr est-il disponible ?</summary><p data-i18n="ld.faq_a6">Partout en Belgique : Bruxelles, Anvers, Gand, Liège, Bruges, Namur, Charleroi, Mons, Louvain… ainsi que les aéroports (Brussels Airport à Zaventem, Charleroi) et les gares.</p></details>
+        <details class="ld-faq-i"><summary data-i18n="ld.faq_q7">Comment se passe le paiement ?</summary><p data-i18n="ld.faq_a7">Par carte bancaire en ligne, sur une page de paiement sécurisée. Le reçu et la facture vous sont envoyés automatiquement par e-mail.</p></details>
+      </div>
+    </div>
+  </section>
+
   <section class="ld-final">
     <div class="ld-wrap">
       <div class="ld-zoom" data-sp><h2 data-i18n-html="ld.votre_chauffeurvous_attend" class="ld-h">Votre chauffeur<br><em>vous attend.</em></h2></div>
@@ -307,7 +328,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
   }catch(e){}
 })();
 </script>
-<div id="screen-auth" class="screen">
+<div id="screen-auth" class="screen" data-nosnippet>
   <div id="auth-blob1"></div>
   <div id="auth-blob2"></div>
   <div id="auth-blob3"></div>
@@ -325,7 +346,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     </div>
   </aside>
   <div class="au-main"><div class="au-main-in">
-  <div class="au-head"><span class="au-eye" id="au-head-eye">Connexion</span><h1 id="au-head-t">Bon <em>retour</em>.</h1></div>
+  <div class="au-head"><span class="au-eye" id="au-head-eye">Connexion</span><h2 id="au-head-t">Bon <em>retour</em>.</h2></div>
   <div class="auth-card">
     <div class="auth-logo"><img src="data:image/png;base64,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wOOTMLMJJAIAgGc0PNEqrZ3hLW77iZtXNZ54yNRjVvxk5rTEU3+473EiwqBkzRhUMpnU9z507zeeX/w/1yx48cmzO0y22DMGIgIWMsRkCBQMCgMNkBhRmY7mbzRn26as31o/5btnH7no2+P2nDU/Me/N4KH1CyUy7emS5mz7wducZkRMJOhvP4KJIjR2tKzFdTBTZ1147HfPOeqPWdYTOjOdAMj3sEwansl1sOr0siOaMq2nNbRuOy06/eRXfnDg9y64+meXreoraozEyNxTqgJw8EAOi0FY1nr1VQBmAhha8LnJcdfcg/v+qpmuvDzvZQcC0q2d73pZp42IVaAR9jp42I6Y/thH+QqZdiwWU0gm9ZU3zjpg4tSjF33asHpOs9M+Jp3NaAZpRUosYiJAEciCwILAIpDFIFIgYS06m83qbenWPT/a8Oljx1744+Srr746PJFImHg83h/HStFo1EISevKl553+33+veXdV88ZpjZm2Yu15nhIyCixMxBycM3deAinFLIrYwDPa0VpvzjQf/o9VH9eeeH5spiLWhclArxMrNtBas4YmEU3G31goSwJt2fbyKVeef+pH6+pebs62TUin057FStushJkpuAa/D4hIEQuDtKNdva5l07HPpv666KwZP61KJpO65/3X1naNjQCrZwsYGS943QqgYlnr1S8A+H1gkF7BQOPAu1pMOTfRH05h3jFQPztOmBTjomFDyxVbthgj0iNpFoEws3ieu9rAIBqNMgbmhQY9VnIjeeqsC075+7K3325oa5qoXc8LKVtsVoqJFBUeQoKfHiifwcpmS9mkTDab9VY1b/jxjX+6++9LliwZkUgkpA/DJESjKpVKeSf9clL8400rnt7S1jTKaO2FLFuYlRUwEgWgL+gaydMTBAFDoGyylALp9kyav2hcf8PJl5z9gIgIYjHuswucLEhEgaAgUIFnVQBCxvVUW1vrTz5cV1fT0tkGW9laKWUBpPrwFsipaAJSipQSLV6T077Tyub1L99Z88DoRCKBbvdf3W1X1WOzgtchAN4GcFJgjBJ81ut+LBogifAZc0WxWEy1tbWpWCw2YORsqGqgRDLBqIPz+fAfn+WyRFjgEWB1o50gsJhpSHHJu30esDPHbvZto9IPLZQzyIsTlx35xucfPN2UaVNFobCGwJKCtIwAMWS08UVVRSAYbYSYDBOD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" alt="Bleenr"></div>
 
@@ -536,7 +557,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 </div>
 
 <!-- ══ SCREEN: APP ════════════════════════════════════════ -->
-<div id="screen-app" class="screen">
+<div id="screen-app" class="screen" data-nosnippet>
 
   <!-- SIDEBAR -->
   <aside class="app-sidebar" id="sidebar">
@@ -700,7 +721,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-dashboard" class="page active">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
-        <div><h1 data-i18n="ap.tableau_de_bord">Tableau de bord</h1><p data-i18n="ap.apercu_de_vos_activites">Aperçu de vos activités</p></div>
+        <div><h2 data-i18n="ap.tableau_de_bord">Tableau de bord</h2><p data-i18n="ap.apercu_de_vos_activites">Aperçu de vos activités</p></div>
       </div>
       <div class="sc-hd"><span data-i18n="ap.mes_demandes" class="section-title">Mes demandes</span><button data-i18n="ap.voir_tout" class="btn btn-ghost btn-sm" onclick="_goRides('all')">Voir tout →</button></div><div class="stats-row" id="client-stats"></div>
       <div id="active-ride-wrap" style="display:none;">
@@ -720,7 +741,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-rides" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4.5" width="18" height="15" rx="3" stroke="currentColor" stroke-width="1.8"/><path d="M7.5 10.5h9M7.5 15h6"/></svg></div>
-        <div><h1 data-i18n="ap.mes_demandes">Mes demandes</h1></div>
+        <div><h2 data-i18n="ap.mes_demandes">Mes demandes</h2></div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="rides-filters">
         <button data-i18n="ap.toutes" class="btn btn-primary btn-sm" onclick="filterRides('all',this)">Toutes</button>
@@ -737,7 +758,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-calendar" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
-        <div><h1 data-i18n="ap.calendrier">Calendrier</h1><p data-i18n="ap.vos_demandes_du_mois">Vos demandes du mois</p></div>
+        <div><h2 data-i18n="ap.calendrier">Calendrier</h2><p data-i18n="ap.vos_demandes_du_mois">Vos demandes du mois</p></div>
       </div>
       <div class="card" style="padding:0;overflow:hidden;background:#FCFCFC;">
         <div class="dcal-bar" style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--sand3);gap:12px;">
@@ -764,7 +785,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-d-calendar" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
-        <div><h1 data-i18n="ap.calendrier">Calendrier</h1><p data-i18n="ap.vos_missions_du_mois">Vos missions du mois</p></div>
+        <div><h2 data-i18n="ap.calendrier">Calendrier</h2><p data-i18n="ap.vos_missions_du_mois">Vos missions du mois</p></div>
       </div>
       <div style="margin-bottom:10px;">
         <button class="btn btn-sm" style="display:flex;align-items:center;gap:6px;background:#E8DEF8;color:#6750A4;border:none;font-weight:600;" onclick="openPersonalMissionModal()"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Ajouter mission personnelle</button>
@@ -791,7 +812,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     </div>
 
     <div id="page-invoices" class="page">
-      <div class="pg-head"><div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div><div><h1 data-i18n="ap.factures">Factures</h1></div></div>
+      <div class="pg-head"><div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div><div><h2 data-i18n="ap.factures">Factures</h2></div></div>
       <div id="invoices-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
 
@@ -799,7 +820,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-passengers" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a7 7 0 0114 0v2"/><circle cx="19" cy="7" r="3"/><path d="M22 21v-1.5a4.5 4.5 0 00-3-4.243"/></svg></div>
-        <div><h1 data-i18n="ap.passagers">Passagers</h1><p data-i18n="ap.gerez_vos_passagers_habituels">Gérez vos passagers habituels</p></div>
+        <div><h2 data-i18n="ap.passagers">Passagers</h2><p data-i18n="ap.gerez_vos_passagers_habituels">Gérez vos passagers habituels</p></div>
       </div>
       <div id="passengers-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
@@ -808,7 +829,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-d-dashboard" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
-        <div><h1 data-i18n="ap.tableau_de_bord">Tableau de bord</h1><p data-i18n="ap.vos_missions_et_activites">Vos missions et activités</p></div>
+        <div><h2 data-i18n="ap.tableau_de_bord">Tableau de bord</h2><p data-i18n="ap.vos_missions_et_activites">Vos missions et activités</p></div>
       </div>
       <div id="driver-verify-banner" style="display:none;"></div>
       <div class="sc-hd"><span data-i18n="ap.mon_activite" class="section-title">Mon activité</span><button data-i18n="ap.voir_tout" class="btn btn-ghost btn-sm" onclick="showPage('missions')">Voir tout →</button></div><div class="stats-row" id="driver-stats"></div>
@@ -840,7 +861,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     </div>
 
     <div id="page-d-calendar" class="page">
-      <div class="pg-head"><div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div><div><h1 data-i18n="ap.calendrier">Calendrier</h1><p data-i18n="ap.vos_missions_du_mois">Vos missions du mois</p></div></div>
+      <div class="pg-head"><div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div><div><h2 data-i18n="ap.calendrier">Calendrier</h2><p data-i18n="ap.vos_missions_du_mois">Vos missions du mois</p></div></div>
       <div style="margin-bottom:10px;">
         <button class="btn btn-sm" style="display:flex;align-items:center;gap:6px;background:#E8DEF8;color:#6750A4;border:none;font-weight:600;" onclick="openPersonalMissionModal()"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Ajouter mission personnelle</button>
       </div>
@@ -861,7 +882,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div id="page-marketplace" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9h18M5.25 3l-2.25 6v10.5a1.5 1.5 0 001.5 1.5h15a1.5 1.5 0 001.5-1.5V9L18.75 3H5.25z"/><path d="M9 9v3a3 3 0 006 0V9"/></svg></div>
-        <div><h1 data-i18n="ap.marketplace_2">Marketplace</h1><p data-i18n="ap.demandes_disponibles">Demandes disponibles</p></div>
+        <div><h2 data-i18n="ap.marketplace_2">Marketplace</h2><p data-i18n="ap.demandes_disponibles">Demandes disponibles</p></div>
       </div>
       <div class="mktabs">
         <button class="mktab active" id="mktab-client" onclick="mkSwitch(this,'mk-client')">Clients</button>
@@ -884,7 +905,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-missions" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
-        <div><h1 data-i18n="ap.mes_missions">Mes missions</h1><p data-i18n="ap.historique_et_a_venir">Historique et à venir</p></div>
+        <div><h2 data-i18n="ap.mes_missions">Mes missions</h2><p data-i18n="ap.historique_et_a_venir">Historique et à venir</p></div>
       </div>
       <div class="mktabs">
         <button class="mktab active" id="mstab-upcoming" onclick="msSwitch(this,'ms-upcoming')">Missions à venir</button>
@@ -899,7 +920,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-d-invoices" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></div>
-        <div><h1 data-i18n="ap.factures">Factures</h1><p data-i18n="ap.vos_missions_facturees">Vos missions facturées</p></div>
+        <div><h2 data-i18n="ap.factures">Factures</h2><p data-i18n="ap.vos_missions_facturees">Vos missions facturées</p></div>
       </div>
       <div id="d-invoices-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
@@ -908,7 +929,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-profile" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-        <div><h1 data-i18n="ap.profil">Profil</h1></div>
+        <div><h2 data-i18n="ap.profil">Profil</h2></div>
       </div>
       <div id="pf-tabs" class="pf-tabs" role="tablist" style="display:none;"></div>
       <div id="pf-panels"></div>
@@ -1140,7 +1161,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-admin-dashboard" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
-        <div><h1>Tableau de bord</h1><p>Aperçu de vos activités</p></div>
+        <div><h2>Tableau de bord</h2><p>Aperçu de vos activités</p></div>
       </div>
       <!-- Top 4 stat cards -->
       <div class="stats-row" id="admin-top-stats">
@@ -1237,7 +1258,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-admin-fleets" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="10" rx="3"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M5 7V6a3 3 0 013-3h8a3 3 0 013 3v1"/></svg></div>
-        <div><h1>Fleets</h1><p>Toutes les fleets inscrites dans l&apos;application</p></div>
+        <div><h2>Fleets</h2><p>Toutes les fleets inscrites dans l&apos;application</p></div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="admin-fleets-filters">
         <button class="btn btn-primary btn-sm" onclick="filterAdminFleets('all',this)">Toutes</button>
@@ -1256,7 +1277,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-admin-clients" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
-        <div><h1>Clients</h1><p>Tous les clients inscrits dans l&apos;application</p></div>
+        <div><h2>Clients</h2><p>Tous les clients inscrits dans l&apos;application</p></div>
       </div>
       <div style="display:flex;gap:0;margin-bottom:16px;background:var(--sand2);border-radius:var(--r);padding:3px;width:fit-content;">
         <button class="btn btn-sm admin-client-tab active" data-tab="pro" onclick="switchAdminClientTab('pro',this)" style="border:none;padding:7px 18px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);">Clients professionnels <span id="acl-count-pro" style="opacity:.7;"></span></button>
@@ -1269,7 +1290,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-admin-reports" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20V12M10 20V5M16 20V9M21 20H3"/></svg></div>
-        <div><h1>Rapports</h1><p>G&eacute;n&eacute;rez les rapports et factures de la plateforme</p></div>
+        <div><h2>Rapports</h2><p>G&eacute;n&eacute;rez les rapports et factures de la plateforme</p></div>
       </div>
       <div id="admin-reports-content"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
@@ -1278,7 +1299,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-admin-issues" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
-        <div><h1>Signalements</h1><p>Probl&egrave;mes signal&eacute;s par les clients sur leurs courses</p></div>
+        <div><h2>Signalements</h2><p>Probl&egrave;mes signal&eacute;s par les clients sur leurs courses</p></div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;" id="admin-issues-filters">
         <button class="btn btn-primary btn-sm" data-f="open" onclick="filterAdminIssues('open',this)">Ouverts</button>
@@ -1292,14 +1313,14 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-admin-settings" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2M19.1 4.9L17 7M7 17l-2.1 2.1M19.1 19.1L17 17M7 7L4.9 4.9"/></svg></div>
-        <div><h1>R&eacute;glages</h1><p>Fonctionnalit&eacute;s et param&egrave;tres des formulaires de demande</p></div>
+        <div><h2>R&eacute;glages</h2><p>Fonctionnalit&eacute;s et param&egrave;tres des formulaires de demande</p></div>
       </div>
       <div id="admin-settings-content" style="max-width:760px;"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
     <div id="page-admin-campaigns" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="M3 6.5l9 6.5 9-6.5"/></svg></div>
-        <div><h1>Campagnes e-mail</h1><p>Offres et nouveaut&eacute;s envoy&eacute;es aux fleets ou aux clients</p></div>
+        <div><h2>Campagnes e-mail</h2><p>Offres et nouveaut&eacute;s envoy&eacute;es aux fleets ou aux clients</p></div>
       </div>
       <div class="cmp-grid">
         <div class="cmp-col">
@@ -1350,7 +1371,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-admin-billing" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l4 4v16H6z"/><path d="M9 11h7M9 15h7M9 19h4"/></svg></div>
-        <div><h1>Facturation</h1><p>Donn&eacute;es de facturation Bleenr et taux de TVA</p></div>
+        <div><h2>Facturation</h2><p>Donn&eacute;es de facturation Bleenr et taux de TVA</p></div>
       </div>
       <div id="admin-billing-content" style="max-width:760px;"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
@@ -1359,7 +1380,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <div id="page-admin-rides" class="page">
       <div class="pg-head">
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h7"/></svg></div>
-        <div><h1>Courses &amp; Offres</h1><p>Toutes les courses et offres du système</p></div>
+        <div><h2>Courses &amp; Offres</h2><p>Toutes les courses et offres du système</p></div>
       </div>
       <!-- Tab switch -->
       <div style="display:flex;gap:0;background:var(--sand2);border-radius:var(--r);padding:3px;width:fit-content;margin-bottom:18px;">
