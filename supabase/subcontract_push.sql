@@ -13,8 +13,14 @@ begin
   select * into r from rides where id = new.ride_id;
   if not found or not coalesce(r.is_subcontract, false) or r.client_id is null
      or r.client_id = r.driver_id or r.status not in ('confirmed', 'active') then return new; end if;
-  if new.vehicle_id is distinct from old.vehicle_id and new.vehicle_id is not null then chg := array_append(chg, 'véhicule'); end if;
-  if new.fleet_driver_id is distinct from old.fleet_driver_id and new.fleet_driver_id is not null then chg := array_append(chg, 'chauffeur'); end if;
+  -- 1re attribution : fleet_update_assignment crée l'offre acceptée (INSERT) ; ensuite elle la modifie (UPDATE)
+  if tg_op = 'INSERT' then
+    if new.vehicle_id is not null then chg := array_append(chg, 'véhicule'); end if;
+    if new.fleet_driver_id is not null then chg := array_append(chg, 'chauffeur'); end if;
+  else
+    if new.vehicle_id is distinct from old.vehicle_id and new.vehicle_id is not null then chg := array_append(chg, 'véhicule'); end if;
+    if new.fleet_driver_id is distinct from old.fleet_driver_id and new.fleet_driver_id is not null then chg := array_append(chg, 'chauffeur'); end if;
+  end if;
   if coalesce(array_length(chg, 1), 0) = 0 then return new; end if;
   perform public._edge_post('notify-drivers', jsonb_build_object(
     'type', 'SUB_ASSIGN', 'table', 'offers',
@@ -31,5 +37,5 @@ revoke all on function public.trg_offers_sub_push() from public, anon, authentic
 
 drop trigger if exists offers_sub_push on public.offers;
 create trigger offers_sub_push
-  after update of vehicle_id, fleet_driver_id on public.offers
+  after insert or update of vehicle_id, fleet_driver_id on public.offers
   for each row execute function public.trg_offers_sub_push();
