@@ -104,9 +104,10 @@ end $$;
 notify pgrst, 'reload schema';
 
 -- ════════════════════════════════════════════════════════════════
--- Compte Stripe actif OBLIGATOIRE pour faire une offre ou accepter une sous-traitance (09/11/2026)
--- (la flotte voit un bandeau « Activez les versements automatiques » sur son tableau de bord)
--- Vérifié par des déclencheurs : s'applique quelle que soit la fonction qui écrit.
+-- Règles d'accès des flottes (12/11/2026)
+--   • courses CLIENTS (offres) : compte validé par Bleenr + versements automatiques Stripe actifs
+--   • SOUS-TRAITANCES (entre flottes, payées hors plateforme) : compte validé uniquement
+-- Vérifié par un déclencheur : s'applique quelle que soit la fonction qui écrit.
 -- L'admin et les traitements automatiques (sans utilisateur connecté) ne sont pas concernés.
 -- ════════════════════════════════════════════════════════════════
 create or replace function public.fleet_payouts_ok(p_uid uuid default auth.uid())
@@ -120,14 +121,11 @@ create or replace function public.trg_fleet_stripe_required()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
   if auth.uid() is null or coalesce(auth.jwt() ->> 'email', '') = 'kb@bleenr.com' then return new; end if;
-  if tg_table_name = 'offers' then
-    if new.driver_id is distinct from auth.uid() or coalesce(new.status, 'pending') <> 'pending' then return new; end if;
-  else  -- rides : sous-traitance prise par la flotte connectée
-    if not coalesce(new.is_subcontract, false) or old.driver_id is not null
-       or new.driver_id is distinct from auth.uid() then return new; end if;
-  end if;
+  -- offre d'une flotte sur une course client
+  if new.driver_id is distinct from auth.uid() or coalesce(new.status, 'pending') <> 'pending' then return new; end if;
+  if exists (select 1 from rides where id = new.ride_id and coalesce(is_subcontract, false)) then return new; end if;
   if not public.fleet_payouts_ok(auth.uid()) then
-    raise exception 'STRIPE_REQUIRED: Activez les versements automatiques (Profil › Société) pour recevoir le paiement de vos courses.'
+    raise exception 'STRIPE_REQUIRED: Activez les versements automatiques (Profil › Société) pour faire des offres sur les courses clients et recevoir vos paiements.'
       using errcode = '42501';
   end if;
   return new;
@@ -136,9 +134,8 @@ end $$;
 drop trigger if exists offers_stripe_required on public.offers;
 create trigger offers_stripe_required before insert on public.offers
   for each row execute function public.trg_fleet_stripe_required();
+-- sous-traitances : plus de contrôle Stripe (compte validé suffit, vérifié par accept_subcontract)
 drop trigger if exists rides_stripe_required on public.rides;
-create trigger rides_stripe_required before update of driver_id on public.rides
-  for each row execute function public.trg_fleet_stripe_required();
 revoke all on function public.trg_fleet_stripe_required() from public, anon, authenticated;
 
 notify pgrst, 'reload schema';

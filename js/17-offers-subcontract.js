@@ -410,8 +410,7 @@ window._detailOffer = function(btn){
 };
 
 window.acceptSubcontract = async function(rideId){
-  if(!sb||!currentUser){ showToast(t('app.non_connecte')); return; }
-  if(!_stripeGate()) return;
+  if(!sb||!currentUser){ showToast(t('app.non_connecte')); return; }   // sous-traitance : compte validé suffit (pas de Stripe)
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){
     showToast(t('app.course_sous_traitee_acceptee'));
     return;
