@@ -10,7 +10,9 @@
 .ldd-steps{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:20px 16px 16px}
 .ldd-st{display:flex;align-items:center;gap:9px;border:1px solid rgba(245,241,232,.18);background:transparent;color:rgba(245,241,232,.7);border-radius:100px;padding:8px 16px 8px 8px;font:600 13px 'DM Sans',sans-serif;cursor:pointer;transition:all .25s}
 .ldd-st span{width:24px;height:24px;border-radius:50%;background:rgba(245,241,232,.12);display:inline-flex;align-items:center;justify-content:center;font-size:11.5px}
-.ldd-st.on{background:#F5F1E8;color:#0E1410;border-color:#F5F1E8}.ldd-st.on span{background:var(--lg);color:#fff}
+.ldd-st{border-color:rgba(214,242,122,.4);color:#D6F27A}.ldd-st span{background:rgba(214,242,122,.16);color:#D6F27A}
+.ldd-st:hover{border-color:#D6F27A}
+.ldd-st.on{background:#D6F27A;color:#0E1410;border-color:#D6F27A}.ldd-st.on span{background:#0E1410;color:#D6F27A}   /* étapes en citron vert */
 .ldd-stage{position:relative;max-width:min(1120px,calc((100vh - 370px) * 1.684 + 32px));min-width:min(100%,560px);margin:0 auto;padding:0 16px}
 .ldd-win{border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 40px 80px -30px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.06)}
 .ldd-bar{height:34px;background:#E9E6DF;display:flex;align-items:center;gap:7px;padding:0 14px}
