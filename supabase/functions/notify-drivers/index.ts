@@ -150,7 +150,7 @@ async function pushPoster(rec: Ride, title: string, lead: string) {
   const toks: any[] = await rest(`push_tokens?user_id=eq.${rec.client_id}&select=token,prefs`);
   const msgs = toks.filter((t) => (t.prefs?.sub_update ?? true) !== false).map((t) => ({
     to: t.token, title: `${title}${rec.booking_code ? " · " + rec.booking_code : ""}`,
-    body: [lead, route(rec), when(rec)].filter(Boolean).join("\n"),
+    body: lead,   // sobre : uniquement ce qui a changé (la référence est dans le titre)
     sound: "default", data: { ride_id: rec.id, kind: "sub_update" }, channelId: "default",
   }));
   return msgs.length ? (await sendAll(msgs)).sent : 0;
@@ -160,12 +160,12 @@ async function subRideEvents(rec: Ride, old: Ride | null) {
   if (rec.driver_id !== old.driver_id) return 0;   // acceptation : gérée ailleurs
   let n = 0;
   const nn = tag(rec.notes, "offer_note"), on = tag(old.notes, "offer_note");
-  if (nn && nn !== on) n += await pushPoster(rec, "Note du sous-traitant", "« " + nn.slice(0, 140) + " »");
+  if (nn !== on) n += await pushPoster(rec, "Sous-traitance mise à jour", nn ? (on ? "Note modifiée : " : "Note ajoutée : ") + nn.slice(0, 160) : "La note a été supprimée");
   // Étapes de la course faites par le sous-traitant
-  if (rec.on_way_at && !old.on_way_at) n += await pushPoster(rec, "En chemin", "Le chauffeur du sous-traitant est en route vers la prise en charge : vous pouvez suivre la course.");
+  if (rec.on_way_at && !old.on_way_at) n += await pushPoster(rec, "En chemin", "Le chauffeur est en route vers la prise en charge.");
   if (rec.pickup_at && !old.pickup_at && rec.status !== "done") {
     n += rec.trip_type === "disposal"
-      ? await pushPoster(rec, "Client à bord", "Le passager est à bord : la mise à disposition a commencé.")
+      ? await pushPoster(rec, "Client à bord", "Le passager est à bord, la mise à disposition a commencé.")
       : await pushPoster(rec, "En route vers la destination", "Le passager est à bord, direction " + (short(rec.to_address) || "la destination") + ".");
   }
   if (rec.status === "done" && old.status !== "done") n += await pushPoster(rec, "Course terminée", "Le sous-traitant a terminé la course.");
@@ -190,10 +190,8 @@ Deno.serve(async (req) => {
     const p = await req.json();
     // Véhicule / chauffeur d'une sous-traitance modifiés par le sous-traitant
     if (p.type === "SUB_ASSIGN") {
-      const ch: string[] = Array.isArray(p.changes) ? p.changes : [];
-      const a = p.assignment || {};
-      const lead = "Modifié : " + ch.join(" et ") + "." + [a.vehicle ? "\n🚘 " + a.vehicle : "", a.driver ? "\n👤 " + a.driver : ""].join("");
-      const sent = await pushPoster(p.record, "Sous-traitance mise à jour", lead);
+      const lines: string[] = Array.isArray(p.lines) ? p.lines.filter(Boolean) : [];
+      const sent = lines.length ? await pushPoster(p.record, "Sous-traitance mise à jour", lines.join("\n")) : 0;
       return new Response(JSON.stringify({ kind: "sub_update", sent }), { status: 200 });
     }
     const rec: Ride = p.record, old: Ride | null = p.old_record ?? null;
