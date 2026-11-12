@@ -446,3 +446,5 @@
 .ld-faq-i[open] summary:after{transform:rotate(45deg);background:var(--lime)}
 .ld-faq-i p{font-size:15.5px;line-height:1.65;color:#4D5A52;padding:0 52px 24px 0;max-width:640px}
 @media(max-width:900px){.ld-faq{padding:80px 0}.ld-faq-grid{grid-template-columns:1fr;gap:30px}.ld-faq-h{position:static}.ld-faq-i summary{font-size:16px;padding:18px 0}.ld-faq-i p{padding-right:0;font-size:14.5px}}
+/* Mobile : le hero (texte + formulaire) reste opaque plus longtemps, il ne s'efface qu'à la fin de sa sortie de l'écran */
+@media(max-width:900px){.ld-hero-in{opacity:calc((1 - var(--hp,0)) * 4);transform:translate3d(0,calc(var(--hp,0) * -40px),0)}}
