@@ -114,7 +114,11 @@ async function badgeCounts(userIds: string[]): Promise<Record<string, number>> {
   const ids = open.map((r) => r.id);
   const offers: any[] = ids.length ? await rest(`offers?ride_id=in.(${ids.join(",")})&select=ride_id,driver_id`) : [];
   const offered = new Set(offers.map((o) => o.driver_id + ":" + o.ride_id));
-  for (const u of userIds) out[u] = open.filter((r) => r.client_id !== u && !offered.has(u + ":" + r.id) && canServe(u, r.vehicle_type, r.passengers)).length;
+  // sous-traitances ciblées : comptées seulement pour les chauffeurs choisis
+  const tg: any[] = ids.length ? await rest(`ride_targets?ride_id=in.(${ids.join(",")})&select=ride_id,driver_id`).catch(() => []) : [];
+  const targeted = new Set(tg.map((x) => x.ride_id)), chosen = new Set(tg.map((x) => x.driver_id + ":" + x.ride_id));
+  for (const u of userIds) out[u] = open.filter((r) => r.client_id !== u && !offered.has(u + ":" + r.id) && canServe(u, r.vehicle_type, r.passengers)
+    && (!targeted.has(r.id) || chosen.has(u + ":" + r.id))).length;
   return out;
 }
 
@@ -166,6 +170,11 @@ Deno.serve(async (req) => {
     if (kind === "new_request") {
       // Uniquement les fleets qui ont un véhicule de la gamme demandée
       users = [...(fleetVeh?.keys() || [])].filter((f) => canServe(f, rec.vehicle_type, rec.passengers));
+      // Sous-traitance réservée à une sélection de chauffeurs (subcontract_targets.sql)
+      if (rec.is_subcontract) {
+        const tg: any[] = await rest(`ride_targets?ride_id=eq.${rec.id}&select=driver_id`).catch(() => []);
+        if (tg.length) { const ok = new Set(tg.map((x) => x.driver_id)); users = users.filter((u) => ok.has(u)); }
+      }
     } else if (kind === "offer_accepted") {
       users = [rec.driver_id];
     } else if (kind) {

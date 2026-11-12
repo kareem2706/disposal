@@ -1012,5 +1012,18 @@
   "ld.offer_business": "Berlina Business",
   "ld.offer_van": "Van de 7 plazas",
   "ld.verified_fixed": "Chófer verificado · precio fijo",
-  "ld.fleet_fixed": "Flota verificada · precio fijo"
+  "ld.fleet_fixed": "Flota verificada · precio fijo",
+  "sub.send_to": "Enviar a",
+  "sub.aud_all": "Todos los chóferes",
+  "sub.aud_some": "Una selección de chóferes",
+  "sub.aud_search": "Buscar un chófer…",
+  "sub.aud_hint": "Solo los chóferes elegidos ven el servicio y reciben la notificación (si tienen un vehículo de la gama solicitada).",
+  "sub.aud_count": "{n} chófer(es) seleccionado(s)",
+  "sub.aud_all_btn": "Marcar todos",
+  "sub.aud_none_btn": "Desmarcar todos",
+  "sub.aud_none": "Elija al menos un chófer, o envíe a todos los chóferes.",
+  "sub.aud_loading": "Cargando…",
+  "sub.aud_error": "Lista no disponible por el momento.",
+  "sub.aud_nomatch": "Ningún chófer coincide.",
+  "sub.aud_nobody": "Todavía no hay otros chóferes validados."
 };

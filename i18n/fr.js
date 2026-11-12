@@ -1012,5 +1012,18 @@
   "ld.offer_business": "Berline Business",
   "ld.offer_van": "Van 7 places",
   "ld.verified_fixed": "Chauffeur vérifié · prix fixe",
-  "ld.fleet_fixed": "Flotte vérifiée · prix fixe"
+  "ld.fleet_fixed": "Flotte vérifiée · prix fixe",
+  "sub.send_to": "Envoyer à",
+  "sub.aud_all": "Tous les chauffeurs",
+  "sub.aud_some": "Une sélection de chauffeurs",
+  "sub.aud_search": "Rechercher un chauffeur…",
+  "sub.aud_hint": "Seuls les chauffeurs choisis voient la course et reçoivent la notification (s'ils ont un véhicule de la gamme demandée).",
+  "sub.aud_count": "{n} chauffeur(s) sélectionné(s)",
+  "sub.aud_all_btn": "Tout cocher",
+  "sub.aud_none_btn": "Tout décocher",
+  "sub.aud_none": "Choisissez au moins un chauffeur, ou envoyez à tous les chauffeurs.",
+  "sub.aud_loading": "Chargement…",
+  "sub.aud_error": "Liste indisponible pour le moment.",
+  "sub.aud_nomatch": "Aucun chauffeur ne correspond.",
+  "sub.aud_nobody": "Aucun autre chauffeur validé pour le moment."
 };

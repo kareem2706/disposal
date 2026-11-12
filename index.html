@@ -1795,6 +1795,19 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div class="input-group"><label>R&eacute;f&eacute;rence / n&deg; de vol</label><input id="sub-cli-ref" placeholder="SN 3712, dossier 2024-118…"></div>
         </div>
       </div>
+      <!-- Diffusion : tous les chauffeurs ou une sélection (subcontract_targets.sql) -->
+      <div class="input-group" style="margin-top:14px;"><label data-i18n="sub.send_to">Envoyer à</label>
+        <div class="trip-types aud">
+          <div class="trip-type active" data-aud="all" onclick="selSubAud(this)" data-i18n="sub.aud_all">Tous les chauffeurs</div>
+          <div class="trip-type" data-aud="some" onclick="selSubAud(this)" data-i18n="sub.aud_some">Une sélection de chauffeurs</div>
+        </div>
+      </div>
+      <div id="sub-aud-box" class="sub-aud" style="display:none;">
+        <input id="sub-aud-q" type="search" data-i18n-ph="sub.aud_search" placeholder="Rechercher un chauffeur…" autocomplete="off" oninput="_subAudRender()">
+        <div class="sub-aud-bar"><span id="sub-aud-count"></span><button type="button" class="sub-aud-all" id="sub-aud-toggle" onclick="_subAudToggleAll()"></button></div>
+        <div id="sub-aud-items" class="sub-aud-items"></div>
+        <div class="sub-aud-hint" data-i18n="sub.aud_hint">Seuls les chauffeurs choisis voient la course et reçoivent la notification (s'ils ont un véhicule de la gamme demandée).</div>
+      </div>
       <div style="margin-top:14px;">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
           <div class="input-group" style="flex:1;margin:0;"><label>Prix (€ HTVA)</label><input id="sub-price" type="number" placeholder="110" oninput="updateSubPriceDisplay(this.value)"></div>

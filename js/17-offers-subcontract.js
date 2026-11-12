@@ -531,7 +531,7 @@ window._subSegDup=function(n){
 
 window.submitSubcontract = async function(){
   var g = function(id){ var e=document.getElementById(id); return e?e.value.trim():''; };
-  var activeType = document.querySelector('#m-subcontract .trip-types .trip-type.active');
+  var activeType = document.querySelector('#m-subcontract .trip-types:not(.aud) .trip-type.active');
   var tripType = activeType ? activeType.dataset.val : 'ab';
   var err = document.getElementById('sub-err');
   var btn = document.querySelector('#m-subcontract .btn-green');
@@ -594,6 +594,9 @@ window.submitSubcontract = async function(){
   if(window._vehPaxSync) _vehPaxSync();
 
   var priceVal = parseFloat(g('sub-price')) || null;
+  // Diffusion : une sélection de chauffeurs (au moins un) ou tout le monde
+  var _aud = _subAudMode(), _targets = _aud==='some' ? Object.keys(_subAud.sel) : null;
+  if(_targets && !_targets.length){ if(err){ err.textContent=t('sub.aud_none'); err.classList.add('show'); } return; }
   // Final client details (shown only to the driver who accepts)
   var _clean=function(v){ return String(v||'').replace(/\|/g,'/').trim(); };
   var _cn=_clean(g('sub-cli-name')), _ct=_clean(g('sub-cli-tel')), _ce=_clean(g('sub-cli-email')), _cr=_clean(g('sub-cli-ref'));
@@ -634,7 +637,9 @@ window.submitSubcontract = async function(){
 
   try {
     // Création par le serveur (vérifie que la fleet est validée ; référence calculée par le serveur)
-    var result = await sb.rpc('api_ride_create', { p: rideData });
+    var result = _targets
+      ? await sb.rpc('api_subcontract_create', { p: rideData, p_targets: _targets })   // réservée aux chauffeurs choisis
+      : await sb.rpc('api_ride_create', { p: rideData });
     if(result.error) throw result.error;
     if(result.data && result.data.id){
       rideData.booking_code = result.data.booking_code;
@@ -1351,3 +1356,56 @@ function getDemoOffers(){
   ];
 }
 
+
+
+// ── Sous-traitance : diffusion à tous les chauffeurs ou à une sélection (subcontract_targets.sql) ──
+var _subAud = { list: null, sel: {} };
+function _subEsc(v){ return String(v==null?'':v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function _subAudMode(){ var a = document.querySelector('#m-subcontract .trip-types.aud .trip-type.active'); return a ? a.dataset.aud : 'all'; }
+window._subAudReset = function(){
+  _subAud.sel = {};
+  var all = document.querySelector('#m-subcontract .trip-types.aud [data-aud="all"]'); if(all) selSubAud(all);
+  var q = document.getElementById('sub-aud-q'); if(q) q.value = '';
+};
+window.selSubAud = async function(el){
+  el.closest('.trip-types').querySelectorAll('.trip-type').forEach(function(b){ b.classList.toggle('active', b===el); });
+  var box = document.getElementById('sub-aud-box'), some = el.dataset.aud === 'some';
+  box.style.display = some ? '' : 'none';
+  if(some && !_subAud.list){
+    document.getElementById('sub-aud-items').innerHTML = '<div class="sub-aud-empty">'+t('sub.aud_loading')+'</div>';
+    try{
+      if(localStorage.getItem(DEMO_MODE_KEY)==='1' || !sb){
+        _subAud.list = [{id:'d1',name:'Brussels Elite Cars',city:'Bruxelles'},{id:'d2',name:'Antwerp Limousines',city:'Anvers'},{id:'d3',name:'Liège VTC Services',city:'Liège'},{id:'d4',name:'Gent Chauffeurs',city:'Gand'}];
+      } else {
+        var r = await sb.rpc('api_fleet_directory');
+        if(r.error) throw r.error;
+        _subAud.list = r.data || [];
+      }
+    }catch(e){ console.warn('api_fleet_directory', e); _subAud.list = null; document.getElementById('sub-aud-items').innerHTML = '<div class="sub-aud-empty">'+t('sub.aud_error')+'</div>'; return; }
+  }
+  if(some) _subAudRender();
+};
+window._subAudRender = function(){
+  var box = document.getElementById('sub-aud-items'); if(!box || !_subAud.list) return;
+  var q = (document.getElementById('sub-aud-q').value || '').trim().toLowerCase();
+  var rows = _subAud.list.filter(function(f){ return !q || (f.name+' '+(f.city||'')).toLowerCase().indexOf(q) > -1; });
+  box.innerHTML = rows.length ? rows.map(function(f){
+    return '<label class="sub-aud-row"><input type="checkbox" value="'+_subEsc(f.id)+'"'+(_subAud.sel[f.id]?' checked':'')+' onchange="_subAudPick(this)">'
+      + '<span class="nm">'+_subEsc(f.name)+'</span>'+(f.city?'<span class="ct">'+_subEsc(f.city)+'</span>':'')+'</label>';
+  }).join('') : '<div class="sub-aud-empty">'+t(_subAud.list.length ? 'sub.aud_nomatch' : 'sub.aud_nobody')+'</div>';
+  _subAudCount();
+};
+window._subAudPick = function(cb){ if(cb.checked) _subAud.sel[cb.value] = 1; else delete _subAud.sel[cb.value]; _subAudCount(); };
+window._subAudToggleAll = function(){
+  var boxes = document.querySelectorAll('#sub-aud-items input[type=checkbox]');
+  var allOn = boxes.length && [].every.call(boxes, function(b){ return b.checked; });
+  boxes.forEach(function(b){ b.checked = !allOn; if(b.checked) _subAud.sel[b.value] = 1; else delete _subAud.sel[b.value]; });
+  _subAudCount();
+};
+function _subAudCount(){
+  var n = Object.keys(_subAud.sel).length;
+  var c = document.getElementById('sub-aud-count'); if(c) c.textContent = t('sub.aud_count', { n: n });
+  var boxes = document.querySelectorAll('#sub-aud-items input[type=checkbox]');
+  var allOn = boxes.length && [].every.call(boxes, function(b){ return b.checked; });
+  var tg = document.getElementById('sub-aud-toggle'); if(tg){ tg.textContent = t(allOn ? 'sub.aud_none_btn' : 'sub.aud_all_btn'); tg.style.display = boxes.length ? '' : 'none'; }
+}

@@ -1012,5 +1012,18 @@
   "ld.offer_business": "Business sedan",
   "ld.offer_van": "7-seater van",
   "ld.verified_fixed": "Verified chauffeur · fixed price",
-  "ld.fleet_fixed": "Verified fleet · fixed price"
+  "ld.fleet_fixed": "Verified fleet · fixed price",
+  "sub.send_to": "Send to",
+  "sub.aud_all": "All drivers",
+  "sub.aud_some": "Selected drivers",
+  "sub.aud_search": "Search for a driver…",
+  "sub.aud_hint": "Only the selected drivers see the ride and get notified (if they have a vehicle of the requested class).",
+  "sub.aud_count": "{n} driver(s) selected",
+  "sub.aud_all_btn": "Select all",
+  "sub.aud_none_btn": "Clear all",
+  "sub.aud_none": "Choose at least one driver, or send to all drivers.",
+  "sub.aud_loading": "Loading…",
+  "sub.aud_error": "List unavailable at the moment.",
+  "sub.aud_nomatch": "No matching driver.",
+  "sub.aud_nobody": "No other approved driver yet."
 };
