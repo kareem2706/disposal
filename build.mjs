@@ -60,6 +60,52 @@ const page = (src, dst = src) => {
   fs.writeFileSync(path.join(out, dst), fill(fs.readFileSync(path.join(root, src), 'utf8'), src));
 };
 page('index.html');
+
+// ── Page d'accueil en anglais et en espagnol (référencement) : _site/en/index.html, _site/es/index.html ──
+// Même page, textes de la page d'accueil déjà traduits dans le HTML (lisibles par Google sans JavaScript),
+// balises <title>, description, aperçus de partage, adresse canonique et données structurées dans la langue.
+// <base href="/"> (index.html) : les fichiers (css, js, images…) restent ceux de la racine.
+const vm = await import('node:vm');
+const dict = (l) => { const ctx = { window: {} }; vm.runInNewContext(fs.readFileSync(path.join(root, 'i18n', l + '.js'), 'utf8'), ctx); return ctx.window.I18N[l]; };
+const esc = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const attr = (v) => esc(v).replace(/"/g, '&quot;');
+const rootHtml = fs.readFileSync(path.join(out, 'index.html'), 'utf8');
+const LOC = { en: 'en_GB', es: 'es_ES' };
+for (const l of ['en', 'es']) {
+  const D = dict(l), F = dict('fr');
+  const tr = (k) => { if (D[k] == null) throw new Error('i18n/' + l + '.js : clé manquante ' + k); return D[k]; };
+  const url = site.url + l + '/';
+  let h = rootHtml;
+  const a = h.indexOf('<div id="screen-landing"'), b = h.indexOf('<div id="screen-auth"');
+  if (a < 0 || b < a) throw new Error('index.html : #screen-landing / #screen-auth introuvables');
+  let land = h.slice(a, b);
+  land = land.replace(/(<(\w+)\b[^>]*\bdata-i18n(-html)?="([^"]+)"[^>]*>)([\s\S]*?)(<\/\2>)/g, (m, open, tag, isHtml, k, inner, close) =>
+    D[k] == null ? m : open + (isHtml ? D[k] : esc(D[k])) + close);
+  land = land.replace(/(<[^>]*\bdata-i18n-ph="([^"]+)"[^>]*>)/g, (m, el, k) => D[k] == null ? m : el.replace(/placeholder="[^"]*"/, 'placeholder="' + attr(D[k]) + '"'));
+  h = h.slice(0, a) + land + h.slice(b);
+  const rep = (from, to) => { if (!h.includes(from)) throw new Error('page ' + l + ' : introuvable « ' + from.slice(0, 60) + ' »'); h = h.replace(from, to); };
+  rep('<html lang="fr">', '<html lang="' + l + '">');
+  rep('<title>' + F['seo.title'] + '</title>', '<title>' + esc(tr('seo.title')) + '</title>');
+  rep('<meta name="description" content="' + F['seo.desc'] + '">', '<meta name="description" content="' + attr(tr('seo.desc')) + '">');
+  rep('<link rel="canonical" href="' + site.url + '">', '<link rel="canonical" href="' + url + '">');
+  rep('<meta property="og:locale" content="fr_BE">', '<meta property="og:locale" content="' + LOC[l] + '">');
+  rep('<meta property="og:url" content="' + site.url + '">', '<meta property="og:url" content="' + url + '">');
+  rep('<meta property="og:title" content="' + F['seo.title'] + '">', '<meta property="og:title" content="' + attr(tr('seo.title')) + '">');
+  rep('<meta property="og:description" content="' + F['seo.og_desc'] + '">', '<meta property="og:description" content="' + attr(tr('seo.og_desc')) + '">');
+  rep('<meta property="og:image:alt" content="' + F['seo.og_alt'] + '">', '<meta property="og:image:alt" content="' + attr(tr('seo.og_alt')) + '">');
+  // Données structurées : service et FAQ dans la langue de la page
+  h = h.replace(/<script type="application\/ld\+json">(.*?)<\/script>/g, (m, js) => {
+    const d = JSON.parse(js);
+    if (d['@type'] === 'TaxiService') { d.name = tr('seo.svc_name'); d.serviceType = tr('seo.svc_type'); d.description = tr('seo.og_desc'); d.url = url; }
+    if (d['@type'] === 'FAQPage') {
+      d['@id'] = url + '#faq'; d.inLanguage = l;
+      d.mainEntity = d.mainEntity.map((q, i) => ({ ...q, name: tr('ld.faq_q' + (i + 1)), acceptedAnswer: { ...q.acceptedAnswer, text: tr('ld.faq_a' + (i + 1)) } }));
+    }
+    return '<script type="application/ld+json">' + JSON.stringify(d) + '</script>';
+  });
+  fs.mkdirSync(path.join(out, l), { recursive: true });
+  fs.writeFileSync(path.join(out, l, 'index.html'), h);
+}
 for (const f of ['404.html', 'sitemap.xml', 'manifest.webmanifest', '_headers']) page(f);
 // robots.txt : tout autorisé en production, tout interdit en développement
 if (isProd) page('robots.txt'); else fs.writeFileSync(path.join(out, 'robots.txt'), 'User-agent: *\nDisallow: /\n');

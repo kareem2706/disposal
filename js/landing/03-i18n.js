@@ -123,7 +123,8 @@ function applyI18n(root){
       var o = '_i18nFr_' + attr; if(el[o] == null) el[o] = get(el);
       var v = (I18N[currentLang] || {})[k];
       if(v == null) v = (TX[currentLang] || {})[k];
-      if(v == null) v = currentLang === 'fr' ? el[o] : ((I18N.fr || {})[k] != null ? I18N.fr[k] : (TX.fr[k] != null ? TX.fr[k] : el[o]));
+      // français (ou repli) : dictionnaire français d'abord — la page /en/ ou /es/ est déjà traduite dans le HTML
+      if(v == null) v = (I18N.fr || {})[k] != null ? I18N.fr[k] : (TX.fr[k] != null ? TX.fr[k] : el[o]);
       if(get(el) !== v) set(el, v);
     });
   };
@@ -143,6 +144,13 @@ window.setLang = function(l, opt){
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.trim()===l.toUpperCase()));
   document.querySelectorAll('select.lang-sel').forEach(function(x){ x.value = l; });
   applyI18n(document);
+  // Page d'accueil : l'adresse suit la langue (/, /en/, /es/), sans recharger
+  try{
+    if(/^\/((en|es)\/?)?$/.test(location.pathname)){
+      var np = l === 'fr' ? '/' : '/' + l + '/';
+      if(np !== location.pathname) history.replaceState(history.state, '', np + location.search + location.hash);
+    }
+  }catch(e){}
   if(typeof window._i18nRefresh === 'function'){ try{ window._i18nRefresh(); }catch(e){} }
   // Langue enregistrée dans le profil (e-mails, documents…) — sauf si elle vient justement du profil
   if(changed && !(opt && opt.noSave) && sb && currentUser && currentProfile && currentProfile.lang !== l){
@@ -166,3 +174,10 @@ function _i18nSyncProfile(){
   else if('lang' in currentProfile && sb){ currentProfile.lang = currentLang; sb.rpc('api_profile_update', { p:{ lang:currentLang } }).then(function(){}, function(){}); }
 }
 
+// Page d'accueil ouverte à la racine avec une langue choisie auparavant : l'adresse suit (/en/, /es/)
+try{
+  if(/^\/((en|es)\/?)?$/.test(location.pathname)){
+    var _np = currentLang === 'fr' ? '/' : '/' + currentLang + '/';
+    if(_np !== location.pathname) history.replaceState(history.state, '', _np + location.search + location.hash);
+  }
+}catch(e){}

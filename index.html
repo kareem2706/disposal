@@ -2,11 +2,18 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<!-- Fichiers du site toujours pris à la racine, aussi depuis /en/ et /es/ -->
+<base href="/">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 {{env_head}}
 <title>Chauffeurs privés en Belgique | Bleenr</title>
 <meta name="description" content="Réservez un chauffeur privé en Belgique : publiez votre trajet, recevez les offres de chauffeurs et de flottes vérifiés, choisissez. Le prix est fixé avant le départ.">
 <link rel="canonical" href="{{url}}">
+<!-- Versions linguistiques de la page d'accueil (en/ et es/ générées par build.mjs) -->
+<link rel="alternate" hreflang="fr" href="{{url}}">
+<link rel="alternate" hreflang="en" href="{{url}}en/">
+<link rel="alternate" hreflang="es" href="{{url}}es/">
+<link rel="alternate" hreflang="x-default" href="{{url}}">
 <meta name="theme-color" content="#1B5E3B">
 <!-- Aperçu lors d'un partage (WhatsApp, LinkedIn, Facebook…) -->
 <!-- Données structurées pour les moteurs de recherche (entreprise, site, service, FAQ) -->
@@ -44,8 +51,11 @@
 (function(){
   try{
     var ls=window.localStorage, ok=['fr','en','es'], l=null;
+    // Langue : adresse (/en/, /es/) d'abord, sinon choix enregistré, sinon français (adresse principale = français pour Google)
+    var pm=/^\/(en|es)(\/|$)/.exec(location.pathname); window._pathLang=pm?pm[1]:null;
     try{ l=ls.getItem('disposal_lang'); }catch(e){}
-    if(ok.indexOf(l)<0){ var n=String((navigator.languages&&navigator.languages[0])||navigator.language||'fr').slice(0,2).toLowerCase(); l=ok.indexOf(n)>=0?n:'fr'; }
+    if(window._pathLang) l=window._pathLang;
+    if(ok.indexOf(l)<0) l='fr';
     window._bootLang=l;
     if(!ls.getItem('disposal-auth') && ls.getItem('disposal_demo')!=='1'
        && !/[?&](payment|th|tt|code|error|session_id)=/.test(location.search)

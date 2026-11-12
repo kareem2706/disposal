@@ -24,11 +24,12 @@ let currentDriverId = null;   // for payment modal
 let currentOfferAmount = 0;   // for payment modal
 let _currentPaymentRide = null; // ride object for payment modal route info
 var _myOffers = {};  // rideId -> {price, msg} for submitted offers
-// Langue : choix enregistré, sinon langue du navigateur (fr / en / es), sinon français
+// Langue : celle de l'adresse (/en/, /es/), sinon choix enregistré, sinon français
 let currentLang = (function(){
   var ok = ['fr','en','es'], l = null;
   try{ l = localStorage.getItem('disposal_lang'); }catch(e){}
-  if(ok.indexOf(l) < 0){ var n = String((navigator.languages && navigator.languages[0]) || navigator.language || 'fr').slice(0,2).toLowerCase(); l = ok.indexOf(n) >= 0 ? n : 'fr'; }
+  if(window._pathLang) l = window._pathLang;   // /en/, /es/ : la langue de l'adresse
+  if(ok.indexOf(l) < 0) l = 'fr';
   return l;
 })();
 var _selectedPaymentMethod = null; // for payment modal step 1
