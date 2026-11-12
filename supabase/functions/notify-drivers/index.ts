@@ -161,8 +161,14 @@ async function subRideEvents(rec: Ride, old: Ride | null) {
   let n = 0;
   const nn = tag(rec.notes, "offer_note"), on = tag(old.notes, "offer_note");
   if (nn && nn !== on) n += await pushPoster(rec, "Note du sous-traitant", "« " + nn.slice(0, 140) + " »");
-  if (rec.on_way_at && !old.on_way_at) n += await pushPoster(rec, "Sous-traitant en chemin", "Le chauffeur est parti : vous pouvez suivre la course.");
-  if (rec.status === "done" && old.status !== "done") n += await pushPoster(rec, "Sous-traitance terminée", "Le sous-traitant a terminé la course.");
+  // Étapes de la course faites par le sous-traitant
+  if (rec.on_way_at && !old.on_way_at) n += await pushPoster(rec, "En chemin", "Le chauffeur du sous-traitant est en route vers la prise en charge : vous pouvez suivre la course.");
+  if (rec.pickup_at && !old.pickup_at && rec.status !== "done") {
+    n += rec.trip_type === "disposal"
+      ? await pushPoster(rec, "Client à bord", "Le passager est à bord : la mise à disposition a commencé.")
+      : await pushPoster(rec, "En route vers la destination", "Le passager est à bord, direction " + (short(rec.to_address) || "la destination") + ".");
+  }
+  if (rec.status === "done" && old.status !== "done") n += await pushPoster(rec, "Course terminée", "Le sous-traitant a terminé la course.");
   return n;
 }
 
