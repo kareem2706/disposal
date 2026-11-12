@@ -61,6 +61,9 @@ const page = (src, dst = src) => {
 };
 page('index.html');
 
+// Pages services / villes (référencement) : données et gabarit
+const { PAGES, LANGS, pagePath, render } = await import('./seo/render.mjs');
+
 // ── Page d'accueil en anglais et en espagnol (référencement) : _site/en/index.html, _site/es/index.html ──
 // Même page, textes de la page d'accueil déjà traduits dans le HTML (lisibles par Google sans JavaScript),
 // balises <title>, description, aperçus de partage, adresse canonique et données structurées dans la langue.
@@ -82,6 +85,8 @@ for (const l of ['en', 'es']) {
   land = land.replace(/(<(\w+)\b[^>]*\bdata-i18n(-html)?="([^"]+)"[^>]*>)([\s\S]*?)(<\/\2>)/g, (m, open, tag, isHtml, k, inner, close) =>
     D[k] == null ? m : open + (isHtml ? D[k] : esc(D[k])) + close);
   land = land.replace(/(<[^>]*\bdata-i18n-ph="([^"]+)"[^>]*>)/g, (m, el, k) => D[k] == null ? m : el.replace(/placeholder="[^"]*"/, 'placeholder="' + attr(D[k]) + '"'));
+  // Liens vers les pages services / villes : version de la langue
+  for (const p of PAGES) land = land.split('href="' + pagePath(p, 'fr') + '"').join('href="' + pagePath(p, l) + '"');
   h = h.slice(0, a) + land + h.slice(b);
   const rep = (from, to) => { if (!h.includes(from)) throw new Error('page ' + l + ' : introuvable « ' + from.slice(0, 60) + ' »'); h = h.replace(from, to); };
   rep('<html lang="fr">', '<html lang="' + l + '">');
@@ -107,6 +112,22 @@ for (const l of ['en', 'es']) {
   fs.writeFileSync(path.join(out, l, 'index.html'), h);
 }
 for (const f of ['404.html', 'sitemap.xml', 'manifest.webmanifest', '_headers']) page(f);
+
+// ── Pages de référencement (services et villes) : seo/pages.mjs + seo/render.mjs → /<slug>/, /en/<slug>/, /es/<slug>/ ──
+site.ver = ver;
+fs.copyFileSync(path.join(root, 'seo', 'seo.css'), path.join(out, 'seo.css'));
+let smx = '';
+for (const p of PAGES) {
+  const alts = LANGS.map((x) => `<xhtml:link rel="alternate" hreflang="${x}" href="${site.url.replace(/\/$/, '') + pagePath(p, x)}"/>`).join('')
+    + `<xhtml:link rel="alternate" hreflang="x-default" href="${site.url.replace(/\/$/, '') + pagePath(p, 'fr')}"/>`;
+  for (const l of LANGS) {
+    const dst = path.join(out, pagePath(p, l), 'index.html');
+    fs.mkdirSync(path.dirname(dst), { recursive: true });
+    fs.writeFileSync(dst, render(p, l, site));
+    smx += `  <url><loc>${site.url.replace(/\/$/, '') + pagePath(p, l)}</loc>${alts}<changefreq>monthly</changefreq><priority>0.8</priority></url>\n`;
+  }
+}
+{ const f = path.join(out, 'sitemap.xml'); fs.writeFileSync(f, fs.readFileSync(f, 'utf8').replace('</urlset>', smx + '</urlset>')); }
 // robots.txt : tout autorisé en production, tout interdit en développement
 if (isProd) page('robots.txt'); else fs.writeFileSync(path.join(out, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
 for (const f of fs.readdirSync(path.join(root, 'legal'))) page(path.join('legal', f));

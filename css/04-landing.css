@@ -345,7 +345,7 @@
 .ld-final p{font-size:18px;color:#D9E0DB;margin:24px auto 34px;max-width:460px;line-height:1.6}
 .ld-final-a{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
 .ld-foot{background:var(--lk);color:rgba(245,241,232,.65);padding:70px 0 30px;font-size:13.5px;flex-shrink:0}
-.ld-foot-g{display:grid;grid-template-columns:2fr repeat(4,1fr);gap:40px;margin-bottom:50px}
+.ld-foot-g{display:grid;grid-template-columns:1.6fr repeat(5,1fr);gap:36px;margin-bottom:50px}
 .ld-foot h5{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--lmi);margin-bottom:16px;font-weight:600}
 .ld-foot button{display:block;background:none;border:none;color:rgba(245,241,232,.65);padding:5px 0;font:inherit;cursor:pointer;text-align:left}.ld-foot button:hover{color:#F5F1E8}
 #screen-landing .ld-foot-g a{display:block;color:rgba(245,241,232,.65);padding:5px 0;text-decoration:none}#screen-landing .ld-foot-g a:hover{color:#F5F1E8}
@@ -455,3 +455,4 @@
 .ldd-st{width:100%;justify-content:flex-start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .ldd-st span{flex:0 0 auto}
 @media(max-width:700px){.ldd-steps{grid-template-columns:repeat(2,minmax(0,1fr));max-width:440px;margin:0 auto}}
+@media(max-width:900px){.ld-foot-g{grid-template-columns:1fr 1fr;gap:34px 20px}.ld-foot-g>div:first-child{grid-column:1/-1}}
