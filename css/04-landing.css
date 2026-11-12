@@ -297,7 +297,7 @@
 .ld-inc{padding:130px 0;background:#fff;flex-shrink:0}
 .ld-inc-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:72px;align-items:start}
 .ld-inc-h{margin-bottom:30px}
-.ld-inc-item{display:grid;grid-template-columns:44px minmax(0,1fr);gap:16px;padding:18px 0;border-top:1px solid #ECEAE5}
+.ld-inc-item{display:block;padding:18px 0;border-top:1px solid #ECEAE5}
 .ld-inc-item .n{font-size:13px;font-weight:600;color:var(--lg);padding-top:4px}
 .ld-inc-item h4{font:600 18px/1.2 'DM Sans',sans-serif}
 .ld-inc-item p{font-size:15px;line-height:1.5;color:#4D5A52;margin-top:4px}
