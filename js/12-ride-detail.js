@@ -483,12 +483,30 @@ function _openRideDetailImpl(el){
       var img=document.getElementById('detail-map-img');
       if(img){
         img.style.visibility='visible';
-        img.src=src;
+        img.src=src; img._geoTok=null;
         wrap.style.display='block';
         var sp3=document.getElementById('detail-map-spacer');if(sp3)sp3.style.height='12px';
         // Replace the straight line by the real driving route (A -> B, via the mixed segments)
         var _routePts = (isMixed&&mixedSegs&&mixedSegs.length>0) ? pts.map(function(x){ return cleanAddr(x); }) : ((r.trip_type!=='disposal'&&r.to_address) ? [cleanAddr(r.from_address), cleanAddr(r.to_address)] : null);
         if(_routePts && _routePts.length>=2) _staticRouteMap(img, src, _routePts);
+        // Adresse seule (mise à disposition) : Google ne trouve pas toujours un texte libre (« The hotel ») et renvoie
+        // alors une image « Map error ». On localise d'abord l'adresse ; introuvable → pas de carte.
+        else if(!_routePts && !isMixed && r.from_address && window.google && google.maps && google.maps.Geocoder){
+          img.style.visibility='hidden';
+          var _gTok={}; img._geoTok=_gTok;
+          try{
+            new google.maps.Geocoder().geocode({ address: r.from_address, region: 'be' }, function(res, st){
+              if(img._geoTok!==_gTok) return;   // autre course ouverte entre-temps
+              if(st==='OK' && res && res[0]){
+                var ll=res[0].geometry.location, c=ll.lat().toFixed(6)+','+ll.lng().toFixed(6);
+                img.src='https://maps.googleapis.com/maps/api/staticmap?size=520x165&scale=2&zoom=14&center='+c+'&markers=size:small%7Ccolor:0x4E8F69%7C'+c+'&'+_MAP_STYLE+'&key='+KEY;
+                img.style.visibility='visible';
+              } else {
+                wrap.style.display='none'; var sp4=document.getElementById('detail-map-spacer'); if(sp4) sp4.style.height='0px';
+              }
+            });
+          }catch(_e){ img.style.visibility='visible'; }
+        }
       }
     }
   })();
