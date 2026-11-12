@@ -360,14 +360,17 @@
 .ld-svc{padding:50px 0 90px}.ld-inc,.ld-drv{padding:90px 0}
 /* classes : texte au-dessus, véhicule en dessous */
 .ld-cls{padding:0;height:460vh}
-.ld-cls-pin{align-items:center;padding-top:60px}
+.ld-cls-pin{align-items:flex-start;padding-top:calc(64px + clamp(4px,2vh,24px))}
 .ld-cls-grid{grid-template-columns:1fr;gap:6px}
 .ld-cls h2{font-size:clamp(22px,7.2vw,40px);margin-top:8px}
-.ld-cls-info{min-height:0;height:clamp(150px,calc(var(--vh) - 560px),230px);margin-top:14px;overflow:hidden}
-.ld-cls-info h3{font-size:40px}.ld-cls-info .specs{margin-top:10px}.ld-cls-info p{font-size:14px;margin-top:8px}
+/* texte descriptif toujours visible : hauteur fixe suffisante (les boutons ne sautent pas d'une classe à l'autre) */
+.ld-cls-info{min-height:0;height:auto;min-height:200px;margin-top:6px;overflow:visible}
+.ld-cls-info h3{font-size:34px}.ld-cls-info .models{font-size:13.5px;margin-top:6px}
+.ld-cls-info .specs{margin-top:8px;gap:20px;font-size:13px}.ld-cls-info .specs b{font-size:22px}
+.ld-cls-info p{font-size:13.5px;line-height:1.5;margin-top:8px}
 .ld-cls-info .ld-btn{display:none}
 .ld-cls-rail{margin-top:12px;gap:5px}.ld-cls-rail button{padding:7px 11px;font-size:12px}
-.ld-cls-stage{order:-1;margin:clamp(4px,2vh,24px) -14px clamp(4px,2vh,20px)}   /* sur téléphone : le véhicule d'abord */
+.ld-cls-stage{order:-1;margin:clamp(0px,1vh,14px) -14px clamp(0px,1vh,10px)}   /* sur téléphone : le véhicule d'abord */
 .ld-inc-grid,.ld-drv-grid,.ld-foot-g{grid-template-columns:1fr;gap:44px}.ld-inc-r{position:static}
 .ld-drv-list{grid-template-columns:1fr}.ld-notif{left:12px;bottom:28px}.ld-drv-ph{margin:0 auto}
 .au-side-img img{object-position:50% 0;transform-origin:50% 0}
