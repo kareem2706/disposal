@@ -323,7 +323,12 @@ window.openOfferModal = function(rideId, summary, rideObj){
   var _edit = !!existing && !_outd && !_lock;
   if(_edit && _ot) _ot.textContent='Modifier mon offre';
   var _sb=document.getElementById('btn-offer-submit'); if(_sb && !_outd) _sb.textContent=_edit?'Mettre à jour →':'Soumettre →';
-  var _wd=document.getElementById('btn-offer-withdraw'); if(_wd) _wd.style.display=(existing && !_lock)?'':'none';
+  var _wd=document.getElementById('btn-offer-withdraw');
+  if(_wd){
+    var _canWd=!!existing && !_lock;
+    _wd.style.display=_canWd?'':'none';
+    _wd.innerHTML=_canWd?_ftMenu('<button class="ft-menu-item" style="color:var(--red);" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');_offerWithdrawFromModal()"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Retirer mon offre</button>'):'';
+  }
   if(priceEl){ priceEl.disabled = _lock; priceEl.style.opacity = _lock ? '0.5' : ''; priceEl.style.cursor = _lock ? 'not-allowed' : ''; }
   if(msgEl){   msgEl.disabled   = _lock; msgEl.style.opacity   = _lock ? '0.5' : ''; msgEl.style.cursor   = _lock ? 'not-allowed' : ''; }
   // Km inclus fields (disposal ride / disposal segments of a mixed ride)
