@@ -530,7 +530,7 @@ window._closeAllOverlays = function(){
 
 window.signOut = async function(){
   _closeAllOverlays();
-  if(sb) await sb.auth.signOut();
+  if(sb) await sb.auth.signOut({ scope: 'local' });   // ce navigateur seulement (l'app iOS reste connectée)
   currentUser = null;
   currentProfile = null;
   currentRole = 'client';
