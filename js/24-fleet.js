@@ -466,8 +466,9 @@ async function loadFleetVehicles(){
     };
     var amenLabels={electric:'100% \u00e9lectrique',hybrid:'Hybride',wifi:'Wi-Fi',water:'Eau',snacks:'Snacks'};
     var vAmen=v.amenities||[];
-    var amenHtml=vAmen.length>0
-      ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+vAmen.map(function(a){
+    var _brdTag=v.branded?'<span style="font-size:10px;padding:2px 6px;background:var(--amber-bg);color:var(--amber);border-radius:4px;font-weight:600;">'+t('veh.branded')+'</span>':'';
+    var amenHtml=(vAmen.length>0||_brdTag)
+      ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+_brdTag+vAmen.map(function(a){
         return '<span style="font-size:10px;padding:2px 6px;background:var(--sand2);color:var(--ink2);border-radius:4px;display:inline-flex;align-items:center;gap:3px;">'+(amenIcons[a]||'')+' '+(amenLabels[a]||a)+'</span>';
       }).join('')+'</div>'
       :'';
@@ -603,6 +604,7 @@ window.openVehicleModal=function(){
   _docFormReset(_VEH_DOCS); window._vehExistingDocs={};
   var vErr=document.getElementById('veh-err'); if(vErr) vErr.classList.remove('show');
   ['electric','hybrid','wifi','water','snacks'].forEach(function(a){var cb=document.getElementById('veh-amen-'+a);if(cb)cb.checked=false;});
+  var brd=document.getElementById('veh-branded');if(brd){brd.checked=false;brd.disabled=false;}
   openModal('m-vehicle');
 };
 
@@ -635,15 +637,16 @@ window.saveVehicle=async function(){
     var cb=document.getElementById('veh-amen-'+a);
     if(cb&&cb.checked)amenities.push(a);
   });
+  var branded=!!(document.getElementById('veh-branded')||{}).checked;   // inscription publicitaire sur la carrosserie
   try{
     var vehId=window._editVehicleId;
     if(vehId){
-      var _vUpd={brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities};
+      var _vUpd={brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities,branded:branded};
       if(!seatsLocked)_vUpd.seats=seats;
       var {error}=await sb.rpc('api_vehicle_save',{ p_id:vehId, p:_vUpd });
       if(error)throw error;
     } else {
-      var {data:veh,error}=await sb.rpc('api_vehicle_save',{ p_id:null, p:{brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities,seats:seats} });
+      var {data:veh,error}=await sb.rpc('api_vehicle_save',{ p_id:null, p:{brand:brand,model:model,year:year,color:color||null,vehicle_class:vclass,plate:plate||null,amenities:amenities,seats:seats,branded:branded} });
       if(error)throw error;
       vehId=veh.id;
     }
@@ -676,6 +679,8 @@ window.editVehicle=async function(id, docsOnly){
     var cb=document.getElementById('veh-amen-'+a);
     if(cb){cb.checked=vAmen.indexOf(a)>=0;cb.disabled=isValidated;}
   });
+  // Marquage : modifiable même sur un véhicule validé (autocollants posés ou retirés)
+  var brd=document.getElementById('veh-branded');if(brd){brd.checked=!!v.branded;brd.disabled=false;}
   // Show validated notice
   var noticeEl=document.getElementById('veh-validated-notice');
   if(!noticeEl){

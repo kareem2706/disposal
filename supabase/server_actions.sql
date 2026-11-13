@@ -605,7 +605,7 @@ returns jsonb language plpgsql security definer set search_path = public as $$
 declare uid uuid := _api_uid(); d jsonb; v fleet_vehicles%rowtype; jv jsonb; k text; x jsonb;
 begin
   perform _api_require_fleet(uid);
-  d := _api_cols('public.fleet_vehicles', p, array['brand','model','year','color','vehicle_class','plate','amenities','seats','active']);
+  d := _api_cols('public.fleet_vehicles', p, array['brand','model','year','color','vehicle_class','plate','amenities','seats','active','branded']);
   foreach k in array array['brand','model','color','plate','vehicle_class'] loop
     if d ? k then d := jsonb_set(d, array[k], coalesce(to_jsonb(_api_txt(d ->> k, 100)), 'null'::jsonb)); end if;
   end loop;

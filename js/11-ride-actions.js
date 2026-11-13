@@ -142,7 +142,7 @@ async function openOffersModal(rideId){
       const vehIds = [...new Set(offers.map(o => o.vehicle_id).filter(Boolean))];
       if(vehIds.length > 0){
         const { data: vData } = await sb.from('fleet_vehicles')
-          .select('id, brand, model, year, color, vehicle_class, amenities')
+          .select('id, brand, model, year, color, vehicle_class, amenities, branded')
           .in('id', vehIds);
         if(vData){
           const vm = {};

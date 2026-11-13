@@ -748,6 +748,7 @@ function renderOfferCard(o){
       +(vehClass?_lbl('Gamme',classLabels[vehClass]||vehClass):'')
       +_lbl('Marque',v.brand||'—')+_lbl('Modèle',v.model||'—')
       +(v.year?_lbl('Année',v.year):'')+(v.color?_lbl('Couleur',v.color):'')
+      +_lbl(t('veh.branding'),v.branded?'<span style="color:var(--amber);font-weight:600;">'+t('veh.branded_yes')+'</span>':t('veh.branded_no'))
     +'</div>'):'';
   if(details) tags='';
 
