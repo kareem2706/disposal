@@ -35,7 +35,8 @@ var _BLEENR_DOC_CSS='*{box-sizing:border-box;margin:0;padding:0}'
   +'.boxt{color:#1FA34A;font-size:19px;font-weight:800;margin-bottom:8px}.box div{margin-bottom:4px}.muted{color:#666;font-size:11.5px}'
   +'.foot{margin-top:26px;text-align:center;font-size:10.5px;color:#999}'
   +'.warn{background:#FEF3DC;color:#92650A;padding:10px 12px;border-radius:6px;margin-bottom:16px}'
-  +'@media print{body{padding:24px}.np{display:none}.page+.page{page-break-before:always;border:none;margin:0;padding:0}'
+  +'@page{size:A4;margin:16mm 15mm}'   // marges haut / bas / gauche / droite sur chaque page imprimée ou PDF
+  +'@media print{body{padding:0}.np{display:none}.page+.page{page-break-before:always;border:none;margin:0;padding:0}'
   +'table.lines th,table.kv th,.box{-webkit-print-color-adjust:exact;print-color-adjust:exact}}';
 
 function _bleenrDocHtml(title, inner){
@@ -339,7 +340,7 @@ function _docContractPage(d){
   var art=function(n,t,body){ return '<div class="ct-a"><h3>Article '+n+' — '+t+'</h3>'+body+'</div>'; };
   var ul=function(items){ return '<ul>'+items.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'; };
   return '<div class="page ct">'
-    +'<style>.ct .top{margin-bottom:14px}.ct .logo{height:34px}.ct .num{font-size:18px}.ct .sect{margin-top:4px}.ct .ct-a{margin-top:8px}.ct h3{font-size:11.5px;font-weight:800;color:#1B5E3B;margin-bottom:2px}.ct p,.ct li{font-size:10.3px;line-height:1.42}.ct ul{padding-left:15px;margin-top:1px}.ct li{margin:0}.ct .ct-parties{display:flex;gap:14px;margin:4px 0 6px}.ct .ct-parties .party{flex:1;border:1px solid #E1E6E3;border-radius:6px;padding:8px 10px;font-size:10.5px}.ct .pname{font-size:12px}.ct .ct-sign{display:flex;gap:18px;margin-top:14px}.ct .ct-sign div{flex:1;border-top:1px solid #1A1A18;padding-top:5px;font-size:10px;color:#555}.ct .foot{margin-top:12px}</style>'
+    +'<style>.ct .top{margin-bottom:22px}.ct .logo{height:36px}.ct .num{font-size:19px}.ct .sect{margin:6px 0 10px}.ct .ct-a{margin-top:18px;break-inside:avoid;page-break-inside:avoid}.ct h3{font-size:12.5px;font-weight:800;color:#1B5E3B;margin-bottom:6px}.ct p,.ct li{font-size:11.3px;line-height:1.65}.ct p+p{margin-top:6px}.ct ul{padding-left:18px;margin-top:2px}.ct li{margin:0 0 5px}.ct .ct-parties{display:flex;gap:18px;margin:8px 0 14px}.ct .ct-parties .party{flex:1;border:1px solid #E1E6E3;border-radius:8px;padding:12px 14px;font-size:11.3px;line-height:1.55}.ct .pname{font-size:12.5px;margin-bottom:2px}.ct .ct-sign{display:flex;gap:28px;margin-top:34px;break-inside:avoid;page-break-inside:avoid}.ct .ct-sign div{flex:1;border-top:1px solid #1A1A18;padding-top:8px;font-size:10.5px;color:#555}.ct .muted{line-height:1.6}.ct .foot{margin-top:18px}</style>'
     +_docTop('Contrat de transport', d.code, ['Annexe au '+(d.mode==='voucher'?'voucher':'l’ordre de mission'), 'Émis le : '+_docDate()])
     +'<div class="sect">Entre les parties</div>'
     +'<div class="ct-parties">'+party('Le transporteur',d.carrier)+party('Le client',d.client)+'</div>'
