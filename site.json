@@ -2,6 +2,7 @@
   "_note": "Informations de la société et environnements (production / développement) : reportés partout ({{…}}) à la construction du site (build.mjs). La clé Supabase « anon » est publique ; ne jamais mettre ici une clé secrète.",
   "company": {
     "name": "Bleenr",
+    "legal_name": "Bleenr",
     "street": "Langestraat 84",
     "postal": "1730",
     "city": "Asse",
