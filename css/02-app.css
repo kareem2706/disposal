@@ -293,6 +293,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 #m-payment .modal{max-height:88vh;}
 #m-new-ride .input-group,#m-subcontract .input-group{margin-bottom:8px;}
 #m-new-ride .form-grid,#m-subcontract .form-grid{gap:8px;}
+/* Mission personnelle : champs resserrés (les grilles se suivent sans grand espace) */
+#m-personal-mission .input-group{margin-bottom:0;}
+#m-personal-mission .form-grid{gap:8px 12px;margin-bottom:8px;}
+#m-personal-mission .modal-body > .input-group{margin-bottom:10px;}
 
 /* ═══ MODAL ═══ */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(14,14,12,.45);z-index:800;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);}
