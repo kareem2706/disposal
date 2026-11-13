@@ -327,7 +327,7 @@ window.openOfferModal = function(rideId, summary, rideObj){
   if(_wd){
     var _canWd=!!existing && !_lock;
     _wd.style.display=_canWd?'':'none';
-    _wd.innerHTML=_canWd?_ftMenu('<button class="ft-menu-item" style="color:var(--red);" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');_offerWithdrawFromModal()"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Retirer mon offre</button>'):'';
+    _wd.innerHTML=_canWd?_ftMenu('<button class="ft-menu-item" style="color:var(--red);" onclick="this.closest(\'.ft-menu\').classList.remove(\'open\');_offerWithdrawFromModal()"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" style="color:var(--red);flex-shrink:0;"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Retirer mon offre</button>'):'';
   }
   if(priceEl){ priceEl.disabled = _lock; priceEl.style.opacity = _lock ? '0.5' : ''; priceEl.style.cursor = _lock ? 'not-allowed' : ''; }
   if(msgEl){   msgEl.disabled   = _lock; msgEl.style.opacity   = _lock ? '0.5' : ''; msgEl.style.cursor   = _lock ? 'not-allowed' : ''; }
