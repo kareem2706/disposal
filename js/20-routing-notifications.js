@@ -211,48 +211,22 @@ var _offerAnimID  = null;
 var _offerCounting = false;
 var _OFFER_DELAY   = 5000;
 
-window._offerBtnClick = function(){
-  if(_offerCounting){
-    // Cancel
-    clearTimeout(_offerTimerID); _offerTimerID = null;
-    cancelAnimationFrame(_offerAnimID); _offerAnimID = null;
-    _offerCounting = false;
-    var btn = document.getElementById('btn-offer-submit');
-    var bar = document.getElementById('offer-progress-bar');
-    if(btn){ btn.textContent = 'Soumettre →'; btn.className = 'btn btn-green'; btn.style.width='100%'; }
-    if(bar){ bar.style.width = '0%'; }
-    showToast(t('app.soumission_annulee'));
-  } else {
-    // Validate first
-    var price = parseFloat(document.getElementById('offer-price').value);
-    var err   = document.getElementById('offer-err');
-    if(!price || price <= 0){ showError(err, t('err_required')); return; }
-    if(!_readOfferKm().ok){ showError(err, t('app.veuillez_indiquer_le_nombre_de')); return; }
-    // Start countdown
-    _offerCounting = true;
-    var btn = document.getElementById('btn-offer-submit');
-    var bar = document.getElementById('offer-progress-bar');
-    if(btn){ btn.textContent = 'Annuler'; btn.className = 'btn btn-offer-cancel'; btn.style.width='100%'; }
-    if(bar){ bar.style.width = '0%'; }
-    var t0 = Date.now();
-    function step(){
-      var pct = Math.min(100, ((Date.now()-t0) / _OFFER_DELAY) * 100);
-      if(bar) bar.style.width = pct + '%';
-      if(pct < 100){
-        _offerAnimID = requestAnimationFrame(step);
-      }
-    }
-    _offerAnimID = requestAnimationFrame(step);
-    _offerTimerID = setTimeout(function(){
-      _offerTimerID = null;
-      cancelAnimationFrame(_offerAnimID); _offerAnimID = null;
-      _offerCounting = false;
-      var b2 = document.getElementById('btn-offer-submit');
-      var br = document.getElementById('offer-progress-bar');
-      if(b2){ b2.textContent = 'Soumettre →'; b2.className = 'btn btn-green'; }
-      if(br){ br.style.width = '0%'; }
-      submitOffer();
-    }, _OFFER_DELAY);
+var _offerBusy = false;
+// Envoi immédiat de l'offre (plus de compte à rebours de 5 s)
+window._offerBtnClick = async function(){
+  if(_offerBusy) return;
+  var price = parseFloat(document.getElementById('offer-price').value);
+  var err   = document.getElementById('offer-err');
+  if(!price || price <= 0){ showError(err, t('err_required')); return; }
+  if(!_readOfferKm().ok){ showError(err, t('app.veuillez_indiquer_le_nombre_de')); return; }
+  if(err){ err.classList.remove('show'); err.textContent=''; }
+  _offerBusy = true;
+  var btn = document.getElementById('btn-offer-submit');
+  if(btn) btn.disabled = true;
+  try{ await submitOffer(); }
+  finally{
+    _offerBusy = false;
+    var b2 = document.getElementById('btn-offer-submit'); if(b2) b2.disabled = false;
   }
 };
 
