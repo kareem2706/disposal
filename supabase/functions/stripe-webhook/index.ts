@@ -75,7 +75,9 @@ Deno.serve(async (req: Request) => {
   const sig = req.headers.get("stripe-signature") ?? "";
   const raw = await req.text();
   let event: Stripe.Event | null = null;
-  for (const secret of [WEBHOOK_SECRET, CONNECT_WEBHOOK_SECRET].filter(Boolean)) {
+  // Plusieurs secrets possibles, séparés par des virgules (ex. webhook test + webhook live, comptes connectés)
+  const secrets = [WEBHOOK_SECRET, CONNECT_WEBHOOK_SECRET].join(",").split(",").map((x) => x.trim()).filter(Boolean);
+  for (const secret of secrets) {
     try { event = await stripe.webhooks.constructEventAsync(raw, sig, secret, undefined, crypto); break; } catch (_) { /* secret suivant */ }
   }
   if (!event) {
