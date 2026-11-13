@@ -214,6 +214,7 @@ window._renderDriverInvoiceMonth = async function(){
   var fmt = function(v){ return parseFloat(v).toFixed(2).replace('.',',')+' €'; };
   var tLbl = {ab:'A → B', disposal:'Disposition', mixed:'Mixte'};
 
+  setTimeout(_dinvStripeBtn, 0);
   var header = '<div class="card-hd dinv-hd" style="display:flex;align-items:center;gap:8px;justify-content:space-between;">'
     +'<div class="dinv-nav" style="display:flex;align-items:center;gap:6px;">'
       +'<button onclick="_dInvStep(-1)" style="'+btnStyle+'">&lt;</button>'
@@ -221,12 +222,14 @@ window._renderDriverInvoiceMonth = async function(){
       +'<select onchange="_dInvSetYear(parseInt(this.value))" style="'+selStyle+'">'+yearOpts+'</select>'
       +'<button onclick="_dInvStep(1)" style="'+btnStyle+'">&gt;</button>'
     +'</div>'
-    +(monthRides.length
-      ? '<div class="dinv-btns" style="display:flex;gap:6px;">'
-          +'<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;flex-shrink:0;" onclick="generateDriverInvoices(\'prestation\')">'+t('app.factures_prestation')+'</button>'
+    +'<div class="dinv-btns" style="display:flex;gap:6px;">'
+      +(monthRides.length
+        ? '<button class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:5px;flex-shrink:0;" onclick="generateDriverInvoices(\'prestation\')">'+t('app.factures_prestation')+'</button>'
           +'<button class="btn btn-secondary btn-sm" style="flex-shrink:0;" onclick="generateDriverInvoices(\'commission\')">'+t('app.facture_commission')+'</button>'
-        +'</div>'
-      : '')
+        : '')
+      // Espace Stripe (versements) : affiché si le fleet a un compte Stripe
+      +'<button class="btn btn-green btn-sm dinv-stripe" style="flex-shrink:0;display:none;" onclick="stripeDashboard()">'+t('st.dashboard')+'</button>'
+    +'</div>'
   +'</div>';
 
   if(!monthRides.length){
@@ -388,3 +391,14 @@ window.deletePassenger = async function(id){
     await loadPassengersList();
   });
 };
+
+// Bouton « Ouvrir mon espace Stripe » des factures : seulement si le fleet a un compte Stripe
+var _dinvStripeOk=null;
+async function _dinvStripeBtn(){
+  if(currentRole!=='driver' || localStorage.getItem(DEMO_MODE_KEY)==='1') return;
+  if(_dinvStripeOk===null){
+    if(typeof _stripeState!=='undefined' && _stripeState) _dinvStripeOk=!!_stripeState.account_id;
+    else { try{ var r=await sb.from('fleet_stripe').select('account_id').eq('driver_id',currentUser.id).maybeSingle(); _dinvStripeOk=!!(r.data&&r.data.account_id); }catch(e){ _dinvStripeOk=false; } }
+  }
+  document.querySelectorAll('.dinv-stripe').forEach(function(b){ b.style.display=_dinvStripeOk?'':'none'; });
+}

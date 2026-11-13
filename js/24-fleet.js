@@ -162,7 +162,8 @@ function _stripeRender(row, pays){
     act.innerHTML=btn(t('st.dashboard'),'stripeDashboard',true);
   }
   var money=function(v){ return (Math.round((+v||0)*100)/100).toLocaleString(_i18nLocale(),{style:'currency',currency:'EUR'}); };
-  list.innerHTML=(pays&&pays.length)?'<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;">'+t('st.recent')+'</div>'
+  list.innerHTML='';   // les versements se consultent dans l'espace Stripe
+  if(false) list.innerHTML=(pays&&pays.length)?'<div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;">'+t('st.recent')+'</div>'
     +pays.map(function(p){ return '<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--line,#ECECE8);font-size:13px;">'
       +'<span>'+new Date(p.updated_at).toLocaleDateString(_i18nLocale())+'</span>'
       +'<span style="color:var(--ink3)">'+t('st.'+(p.status==='paid'?'paid':p.status==='reversed'?'reversed':'failed'))+'</span>'
@@ -235,7 +236,7 @@ document.addEventListener('click', function(e){
 function _sectionStatusHtml(items){
   if(!items||items.length===0)return '';
   var allValidated=items.every(function(i){return i.status==='validated';});
-  if(allValidated)return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--green-bg);color:var(--green);font-size:10px;font-weight:600;"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'+t('app2.valide_2')+'</span>';
+  if(allValidated)return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--ok-bg,var(--green-bg));color:var(--ok,var(--green));font-size:10px;font-weight:600;"><svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3.5 3.5L13 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'+t('app2.valide_2')+'</span>';
   return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-size:10px;font-weight:600;">'+t('app.en_attente')+'</span>';
 }
 
@@ -451,9 +452,19 @@ async function loadFleetVehicles(){
   (allVehDocs||[]).forEach(function(d){if(!vehDocsMap[d.vehicle_id])vehDocsMap[d.vehicle_id]=[];vehDocsMap[d.vehicle_id].push(d);});
   var classLabels={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus',any:'Toute gamme'};
   var vehDocLabels={carte_grise:'Carte grise',assurance:'Assurance',controle_technique:'CT',vignette_identification:'Vignette'};
+  // Véhicules regroupés par gamme (Economy, Business, Van, Luxe, Bus)
+  var _clsOrder=['lowcost','business','van','luxe','bus','any'];
+  data=data.slice().sort(function(a,b){ var x=_clsOrder.indexOf(a.vehicle_class), y=_clsOrder.indexOf(b.vehicle_class); return (x<0?99:x)-(y<0?99:y); });
+  var _lastCls=null;
   el.innerHTML=data.map(function(v){
     var safeId=v.id.replace(/'/g,'');
     var docs=vehDocsMap[v.id]||[];
+    var _grpHd='';
+    if(v.vehicle_class!==_lastCls){
+      _lastCls=v.vehicle_class;
+      var _nb=data.filter(function(x){return x.vehicle_class===v.vehicle_class;}).length;
+      _grpHd='<div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);padding:14px 0 4px;border-bottom:1px solid var(--sand2);">'+(classLabels[v.vehicle_class]||v.vehicle_class||'—')+' <span style="font-weight:500;color:var(--ink4);">· '+_nb+'</span></div>';
+    }
     var docsHtml=docs.length>0
       ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+docs.map(_docBadge).join('')+'</div>'
       :'';
@@ -474,11 +485,11 @@ async function loadFleetVehicles(){
       :'';
     var vStatus=v.status||'pending';
     var vStatusBadge=vStatus==='validated'
-      ?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--green-bg);color:var(--green);font-weight:600;margin-left:8px;">'+t('app2.valide')+'</span>'
+      ?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--ok-bg,var(--green-bg));color:var(--ok,var(--green));font-weight:600;margin-left:8px;">'+t('app2.valide')+'</span>'
       :vStatus==='rejected'
         ?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:8px;">'+t('app2.rejete')+'</span>'
         :'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-weight:600;margin-left:8px;">'+t('app.en_attente')+'</span>';
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
+    return _grpHd+'<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
       +'<div style="flex:1;min-width:0;"><div style="font-weight:500;font-size:13px;display:flex;align-items:center;">'+v.brand+' '+v.model+vStatusBadge+'</div>'
       +'<div style="font-size:11px;color:var(--ink4);">'+(v.color||'')+' \u00b7 '+(classLabels[v.vehicle_class]||v.vehicle_class)+(v.plate?' \u00b7 '+v.plate:'')+'</div>'
       +amenHtml+docsHtml+'</div>'
@@ -536,7 +547,7 @@ function _docFormFill(defs, existing){
     var wrap=fi.closest('.doc-file-wrap')||fi.parentElement;
     var tag=document.createElement('div'); tag.className='doc-exists-tag';
     tag.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11.5px;';
-    tag.innerHTML='<a href="'+doc.file_url+'" target="_blank" style="padding:2px 8px;background:var(--green-bg);color:var(--green);border-radius:4px;text-decoration:none;font-weight:600;">'+t('app.document_ajoute')+'</a>'
+    tag.innerHTML='<a href="'+doc.file_url+'" target="_blank" style="padding:2px 8px;background:var(--ok-bg,var(--green-bg));color:var(--ok,var(--green));border-radius:4px;text-decoration:none;font-weight:600;">'+t('app.document_ajoute')+'</a>'
       +'<button type="button" style="background:none;border:none;color:var(--blue);font-weight:600;font-size:11.5px;cursor:pointer;padding:0;">'+t('app.remplacer')+'</button>';
     tag.querySelector('button').onclick=function(){ fi.style.display=''; fi.click(); tag.remove(); };
     wrap.appendChild(tag);
@@ -824,7 +835,7 @@ async function loadFleetDriversList(){
       :'';
     var dStatus=d.status||'pending';
     var dStatusBadge=dStatus==='validated'
-      ?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--green-bg);color:var(--green);font-weight:600;margin-left:8px;">'+t('app2.valide')+'</span>'
+      ?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--ok-bg,var(--green-bg));color:var(--ok,var(--green));font-weight:600;margin-left:8px;">'+t('app2.valide')+'</span>'
       :dStatus==='rejected'
         ?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:8px;">'+t('app2.rejete')+'</span>'
         :'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-weight:600;margin-left:8px;">'+t('app.en_attente')+'</span>';
@@ -1057,7 +1068,7 @@ function renderRideItem(r){
 // ═══════════════════════════════════════════════════════════════
 
 function _adminStatusBadge(status){
-  if(status==='validated') return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--green-bg);color:var(--green);font-size:10px;font-weight:600;">V\u00e9rifi\u00e9</span>';
+  if(status==='validated') return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--ok-bg,var(--green-bg));color:var(--ok,var(--green));font-size:10px;font-weight:600;">V\u00e9rifi\u00e9</span>';
   if(status==='rejected') return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--red-bg);color:var(--red);font-size:10px;font-weight:600;">Rejet\u00e9</span>';
   return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-size:10px;font-weight:600;">En attente</span>';
 }
