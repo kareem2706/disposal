@@ -18,6 +18,19 @@ async function loadMyOffers(){
   } catch(e){ console.warn('loadMyOffers error:', e); }
 }
 
+// Thème de l'espace fleet : 'lemon' (noir + citron vert) ou 'forest' (thème d'origine).
+// Pour revenir en arrière : FLEET_THEME = 'forest'. Les clients restent toujours en forest.
+var FLEET_THEME = 'lemon';
+function _applyFleetTheme(isFleet){
+  var on = isFleet && FLEET_THEME === 'lemon';
+  document.body.classList.toggle('th-lemon', on);
+  var lg = document.querySelector('.sidebar-logo img');
+  if(lg){
+    if(!lg.dataset.forest) lg.dataset.forest = lg.getAttribute('src');
+    lg.setAttribute('src', on ? 'logo_text_dark.png' : lg.dataset.forest);
+  }
+}
+
 function enterApp(){
   console.log('[enterApp] called, _entering=',_entering);
   if(_entering)return; _entering=true;
@@ -30,6 +43,7 @@ function enterApp(){
   console.log('[enterApp] email:', currentUser?.email, 'ADMIN_EMAIL:', ADMIN_EMAIL, 'isAdmin:', isAdmin, 'role:', role);
   const isAdminDriver = isAdmin && role === 'driver';
   currentRole = isAdmin ? 'admin' : role;
+  _applyFleetTheme(!isAdmin && role==='driver');
   document.getElementById('nav-client').style.display = (!isAdmin && role === 'client') ? 'block' : 'none';
   document.getElementById('nav-driver').style.display = (isAdminDriver || (!isAdmin && role === 'driver')) ? 'block' : 'none';
   var adminNav=document.getElementById('nav-admin');if(adminNav)adminNav.style.display=isAdmin?'block':'none';

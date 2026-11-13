@@ -537,6 +537,7 @@ window.signOut = async function(){
   _entering = false;
   _passwordRecoveryActive = false;
   localStorage.removeItem(DEMO_MODE_KEY);
+  if(typeof _applyFleetTheme==='function') _applyFleetTheme(false);
   _resetAuthUI();
   showToast(t('toast_signout'));
   showScreen('landing');

@@ -131,7 +131,7 @@ for (const p of PAGES) {
 // robots.txt : tout autorisé en production, tout interdit en développement
 if (isProd) page('robots.txt'); else fs.writeFileSync(path.join(out, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
 for (const f of fs.readdirSync(path.join(root, 'legal'))) page(path.join('legal', f));
-for (const p of ['assets', 'i18n', 'logo.png', 'logo_text.png', 'logo_text_light.png', 'favicon.ico']) {
+for (const p of ['assets', 'i18n', 'logo.png', 'logo_text.png', 'logo_text_light.png', 'logo_text_dark.png', 'favicon.ico']) {
   if (fs.existsSync(path.join(root, p))) fs.cpSync(path.join(root, p), path.join(out, p), { recursive: true });
 }
 console.log('Site construit dans _site/ (version ' + ver + ', environnement ' + envName + ', branche ' + branch + ')');
