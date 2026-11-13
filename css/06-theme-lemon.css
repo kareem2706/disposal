@@ -64,3 +64,7 @@ body.th-lemon{
 .th-lemon .ride-card .btn-green{border-radius:999px;font-weight:600;}
 /* Listes de courses (missions terminées, annulées, sous-traitance…) : conteneur transparent, seules les cartes sont blanches */
 .th-lemon .card:has(.ride-card){background:transparent!important;box-shadow:none!important;border:none!important;overflow:visible;}
+/* Bouton d'action des cartes (« Soumettre une offre », « Accepter »…) : sur une ligne, sans chevron par-dessus */
+.th-lemon .ride-card .btn-green{white-space:nowrap;padding:10px 20px;}
+.th-lemon .ride-card:has(.btn-green) .ride-card-arrow{display:none;}
+@media(min-width:901px){.th-lemon .ride-card:has(.btn-green){grid-template-columns:52px 72px 1.1fr 1.1fr 130px auto;padding-right:16px;}}
