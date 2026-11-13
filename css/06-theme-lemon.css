@@ -62,3 +62,5 @@ body.th-lemon{
 .th-lemon .ride-card{border:1px solid #ECEAE4;box-shadow:0 1px 3px rgba(20,30,25,.04);border-radius:16px;margin-bottom:10px;}
 .th-lemon .ride-card:hover{box-shadow:0 4px 14px rgba(20,30,25,.08);border-color:#E0DED6;}
 .th-lemon .ride-card .btn-green{border-radius:999px;font-weight:600;}
+/* Listes de courses (missions terminées, annulées, sous-traitance…) : conteneur transparent, seules les cartes sont blanches */
+.th-lemon .card:has(.ride-card){background:transparent!important;box-shadow:none!important;border:none!important;overflow:visible;}
