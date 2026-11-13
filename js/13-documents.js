@@ -136,7 +136,7 @@ function _rdInfoBlocks(o){
   var tel=function(ph){ return ph?'<a href="tel:'+_rdEsc(String(ph).replace(/[^\d+]/g,''))+'" style="font-size:12.5px;color:var(--blue);text-decoration:none;white-space:nowrap;">'+_rdEsc(ph)+'</a>':''; };
   var none='<span style="color:var(--ink4);">Non renseigné</span>';
   var p=o.pax||{}, v=o.veh, d=o.drv;
-  var h='<div style="'+box+'">'+cap('Informations du passager')
+  var h='<div class="rd-pax-card" style="'+box+'">'+cap('Informations du passager')
     +row(I.usr, p.name?'<b>'+_rdEsc(p.name)+'</b>':none, tel(p.phone))
     +(p.email?row(I.mail,'<a href="mailto:'+_rdEsc(p.email)+'" style="color:var(--blue);text-decoration:none;">'+_rdEsc(p.email)+'</a>'):'')
     +(p.ref?row(I.ref,'<span style="color:var(--ink3);">Réf. : </span><b>'+_rdEsc(p.ref)+'</b>'):'')

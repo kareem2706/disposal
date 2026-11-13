@@ -79,3 +79,4 @@ body.th-lemon{
 .th-lemon .rd-pax-card span[style*="border-radius:9px"]{background:rgba(255,255,255,.1)!important;}
 .th-lemon .rd-pax-card div[style*="border-top"]{border-top-color:rgba(255,255,255,.12)!important;}
 .th-lemon .rd-pax-card div[style*="font-style:italic"]{color:#E6EBD8!important;}
+.th-lemon .rd-pax-card div[style*="color:var(--ink4)"],.th-lemon .rd-pax-card span[style*="color:var(--ink4)"]{color:#8C9A86!important;font-style:normal;}
