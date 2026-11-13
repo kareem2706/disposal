@@ -259,6 +259,17 @@ window._offerNetUpdate=function(){
     +'<div style="font-size:12px;color:var(--ink3);">'+f(p)+' − commission Bleenr '+_pctTxt(_offerCommRate)+' % ('+f(comm)+')</div>';
   box.style.display='block';
 };
+// Offre existante : son véhicule reste présélectionné
+function _offerPickVehicle(ex){
+  var s=document.getElementById('offer-vehicle-select');
+  if(s && ex && ex.vehicle && s.querySelector('option[value="'+ex.vehicle+'"]')) s.value=ex.vehicle;
+}
+// Retrait depuis le panneau de l'offre
+window._offerWithdrawFromModal=async function(){
+  if(!currentRideId) return;
+  await _withdrawOffer(currentRideId);
+  if(!(_myOffers&&_myOffers[currentRideId])) closeModal('m-submit-offer');
+};
 window.openOfferModal = function(rideId, summary, rideObj){
   if(!_stripeGate()) return;
   _offerCommRate=null;
@@ -307,7 +318,12 @@ window.openOfferModal = function(rideId, summary, rideObj){
   // Disable price and message fields if offer already submitted (cannot be modified)
   var priceEl = document.getElementById('offer-price');
   var msgEl   = document.getElementById('offer-msg');
-  var _lock = !!existing && !_outd;
+  // Offre en attente : modifiable et retirable tant que le client ne l'a pas acceptée (contrôlé par le serveur)
+  var _lock = !!existing && !_outd && existing.status==='accepted';
+  var _edit = !!existing && !_outd && !_lock;
+  if(_edit && _ot) _ot.textContent='Modifier mon offre';
+  var _sb=document.getElementById('btn-offer-submit'); if(_sb && !_outd) _sb.textContent=_edit?'Mettre à jour →':'Soumettre →';
+  var _wd=document.getElementById('btn-offer-withdraw'); if(_wd) _wd.style.display=(existing && !_lock)?'':'none';
   if(priceEl){ priceEl.disabled = _lock; priceEl.style.opacity = _lock ? '0.5' : ''; priceEl.style.cursor = _lock ? 'not-allowed' : ''; }
   if(msgEl){   msgEl.disabled   = _lock; msgEl.style.opacity   = _lock ? '0.5' : ''; msgEl.style.cursor   = _lock ? 'not-allowed' : ''; }
   // Km inclus fields (disposal ride / disposal segments of a mixed ride)
@@ -325,9 +341,11 @@ window.openOfferModal = function(rideId, summary, rideObj){
       sb.from('fleet_vehicles').select('*').eq('fleet_id',currentUser.id).eq('active',true).then(function(res){
         _fleetVehicles=res.data||[];
         populateOfferVehicles(reqClass, rideObj&&rideObj.passengers);
+        _offerPickVehicle(existing);
       });
     } else {
       populateOfferVehicles(reqClass, rideObj&&rideObj.passengers);
+      _offerPickVehicle(existing);
     }
   } else {
     var vwrap=document.getElementById('offer-vehicle-wrap');if(vwrap)vwrap.style.display='none';

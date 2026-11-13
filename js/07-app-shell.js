@@ -12,7 +12,7 @@ async function loadMyOffers(){
     if(result.error) return;
     var rows = result.data || [];
     rows.forEach(function(row){
-      _myOffers[row.ride_id] = { price: row.price, msg: row.message || '', km: row.included_km || null,
+      _myOffers[row.ride_id] = { id: row.id, status: row.status, vehicle: row.vehicle_id || null, price: row.price, msg: row.message || '', km: row.included_km || null,
         outdated: row.status==='pending' && !!row.outdated_at, reason: row.outdated_reason || '', changes: row.outdated_changes || '' };
     });
   } catch(e){ console.warn('loadMyOffers error:', e); }

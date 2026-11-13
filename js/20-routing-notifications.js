@@ -188,9 +188,11 @@ window.submitOffer = async function(){
     // Notify the client that a new offer arrived (only on first submission)
     // Email « offre reçue » : envoyé par la base à la création de l'offre (ride_driver_emails.sql)
 
-    var _wasOutd = !!(_myOffers[currentRideId] && _myOffers[currentRideId].outdated);
-    _myOffers[currentRideId] = { price: price, msg: msg, km: includedKm };
-    setLoading(btn, false, t('app.soumettre'));
+    var _prev = _myOffers[currentRideId];
+    var _wasOutd = !!(_prev && (_prev.outdated || _prev.status==='pending'));
+    var _row = offerResult.data || {};
+    _myOffers[currentRideId] = { id: _row.id || (_prev&&_prev.id), status: 'pending', vehicle: selectedVehicleId || null, price: price, msg: msg, km: includedKm };
+    setLoading(btn, false, 'Soumettre →');
     if(_wasOutd){ closeModal('m-submit-offer'); showToast(t('app.offre_mise_a_jour')); if(typeof loadDriverDashboard === 'function') loadDriverDashboard(); var _mk=document.getElementById('page-marketplace'); if(_mk && _mk.classList.contains('active') && typeof loadMarketplace === 'function') loadMarketplace(); return; }
     closeModal('m-submit-offer');
     showToast(t('app.offre_soumise_avec_succes'));
@@ -238,11 +240,12 @@ function resetOfferBtn(){
   var bar = document.getElementById('offer-progress-bar');
   var existingOffer = _myOffers && currentRideId && _myOffers[currentRideId];
   var _upd = !!(existingOffer && existingOffer.outdated);
-  if(btn){ btn.textContent = _upd ? 'Mettre à jour mon offre →' : 'Soumettre →'; btn.className = _upd ? 'btn btn-red-solid' : 'btn btn-green'; btn.style.width='100%'; }
+  var _pend = !!(existingOffer && !_upd && existingOffer.status!=='accepted');
+  if(btn){ btn.textContent = _upd ? 'Mettre à jour mon offre →' : _pend ? 'Mettre à jour →' : 'Soumettre →'; btn.className = _upd ? 'btn btn-red-solid' : 'btn btn-green'; btn.style.width='100%'; }
   if(bar){ bar.style.width = '0%'; }
   // Respect existing offer state: keep submit wrap hidden if offer already submitted (sauf offre à mettre à jour)
   var wrap = document.getElementById('offer-btn-wrap');
-  if(wrap){ wrap.style.display = existingOffer && !_upd ? 'none' : ''; }
+  if(wrap){ wrap.style.display = existingOffer && !_upd && !_pend ? 'none' : ''; }
 }
 
 
