@@ -573,7 +573,7 @@ function _openRideDetailImpl(el){
         var _pxRef='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L2 12V2h10l8.6 8.6a2 2 0 010 2.8z"/><circle cx="7" cy="7" r="1.5"/></svg>';
         var _pxEmail=((notesRaw.match(/\|pemail:([^|]+)/)||[])[1]||'').trim();
         var _pxPref=((notesRaw.match(/\|pref:([^|]+)/)||[])[1]||'').trim();
-        var contactBlock = '<div style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
+        var contactBlock = '<div class="rd-pax-card" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
           +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">'+t('app.informations_du_passager')+'</div>'
             +(_isSubPoster && !(r.status==='active'||r.status==='done'||r.pickup_at)?'<button class="sub-pax-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;">'+_editIco+(paxMatch||telMatch?' Modifier':' Ajouter')+'</button>':'')
           +'</div>'
