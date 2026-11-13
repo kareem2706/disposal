@@ -46,8 +46,47 @@ function clientChanges(rec: Ride, old: Ride): string[] {
 const VEH: Record<string, string> = { lowcost: "Economy", business: "Business", van: "Van", luxe: "Luxe", bus: "Bus", any: "Toute gamme" };
 const MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 const DAYS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+const MONTHS_EN = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const DAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 type Ride = Record<string, any>;
+type Lang = "fr" | "en";
+
+// ── Langue des notifications : celle du profil du destinataire (profiles.lang, choisie dans l'app ou sur le site) ──
+const EN: Record<string, string> = {
+  "date": "date", "heure": "time", "adresse de départ": "departure address", "adresse d'arrivée": "arrival address", "gamme": "category",
+  "passagers": "passengers", "type de course": "ride type", "passager": "passenger", "téléphone du passager": "passenger’s phone",
+  "note pour le chauffeur": "note for the driver", "note du client": "client’s note", "numéro de vol": "flight number", "numéro de train": "train number",
+  "Toute gamme": "Any category", "Luxe": "Luxury", "Disposition": "Hourly",
+  "Nouvelle sous-traitance": "New subcontract", "Nouvelle demande": "New request", "Mission modifiée": "Mission changed", "Demande modifiée": "Request changed",
+  "Offre acceptée 🎉": "Offer accepted 🎉", "Demande annulée": "Request cancelled", "Course": "Ride", " est confirmée pour vous.": " is confirmed for you.",
+  "Modifié par le client : ": "Changed by the client: ",
+  "Sous-traitance mise à jour": "Subcontract updated", "Note modifiée : ": "Note changed: ", "Note ajoutée : ": "Note added: ", "La note a été supprimée": "The note was deleted",
+  "En chemin": "On the way", "Le chauffeur est en route vers la prise en charge.": "The driver is heading to the pick-up.",
+  "Client à bord": "Client on board", "Le passager est à bord, la mise à disposition a commencé.": "The passenger is on board, the hourly hire has started.",
+  "En route vers la destination": "Heading to the destination", "Le passager est à bord, direction ": "The passenger is on board, heading to ", "la destination": "the destination",
+  "Course terminée": "Ride completed", "Le sous-traitant a terminé la course.": "The subcontractor has completed the ride.",
+  // lignes envoyées par subcontract_push.sql
+  "Le véhicule a été retiré": "The vehicle was removed", "Véhicule assigné : ": "Vehicle assigned: ", "Changement de véhicule : ": "Vehicle changed: ",
+  "Le chauffeur a été supprimé": "The driver was removed", "Chauffeur assigné : ": "Driver assigned: ", "Changement de chauffeur : ": "Driver changed: ",
+  "véhicule": "vehicle", "chauffeur": "driver",
+};
+const T = (l: Lang, fr: string) => (l === "en" ? EN[fr] ?? fr : fr);
+// Ligne venant de la base (« Chauffeur assigné : Mounir Bassi ») : préfixe traduit, nom inchangé
+function trLine(l: Lang, line: string) {
+  if (l !== "en") return line;
+  if (EN[line]) return EN[line];
+  const pre = Object.keys(EN).find((k) => k.endsWith(": ") && line.startsWith(k));
+  return pre ? EN[pre] + line.slice(pre.length) : line;
+}
+async function langsOf(ids: string[]): Promise<Record<string, Lang>> {
+  const u = [...new Set(ids.filter(Boolean))];
+  if (!u.length) return {};
+  const rows: any[] = await rest(`profiles?id=in.(${u.join(",")})&select=id,lang`).catch(() => []);
+  const out: Record<string, Lang> = {};
+  for (const r of rows) out[r.id] = r.lang === "en" ? "en" : "fr";
+  return out;
+}
 type Kind = "new_request" | "request_updated" | "request_cancelled" | "offer_accepted";
 
 async function rest(path: string) {
@@ -56,16 +95,17 @@ async function rest(path: string) {
 }
 
 const short = (a?: string) => (a || "").split(",")[0].trim();
-function when(r: Ride) {
+function when(r: Ride, l: Lang = "fr") {
   const [y, m, d] = String(r.ride_date || "").slice(0, 10).split("-").map(Number);
   if (!y) return "";
   const dt = new Date(Date.UTC(y, m - 1, d));
-  return `${DAYS[dt.getUTCDay()]} ${d} ${MONTHS[m - 1]}` + (r.ride_time ? " · " + String(r.ride_time).slice(0, 5) : "");
+  const day = l === "en" ? `${DAYS_EN[dt.getUTCDay()]} ${d} ${MONTHS_EN[m - 1]}` : `${DAYS[dt.getUTCDay()]} ${d} ${MONTHS[m - 1]}`;
+  return day + (r.ride_time ? " · " + String(r.ride_time).slice(0, 5) : "");
 }
-function route(r: Ride) {
+function route(r: Ride, l: Lang = "fr") {
   if (r.trip_type === "disposal") {
     const dur = (String(r.notes || "").match(/Durée:([^\s|,]+)/) || [])[1];
-    return `Disposition${dur ? " " + dur : ""} · ${short(r.from_address)}`;
+    return `${T(l, "Disposition")}${dur ? " " + dur : ""} · ${short(r.from_address)}`;
   }
   return `${short(r.from_address)} → ${short(r.to_address)}`;
 }
@@ -145,12 +185,14 @@ async function sendAll(msgs: any[]) {
 // ── Suivi d'une sous-traitance : push au donneur d'ordre (client_id de la course) ──
 // • course (rides UPDATE) : note du sous-traitant, « En chemin », course terminée
 // • offre (SUB_ASSIGN, subcontract_push.sql) : véhicule / chauffeur changés
-async function pushPoster(rec: Ride, title: string, lead: string) {
+// title : texte français (traduit ici) ; lead : texte déjà prêt, ou fonction (langue → texte)
+async function pushPoster(rec: Ride, title: string, lead: string | ((l: Lang) => string)) {
   if (!rec?.client_id) return 0;
   const toks: any[] = await rest(`push_tokens?user_id=eq.${rec.client_id}&select=token,prefs`);
+  const l = (await langsOf([rec.client_id]))[rec.client_id] || "fr";
   const msgs = toks.filter((t) => (t.prefs?.sub_update ?? true) !== false).map((t) => ({
-    to: t.token, title: `${title}${rec.booking_code ? " · " + rec.booking_code : ""}`,
-    body: lead,   // sobre : uniquement ce qui a changé (la référence est dans le titre)
+    to: t.token, title: `${T(l, title)}${rec.booking_code ? " · " + rec.booking_code : ""}`,
+    body: typeof lead === "function" ? lead(l) : lead,   // sobre : uniquement ce qui a changé (la référence est dans le titre)
     sound: "default", data: { ride_id: rec.id, kind: "sub_update" }, channelId: "default",
   }));
   return msgs.length ? (await sendAll(msgs)).sent : 0;
@@ -160,15 +202,15 @@ async function subRideEvents(rec: Ride, old: Ride | null) {
   if (rec.driver_id !== old.driver_id) return 0;   // acceptation : gérée ailleurs
   let n = 0;
   const nn = tag(rec.notes, "offer_note"), on = tag(old.notes, "offer_note");
-  if (nn !== on) n += await pushPoster(rec, "Sous-traitance mise à jour", nn ? (on ? "Note modifiée : " : "Note ajoutée : ") + nn.slice(0, 160) : "La note a été supprimée");
+  if (nn !== on) n += await pushPoster(rec, "Sous-traitance mise à jour", (l) => nn ? T(l, on ? "Note modifiée : " : "Note ajoutée : ") + nn.slice(0, 160) : T(l, "La note a été supprimée"));
   // Étapes de la course faites par le sous-traitant
-  if (rec.on_way_at && !old.on_way_at) n += await pushPoster(rec, "En chemin", "Le chauffeur est en route vers la prise en charge.");
+  if (rec.on_way_at && !old.on_way_at) n += await pushPoster(rec, "En chemin", (l) => T(l, "Le chauffeur est en route vers la prise en charge."));
   if (rec.pickup_at && !old.pickup_at && rec.status !== "done") {
     n += rec.trip_type === "disposal"
-      ? await pushPoster(rec, "Client à bord", "Le passager est à bord, la mise à disposition a commencé.")
-      : await pushPoster(rec, "En route vers la destination", "Le passager est à bord, direction " + (short(rec.to_address) || "la destination") + ".");
+      ? await pushPoster(rec, "Client à bord", (l) => T(l, "Le passager est à bord, la mise à disposition a commencé."))
+      : await pushPoster(rec, "En route vers la destination", (l) => T(l, "Le passager est à bord, direction ") + (short(rec.to_address) || T(l, "la destination")) + ".");
   }
-  if (rec.status === "done" && old.status !== "done") n += await pushPoster(rec, "Course terminée", "Le sous-traitant a terminé la course.");
+  if (rec.status === "done" && old.status !== "done") n += await pushPoster(rec, "Course terminée", (l) => T(l, "Le sous-traitant a terminé la course."));
   return n;
 }
 
@@ -191,7 +233,7 @@ Deno.serve(async (req) => {
     // Véhicule / chauffeur d'une sous-traitance modifiés par le sous-traitant
     if (p.type === "SUB_ASSIGN") {
       const lines: string[] = Array.isArray(p.lines) ? p.lines.filter(Boolean) : [];
-      const sent = lines.length ? await pushPoster(p.record, "Sous-traitance mise à jour", lines.join("\n")) : 0;
+      const sent = lines.length ? await pushPoster(p.record, "Sous-traitance mise à jour", (l) => lines.map((x) => trLine(l, x)).join("\n")) : 0;
       return new Response(JSON.stringify({ kind: "sub_update", sent }), { status: 200 });
     }
     const rec: Ride = p.record, old: Ride | null = p.old_record ?? null;
@@ -227,18 +269,24 @@ Deno.serve(async (req) => {
 
     const mission = !!rec.driver_id && ["confirmed", "active", "pending_payment"].includes(rec.status);
     const changed = kind === "request_updated" && old ? clientChanges(rec, old).map((k) => LABELS[k] || k) : [];
-    const title = kind === "new_request" ? (rec.is_subcontract ? "Nouvelle sous-traitance" : "Nouvelle demande")
-      : kind === "request_updated" ? (mission ? `Mission modifiée${rec.booking_code ? " · " + rec.booking_code : ""}` : "Demande modifiée")
-      : kind === "offer_accepted" ? "Offre acceptée 🎉" : "Demande annulée";
     const lug = (rec.luggage_large || rec.luggage_small) ? "🧳 " + (rec.luggage_large || 0) + " + " + (rec.luggage_small || 0) : "";
-    const extra = [VEH[rec.vehicle_type] || rec.vehicle_type, rec.passengers ? rec.passengers + " pax" : "", lug].filter(Boolean).join(" · ");
-    const lead = kind === "offer_accepted" ? `${rec.booking_code || "Course"} est confirmée pour vous.`
-      : changed.length ? "Modifié par le client : " + [...new Set(changed)].join(", ") + "." : "";
-    const body = [lead, route(rec), [when(rec), kind === "new_request" ? extra : ""].filter(Boolean).join(" · ")].filter(Boolean).join("\n");
+    const text = (l: Lang) => {
+      const title = kind === "new_request" ? T(l, rec.is_subcontract ? "Nouvelle sous-traitance" : "Nouvelle demande")
+        : kind === "request_updated" ? (mission ? `${T(l, "Mission modifiée")}${rec.booking_code ? " · " + rec.booking_code : ""}` : T(l, "Demande modifiée"))
+        : kind === "offer_accepted" ? T(l, "Offre acceptée 🎉") : T(l, "Demande annulée");
+      const veh = VEH[rec.vehicle_type] ? T(l, VEH[rec.vehicle_type]) : rec.vehicle_type;
+      const extra = [veh, rec.passengers ? rec.passengers + " pax" : "", lug].filter(Boolean).join(" · ");
+      const lead = kind === "offer_accepted" ? `${rec.booking_code || T(l, "Course")}${T(l, " est confirmée pour vous.")}`
+        : changed.length ? T(l, "Modifié par le client : ") + [...new Set(changed.map((c) => T(l, c)))].join(", ") + "." : "";
+      const body = [lead, route(rec, l), [when(rec, l), kind === "new_request" ? extra : ""].filter(Boolean).join(" · ")].filter(Boolean).join("\n");
+      return { title, body };
+    };
+    const langs = visible.length ? await langsOf(visible.map((t) => t.user_id)) : {};
+    const byLang = { fr: kind ? text("fr") : null, en: kind ? text("en") : null };
 
     const shown = new Set(visible.map((t) => t.token));
     const msgs: any[] = visible.map((t) => ({
-      to: t.token, title, body, sound: "default", data: { ride_id: rec.id, kind }, channelId: "default",
+      to: t.token, ...(byLang[langs[t.user_id] || "fr"] as { title: string; body: string }), sound: "default", data: { ride_id: rec.id, kind }, channelId: "default",
       ...(openChanged ? { badge: badges[t.user_id] ?? 0 } : {}),
     }));
     // Les autres téléphones : mise à jour silencieuse de la pastille uniquement
