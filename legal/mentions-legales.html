@@ -20,13 +20,13 @@
 
 <h2>Éditeur du site et de l'application</h2>
 <div class="box">
-  <p><strong>{{company.legal_name}}</strong></p>
-  <p>{{company.street}}, {{company.postal}} {{company.city}}, {{company.country}}</p>
-  <p>Numéro d'entreprise (BCE) : {{company.bce}}</p>
-  <p>Numéro de TVA : {{company.vat}}</p>
+  <p><strong><span data-co="legal_name">{{company.legal_name}}</span></strong></p>
+  <p><span data-co="street">{{company.street}}</span>, <span data-co="postal">{{company.postal}}</span> <span data-co="city">{{company.city}}</span>, <span data-co="country">{{company.country}}</span></p>
+  <p>Numéro d'entreprise (BCE) : <span data-co="bce">{{company.bce}}</span></p>
+  <p>Numéro de TVA : <span data-co="vat">{{company.vat}}</span></p>
   <p>E-mail : <a href="mailto:{{company.email}}">{{company.email}}</a></p>
 </div>
-<p>Le site <a href="{{url}}">{{url}}</a> et l'application mobile Bleenr (ci-après « la plateforme ») sont édités par {{company.legal_name}}.</p>
+<p>Le site <a href="{{url}}">{{url}}</a> et l'application mobile Bleenr (ci-après « la plateforme ») sont édités par <span data-co="legal_name">{{company.legal_name}}</span>.</p>
 
 <h2>Activité</h2>
 <p>Bleenr exploite une plateforme de mise en relation entre des clients (particuliers et professionnels) et des transporteurs professionnels de personnes (sociétés de taxis, de location de voitures avec chauffeur, d'autocars, chauffeurs indépendants). Bleenr agit comme <strong>intermédiaire de réservation</strong> : il n'est pas transporteur et n'exécute pas lui-même les transports. Les conditions d'utilisation de la plateforme figurent dans les <a href="conditions.html">conditions générales</a>.</p>
@@ -39,7 +39,7 @@
 <p>La liste complète des prestataires qui traitent des données pour Bleenr figure dans la <a href="confidentialite.html">politique de confidentialité</a>.</p>
 
 <h2>Propriété intellectuelle</h2>
-<p>La marque, le logo, les textes, les visuels, la présentation et le code de la plateforme sont la propriété de {{company.legal_name}} ou font l'objet d'une licence. Toute reproduction ou réutilisation, totale ou partielle, sans autorisation écrite préalable est interdite.</p>
+<p>La marque, le logo, les textes, les visuels, la présentation et le code de la plateforme sont la propriété de <span data-co="legal_name">{{company.legal_name}}</span> ou font l'objet d'une licence. Toute reproduction ou réutilisation, totale ou partielle, sans autorisation écrite préalable est interdite.</p>
 
 <h2>Responsabilité</h2>
 <p>Bleenr veille à l'exactitude des informations publiées sur la plateforme mais ne peut garantir l'absence d'erreurs ou d'interruptions. Les informations relatives aux transporteurs (véhicules, chauffeurs, documents, prix) sont fournies par les transporteurs eux-mêmes. Les liens vers des sites tiers sont fournis à titre informatif ; Bleenr n'est pas responsable de leur contenu.</p>
@@ -47,6 +47,21 @@
 <h2>Contact</h2>
 <p>Pour toute question, réclamation ou demande relative à vos données : <a href="mailto:{{company.email}}">{{company.email}}</a>, ou par courrier à l'adresse ci-dessus.</p>
 </div></main>
-<footer><span>&copy; {{year}} {{company.name}} — {{company.city}}, {{company.country}}</span><nav><a href="mentions-legales.html">Mentions légales</a><a href="conditions.html">Conditions générales</a><a href="confidentialite.html">Confidentialité</a><a href="mailto:{{company.email}}">Contact</a></nav></footer>
+<footer><span>&copy; {{year}} {{company.name}} — <span data-co="city">{{company.city}}</span>, <span data-co="country">{{company.country}}</span></span><nav><a href="mentions-legales.html">Mentions légales</a><a href="conditions.html">Conditions générales</a><a href="confidentialite.html">Confidentialité</a><a href="mailto:{{company.email}}">Contact</a></nav></footer>
+<script>
+/* Coordonnées officielles de Bleenr : lues en direct dans Admin › Facturation (fonction bleenr_company) */
+(function(){
+  var U='{{supabase_url}}',K='{{supabase_anon_key}}';
+  var CN={BE:'Belgique',FR:'France',NL:'Pays-Bas',LU:'Luxembourg',DE:'Allemagne',ES:'Espagne',IT:'Italie',PT:'Portugal',CH:'Suisse',GB:'Royaume-Uni'};
+  fetch(U+'/rest/v1/rpc/bleenr_company',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},body:'{}'})
+    .then(function(r){return r.ok?r.json():null;}).then(function(c){
+      if(!c||!c.street||!c.city) return;
+      var vat=String(c.vat||'').replace(/[\s.]/g,'').toUpperCase(), n=vat.replace(/^[A-Z]{2}/,'');
+      var bce=/^\d{10}$/.test(n)?n.slice(0,4)+'.'+n.slice(4,7)+'.'+n.slice(7):n;
+      var v={legal_name:c.name,street:c.street,postal:c.postal,city:c.city,country:CN[String(c.country||'').toUpperCase()]||c.country,bce:bce,vat:/^BE\d{10}$/.test(vat)?'BE'+bce:vat};
+      document.querySelectorAll('[data-co]').forEach(function(e){var x=v[e.getAttribute('data-co')];if(x)e.textContent=x;});
+    }).catch(function(){});
+})();
+</script>
 </body>
 </html>

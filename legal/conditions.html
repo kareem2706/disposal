@@ -38,7 +38,7 @@
 </ol>
 
 <h2 id="a1">1. Objet et définitions</h2>
-<p>Les présentes conditions régissent l'utilisation du site et de l'application mobile Bleenr (« la plateforme »), éditée par {{company.legal_name}}, {{company.street}}, {{company.postal}} {{company.city}}, BCE {{company.bce}}, TVA {{company.vat}} (« Bleenr »). Tout utilisateur les accepte lors de la création de son compte.</p>
+<p>Les présentes conditions régissent l'utilisation du site et de l'application mobile Bleenr (« la plateforme »), éditée par <span data-co="legal_name">{{company.legal_name}}</span>, <span data-co="street">{{company.street}}</span>, <span data-co="postal">{{company.postal}}</span> <span data-co="city">{{company.city}}</span>, BCE <span data-co="bce">{{company.bce}}</span>, TVA <span data-co="vat">{{company.vat}}</span> (« Bleenr »). Tout utilisateur les accepte lors de la création de son compte.</p>
 <ul>
   <li><strong>Client</strong> : personne physique ou morale qui publie une demande de transport.</li>
   <li><strong>Transporteur</strong> (ou « flotte ») : professionnel du transport rémunéré de personnes inscrit sur la plateforme, y compris ses chauffeurs.</li>
@@ -136,9 +136,24 @@
 <p>Bleenr peut faire évoluer les présentes conditions. Les utilisateurs sont informés des changements importants avant leur entrée en vigueur. Les courses déjà confirmées restent soumises aux conditions en vigueur lors de leur réservation.</p>
 
 <h2 id="a16">16. Réclamations, droit applicable</h2>
-<p>Toute réclamation peut être adressée à <a href="mailto:{{company.email}}">{{company.email}}</a> ou par courrier à {{company.legal_name}}, {{company.street}}, {{company.postal}} {{company.city}}. Le consommateur peut aussi s'adresser au Service de Médiation pour le Consommateur (<a href="https://mediationconsommateur.be" rel="noopener" target="_blank">mediationconsommateur.be</a>).</p>
+<p>Toute réclamation peut être adressée à <a href="mailto:{{company.email}}">{{company.email}}</a> ou par courrier à <span data-co="legal_name">{{company.legal_name}}</span>, <span data-co="street">{{company.street}}</span>, <span data-co="postal">{{company.postal}}</span> <span data-co="city">{{company.city}}</span>. Le consommateur peut aussi s'adresser au Service de Médiation pour le Consommateur (<a href="https://mediationconsommateur.be" rel="noopener" target="_blank">mediationconsommateur.be</a>).</p>
 <p>Les présentes conditions sont soumises au droit belge. À défaut d'accord amiable, les tribunaux compétents sont ceux du siège de Bleenr, sans préjudice des règles impératives qui permettent au consommateur de saisir le tribunal de son domicile.</p>
 </div></main>
-<footer><span>&copy; {{year}} {{company.name}} — {{company.city}}, {{company.country}}</span><nav><a href="mentions-legales.html">Mentions légales</a><a href="conditions.html">Conditions générales</a><a href="confidentialite.html">Confidentialité</a><a href="mailto:{{company.email}}">Contact</a></nav></footer>
+<footer><span>&copy; {{year}} {{company.name}} — <span data-co="city">{{company.city}}</span>, <span data-co="country">{{company.country}}</span></span><nav><a href="mentions-legales.html">Mentions légales</a><a href="conditions.html">Conditions générales</a><a href="confidentialite.html">Confidentialité</a><a href="mailto:{{company.email}}">Contact</a></nav></footer>
+<script>
+/* Coordonnées officielles de Bleenr : lues en direct dans Admin › Facturation (fonction bleenr_company) */
+(function(){
+  var U='{{supabase_url}}',K='{{supabase_anon_key}}';
+  var CN={BE:'Belgique',FR:'France',NL:'Pays-Bas',LU:'Luxembourg',DE:'Allemagne',ES:'Espagne',IT:'Italie',PT:'Portugal',CH:'Suisse',GB:'Royaume-Uni'};
+  fetch(U+'/rest/v1/rpc/bleenr_company',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+K,'Content-Type':'application/json'},body:'{}'})
+    .then(function(r){return r.ok?r.json():null;}).then(function(c){
+      if(!c||!c.street||!c.city) return;
+      var vat=String(c.vat||'').replace(/[\s.]/g,'').toUpperCase(), n=vat.replace(/^[A-Z]{2}/,'');
+      var bce=/^\d{10}$/.test(n)?n.slice(0,4)+'.'+n.slice(4,7)+'.'+n.slice(7):n;
+      var v={legal_name:c.name,street:c.street,postal:c.postal,city:c.city,country:CN[String(c.country||'').toUpperCase()]||c.country,bce:bce,vat:/^BE\d{10}$/.test(vat)?'BE'+bce:vat};
+      document.querySelectorAll('[data-co]').forEach(function(e){var x=v[e.getAttribute('data-co')];if(x)e.textContent=x;});
+    }).catch(function(){});
+})();
+</script>
 </body>
 </html>

@@ -31,6 +31,8 @@ if (!env) throw new Error('Environnement inconnu : ' + envName);
 if (!env.supabase_url || !env.supabase_anon_key) throw new Error('site.json › envs.' + envName + ' : supabase_url / supabase_anon_key à compléter');
 site.env = envName;
 site.url = env.url;
+site.supabase_url = env.supabase_url;            // clé anon : publique (lecture des coordonnées officielles)
+site.supabase_anon_key = env.supabase_anon_key;
 const isProd = envName === 'prod';
 // Développement : bandeau « DEV » et pages exclues des moteurs de recherche
 site.env_head = isProd ? '' : '<meta name="robots" content="noindex,nofollow"><style>#bleenr-env{position:fixed;left:10px;bottom:10px;z-index:2147483647;background:#C77A10;color:#fff;font:700 11px/1 system-ui,sans-serif;letter-spacing:.08em;padding:6px 9px;border-radius:7px;box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none}</style>';
