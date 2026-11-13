@@ -353,7 +353,8 @@ window._lugWarnAll=function(){ document.querySelectorAll('.lug-warn').forEach(_l
 // Formulaires fixes : bloc bagages inséré après le champ Véhicule
 function _lugMount(){
   [['ride-vehicle','ride-lugL','ride-lugS','ride-pax'],['disp-vehicle','disp-lugL','disp-lugS','disp-pax'],
-   ['sub-veh','sub-lugL','sub-lugS','sub-pax'],['sub-disp-veh','sub-disp-lugL','sub-disp-lugS','sub-disp-pax']].forEach(function(x){
+   ['sub-veh','sub-lugL','sub-lugS','sub-pax'],['sub-disp-veh','sub-disp-lugL','sub-disp-lugS','sub-disp-pax'],
+   ['pm-vehicle','pm-lugL','pm-lugS','pm-pax']].forEach(function(x){
     var v=document.getElementById(x[0]); if(!v||document.getElementById(x[1])) return;
     var g=v.closest('.input-group'); if(g) g.insertAdjacentHTML('afterend', _lugBlock(x[1],x[2],x[0],x[3]));
   });

@@ -60,25 +60,20 @@ function renderDriverStatsChart(missions){
 // ── Driver calendar ──
 // ── Personal Mission ──
 window.pmSetType=function(type){
-  var green='var(--green)',greenBg='var(--green-bg)',amber='var(--amber)',amberBg='var(--amber-bg)',sand2='var(--sand2)',ink3='var(--ink3)';
-  var abBtn=document.getElementById('pm-type-ab');
-  var dispoBtn=document.getElementById('pm-type-dispo');
-  var abFields=document.getElementById('pm-ab-fields');
-  var dispoFields=document.getElementById('pm-dispo-fields');
-  if(type==='ab'){
-    if(abBtn){abBtn.style.border='none';abBtn.style.background=greenBg;abBtn.style.color=green;}
-    if(dispoBtn){dispoBtn.style.border='none';dispoBtn.style.background=sand2;dispoBtn.style.color=ink3;}
-    if(abFields)abFields.style.display='contents';
-    if(dispoFields)dispoFields.style.display='none';
-  }else{
-    if(dispoBtn){dispoBtn.style.border='none';dispoBtn.style.background=amberBg;dispoBtn.style.color=amber;}
-    if(abBtn){abBtn.style.border='none';abBtn.style.background=sand2;abBtn.style.color=ink3;}
-    if(abFields)abFields.style.display='none';
-    if(dispoFields)dispoFields.style.display='';
-  }
+  ['ab','dispo'].forEach(function(k){ var b=document.getElementById('pm-type-'+k); if(b) b.classList.toggle('active', k===type); });
+  var abFields=document.getElementById('pm-ab-fields'), dispoFields=document.getElementById('pm-dispo-fields');
+  if(abFields) abFields.style.display = type==='ab' ? '' : 'none';
+  if(dispoFields) dispoFields.style.display = type==='ab' ? 'none' : '';
   var typeInput=document.getElementById('pm-mission-type');
   if(typeInput)typeInput.value=type;
 };
+
+// Infos client d'une mission personnelle : mêmes étiquettes que la sous-traitance (|pax:|tel:|pemail:|pref:)
+var _PM_CLI={name:'pax',tel:'tel',email:'pemail',ref:'pref'};
+function _pmTags(notes){
+  var out={}; String(notes||'').replace(/\|(pax|tel|pemail|pref|lg):([^|]*)/g,function(_,k,v){ out[k]=v.trim(); return ''; });
+  return out;
+}
 
 window.openPersonalMissionModal=function(editRide){
   var err=document.getElementById('pm-err');if(err){err.textContent='';err.classList.remove('show');}
@@ -86,7 +81,10 @@ window.openPersonalMissionModal=function(editRide){
   var titleEl=document.querySelector('#m-personal-mission .modal-title');
   var footerEl=document.getElementById('pm-footer');
 
-  ['pm-label','pm-from','pm-to','pm-dispo-location','pm-notes','pm-vehicle','pm-plate'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['pm-label','pm-from','pm-to','pm-dispo-location','pm-notes','pm-plate','pm-cli-name','pm-cli-tel','pm-cli-email','pm-cli-ref'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var _pv=document.getElementById('pm-vehicle');if(_pv)_pv.value='lowcost';
+  var _pp=document.getElementById('pm-pax');if(_pp)_pp.value='1';
+  if(typeof _lugSet==='function'){_lugSet('pm-lugL',0);_lugSet('pm-lugS',0);}
   var dur=document.getElementById('pm-duration');if(dur)dur.value='2';
   var td=todayStr();
   var dt=document.getElementById('pm-date');if(dt){dt.value=td;dt.min=td;}
@@ -97,7 +95,9 @@ window.openPersonalMissionModal=function(editRide){
     if(titleEl)titleEl.textContent='Modifier la mission';
     var isD=editRide.trip_type==='disposal';
     pmSetType(isD?'dispo':'ab');
-    var notesParts=(editRide.notes||'').split(' \u2014 ');
+    var _tg=_pmTags(editRide.notes);
+    Object.keys(_PM_CLI).forEach(function(k){ var e=document.getElementById('pm-cli-'+k); if(e) e.value=_tg[_PM_CLI[k]]||''; });
+    var notesParts=String(editRide.notes||'').split('|')[0].split(' \u2014 ');
     var lbl=document.getElementById('pm-label');if(lbl)lbl.value=notesParts[0]||'';
     // Extract plate from notes
     var plateFromNotes='';
@@ -118,7 +118,9 @@ window.openPersonalMissionModal=function(editRide){
     }
     if(dt)dt.value=editRide.ride_date||td;
     if(tm)tm.value=editRide.ride_time?editRide.ride_time.slice(0,5):'08:00';
-    var veh=document.getElementById('pm-vehicle');if(veh)veh.value=editRide.vehicle_type||'';
+    var veh=document.getElementById('pm-vehicle');if(veh)veh.value=editRide.vehicle_type||'lowcost';
+    var pax=document.getElementById('pm-pax');if(pax)pax.value=String(Math.min(8,editRide.passengers||1)).replace('8','8+');
+    if(typeof _lugSet==='function'){_lugSet('pm-lugL',editRide.luggage_large);_lugSet('pm-lugS',editRide.luggage_small);}
     var pl=document.getElementById('pm-plate');if(pl)pl.value=plateFromNotes||'';
     if(footerEl)footerEl.innerHTML=
       '<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deletePersonalMission(\''+editRide.id+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'+t('app.supprimer')+'</button>'
@@ -178,10 +180,18 @@ window.savePersonalMission=async function(btn){
   var editId=document.getElementById('pm-edit-id')?.value||null;
   var err=document.getElementById('pm-err');
 
-  if(!label||!date||!time){
-    if(err){err.textContent='Veuillez remplir les champs obligatoires.';err.classList.add('show');}
+  var _req=missionType==='dispo' ? [document.getElementById('pm-dispo-location')?.value.trim()] : [document.getElementById('pm-from')?.value.trim(), document.getElementById('pm-to')?.value.trim()];
+  if(!label||!date||!time||_req.some(function(v){return !v;})){
+    if(err){err.textContent=t('err_required');err.classList.add('show');}
     return;
   }
+  // Infos client (comme la sous-traitance)
+  var _clean=function(v){ return String(v||'').replace(/\|/g,'/').trim(); };
+  var _cli={}; Object.keys(_PM_CLI).forEach(function(k){ _cli[k]=_clean(document.getElementById('pm-cli-'+k)?.value); });
+  if(_cli.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(_cli.email)){ if(err){err.textContent='E-mail du client invalide';err.classList.add('show');} return; }
+  var _tags=Object.keys(_PM_CLI).map(function(k){ return _cli[k]?'|'+_PM_CLI[k]+':'+_cli[k]:''; }).join('');
+  var paxN=parseInt(document.getElementById('pm-pax')?.value,10)||1;
+  var lugL=typeof _lugVal==='function'?_lugVal('pm-lugL'):0, lugS=typeof _lugVal==='function'?_lugVal('pm-lugS'):0;
 
   var from,to,tripType;
   if(missionType==='dispo'){
@@ -213,6 +223,7 @@ window.savePersonalMission=async function(btn){
   if(!sb||!currentUser){if(err){err.textContent='Non connect\u00e9';err.classList.add('show');}return;}
   if(btn)setLoading(btn,true,t('app.enregistrer'));
 
+  notes=((notes||'')+_tags)||null;
   var rideData={
     client_id:    currentUser.id,
     driver_id:    currentUser.id,
@@ -222,6 +233,9 @@ window.savePersonalMission=async function(btn){
     ride_date:    date,
     ride_time:    time,
     vehicle_type: vehicle,
+    passengers:   paxN,
+    luggage_large: lugL||0,
+    luggage_small: lugS||0,
     notes:        notes||null,
     status:       'personal'
   };
