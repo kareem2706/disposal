@@ -59,3 +59,11 @@ begin
   perform set_config('bleenr.as_user', '1', true);
   return v;
 end $$;
+
+-- 4) Edge Functions : « ce compte a-t-il activé la double authentification ? » (réservé au serveur)
+create or replace function public.mfa_user_enabled(p_uid uuid)
+returns boolean language sql stable security definer set search_path = public, auth, pg_temp as $$
+  select exists (select 1 from auth.mfa_factors f where f.user_id = p_uid and f.status = 'verified');
+$$;
+revoke all on function public.mfa_user_enabled(uuid) from public, anon, authenticated;
+grant execute on function public.mfa_user_enabled(uuid) to service_role;
