@@ -1252,6 +1252,7 @@ function _arRenderTable(rides, el){
     confirmed:'var(--green)', active:'var(--green)',   done:'var(--ink4)', cancelled:'var(--red)'
   };
 
+  var cards=[];
   var rows = rides.map(function(r){
     var dateStr = r.ride_date ? new Date(r.ride_date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
     var tBg=typeBg(r.trip_type), tCol=typeColor(r.trip_type), tLbl=typeLabel(r.trip_type);
@@ -1274,6 +1275,13 @@ function _arRenderTable(rides, el){
       ? '<span style="font-size:10px;font-weight:700;background:var(--red-bg);color:var(--red);padding:2px 7px;border-radius:20px;margin-left:4px;white-space:nowrap;">⚠ Remb.</span>'
       : '';
 
+    // Mobile : carte (même ouverture du détail que la ligne du tableau)
+    cards.push('<div class="ar-card" onclick="arOpenDetail(this)" data-ride=\''+safeR+'\'>'
+      +'<div class="ar-c1"><span class="ar-code">'+code+'</span><span class="ar-pill" style="background:'+sBg+';color:'+sCol+';">'+sLbl+'</span>'+refundBadge+'</div>'
+      +'<div class="ar-c2"><span>'+dateStr+'</span><span class="ar-pill" style="background:'+tBg+';color:'+tCol+';">'+tLbl+'</span>'+subIcon+'<b class="ar-price">'+price+'</b></div>'
+      +'<div class="ar-c3"><span>'+_rdEsc(clientName)+'</span><span class="ar-arrow">→</span><span>'+_rdEsc(driverName)+'</span></div>'
+      +(rating?'<div class="ar-c4">'+ratingHtml+'</div>':'')
+    +'</div>');
     return '<tr style="border-bottom:1px solid var(--sand2);cursor:pointer;transition:background .15s;" onclick="arOpenDetail(this)" data-ride=\''+safeR+'\' onmouseenter="this.style.background=\'var(--sand)\'" onmouseleave="this.style.background=\'\'">'
       +'<td style="padding:10px 14px;font-size:12.5px;color:var(--ink3);white-space:nowrap;">'+dateStr+'</td>'
       +'<td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:2px;"><span style="font-size:10px;font-weight:700;background:'+tBg+';color:'+tCol+';padding:2px 8px;border-radius:20px;white-space:nowrap;">'+tLbl+'</span>'+subIcon+'</div></td>'
@@ -1287,7 +1295,8 @@ function _arRenderTable(rides, el){
     +'</tr>';
   }).join('');
 
-  el.innerHTML = '<div class="card" style="overflow:hidden;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:760px;">'
+  el.innerHTML = '<div class="ar-cards">'+cards.join('')+'</div>'
+    +'<div class="card ar-table" style="overflow:hidden;"><div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:760px;">'
     +'<thead><tr style="background:var(--sand2);">'
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Date</th>'
       +'<th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Type</th>'

@@ -67,3 +67,26 @@
   [id^="page-admin-"] table th,[id^="page-admin-"] table td{white-space:nowrap;}
   [id^="page-admin-"] table td .btn,[id^="page-admin-"] table td button{white-space:nowrap;}
 }
+
+/* Courses (admin) : cartes sur mobile, tableau sur ordinateur */
+.ar-cards{display:none;}
+@media(max-width:700px){
+  .ar-cards{display:flex;flex-direction:column;gap:10px;}
+  .ar-table{display:none!important;}
+  .ar-card{background:#fff;border:1px solid var(--sand3);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;}
+  .ar-card:active{background:var(--sand);}
+  .ar-c1,.ar-c2,.ar-c3{display:flex;align-items:center;gap:8px;min-width:0;}
+  .ar-code{font:600 14px ui-monospace,Menlo,monospace;color:var(--ink);}
+  .ar-c1 .ar-pill{margin-left:auto;}
+  .ar-pill{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+  .ar-c2{font-size:13px;color:var(--ink3);}
+  .ar-price{margin-left:auto;font-size:15px;color:var(--ink);white-space:nowrap;}
+  .ar-c3{font-size:13.5px;color:var(--ink2);}
+  .ar-c3 span:not(.ar-arrow){overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+  .ar-arrow{color:var(--ink4);flex-shrink:0;}
+  .ar-c4{font-size:12px;}
+
+  /* Champs de date iOS : même hauteur et largeur que les autres champs (sinon ils débordent, vides et trop hauts) */
+  .adm-filters input[type="date"],.adm-period input[type="date"]{-webkit-appearance:none;appearance:none;display:block;height:44px!important;min-height:44px;line-height:normal;padding:0 12px!important;max-width:100%;background:#fff;}
+  .adm-filters input[type="date"]::-webkit-date-and-time-value,.adm-period input[type="date"]::-webkit-date-and-time-value{text-align:left;line-height:44px;}
+}
