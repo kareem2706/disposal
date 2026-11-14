@@ -15,7 +15,7 @@ var _MFA_T={
     'iPhone / Mac : l’app « Mots de passe » est déjà installée.':'iPhone / Mac: the built-in “Passwords” app works.',
     'Android / Windows : installez Google Authenticator ou Microsoft Authenticator (gratuit).':'Android / Windows: install Google Authenticator or Microsoft Authenticator (free).',
     'Touchez « Ouvrir dans l’app d’authentification ». Si rien ne s’ouvre : « Copier la clé », puis dans l’app « Ajouter » › « Saisir une clé de configuration » et collez-la.':'Tap “Open in authenticator app”. If nothing opens: “Copy key”, then in the app “Add” › “Enter a setup key” and paste it.',
-    'Scannez ce QR code avec votre téléphone :':'Scan this QR code with your phone:','Clé de configuration :':'Setup key:','Ouvrir dans l’app d’authentification':'Open in authenticator app','Copier la clé':'Copy key','Clé copiée ✓':'Key copied ✓',
+    'Scannez ce QR code avec votre téléphone :':'Scan this QR code with your phone:','Clé de configuration :':'Setup key:','Afficher la clé (saisie manuelle)':'Show key (manual entry)','Ouvrir dans l’app d’authentification':'Open in authenticator app','Copier la clé':'Copy key','Clé copiée ✓':'Key copied ✓',
     'Revenez ici et entrez le code affiché par l’application :':'Come back here and enter the code shown by the app:',
     'Chaque activation crée une nouvelle clé : si Bleenr est déjà dans votre app (activation précédente ou page rechargée), supprimez d’abord l’ancien code, il ne fonctionne plus.':'Each activation creates a new key: if Bleenr is already in your app (previous activation or reloaded page), delete the old code first, it no longer works.',
     'Entrez le code à 6 chiffres affiché par votre application d’authentification.':'Enter the 6-digit code shown by your authenticator app.',
@@ -32,7 +32,7 @@ var _MFA_T={
     'iPhone / Mac : l’app « Mots de passe » est déjà installée.':'iPhone / Mac: la app «Contraseñas» ya está instalada.',
     'Android / Windows : installez Google Authenticator ou Microsoft Authenticator (gratuit).':'Android / Windows: instale Google Authenticator o Microsoft Authenticator (gratis).',
     'Touchez « Ouvrir dans l’app d’authentification ». Si rien ne s’ouvre : « Copier la clé », puis dans l’app « Ajouter » › « Saisir une clé de configuration » et collez-la.':'Pulse «Abrir en la app de autenticación». Si no se abre nada: «Copiar la clave» y, en la app, «Añadir» › «Introducir una clave» y péguela.',
-    'Scannez ce QR code avec votre téléphone :':'Escanee este código QR con su teléfono:','Clé de configuration :':'Clave de configuración:','Ouvrir dans l’app d’authentification':'Abrir en la app de autenticación','Copier la clé':'Copiar la clave','Clé copiée ✓':'Clave copiada ✓',
+    'Scannez ce QR code avec votre téléphone :':'Escanee este código QR con su teléfono:','Clé de configuration :':'Clave de configuración:','Afficher la clé (saisie manuelle)':'Mostrar la clave (introducción manual)','Ouvrir dans l’app d’authentification':'Abrir en la app de autenticación','Copier la clé':'Copiar la clave','Clé copiée ✓':'Clave copiada ✓',
     'Revenez ici et entrez le code affiché par l’application :':'Vuelva aquí e introduzca el código que muestra la app:',
     'Chaque activation crée une nouvelle clé : si Bleenr est déjà dans votre app (activation précédente ou page rechargée), supprimez d’abord l’ancien code, il ne fonctionne plus.':'Cada activación crea una nueva clave: si Bleenr ya está en su app (activación anterior o página recargada), borre primero el código antiguo, ya no funciona.',
     'Entrez le code à 6 chiffres affiché par votre application d’authentification.':'Introduzca el código de 6 cifras de su aplicación de autenticación.',
@@ -124,10 +124,13 @@ async function _mfaShow(mode, factor, done, opt){
         ? '<li>'+_mt('Touchez « Ouvrir dans l’app d’authentification ». Si rien ne s’ouvre : « Copier la clé », puis dans l’app « Ajouter » › « Saisir une clé de configuration » et collez-la.')+'</li></ol>'+openBtn+copyBtn
         : '<li>'+_mt('Scannez ce QR code avec votre téléphone :')+'</li></ol>'
           +(qr?'<div style="display:flex;justify-content:center;margin:12px 0;"><img src="'+_mfaEsc(qr)+'" alt="QR code" style="width:190px;height:190px;border:1px solid #ECEAE4;border-radius:12px;padding:6px;background:#fff;"></div>':''))
-      +'<div style="font-size:12.5px;margin-top:10px;">'+_mt('Clé de configuration :')+' <code style="font-size:12.5px;word-break:break-all;background:#F1F0EB;padding:2px 6px;border-radius:6px;user-select:all;">'+_mfaEsc(secret)+'</code></div>'
+      +'<div style="font-size:12.5px;margin-top:10px;"><a href="#" id="mfa-showkey" style="color:#5A6560;text-decoration:underline;">'+_mt('Afficher la clé (saisie manuelle)')+'</a>'
+      +'<span id="mfa-key" style="display:none;">'+_mt('Clé de configuration :')+' <code style="font-size:12.5px;word-break:break-all;background:#F1F0EB;padding:2px 6px;border-radius:6px;user-select:all;">'+_mfaEsc(secret)+'</code></span></div>'
       +(mob?'':copyBtn)
       +'<div style="margin-top:10px;">3. '+_mt('Revenez ici et entrez le code affiché par l’application :')+'</div>'
       +'<div style="font-size:12px;color:#9AA29D;margin-top:4px;">'+_mt('Chaque activation crée une nouvelle clé : si Bleenr est déjà dans votre app (activation précédente ou page rechargée), supprimez d’abord l’ancien code, il ne fonctionne plus.')+'</div>';
+    var sk=o.querySelector('#mfa-showkey');
+    if(sk) sk.onclick=function(ev){ ev.preventDefault(); sk.style.display='none'; o.querySelector('#mfa-key').style.display='inline'; };
     var cp=o.querySelector('#mfa-copy');
     if(cp) cp.onclick=function(){
       var ok2=function(){ cp.textContent=_mt('Clé copiée ✓'); setTimeout(function(){ cp.textContent=_mt('Copier la clé'); },2500); };
