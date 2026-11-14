@@ -507,3 +507,5 @@ input.gp-bad{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(192,57,
 #screen-auth .role-opt,#screen-auth button,#screen-auth a,#screen-auth .terms-switch{-webkit-tap-highlight-color:transparent;}
 #screen-auth .role-opt:focus,#screen-auth button:focus,#screen-auth a:focus{outline:none;}
 #screen-auth .role-opt:focus-visible,#screen-auth button:focus-visible,#screen-auth a:focus-visible{outline:2px solid #0E1410;outline-offset:2px;}
+/* Cartes de choix : pas de curseur de texte (barre qui clignote) ni de sélection de texte au clic */
+#screen-auth .role-opt,#screen-auth .role-opt *{user-select:none;-webkit-user-select:none;caret-color:transparent;cursor:pointer;}
