@@ -20,7 +20,7 @@ var _MFA_T={
     'Si cette page se recharge, une nouvelle clé est créée : supprimez alors l’ancienne entrée « Bleenr » dans l’app et recommencez.':'If this page reloads, a new key is created: delete the old “Bleenr” entry in the app and start again.',
     'Entrez le code à 6 chiffres affiché par votre application d’authentification.':'Enter the 6-digit code shown by your authenticator app.',
     'Entrez les 6 chiffres.':'Enter the 6 digits.','Vérification…':'Checking…','Code incorrect ou expiré.':'Wrong or expired code.','Trop d’essais, patientez une minute.':'Too many attempts, wait a minute.','Activation impossible : ':'Cannot turn on: ',
-    'Double authentification':'Two-step verification','Activée':'On','Désactivée':'Off','Activer':'Turn on','Désactiver':'Turn off',
+    'Double authentification':'Two-step verification','Configuration (une seule fois). Ensuite, le code sera demandé à chaque connexion.':'One-time setup. After that, the code will be asked at every sign-in.','Activée':'On','Désactivée':'Off','Activer':'Turn on','Désactiver':'Turn off',
     'Protégez votre compte : en plus du mot de passe ou du code e-mail, un code à 6 chiffres de votre téléphone sera demandé à chaque connexion.':'Protect your account: besides your password or e-mail code, a 6-digit code from your phone is asked at every sign-in.',
     'Un code à 6 chiffres de votre application d’authentification est demandé à chaque connexion.':'A 6-digit code from your authenticator app is asked at every sign-in.',
     'Obligatoire pour le compte administrateur.':'Required for the administrator account.',
@@ -37,7 +37,7 @@ var _MFA_T={
     'Si cette page se recharge, une nouvelle clé est créée : supprimez alors l’ancienne entrée « Bleenr » dans l’app et recommencez.':'Si esta página se recarga, se crea una nueva clave: borre la entrada «Bleenr» anterior en la app y vuelva a empezar.',
     'Entrez le code à 6 chiffres affiché par votre application d’authentification.':'Introduzca el código de 6 cifras de su aplicación de autenticación.',
     'Entrez les 6 chiffres.':'Introduzca las 6 cifras.','Vérification…':'Comprobando…','Code incorrect ou expiré.':'Código incorrecto o caducado.','Trop d’essais, patientez une minute.':'Demasiados intentos, espere un minuto.','Activation impossible : ':'No se puede activar: ',
-    'Double authentification':'Verificación en dos pasos','Activée':'Activada','Désactivée':'Desactivada','Activer':'Activar','Désactiver':'Desactivar',
+    'Double authentification':'Verificación en dos pasos','Configuration (une seule fois). Ensuite, le code sera demandé à chaque connexion.':'Configuración (una sola vez). Después, el código se pedirá en cada inicio de sesión.','Activée':'Activada','Désactivée':'Desactivada','Activer':'Activar','Désactiver':'Desactivar',
     'Protégez votre compte : en plus du mot de passe ou du code e-mail, un code à 6 chiffres de votre téléphone sera demandé à chaque connexion.':'Proteja su cuenta: además de la contraseña o del código por e-mail, se pedirá un código de 6 cifras de su teléfono en cada inicio de sesión.',
     'Un code à 6 chiffres de votre application d’authentification est demandé à chaque connexion.':'Se pide un código de 6 cifras de su aplicación de autenticación en cada inicio de sesión.',
     'Désactiver la double authentification ? Votre compte ne sera plus protégé que par le mot de passe ou le code e-mail.':'¿Desactivar la verificación en dos pasos? Su cuenta solo quedará protegida por la contraseña o el código por e-mail.',
@@ -117,6 +117,7 @@ async function _mfaShow(mode, factor, done, opt){
     var openBtn=uri?'<a href="'+_mfaEsc(uri)+'" style="'+bt+'background:#0E1410;color:#D6F27A;border:none;">'+_mt('Ouvrir dans l’app d’authentification')+'</a>':'';
     var copyBtn='<button type="button" id="mfa-copy" style="'+bt+'background:#fff;color:#0E1410;border:1.5px solid #E6E4DD;">'+_mt('Copier la clé')+'</button>';
     body.innerHTML=_mt(_mfaIsAdmin()?'Le compte administrateur exige un code à 6 chiffres en plus du mot de passe ou du code e-mail.':'À chaque connexion, un code à 6 chiffres vous sera demandé en plus du mot de passe ou du code e-mail.')
+      +'<div style="margin-top:8px;font-weight:600;color:#0E1410;">'+_mt('Configuration (une seule fois). Ensuite, le code sera demandé à chaque connexion.')+'</div>'
       +'<ol style="margin:12px 0 0;padding-left:18px;">'
       +'<li>'+_mt('Ouvrez une application d’authentification :')+'<div style="font-size:12.5px;margin-top:2px;">• '+_mt('iPhone / Mac : l’app « Mots de passe » est déjà installée.')+'<br>• '+_mt('Android / Windows : installez Google Authenticator ou Microsoft Authenticator (gratuit).')+'</div></li>'
       +(mob
