@@ -79,7 +79,11 @@ async function _mfaShow(mode, factor, done){
     err.style.display='none'; go.disabled=true; go.textContent='Vérification…';
     var v=await sb.auth.mfa.challengeAndVerify({ factorId:factorId, code:code });
     go.disabled=false; go.textContent='Valider';
-    if(v.error){ inp.value=''; inp.focus(); fail(/rate|too many/i.test(v.error.message||'')?'Trop d’essais, patientez une minute.':'Code incorrect ou expiré.'); return; }
+    if(v.error){
+      // Le code a pu être accepté malgré une erreur de réseau : on vérifie avant d'afficher l'erreur
+      var a2=await sb.auth.mfa.getAuthenticatorAssuranceLevel().catch(function(){ return {}; });
+      if(a2 && a2.data && a2.data.currentLevel==='aal2'){ _mfaClose(); done(true); return; }
+      inp.value=''; inp.focus(); fail(/rate|too many/i.test(v.error.message||'')?'Trop d’essais, patientez une minute.':'Code incorrect ou expiré.'); return; }
     _mfaClose(); done(true);
   };
 }
