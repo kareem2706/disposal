@@ -699,10 +699,10 @@ async function _rptRender(){
   var sel='font-size:13px;font-weight:600;border:1.5px solid var(--sand3);border-radius:6px;padding:4px 8px;background:var(--white);cursor:pointer;';
   var nb='background:none;border:1.5px solid var(--sand3);border-radius:6px;width:30px;height:30px;cursor:pointer;';
 
-  var head='<div class="card" style="padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
+  var head='<div class="card rpt-head" style="padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">'
     +'<div style="font-size:12px;color:var(--ink3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Rapport</div>'
     +'<select style="'+sel+'"><option>Paiements fleets &amp; factures (mensuel)</option></select>'
-    +'<div style="display:flex;align-items:center;gap:6px;margin-left:auto;">'
+    +'<div class="rpt-nav" style="display:flex;align-items:center;gap:6px;margin-left:auto;">'
       +'<button style="'+nb+'" onclick="_rptStep(-1)">&lt;</button>'
       +'<select style="'+sel+'" onchange="_rptSet(_rptYear,parseInt(this.value))">'+mOpts+'</select>'
       +'<select style="'+sel+'" onchange="_rptSet(parseInt(this.value),_rptMonth)">'+yOpts+'</select>'

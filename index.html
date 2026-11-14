@@ -1181,32 +1181,32 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       </div>
       <!-- Top 4 stat cards -->
       <div class="stats-row" id="admin-top-stats">
-        <div class="stat-card">
-          <div style="margin-bottom:14px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+        <div class="stat-card sc sc-g">
+          <div class="stat-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></div>
           <div class="stat-label">Nombre de clients</div>
           <div class="stat-val" id="admin-stat-clients">—</div>
         </div>
-        <div class="stat-card">
-          <div style="margin-bottom:14px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg></div>
+        <div class="stat-card sc sc-b">
+          <div class="stat-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="3"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></div>
           <div class="stat-label">Nombre de fleets</div>
           <div class="stat-val" id="admin-stat-fleets">—</div>
         </div>
-        <div class="stat-card">
-          <div style="margin-bottom:14px;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+        <div class="stat-card sc sc-p">
+          <div class="stat-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
           <div class="stat-label">Courses effectuées</div>
           <div class="stat-val" id="admin-stat-rides">—</div>
           <div id="admin-stat-rides-pending" style="display:none;margin-top:8px;font-size:12px;font-weight:600;color:#1E4D7B;background:#EAF1FB;border-radius:8px;padding:4px 10px;width:fit-content;cursor:pointer;" onclick="showPage('admin-rides');setTimeout(function(){var f=document.getElementById('ar-filter-status');if(f){f.value='pending_payment';if(typeof loadAdminRides==='function')loadAdminRides();}},50);" title="Voir les courses en attente de confirmation"></div>
         </div>
-        <div class="stat-card">
-          <div style="margin-bottom:14px;color:var(--red);"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-4 0v2M12 12v4M10 14h4"/></svg></div>
-          <div class="stat-label">CA Bleenr <span id="admin-stat-ca-rate" style="font-size:11.5px;font-weight:500;color:var(--ink3);"></span></div>
-          <div class="stat-val" id="admin-stat-ca" style="font-size:28px;">—</div>
-          <div style="font-size:11.5px;color:var(--ink3);margin-top:4px;">Total des commissions plateforme (HTVA)</div>
+        <div class="stat-card sc sc-o">
+          <div class="stat-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 6.5A6.5 6.5 0 007 9.5M17.5 17.5A6.5 6.5 0 017 14.5M4.5 10.5h9M4.5 13.5h9"/></svg></div>
+          <div class="stat-label">CA Bleenr <span id="admin-stat-ca-rate"></span></div>
+          <div class="stat-val stat-money" id="admin-stat-ca">—</div>
+          <div class="stat-sub">Commissions plateforme (HTVA)</div>
         </div>
       </div>
       <div id="admin-live-rides" style="display:none;"></div>
       <!-- Period filter -->
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+      <div class="adm-period" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
         <span style="font-size:15px;font-weight:600;color:var(--ink);">Sélection</span>
         <div style="display:flex;gap:0;background:var(--sand2);border-radius:var(--r);padding:3px;">
           <button id="admin-period-all" onclick="setAdminPeriod('all')" style="padding:6px 16px;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;border:none;background:var(--white);color:var(--ink);box-shadow:0 1px 4px rgba(14,14,12,.1);">Tout</button>
@@ -1416,7 +1416,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <!-- Rides tab -->
       <div id="ar-panel-rides">
         <!-- Filters -->
-        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:flex-end;">
+        <div class="adm-filters" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;align-items:flex-end;">
           <div style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Statut</label>
             <select id="ar-filter-status" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;min-width:150px;">
@@ -1441,11 +1441,11 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
               <option value="">Toutes les fleets</option>
             </select>
           </div>
-          <div style="display:flex;flex-direction:column;gap:4px;">
+          <div class="adm-half" style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Du</label>
             <input type="date" id="ar-filter-from" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;">
           </div>
-          <div style="display:flex;flex-direction:column;gap:4px;">
+          <div class="adm-half" style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Au</label>
             <input type="date" id="ar-filter-to" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;">
           </div>

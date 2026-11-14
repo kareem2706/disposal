@@ -1,0 +1,69 @@
+/* ═══ ADMINISTRATION — mise en page mobile ═══
+   Cartes de chiffres, filtres, formulaires (facturation, réglages, campagnes, rapports) alignés sur petit écran. */
+
+/* Cartes de chiffres : ligne secondaire (ex. « Commissions plateforme ») */
+.stats-row .stat-card .stat-sub{font-size:12px;color:var(--ink3);margin-top:4px;line-height:1.35;}
+#admin-stat-ca-rate{font-size:.9em;font-weight:500;color:var(--ink3);}
+@media(max-width:900px){
+  /* icône à gauche sur toute la hauteur, libellé / valeur / ligne secondaire à droite, sans chevauchement */
+  .stats-row .stat-card:has(.stat-sub),.stats-row .stat-card:has(#admin-stat-rides-pending){grid-template-rows:auto auto auto!important;}
+  .stats-row .stat-card:has(.stat-sub) .stat-card-icon,.stats-row .stat-card:has(#admin-stat-rides-pending) .stat-card-icon{grid-row:1/4!important;}
+  .stats-row .stat-card .stat-sub,#admin-stat-rides-pending{grid-column:2;margin:0!important;font-size:10.5px!important;line-height:1.3;}
+  .stats-row .stat-card .stat-label{white-space:normal;}
+  #admin-stat-ca{white-space:nowrap;}
+}
+
+@media(max-width:700px){
+  /* Filtres (Courses…) : une colonne, champs pleine largeur ; dates côte à côte ; bouton pleine largeur */
+  .adm-filters{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px!important;align-items:end!important;}
+  .adm-filters>*{grid-column:1/-1;min-width:0;}
+  .adm-filters>.adm-half{grid-column:auto;}
+  .adm-filters select,.adm-filters input{width:100%!important;min-width:0!important;box-sizing:border-box;height:44px;font-size:16px!important;}
+  .adm-filters>.btn{width:100%;justify-content:center;height:44px;align-self:auto!important;}
+
+  /* Tableau de bord : période personnalisée sur toute la largeur */
+  .adm-period #admin-period-dates{width:100%;}
+  .adm-period #admin-period-dates input{flex:1;min-width:0;height:42px;font-size:16px!important;box-sizing:border-box;}
+
+  /* Formulaires admin : un seul espacement entre les champs (pas d'écart double quand la grille passe en colonne) */
+  [id^="page-admin-"] .form-grid{row-gap:0!important;}
+  [id^="page-admin-"] .input-group input,[id^="page-admin-"] .input-group select,[id^="page-admin-"] .input-group textarea{font-size:16px;}
+
+  /* Facturation : pays + taux sur une ligne, pleine largeur */
+  #admin-billing-content [class^="billing-"][class$="-row"]{flex-wrap:wrap!important;gap:8px!important;}
+  #admin-billing-content [class^="billing-"][class$="-row"] > select{flex:1 1 0!important;min-width:0!important;height:42px;font-size:16px;}
+  #admin-billing-content [class^="billing-"][class$="-row"] > div{width:auto!important;flex:0 0 auto;}
+  #admin-billing-content [class^="billing-"][class$="-row"] input[type="number"]{width:72px!important;height:42px;font-size:16px;box-sizing:border-box;}
+  #admin-billing-content [class^="billing-"][class$="-row"] > label{flex-basis:100%;}
+
+  /* Réglages : capacités en bagages, nom de la gamme au-dessus des combinaisons */
+  .lca-row{flex-direction:column;gap:6px;}
+  .lca-n{width:auto;padding-top:0;}
+  .lca-list{width:100%;}
+  .lca-c{flex-wrap:nowrap;}
+  .lca-c input{width:44px;font-size:16px;}
+
+  /* Rapports : sélecteurs de période sur toute la largeur */
+  .rpt-head{flex-direction:column;align-items:stretch!important;gap:10px!important;}
+  .rpt-head > select{width:100%;height:42px;font-size:15px!important;}
+  .rpt-nav{margin-left:0!important;width:100%;}
+  .rpt-nav select{flex:1;min-width:0;height:42px;font-size:15px!important;}
+  .rpt-nav select:last-of-type{flex:0 0 92px;}
+  .rpt-nav button{width:42px!important;height:42px!important;flex-shrink:0;font-size:16px;}
+
+  /* Campagnes : aperçu moins haut, champs du bouton sans écart double, recherche pleine largeur */
+  #cmp-preview{height:480px;}
+  .cmp-row2{row-gap:0!important;}
+  .cmp-tools{flex-wrap:wrap;}
+  .cmp-tools input{flex:1 1 100%;height:42px;font-size:16px;}
+  .cmp-tools select{flex:1 1 100%;width:100%;height:42px;font-size:16px;}
+}
+
+@media(max-width:700px){
+  /* Tableaux admin (fleets, documents, véhicules, chauffeurs, clients, courses) : défilement horizontal
+     dans leur carte, cellules sur une ligne (plus de textes coupés ni de colonnes masquées) */
+  [id^="page-admin-"] .card:has(table),[id^="page-admin-"] div:has(> table){overflow-x:auto!important;-webkit-overflow-scrolling:touch;}
+  [id^="page-admin-"] table{min-width:100%;width:max-content!important;}
+  [id^="page-admin-"] table th,[id^="page-admin-"] table td{white-space:nowrap;}
+  [id^="page-admin-"] table td .btn,[id^="page-admin-"] table td button{white-space:nowrap;}
+}
