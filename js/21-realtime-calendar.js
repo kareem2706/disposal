@@ -232,7 +232,7 @@ window.calSetFilter=function(status){
     var active=(_calFilter===s);
     btn.style.background = active ? c.border : c.bg;
     btn.style.color      = active ? '#fff' : c.color;
-    btn.style.borderColor= c.border;
+    btn.style.borderColor= 'transparent';   // pastilles sans contour
     btn.style.opacity    = active ? '1' : '0.55';
   });
   loadCalendar(false);
@@ -271,7 +271,7 @@ window.dCalSetFilter=function(status){
     var active=(_dCalFilter===s);
     btn.style.background = active ? c.border : c.bg;
     btn.style.color      = active ? '#fff' : c.color;
-    btn.style.borderColor= c.border;
+    btn.style.borderColor= 'transparent';   // pastilles sans contour
     btn.style.opacity    = active ? '1' : '0.55';
   });
   loadDriverCalendar(false);

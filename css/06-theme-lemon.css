@@ -80,3 +80,7 @@ body.th-lemon{
 .th-lemon .rd-pax-card div[style*="border-top"]{border-top-color:rgba(255,255,255,.12)!important;}
 .th-lemon .rd-pax-card div[style*="font-style:italic"]{color:#E6EBD8!important;}
 .th-lemon .rd-pax-card div[style*="color:var(--ink4)"],.th-lemon .rd-pax-card span[style*="color:var(--ink4)"]{color:#8C9A86!important;font-style:normal;}
+
+/* Nouvelle demande : icônes des types de course en citron, pictogramme noir */
+.th-lemon .nr-opt.g .nr-ic,.th-lemon .nr-opt.o .nr-ic,.th-lemon .nr-opt.b .nr-ic,.th-lemon .nr-opt.v .nr-ic{background:var(--lime);color:var(--ink);}
+.th-lemon .nr-opt:hover{border-color:#C8D9A0;}
