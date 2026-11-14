@@ -180,3 +180,4 @@ body,body *{caret-color:transparent;}
 input,textarea,select,[contenteditable],[contenteditable] *{caret-color:auto;}
 button,button *,.btn,.btn *,a.btn,[onclick],[onclick] *,[role="button"],[role="button"] *,img,svg,label{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
 button:focus:not(:focus-visible),[onclick]:focus:not(:focus-visible),a:focus:not(:focus-visible){outline:none;}
+input,textarea,[contenteditable]{-webkit-user-select:text!important;user-select:text!important;}
