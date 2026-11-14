@@ -95,7 +95,32 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMWIsPQ6YWrRXFwzKypcbKhP4urk27g3Y&libraries=places,routes&language=fr&loading=async&callback=initGooglePlaces" async defer></script>
 </head>
 <body>{{env_badge}}
-<div id="app-loader" style="position:fixed;inset:0;background:#fff;z-index:99999;display:flex;align-items:center;justify-content:center;"><div style="font-family:'Cormorant Garamond',serif;font-size:22px;letter-spacing:.18em;text-transform:uppercase;color:#1d1d1f;opacity:.6;">Bleenr</div></div>
+<!-- Chargement : voiture qui roule (styles intégrés pour s'afficher immédiatement) -->
+<style>
+#app-loader{position:fixed;inset:0;background:#F6F5F1;z-index:99999;display:flex;align-items:center;justify-content:center;}
+#app-loader .bl-car{position:relative;width:132px;height:64px;overflow:hidden;}
+#app-loader .bl-body{position:absolute;left:22px;top:6px;animation:blBump .5s ease-in-out infinite;}
+#app-loader .bl-wheel{transform-box:fill-box;transform-origin:center;animation:blSpin .45s linear infinite;}
+#app-loader .bl-road{position:absolute;left:0;right:0;bottom:4px;height:3px;border-radius:2px;opacity:.28;
+  background:repeating-linear-gradient(90deg,#0E1410 0 16px,transparent 16px 28px);animation:blRoad .42s linear infinite;}
+#app-loader .bl-wind{position:absolute;left:4px;top:22px;width:16px;height:2px;border-radius:2px;background:#0E1410;opacity:.18;animation:blWind .42s linear infinite;}
+#app-loader .bl-wind.w2{top:32px;width:10px;animation-delay:.2s;}
+@keyframes blRoad{to{background-position:-28px 0}}
+@keyframes blBump{50%{transform:translateY(-1.5px)}}
+@keyframes blSpin{to{transform:rotate(360deg)}}
+@keyframes blWind{0%{transform:translateX(12px);opacity:0}50%{opacity:.25}100%{transform:translateX(-8px);opacity:0}}
+@media(prefers-reduced-motion:reduce){#app-loader *{animation:none!important;}}
+</style>
+<div id="app-loader" role="status" aria-label="Chargement"><div class="bl-car">
+  <span class="bl-wind"></span><span class="bl-wind w2"></span>
+  <svg class="bl-body" width="92" height="48" viewBox="0 0 92 48" fill="none" aria-hidden="true">
+    <path d="M8 34V27c0-2 1.2-3.6 3-4.3l8-3 9-9C30 8.7 32.6 8 35 8h20c3 0 5.6 1.3 7.5 3.6L70 20l11 2.4c3 .7 5 3.2 5 6.2V34c0 1.7-1.3 3-3 3H11c-1.7 0-3-1.3-3-3z" fill="#D6F27A" stroke="#0E1410" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M30 20l6.5-6.6c.8-.8 1.8-1.2 2.9-1.2H47v7.8H30zM51 12.2h4c1.6 0 3.1.7 4.1 2L64.5 20H51z" fill="#0E1410"/>
+    <g class="bl-wheel"><circle cx="25" cy="37" r="7.5" fill="#0E1410"/><circle cx="25" cy="37" r="2.6" fill="#D6F27A"/><path d="M25 31.5v3M25 39.5v3" stroke="#D6F27A" stroke-width="1.6" stroke-linecap="round"/></g>
+    <g class="bl-wheel"><circle cx="69" cy="37" r="7.5" fill="#0E1410"/><circle cx="69" cy="37" r="2.6" fill="#D6F27A"/><path d="M69 31.5v3M69 39.5v3" stroke="#D6F27A" stroke-width="1.6" stroke-linecap="round"/></g>
+  </svg>
+  <span class="bl-road"></span>
+</div></div>
 
 <!-- ══ SCREEN: AUTH ═══════════════════════════════════════ -->
 <div id="screen-landing" class="screen">
