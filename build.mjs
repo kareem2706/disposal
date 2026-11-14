@@ -51,28 +51,6 @@ if (/^\s*["']use strict/.test(core)) throw new Error('core: directive use strict
 fs.writeFileSync(path.join(out, 'landing.js'), (envJs + '// ── core (core/*.ts, partagé avec l’app iOS) ──\n' + core + concat(path.join('js', 'landing'), '.js')).replaceAll('__V__', ver));
 fs.writeFileSync(path.join(out, 'app.js'), concat('js', '.js').replaceAll('__V__', ver));
 fs.writeFileSync(path.join(out, 'admin.js'), concat(path.join('js', 'admin'), '.js').replaceAll('__V__', ver));
-// Coordonnées officielles : celles d'Admin › Facturation (fonction bleenr_company, company_public.sql).
-// site.json sert de secours si la base n'est pas joignable pendant la construction.
-const COUNTRY_FR = { BE: 'Belgique', FR: 'France', NL: 'Pays-Bas', LU: 'Luxembourg', DE: 'Allemagne', ES: 'Espagne', IT: 'Italie', PT: 'Portugal', CH: 'Suisse', GB: 'Royaume-Uni' };
-try {
-  const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 8000);
-  const res = await fetch(env.supabase_url + '/rest/v1/rpc/bleenr_company', { method: 'POST', signal: ctl.signal,
-    headers: { apikey: env.supabase_anon_key, Authorization: 'Bearer ' + env.supabase_anon_key, 'Content-Type': 'application/json' }, body: '{}' });
-  clearTimeout(tm);
-  const c = res.ok ? await res.json() : null;
-  if (c && c.street && c.city) {
-    const vat = String(c.vat || '').replace(/[\s.]/g, '').toUpperCase();
-    const num = vat.replace(/^[A-Z]{2}/, '');
-    Object.assign(site.company, {
-      legal_name: c.name || site.company.legal_name, street: c.street, postal: c.postal || '', city: c.city,
-      country: COUNTRY_FR[String(c.country || '').toUpperCase()] || c.country || site.company.country,
-      vat: vat || site.company.vat,
-      bce: /^\d{10}$/.test(num) ? num.slice(0, 4) + '.' + num.slice(4, 7) + '.' + num.slice(7) : (num || site.company.bce),
-    });
-    if (/^BE\d{10}$/.test(vat)) site.company.vat = 'BE' + site.company.bce;
-    console.log('Coordonnées Bleenr : Admin › Facturation (' + site.company.street + ', ' + site.company.city + ')');
-  } else console.warn('Coordonnées Bleenr : site.json (bleenr_company indisponible : ' + res.status + ')');
-} catch (e) { console.warn('Coordonnées Bleenr : site.json (' + (e && e.message) + ')'); }
 // Informations de la société / adresse du site (site.json) : {{url}}, {{company.name}}, {{company.vat}}…
 const fill = (txt, file) => txt.replaceAll('__V__', ver).replace(/\{\{\s*([\w.]+)\s*\}\}/g, (m, key) => {
   const v = key.split('.').reduce((o, k) => (o == null ? undefined : o[k]), site);
