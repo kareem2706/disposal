@@ -175,3 +175,8 @@ input.fld-err,select.fld-err,textarea.fld-err{border-color:#C0392B!important;box
 .au-points b{color:var(--lime)}
 .au-back:hover{border-color:var(--lime);color:var(--lime);background:rgba(214,242,122,.08)}
 .au-head h2 em{color:#1B5E3B;background:linear-gradient(transparent 62%,rgba(214,242,122,.75) 62%,rgba(214,242,122,.75) 88%,transparent 88%);padding:0 .06em}
+/* Pas de barre de texte qui clignote hors des champs de saisie (navigation au curseur du navigateur, clics sur boutons / cartes) */
+body,body *{caret-color:transparent;}
+input,textarea,select,[contenteditable],[contenteditable] *{caret-color:auto;}
+button,button *,.btn,.btn *,a.btn,[onclick],[onclick] *,[role="button"],[role="button"] *,img,svg,label{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
+button:focus:not(:focus-visible),[onclick]:focus:not(:focus-visible),a:focus:not(:focus-visible){outline:none;}
