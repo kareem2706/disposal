@@ -480,3 +480,6 @@ input.gp-bad{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(192,57,
 .terms-txt{font-size:13px;line-height:1.5;color:var(--ink2);}
 .terms-txt a{color:var(--green);font-weight:600;text-decoration:underline;}
 .terms-switch.terms-bad{border-color:var(--red);box-shadow:0 0 0 3px rgba(192,57,43,.1);}
+/* Inscription : le bouton Google officiel (invisible) n'est cliquable qu'une fois les conditions acceptées ;
+   sinon le clic arrive sur notre bouton, qui affiche le message « acceptez les conditions » */
+#reg-step3:not(.terms-ok) .gis-ov,#reg-step3:not(.terms-ok) .gis-ov *{pointer-events:none!important;}

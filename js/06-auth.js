@@ -109,7 +109,14 @@ function _termsOk(){
   if(lab){ lab.classList.add('terms-bad'); try{ lab.scrollIntoView({ block:'center', behavior:'smooth' }); }catch(e){} }
   return false;
 }
-window._termsChanged=function(){ var c=document.getElementById('inp-terms'); if(c&&c.checked) _termsOk(); };
+// Le bouton Google officiel (invisible, posé sur notre bouton) ne passe pas par ssoAuth : il n'est actif que
+// lorsque l'interrupteur est sur « oui » (classe terms-ok) ; l'acceptation est mémorisée pour être enregistrée au retour.
+window._termsChanged=function(){
+  var c=document.getElementById('inp-terms'), on=!!(c&&c.checked), r3=document.getElementById('reg-step3');
+  if(r3) r3.classList.toggle('terms-ok', on);
+  try{ if(on) localStorage.setItem('bleenr_terms_ok', String(Date.now())); else localStorage.removeItem('bleenr_terms_ok'); }catch(e){}
+  if(on) _termsOk();
+};
 
 window.submitEmailReg = async function(){
   var email = (document.getElementById('inp-email-reg')?.value||'').trim().toLowerCase();
