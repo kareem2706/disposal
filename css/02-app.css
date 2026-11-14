@@ -498,3 +498,12 @@ input.gp-bad{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(192,57,
 #screen-auth .role-opt{box-shadow:0 2px 8px rgba(14,20,16,.08)!important;}
 #screen-auth .role-opt.active{box-shadow:0 16px 34px -12px rgba(14,20,16,.38),0 4px 10px rgba(14,20,16,.12)!important;}
 #screen-auth [data-i18n="au.vous_etes"],#screen-auth [data-i18n="au.type_de_compte"]{color:#0E1410!important;}
+/* Inscription : le choix non sélectionné passe en retrait (plus pâle, plus petit, sans relief) */
+#screen-auth .role-opt{transition:opacity .2s,transform .2s,box-shadow .2s!important;}
+#screen-auth .role-opt:not(.active){opacity:.5;transform:scale(.96);box-shadow:none!important;background:rgba(255,255,255,.6)!important;}
+#screen-auth .role-opt:not(.active):hover{opacity:.75;}
+#screen-auth .role-opt:not(.active) .role-opt-icon{background:#ECEADF!important;color:#7A847E!important;}
+/* Pas de cadre de focus ni de surbrillance au clic (le cadre reste pour la navigation au clavier) */
+#screen-auth .role-opt,#screen-auth button,#screen-auth a,#screen-auth .terms-switch{-webkit-tap-highlight-color:transparent;}
+#screen-auth .role-opt:focus,#screen-auth button:focus,#screen-auth a:focus{outline:none;}
+#screen-auth .role-opt:focus-visible,#screen-auth button:focus-visible,#screen-auth a:focus-visible{outline:2px solid #0E1410;outline-offset:2px;}
