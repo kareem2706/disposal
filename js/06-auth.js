@@ -539,6 +539,7 @@ window.signOut = async function(){
   localStorage.removeItem(DEMO_MODE_KEY);
   if(typeof _applyFleetTheme==='function') _applyFleetTheme(false);
   if(typeof _actDay!=='undefined') _actDay='';
+  if(typeof _mfaOk!=='undefined'){ _mfaOk=false; _mfaPending=false; if(typeof _mfaClose==='function') _mfaClose(); }
   _resetAuthUI();
   showToast(t('toast_signout'));
   showScreen('landing');

@@ -24,6 +24,14 @@ const APP_URL = (Deno.env.get("APP_URL") ?? "https://www.bleenr.com").replace(/\
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ADMIN_EMAIL = "kb@bleenr.com";
+
+// Admin : connexion validée par la double authentification (jeton « aal2 »), en plus de l'e-mail
+function aal2(token: string) {
+  try {
+    const p = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(p + "===".slice((p.length + 3) % 4))).aal === "aal2";
+  } catch { return false; }
+}
 const MAX_RECIPIENTS = 2000;
 const admin = createClient(SB_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
@@ -86,7 +94,7 @@ Deno.serve(async (req) => {
     // Admin uniquement
     const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
     const { data: u } = await admin.auth.getUser(token);
-    if (u?.user?.email?.toLowerCase() !== ADMIN_EMAIL) return json({ error: "Réservé à l'administrateur" }, 403);
+    if (u?.user?.email?.toLowerCase() !== ADMIN_EMAIL || !aal2(token)) return json({ error: "Réservé à l'administrateur" }, 403);
     if (!RESEND_KEY) return json({ error: "RESEND_API_KEY non configurée" }, 500);
 
     const p = await req.json();

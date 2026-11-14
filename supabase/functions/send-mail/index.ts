@@ -18,6 +18,14 @@ const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("MAIL_FROM") ?? "Bleenr <noreply@bleenr.com>";
 const APP_URL = Deno.env.get("APP_URL") ?? "https://www.bleenr.com";
 const ADMIN_EMAIL = "kb@bleenr.com";
+
+// Admin : connexion validée par la double authentification (jeton « aal2 »), en plus de l'e-mail
+function aal2(token: string) {
+  try {
+    const p = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(p + "===".slice((p.length + 3) % 4))).aal === "aal2";
+  } catch { return false; }
+}
 const admin = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -434,7 +442,7 @@ Deno.serve(async (req: Request) => {
     const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
     const { data: u } = await admin.auth.getUser(token);
     const user = u?.user ?? null;
-    const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL;
+    const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL && aal2(token);
 
     // ── Bienvenue : possible sans session, juste après l'inscription ──
     if (type === "welcome_client" || type === "welcome_driver") {

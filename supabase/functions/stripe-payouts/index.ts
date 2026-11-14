@@ -23,6 +23,14 @@ const admin = createClient(
 );
 const HOOK_SECRET = Deno.env.get("NOTIFY_HOOK_SECRET") ?? "";
 const ADMIN_EMAIL = "kb@bleenr.com";
+
+// Admin : connexion validée par la double authentification (jeton « aal2 »), en plus de l'e-mail
+function aal2(token: string) {
+  try {
+    const p = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(p + "===".slice((p.length + 3) % 4))).aal === "aal2";
+  } catch { return false; }
+}
 const DELAY = Math.max(0, parseInt(Deno.env.get("PAYOUT_DELAY_HOURS") ?? "24", 10) || 0);
 
 function sameSecret(a: string, b: string) {
@@ -38,7 +46,7 @@ async function allowed(req: Request) {
   if (sameSecret(req.headers.get("x-hook-secret") ?? "", HOOK_SECRET)) return true;
   const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
   const { data } = await admin.auth.getUser(token);
-  return data?.user?.email === ADMIN_EMAIL;
+  return data?.user?.email?.toLowerCase() === ADMIN_EMAIL && aal2(token);
 }
 
 Deno.serve(async (req: Request) => {

@@ -43,7 +43,16 @@ function _applyFleetTheme(isFleet){
 
 function enterApp(){
   console.log('[enterApp] called, _entering=',_entering);
-  if(_entering)return; _entering=true;
+  if(_entering)return;
+  // Admin : double authentification validée avant tout accès (sinon le serveur refuse les droits admin)
+  if(currentUser?.email === ADMIN_EMAIL && !_mfaOk && sb && !localStorage.getItem(DEMO_MODE_KEY)){
+    if(_mfaPending) return; _mfaPending=true;
+    var _ld=document.getElementById('app-loader'); if(_ld) _ld.style.display='none';
+    _adminMfaGate().then(function(ok){ _mfaPending=false; if(ok){ _mfaOk=true; enterApp(); } })
+      .catch(function(e){ _mfaPending=false; if(typeof showToast==='function') showToast('Double authentification indisponible : '+(e&&e.message||e)); });
+    return;
+  }
+  _entering=true;
   if(/^#course\//.test(location.hash||'')) setTimeout(_rdDeepLink, 900);
   var _l=document.getElementById('app-loader');if(_l)_l.style.display='none';
   showScreen('app');
