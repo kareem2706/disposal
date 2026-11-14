@@ -483,3 +483,11 @@ input.gp-bad{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(192,57,
 /* Inscription : le bouton Google officiel (invisible) n'est cliquable qu'une fois les conditions acceptées ;
    sinon le clic arrive sur notre bouton, qui affiche le message « acceptez les conditions » */
 #reg-step3:not(.terms-ok) .gis-ov,#reg-step3:not(.terms-ok) .gis-ov *{pointer-events:none!important;}
+/* Écran connexion / inscription : boutons principaux noirs, liens en noir */
+#screen-auth .btn-primary{background:#0E1410!important;color:#fff!important;border-color:#0E1410!important;}
+#screen-auth .btn-primary:hover:not(:disabled){background:#26302A!important;}
+#screen-auth .btn-primary svg [stroke="white"],#screen-auth .btn-primary svg [stroke="#fff"]{stroke:currentColor;}
+#screen-auth p[data-i18n-html="au.en_continuant_vous_acceptez_nos"]{color:#5A6560!important;}
+#screen-auth p[data-i18n-html="au.en_continuant_vous_acceptez_nos"] a,#screen-auth .terms-txt a{color:#0E1410!important;}
+#login-mode-link{color:#0E1410!important;text-decoration:underline!important;text-underline-offset:3px;}
+#screen-auth .terms-switch input:checked + .terms-sw{background:#0E1410;}
