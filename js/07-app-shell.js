@@ -44,12 +44,15 @@ function _applyFleetTheme(isFleet){
 function enterApp(){
   console.log('[enterApp] called, _entering=',_entering);
   if(_entering)return;
-  // Admin : double authentification validée avant tout accès (sinon le serveur refuse les droits admin)
-  if(currentUser?.email === ADMIN_EMAIL && !_mfaOk && sb && !localStorage.getItem(DEMO_MODE_KEY)){
+  // Double authentification validée avant tout accès (admin : obligatoire ; clients / fleets : si activée)
+  if(currentUser && !_mfaOk && sb && !localStorage.getItem(DEMO_MODE_KEY)){
     if(_mfaPending) return; _mfaPending=true;
     var _ld=document.getElementById('app-loader'); if(_ld) _ld.style.display='none';
     _adminMfaGate().then(function(ok){ _mfaPending=false; if(ok){ _mfaOk=true; enterApp(); } })
-      .catch(function(e){ _mfaPending=false; if(typeof showToast==='function') showToast('Double authentification indisponible : '+(e&&e.message||e)); });
+      .catch(function(e){ _mfaPending=false;
+        // Vérification impossible (réseau) : on continue, le serveur refusera de toute façon l'accès si le code est requis
+        if(!_mfaIsAdmin()){ _mfaOk=true; enterApp(); return; }
+        if(typeof showToast==='function') showToast('Double authentification indisponible : '+(e&&e.message||e)); });
     return;
   }
   _entering=true;

@@ -365,6 +365,7 @@ window.removeSeg=function(n){var el=document.getElementById('seg-'+n);if(el)el.r
 
 function loadProfileForm(){
   if(!currentProfile)return;
+  if(typeof _pfMfaRender==='function') _pfMfaRender();
   var role=currentProfile.role||currentUser?.user_metadata?.role||'client',ct=currentProfile.client_type||'perso';
   var isP=(role==='client'&&ct==='perso'),showC=(role==='driver'||(role==='client'&&ct==='pro'));
   var show=function(id,v){var el=document.getElementById(id);if(el)el.style.display=v;};

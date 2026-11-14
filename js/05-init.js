@@ -222,6 +222,8 @@ async function _applySignupRole(role, clientType, company){
 
 async function loadProfile(){
   if(!sb || !currentUser) return;
+  // Double authentification : code demandé avant tout chargement (le serveur refuse tout sans lui)
+  if(typeof _mfaGate==='function') await _mfaGate().catch(function(){});
   const { data, error } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
   if(data) {
     currentProfile = data;
