@@ -17,7 +17,7 @@ var _MFA_T={
     'Touchez « Ouvrir dans l’app d’authentification ». Si rien ne s’ouvre : « Copier la clé », puis dans l’app « Ajouter » › « Saisir une clé de configuration » et collez-la.':'Tap “Open in authenticator app”. If nothing opens: “Copy key”, then in the app “Add” › “Enter a setup key” and paste it.',
     'Scannez ce QR code avec votre téléphone :':'Scan this QR code with your phone:','Clé de configuration :':'Setup key:','Ouvrir dans l’app d’authentification':'Open in authenticator app','Copier la clé':'Copy key','Clé copiée ✓':'Key copied ✓',
     'Revenez ici et entrez le code affiché par l’application :':'Come back here and enter the code shown by the app:',
-    'Si cette page se recharge, une nouvelle clé est créée : supprimez alors l’ancienne entrée « Bleenr » dans l’app et recommencez.':'If this page reloads, a new key is created: delete the old “Bleenr” entry in the app and start again.',
+    'Chaque activation crée une nouvelle clé : si Bleenr est déjà dans votre app (activation précédente ou page rechargée), supprimez d’abord l’ancien code, il ne fonctionne plus.':'Each activation creates a new key: if Bleenr is already in your app (previous activation or reloaded page), delete the old code first, it no longer works.',
     'Entrez le code à 6 chiffres affiché par votre application d’authentification.':'Enter the 6-digit code shown by your authenticator app.',
     'Entrez les 6 chiffres.':'Enter the 6 digits.','Vérification…':'Checking…','Code incorrect ou expiré.':'Wrong or expired code.','Trop d’essais, patientez une minute.':'Too many attempts, wait a minute.','Activation impossible : ':'Cannot turn on: ',
     'Double authentification':'Two-step verification','Configuration (une seule fois). Ensuite, le code sera demandé à chaque connexion.':'One-time setup. After that, the code will be asked at every sign-in.','Activée':'On','Désactivée':'Off','Activer':'Turn on','Désactiver':'Turn off',
@@ -34,7 +34,7 @@ var _MFA_T={
     'Touchez « Ouvrir dans l’app d’authentification ». Si rien ne s’ouvre : « Copier la clé », puis dans l’app « Ajouter » › « Saisir une clé de configuration » et collez-la.':'Pulse «Abrir en la app de autenticación». Si no se abre nada: «Copiar la clave» y, en la app, «Añadir» › «Introducir una clave» y péguela.',
     'Scannez ce QR code avec votre téléphone :':'Escanee este código QR con su teléfono:','Clé de configuration :':'Clave de configuración:','Ouvrir dans l’app d’authentification':'Abrir en la app de autenticación','Copier la clé':'Copiar la clave','Clé copiée ✓':'Clave copiada ✓',
     'Revenez ici et entrez le code affiché par l’application :':'Vuelva aquí e introduzca el código que muestra la app:',
-    'Si cette page se recharge, une nouvelle clé est créée : supprimez alors l’ancienne entrée « Bleenr » dans l’app et recommencez.':'Si esta página se recarga, se crea una nueva clave: borre la entrada «Bleenr» anterior en la app y vuelva a empezar.',
+    'Chaque activation crée une nouvelle clé : si Bleenr est déjà dans votre app (activation précédente ou page rechargée), supprimez d’abord l’ancien code, il ne fonctionne plus.':'Cada activación crea una nueva clave: si Bleenr ya está en su app (activación anterior o página recargada), borre primero el código antiguo, ya no funciona.',
     'Entrez le code à 6 chiffres affiché par votre application d’authentification.':'Introduzca el código de 6 cifras de su aplicación de autenticación.',
     'Entrez les 6 chiffres.':'Introduzca las 6 cifras.','Vérification…':'Comprobando…','Code incorrect ou expiré.':'Código incorrecto o caducado.','Trop d’essais, patientez une minute.':'Demasiados intentos, espere un minuto.','Activation impossible : ':'No se puede activar: ',
     'Double authentification':'Verificación en dos pasos','Configuration (une seule fois). Ensuite, le code sera demandé à chaque connexion.':'Configuración (una sola vez). Después, el código se pedirá en cada inicio de sesión.','Activée':'Activada','Désactivée':'Desactivada','Activer':'Activar','Désactiver':'Desactivar',
@@ -127,7 +127,7 @@ async function _mfaShow(mode, factor, done, opt){
       +'<div style="font-size:12.5px;margin-top:10px;">'+_mt('Clé de configuration :')+' <code style="font-size:12.5px;word-break:break-all;background:#F1F0EB;padding:2px 6px;border-radius:6px;user-select:all;">'+_mfaEsc(secret)+'</code></div>'
       +(mob?'':copyBtn)
       +'<div style="margin-top:10px;">3. '+_mt('Revenez ici et entrez le code affiché par l’application :')+'</div>'
-      +'<div style="font-size:12px;color:#9AA29D;margin-top:4px;">'+_mt('Si cette page se recharge, une nouvelle clé est créée : supprimez alors l’ancienne entrée « Bleenr » dans l’app et recommencez.')+'</div>';
+      +'<div style="font-size:12px;color:#9AA29D;margin-top:4px;">'+_mt('Chaque activation crée une nouvelle clé : si Bleenr est déjà dans votre app (activation précédente ou page rechargée), supprimez d’abord l’ancien code, il ne fonctionne plus.')+'</div>';
     var cp=o.querySelector('#mfa-copy');
     if(cp) cp.onclick=function(){
       var ok2=function(){ cp.textContent=_mt('Clé copiée ✓'); setTimeout(function(){ cp.textContent=_mt('Copier la clé'); },2500); };
