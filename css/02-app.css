@@ -466,3 +466,5 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 .badge-pending{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:var(--amber-bg);color:var(--amber);}
 .badge-validated{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;background:var(--green-bg);color:var(--green);}
 
+/* Adresse non choisie dans la liste Google */
+input.gp-bad{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(192,57,43,.12)!important;}

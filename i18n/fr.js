@@ -1120,5 +1120,10 @@
   "sub.aud_nomatch": "Aucun chauffeur ne correspond.",
   "sub.aud_nobody": "Aucun autre chauffeur validé pour le moment.",
   "ld.vos_sous_traitances": "Vos sous-traitances",
-  "ld.sous_traitez_vos_courses": "Sous-traitez vos propres courses à tous les chauffeurs ou à ceux que vous choisissez, et gardez le suivi de chaque mission."
+  "ld.sous_traitez_vos_courses": "Sous-traitez vos propres courses à tous les chauffeurs ou à ceux que vous choisissez, et gardez le suivi de chaque mission.",
+  "gp.err_pick": "Choisissez l’adresse dans la liste proposée par Google",
+  "gp.from": "départ",
+  "gp.to": "arrivée",
+  "gp.pickup": "lieu de prise en charge",
+  "gp.trip": "trajet"
 };

@@ -36,9 +36,10 @@ function _evRows(){ return [].slice.call(document.querySelectorAll('#ev-vehicles
 function _evClassOpts(){ var s=document.getElementById('ride-vehicle'); return s?s.innerHTML:'<option value="business">Business</option>'; }
 function _evGp(el){
   if(!el||el._gp||!(window.google&&google.maps&&google.maps.places)) return;
-  el._gp=new google.maps.places.Autocomplete(el,{ language:'fr', fields:['formatted_address','name'], componentRestrictions:{ country:['be','fr','lu','nl','de','gb','ch'] } });
+  el._gp=new google.maps.places.Autocomplete(el,{ language:'fr', fields:['formatted_address','name','place_id'], componentRestrictions:{ country:['be','fr','lu','nl','de','gb','ch'] } });
   el._gp.addListener('place_changed',function(){ var pl=el._gp.getPlace(); if(!pl) return; var nm=pl.name||'', ad=pl.formatted_address||'';
     el.value = nm&&ad&&ad.toLowerCase().indexOf(nm.toLowerCase())===-1 ? nm+', '+ad : (ad||nm);
+    if(window._gpMark) _gpMark(el, pl);
     var row=el.closest&&el.closest('.ev-veh'); if(row) _evTr(row); });
 }
 function _evVal(row,c){ var e=row.querySelector('.'+c); return e?String(e.value||'').trim():''; }
@@ -359,7 +360,8 @@ async function _mixSplitSubmit(segs, gName, gTel, btn, err){
       if(pn) notes+='|pax:'+pn.replace(/\|/g,' ');
       if(pt) notes+='|tel:'+pt.replace(/\|/g,' ');
       ['flight','train','flight2','train2'].forEach(function(x){ if(s[x]) notes+='|'+x+':'+s[x]; });
-      var rd={ client_id:currentUser.id, trip_type:disp?'disposal':'ab', from_address:s.from, to_address:disp?null:s.to, ride_date:s.date||todayStr(), ride_time:s.time||'08:00',
+      var _pi=window._ridePids||{};
+      var rd={ client_id:currentUser.id, trip_type:disp?'disposal':'ab', from_address:s.from, to_address:disp?null:s.to, from_place_id:_pi['s'+k+'f']||null, to_place_id:disp?null:(_pi['s'+k+'t']||null), ride_date:s.date||todayStr(), ride_time:s.time||'08:00',
                passengers:parseInt(s.pax,10)||1, vehicle_type:s.veh||null, luggage_large:s.lugL||0, luggage_small:s.lugS||0, notes:notes||null, status:'waiting' };
       var res=await sb.rpc('api_ride_create',{ p:rd });
       if(res.error) throw new Error('Trajet '+(k+1)+' : '+(res.error.message||'refusé'));
@@ -394,6 +396,10 @@ async function submitEvent(){
     });
     if(_bad) return fail('Trajet '+(i+1)+' : '+_bad+'.');
     if(!t.from || (ty==='ab' && !t.to) || !t.date || !t.time) return fail('Trajet '+(i+1)+' : indiquez '+(!t.from?(ty==='ab'?'le départ':'le lieu de prise en charge'):(ty==='ab'&&!t.to)?'l’arrivée':!t.date?'la date':'l’heure')+'.');
+    var _gc=window._gpCheckFields ? await window._gpCheckFields([{ el:r.querySelector('.ev-from'), key:'from', label:_T('gp.trip')+' '+(i+1)+' – '+(ty==='ab'?_T('gp.from'):_T('gp.pickup')) }]
+      .concat(ty==='ab'?[{ el:r.querySelector('.ev-to'), key:'to', label:_T('gp.trip')+' '+(i+1)+' – '+_T('gp.to') }]:[])) : { ids:{}, err:'' };
+    if(_gc.err) return fail(_gc.err);
+    t.fromPid=_gc.ids.from||null; t.toPid=_gc.ids.to||null;
     if(_leadErr(t.date,t.time)){ var _de=r.querySelector('.ev-date'), _te=r.querySelector('.ev-time'); setTimeout(function(){ if(_de) _de.classList.add('fld-err'); if(_te) _te.classList.add('fld-err'); },40); return fail('Trajet '+(i+1)+' : il doit commencer au moins 1 heure à l’avance.'); }
     var vm=r.getAttribute('data-vm'), N=parseInt(r.getAttribute('data-n'),10)||0, c=_evCounts(r);
     if(vm==='pax' && !N) return fail('Trajet '+(i+1)+' : indiquez le nombre de personnes.');
@@ -429,7 +435,7 @@ async function submitEvent(){
       if(v.train) notes+='|train:'+v.train;
       if(v.flight2) notes+='|flight2:'+v.flight2;
       if(v.train2) notes+='|train2:'+v.train2;
-      var rd={ client_id:currentUser.id, trip_type:v.type, from_address:v.from, to_address:v.type==='ab'?v.to:null, ride_date:v.date, ride_time:v.time,
+      var rd={ client_id:currentUser.id, trip_type:v.type, from_address:v.from, to_address:v.type==='ab'?v.to:null, from_place_id:v.fromPid||null, to_place_id:v.type==='ab'?(v.toPid||null):null, ride_date:v.date, ride_time:v.time,
                passengers:parseInt(v.pax,10)||1, vehicle_type:v.cls||null, luggage_large:v.lugL||0, luggage_small:v.lugS||0, notes:notes||null, status:'waiting' };
       var res=await sb.rpc('api_ride_create',{ p:rd });
       if(res.error) throw new Error('Trajet '+v.trip+' ('+_evClsName(v.cls)+') : '+(res.error.message||'refusé'));

@@ -514,6 +514,19 @@ window.submitRide = async function(){
     } else if(_leadErr(date,time)){ _le=_leadErr(date,time); if(tripType==='disposal') _leadMark('disp-date','disp-time'); else _leadMark('ride-date','ride-time'); }
     if(_le){ if(err){ err.textContent=_le; err.classList.add('show'); err.style.display=''; } return; }
   }
+  // Adresses : obligatoirement choisies dans la liste Google (le serveur vérifie ensuite le lieu auprès de Google)
+  var _gf=[], _ge=function(id){ return document.getElementById(id); };
+  if(tripType==='disposal') _gf=[{ el:_ge('disp-from'), key:'from', label:t('gp.pickup') }];
+  else if(tripType==='mixed'){
+    document.querySelectorAll('#mixed-segments .mixed-segment').forEach(function(sg,i){
+      var n=sg.id.replace('seg-',''), ab=sg.querySelector('.seg-type-btn.active'), isD=ab&&ab.textContent.toLowerCase().indexOf('disp')>=0;
+      _gf.push({ el:_ge('sf-'+n), key:'s'+i+'f', label:t('gp.trip')+' '+(i+1)+' – '+(isD?t('gp.pickup'):t('gp.from')) });
+      if(!isD) _gf.push({ el:_ge('st-'+n), key:'s'+i+'t', label:t('gp.trip')+' '+(i+1)+' – '+t('gp.to') });
+    });
+  } else _gf=[{ el:_ge('ride-from'), key:'from', label:t('gp.from') }, { el:_ge('ride-to'), key:'to', label:t('gp.to') }];
+  var _gc=window._gpCheckFields ? await window._gpCheckFields(_gf) : { ids:{}, err:'' };
+  if(_gc.err){ if(err){ err.textContent=_gc.err; err.classList.add('show'); err.style.display=''; } return; }
+  window._ridePids=_gc.ids;
   // Gamme cohérente avec le nombre de passagers
   if(window._vehPaxSync) _vehPaxSync();
   // Numéro de vol / train (aéroport ou gare au départ ou à l'arrivée)
@@ -564,6 +577,9 @@ window.submitRide = async function(){
     client_id:    currentUser.id,
     trip_type:    tripType,
     from_address: from,
+    from_place_id: tripType==='mixed' ? (window._ridePids.s0f||null) : (window._ridePids.from||null),
+    to_place_id: window._ridePids.to||null,
+    places: tripType==='mixed' ? Object.keys(window._ridePids).map(function(k){ return window._ridePids[k]; }) : undefined,
     to_address:   to||null,
     ride_date:    date,
     ride_time:    time,

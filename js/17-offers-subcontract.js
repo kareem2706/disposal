@@ -590,6 +590,19 @@ window.submitSubcontract = async function(){
     if(tripType==='disposal') _leadMark('sub-disp-date','sub-disp-time'); else _leadMark('sub-date','sub-time');
     if(err){ err.textContent=_leadErr(date,time); err.classList.add('show'); } return;
   }
+  // Adresses : obligatoirement choisies dans la liste Google (le serveur vérifie ensuite le lieu auprès de Google)
+  var _gf=[], _ge=function(id){ return document.getElementById(id); };
+  if(tripType==='disposal') _gf=[{ el:_ge('sub-disp-from'), key:'from', label:t('gp.pickup') }];
+  else if(tripType==='mixed'){
+    document.querySelectorAll('#sub-mixed-segments .mixed-segment').forEach(function(sg,i){
+      var n=sg.id.replace('sub-seg-',''), ab=sg.querySelector('.seg-type-btn.active'), isD=ab&&ab.textContent.toLowerCase().indexOf('disp')>=0;
+      _gf.push({ el:_ge('sub-sf-'+n), key:'s'+i+'f', label:t('gp.trip')+' '+(i+1)+' – '+(isD?t('gp.pickup'):t('gp.from')) });
+      if(!isD) _gf.push({ el:_ge('sub-st-'+n), key:'s'+i+'t', label:t('gp.trip')+' '+(i+1)+' – '+t('gp.to') });
+    });
+  } else _gf=[{ el:_ge('sub-from'), key:'from', label:t('gp.from') }, { el:_ge('sub-to'), key:'to', label:t('gp.to') }];
+  var _gc=window._gpCheckFields ? await window._gpCheckFields(_gf) : { ids:{}, err:'' };
+  if(_gc.err){ if(err){ err.textContent=_gc.err; err.classList.add('show'); } return; }
+  var _pids=_gc.ids;
   if(window._vehPaxSync) _vehPaxSync();
 
   var priceVal = parseFloat(g('sub-price')) || null;
@@ -622,6 +635,9 @@ window.submitSubcontract = async function(){
     trip_type:     tripType,
     from_address:  from,
     to_address:    to||null,
+    from_place_id: tripType==='mixed' ? (_pids.s0f||null) : (_pids.from||null),
+    to_place_id:   _pids.to||null,
+    places:        tripType==='mixed' ? Object.keys(_pids).map(function(k){ return _pids[k]; }) : undefined,
     ride_date:     date,
     ride_time:     time,
     passengers:    parseInt(pax)||1,

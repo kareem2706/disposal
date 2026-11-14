@@ -1120,5 +1120,10 @@
   "sub.aud_nomatch": "Ningún chófer coincide.",
   "sub.aud_nobody": "Todavía no hay otros chóferes validados.",
   "ld.vos_sous_traitances": "Sus subcontrataciones",
-  "ld.sous_traitez_vos_courses": "Subcontrate sus propios servicios a todos los chóferes o a los que elija, y mantenga el seguimiento de cada misión."
+  "ld.sous_traitez_vos_courses": "Subcontrate sus propios servicios a todos los chóferes o a los que elija, y mantenga el seguimiento de cada misión.",
+  "gp.err_pick": "Elija la dirección en la lista propuesta por Google",
+  "gp.from": "salida",
+  "gp.to": "llegada",
+  "gp.pickup": "lugar de recogida",
+  "gp.trip": "trayecto"
 };

@@ -1120,5 +1120,10 @@
   "sub.aud_nomatch": "No matching driver.",
   "sub.aud_nobody": "No other approved driver yet.",
   "ld.vos_sous_traitances": "Your subcontracting",
-  "ld.sous_traitez_vos_courses": "Subcontract your own rides to all drivers or to the ones you choose, and keep track of every mission."
+  "ld.sous_traitez_vos_courses": "Subcontract your own rides to all drivers or to the ones you choose, and keep track of every mission.",
+  "gp.err_pick": "Choose the address from the list suggested by Google",
+  "gp.from": "departure",
+  "gp.to": "arrival",
+  "gp.pickup": "pick-up location",
+  "gp.trip": "trip"
 };
