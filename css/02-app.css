@@ -494,5 +494,6 @@ input.gp-bad{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(192,57,
 /* Inscription : pastilles Client / Fleet en citron un peu plus foncé, icône noire */
 #screen-auth .role-opt .role-opt-icon{background:#E2F0A8!important;color:#0E1410!important;}
 #screen-auth .role-opt.active .role-opt-icon{background:#C8E862!important;color:#0E1410!important;}
-#screen-auth .role-opt.active{border-color:#0E1410!important;box-shadow:0 14px 30px -18px rgba(14,20,16,.45)!important;}
-#screen-auth .role-opt:hover{border-color:rgba(14,20,16,.25);}
+#screen-auth .role-opt,#screen-auth .role-opt:hover,#screen-auth .role-opt.active{border-color:transparent!important;}
+#screen-auth .role-opt{box-shadow:0 1px 3px rgba(14,20,16,.06)!important;}
+#screen-auth .role-opt.active{box-shadow:0 10px 24px -10px rgba(14,20,16,.28),0 2px 6px rgba(14,20,16,.08)!important;}
