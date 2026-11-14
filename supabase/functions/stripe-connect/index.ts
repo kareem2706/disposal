@@ -5,6 +5,7 @@
 //   { action: "dashboard" }             → lien vers le tableau de bord Stripe Express de la flotte → { url }
 // Seule la flotte elle-même peut agir sur son compte (jeton de session vérifié ici).
 
+import { MFA_MSG, mfaBlocked } from "../_shared/mfa.ts";
 import Stripe from "npm:stripe@14.25.0";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import { returnBase } from "../_shared/site.ts";
@@ -39,6 +40,7 @@ Deno.serve(async (req: Request) => {
     const { data: u, error: uErr } = await admin.auth.getUser(token);
     if (uErr || !u?.user) return json({ error: "Session expirée, reconnectez-vous." }, 401);
     const user = u.user;
+    if (await mfaBlocked(token, user.id)) return json({ error: MFA_MSG }, 403);
 
     const { data: prof } = await admin.from("profiles")
       .select("id, role, email, company_name, first_name, last_name, address_country").eq("id", user.id).maybeSingle();

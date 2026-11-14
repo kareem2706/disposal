@@ -4,6 +4,7 @@
 // recalculé ici à partir du prix HTVA de l'offre en base (+ TVA 6 %),
 // après avoir vérifié que l'utilisateur connecté est bien le client de la course.
 
+import { MFA_MSG, mfaBlocked } from "../_shared/mfa.ts";
 import Stripe from "npm:stripe@14.25.0";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import { returnBase } from "../_shared/site.ts";
@@ -39,6 +40,7 @@ Deno.serve(async (req: Request) => {
     const { data: u, error: uErr } = await admin.auth.getUser(token);
     if (uErr || !u?.user) return json({ error: "Session expirée, reconnectez-vous." }, 401);
     const user = u.user;
+    if (await mfaBlocked(token, user.id)) return json({ error: MFA_MSG }, 403);
 
     const body = await req.json();
     const { rideId, offerId } = body;

@@ -9,6 +9,7 @@
 // Contrôles serveur : utilisateur connecté, interrupteur admin billing_settings.ai_requests_enabled,
 // limite d'appels par utilisateur (table ai_request_log), longueur du texte.
 
+import { MFA_MSG, mfaBlocked } from "../_shared/mfa.ts";
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
@@ -131,6 +132,7 @@ Deno.serve(async (req) => {
     if (!u.ok) return json({ error: "Session expirée, reconnectez-vous." }, 401);
     const user = await u.json();
     if (!user?.id) return json({ error: "Session expirée, reconnectez-vous." }, 401);
+    if (await mfaBlocked(auth, user.id)) return json({ error: MFA_MSG }, 403);
 
     // 2. Interrupteur admin
     const bs = await fetch(`${SB_URL}/rest/v1/billing_settings?id=eq.1&select=ai_requests_enabled`, { headers: H });

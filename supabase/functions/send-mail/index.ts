@@ -11,6 +11,7 @@
 //  • toutes les données sont échappées (aucun HTML ou lien injecté) ;
 //  • le destinataire est lu dans auth.users, pas dans profiles (modifiable).
 
+import { MFA_MSG, mfaBlocked } from "../_shared/mfa.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 import { box, callout, infoGrid, mailLayout, type MailOpts, steps, tripCard, devRedirect } from "../_shared/mail.ts";
 
@@ -442,6 +443,7 @@ Deno.serve(async (req: Request) => {
     const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
     const { data: u } = await admin.auth.getUser(token);
     const user = u?.user ?? null;
+    if (user && await mfaBlocked(token, user.id)) return json({ ok: false, error: MFA_MSG }, 403);
     const isAdmin = user?.email?.toLowerCase() === ADMIN_EMAIL && aal2(token);
 
     // ── Bienvenue : possible sans session, juste après l'inscription ──

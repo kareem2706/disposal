@@ -7,6 +7,7 @@
 // Réponse : { items: [ { kind, number, ok, ... } ] } — un élément par numéro renseigné.
 // Cache en mémoire (2 min vols, 1 min trains) pour ménager le quota du fournisseur de vols.
 
+import { MFA_MSG, mfaBlocked } from "../_shared/mfa.ts";
 const SB_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SB_SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
@@ -178,6 +179,7 @@ Deno.serve(async (req) => {
     const u = await fetch(`${SB_URL}/auth/v1/user`, { headers: { apikey: SB_ANON || SB_SERVICE, Authorization: auth } });
     if (!u.ok) return json({ error: "unauthorized" }, 401);
     const user = await u.json();
+    if (await mfaBlocked(auth, user?.id)) return json({ error: MFA_MSG }, 403);
     const { ride_id } = await req.json().catch(() => ({}));
     if (!ride_id) return json({ error: "ride_id manquant" }, 400);
 

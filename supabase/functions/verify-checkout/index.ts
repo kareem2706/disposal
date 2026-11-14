@@ -6,6 +6,7 @@
 // Le webhook stripe-webhook fait la même chose si le client ferme l'onglet.
 // Peut être appelée plusieurs fois sans effet de bord.
 
+import { MFA_MSG, mfaBlocked } from "../_shared/mfa.ts";
 import Stripe from "npm:stripe@14.25.0";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
@@ -75,6 +76,7 @@ Deno.serve(async (req: Request) => {
     const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
     const { data: u, error: uErr } = await admin.auth.getUser(token);
     if (uErr || !u?.user) return json({ error: "Session expirée, reconnectez-vous." }, 401);
+    if (await mfaBlocked(token, u.user.id)) return json({ error: MFA_MSG }, 403);
 
     const { sessionId } = await req.json();
     if (!sessionId || !/^cs_/.test(sessionId)) return json({ error: "Session de paiement invalide" }, 400);
