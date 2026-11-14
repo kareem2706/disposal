@@ -102,7 +102,7 @@ function _stRender(){
   h+='<div class="st-grid">'
    +'<div class="st-card"><h3>Utilisateurs actifs par jour</h3><div class="sub">Personnes qui ont ouvert le site ou une app</div>'
    +_stBars(ser,['active_web','active_ios','active_android'],['#0E1410','#7FA33A','#C8E862'])
-   +_stLeg([['Site','#0E1410'],['iOS','#7FA33A'],['Android','#C8E862']])+'</div>'
+   +_stLeg([['Site','#0E1410'],['App chauffeur iOS','#7FA33A'],['App chauffeur Android','#C8E862']])+'</div>'
    +'<div class="st-card"><h3>Inscriptions par jour</h3><div class="sub">Nouveaux comptes</div>'
    +_stBars(ser,['signup_clients','signup_fleets'],['#1B5E3B','#C8E862'])
    +_stLeg([['Clients','#1B5E3B'],['Fleets','#C8E862']])+'</div>'
@@ -121,7 +121,7 @@ function _stRender(){
    +'<div class="st-row"><span>Montant des courses terminées</span><b>'+Number(rd.revenue||0).toLocaleString('fr-BE',{style:'currency',currency:'EUR'})+'</b></div>'
    +'</div></div>'
    +'<div class="st-card"><h3>Support utilisé</h3><div class="sub">Utilisateurs actifs sur 30 jours</div>'
-   +(tot? meter('Site web',Number(pf.web||0))+meter('App iOS',Number(pf.ios||0))+meter('App Android',Number(pf.android||0))
+   +(tot? meter('Site web',Number(pf.web||0))+meter('App chauffeur iOS',Number(pf.ios||0))+meter('App chauffeur Android',Number(pf.android||0))
         : '<div style="font-size:13px;color:var(--ink3);">Pas encore de données.</div>')
    +'<div style="margin-top:14px;">'
    +'<div class="st-row"><span>Clients particuliers</span><b>'+_stNum(u.perso)+'</b></div>'
