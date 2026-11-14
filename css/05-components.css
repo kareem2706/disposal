@@ -492,3 +492,6 @@ option[hidden]{display:none;}
 @media (max-width:640px){ .lf-row{flex-direction:column;align-items:stretch;} .lf-wrap{align-self:flex-end;} }
 .lf-apply{height:34px;padding:0 16px;border:none;border-radius:10px;background:var(--green);color:#fff;font:600 12.5px 'DM Sans',sans-serif;cursor:pointer;}
 .lf-apply:hover{filter:brightness(1.08);}
+/* Bouton « Nouvelle demande » : icône et texte alignés sur les autres liens du menu */
+.sidebar-cta{justify-content:flex-start;gap:10px;padding-left:14px;padding-right:14px;}
+.sidebar-cta > svg{width:16px;height:16px;flex-shrink:0;}
