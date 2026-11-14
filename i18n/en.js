@@ -1125,5 +1125,10 @@
   "gp.from": "departure",
   "gp.to": "arrival",
   "gp.pickup": "pick-up location",
-  "gp.trip": "trip"
+  "gp.trip": "trip",
+  "au.terms_accept_html": "I accept Bleenr's <a href=\"legal/conditions.html\" target=\"_blank\" rel=\"noopener\">terms and conditions</a> and <a href=\"legal/confidentialite.html\" target=\"_blank\" rel=\"noopener\">privacy policy</a>.",
+  "au.err_terms": "To create your account, please accept the terms and conditions and the privacy policy.",
+  "au.terms_title": "Terms and conditions",
+  "au.terms_intro": "Before continuing, please accept Bleenr's terms and conditions and privacy policy.",
+  "au.terms_continue": "Continue"
 };

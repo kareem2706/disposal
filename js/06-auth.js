@@ -100,10 +100,22 @@ window.selectClientType = function(type){
 };
 
 // submitEmailReg reads from reg-specific fields
+// ── Conditions générales : interrupteur obligatoire pour s'inscrire (le serveur refuse un compte sans acceptation) ──
+var TERMS_VERSION='2026-11-14';
+function _termsOk(){
+  var c=document.getElementById('inp-terms'), lab=c&&c.closest('.terms-switch'), er=document.getElementById('auth-err-terms');
+  if(c && c.checked){ if(er) er.classList.remove('show'); if(lab) lab.classList.remove('terms-bad'); return true; }
+  if(er){ er.textContent=t('au.err_terms'); er.classList.add('show'); }
+  if(lab){ lab.classList.add('terms-bad'); try{ lab.scrollIntoView({ block:'center', behavior:'smooth' }); }catch(e){} }
+  return false;
+}
+window._termsChanged=function(){ var c=document.getElementById('inp-terms'); if(c&&c.checked) _termsOk(); };
+
 window.submitEmailReg = async function(){
   var email = (document.getElementById('inp-email-reg')?.value||'').trim().toLowerCase();
   var errEl = document.getElementById('auth-err-email-reg');
   if(!_validEmail(email)){ if(errEl){errEl.textContent=t('au.err_email_invalid');errEl.classList.add('show');} return; }
+  if(!_termsOk()) return;
 
   var role = _authSelectedRole||'client';
   var clientType = role==='client' ? (_regClientType||'perso') : null;
@@ -126,7 +138,7 @@ window.submitEmailReg = async function(){
   if(errEl) errEl.classList.remove('show');
   var btn = document.getElementById('btn-reg-submit');
   if(btn) setLoading(btn,true,t('au.sending_code'));
-  var meta = {role, client_type:clientType, first_name:fname||null, last_name:lname||null, company_name:company||null};
+  var meta = {role, client_type:clientType, first_name:fname||null, last_name:lname||null, company_name:company||null, terms_accepted:true, terms_version:TERMS_VERSION};
   var vat = (document.getElementById('inp-vat')?.value||'').trim();
   var {error} = await _sendEmailCode(email, true, meta);
   if(btn) setLoading(btn,false,t('au.recevoir_un_code'));
@@ -303,6 +315,12 @@ function _ssoKeepRole(){
 window.ssoAuth = async function(provider){
   if(localStorage.getItem(DEMO_MODE_KEY) === '1'){ enterApp(); return; }
   if(!sb){ showToast('Supabase non configuré'); return; }
+  // Inscription (étape 3) : conditions acceptées avant la redirection, enregistrées au retour (api_terms_accept)
+  var _r3=document.getElementById('reg-step3');
+  if(_r3 && _r3.offsetParent!==null){
+    if(!_termsOk()) return;
+    try{ localStorage.setItem('bleenr_terms_ok', String(Date.now())); }catch(e){}
+  }
 
   document.getElementById('auth-main').style.display = 'none';
   document.getElementById('auth-sso').style.display = 'block';
@@ -540,6 +558,7 @@ window.signOut = async function(){
   if(typeof _applyFleetTheme==='function') _applyFleetTheme(false);
   if(typeof _actDay!=='undefined') _actDay='';
   if(typeof _mfaOk!=='undefined'){ _mfaOk=false; _mfaPending=false; _mfaGateP=null; if(typeof _mfaClose==='function') _mfaClose(); }
+  if(typeof _termsDone!=='undefined'){ _termsDone=false; _termsPending=false; var _to=document.getElementById('terms-ov'); if(_to) _to.remove(); }
   _resetAuthUI();
   showToast(t('toast_signout'));
   showScreen('landing');

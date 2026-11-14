@@ -55,6 +55,12 @@ function enterApp(){
         if(typeof showToast==='function') showToast('Double authentification indisponible : '+(e&&e.message||e)); });
     return;
   }
+  // Conditions générales acceptées (inscription Google / Microsoft, compte récent sans acceptation)
+  if(typeof _termsNeeded==='function' && _termsNeeded()){
+    if(_termsPending) return; _termsPending=true;
+    _termsGate().then(function(){ _termsPending=false; _termsDone=true; enterApp(); });
+    return;
+  }
   _entering=true;
   if(/^#course\//.test(location.hash||'')) setTimeout(_rdDeepLink, 900);
   var _l=document.getElementById('app-loader');if(_l)_l.style.display='none';

@@ -468,3 +468,15 @@ input:focus,select:focus,textarea:focus{border-color:var(--ink);}
 
 /* Adresse non choisie dans la liste Google */
 input.gp-bad{border-color:var(--red)!important;box-shadow:0 0 0 3px rgba(192,57,43,.12)!important;}
+/* Inscription : interrupteur « J'accepte les conditions » */
+.terms-switch{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;margin:0 0 14px;border:1px solid var(--sand3);border-radius:14px;background:var(--white,#fff);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.terms-switch input{position:absolute;opacity:0;width:1px;height:1px;}
+.terms-sw{flex-shrink:0;width:44px;height:26px;border-radius:13px;background:#D5DCD4;position:relative;transition:background .18s;margin-top:1px;}
+.terms-sw::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .18s;}
+.terms-switch input:checked + .terms-sw{background:var(--green);}
+.th-lemon .terms-switch input:checked + .terms-sw{background:var(--lime);}
+.terms-switch input:checked + .terms-sw::after{transform:translateX(18px);}
+.terms-switch input:focus-visible + .terms-sw{outline:2px solid var(--green);outline-offset:2px;}
+.terms-txt{font-size:13px;line-height:1.5;color:var(--ink2);}
+.terms-txt a{color:var(--green);font-weight:600;text-decoration:underline;}
+.terms-switch.terms-bad{border-color:var(--red);box-shadow:0 0 0 3px rgba(192,57,43,.1);}
