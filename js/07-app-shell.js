@@ -19,8 +19,9 @@ async function loadMyOffers(){
 }
 
 // Thème de l'espace fleet : 'lemon' (noir + citron vert) ou 'forest' (thème d'origine).
-// Pour revenir en arrière : FLEET_THEME = 'forest'. Les clients restent toujours en forest.
+// Pour revenir en arrière : FLEET_THEME / CLIENT_THEME = 'forest'. L'administration reste en forest.
 var FLEET_THEME = 'lemon';
+var CLIENT_THEME = 'lemon';   // clients particuliers et pro
 // Statistiques (Admin › Statistiques) : « actif aujourd'hui sur le site », enregistré par le serveur (api_activity_ping)
 var _actDay='';
 function _activityPing(){
@@ -32,7 +33,7 @@ function _activityPing(){
 }
 document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible') _activityPing(); });
 function _applyFleetTheme(isFleet){
-  var on = isFleet && FLEET_THEME === 'lemon';
+  var on = !!isFleet;   // thème lemon (fleets et clients ; l'administration reste en forest)
   document.body.classList.toggle('th-lemon', on);
   var lg = document.querySelector('.sidebar-logo img');
   if(lg){
@@ -71,7 +72,7 @@ function enterApp(){
   console.log('[enterApp] email:', currentUser?.email, 'ADMIN_EMAIL:', ADMIN_EMAIL, 'isAdmin:', isAdmin, 'role:', role);
   const isAdminDriver = isAdmin && role === 'driver';
   currentRole = isAdmin ? 'admin' : role;
-  _applyFleetTheme(!isAdmin && role==='driver');
+  _applyFleetTheme(!isAdmin && ((role==='driver' && FLEET_THEME==='lemon') || (role!=='driver' && CLIENT_THEME==='lemon')));
   _activityPing();
   document.getElementById('nav-client').style.display = (!isAdmin && role === 'client') ? 'block' : 'none';
   document.getElementById('nav-driver').style.display = (isAdminDriver || (!isAdmin && role === 'driver')) ? 'block' : 'none';
