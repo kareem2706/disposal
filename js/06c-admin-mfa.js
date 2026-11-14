@@ -47,13 +47,28 @@ async function _mfaShow(mode, factor, done){
     if(e.error){ body.textContent=''; fail('Activation impossible : '+(e.error.message||e.error)); return; }
     factorId=e.data.id;
     var secret=(e.data.totp && e.data.totp.secret)||'', qr=(e.data.totp && e.data.totp.qr_code)||'';
+    var uri=(e.data.totp && e.data.totp.uri)||'';
+    var mob=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    var bt='display:block;width:100%;box-sizing:border-box;text-align:center;margin-top:8px;padding:12px;border-radius:999px;font:600 14px \'DM Sans\',sans-serif;text-decoration:none;cursor:pointer;';
+    var phoneBtns=(uri?'<a href="'+_mfaEsc(uri)+'" style="'+bt+'background:#0E1410;color:#D6F27A;border:none;">Ouvrir dans l’app d’authentification</a>':'')
+      +'<button type="button" id="mfa-copy" style="'+bt+'background:#fff;color:#0E1410;border:1.5px solid #E6E4DD;">Copier la clé</button>';
     body.innerHTML='Le compte administrateur exige un code à 6 chiffres en plus du mot de passe ou du code e-mail.'
       +'<ol style="margin:12px 0 0;padding-left:18px;">'
       +'<li>Ouvrez une application d’authentification (Google Authenticator, Microsoft Authenticator, 1Password, Authy…).</li>'
-      +'<li>Scannez ce QR code :</li></ol>'
-      +(qr?'<div style="display:flex;justify-content:center;margin:12px 0;"><img src="'+_mfaEsc(qr)+'" alt="QR code" style="width:190px;height:190px;border:1px solid #ECEAE4;border-radius:12px;padding:6px;background:#fff;"></div>':'')
-      +'<div style="font-size:12.5px;">Ou saisissez cette clé : <code style="font-size:12.5px;word-break:break-all;background:#F1F0EB;padding:2px 6px;border-radius:6px;user-select:all;">'+_mfaEsc(secret)+'</code></div>'
-      +'<div style="margin-top:10px;">3. Entrez le code affiché par l’application :</div>';
+      +(mob
+        ? '<li>Touchez « Ouvrir dans l’app d’authentification ». Si rien ne s’ouvre : « Copier la clé », puis dans l’app « Ajouter » › « Saisir une clé de configuration » et collez-la.</li></ol>'+phoneBtns
+        : '<li>Scannez ce QR code avec votre téléphone :</li></ol>'
+          +(qr?'<div style="display:flex;justify-content:center;margin:12px 0;"><img src="'+_mfaEsc(qr)+'" alt="QR code" style="width:190px;height:190px;border:1px solid #ECEAE4;border-radius:12px;padding:6px;background:#fff;"></div>':''))
+      +'<div style="font-size:12.5px;margin-top:10px;">Clé de configuration : <code style="font-size:12.5px;word-break:break-all;background:#F1F0EB;padding:2px 6px;border-radius:6px;user-select:all;">'+_mfaEsc(secret)+'</code></div>'
+      +(mob?'':phoneBtns.replace(/^<a[^>]*>.*?<\/a>/,''))
+      +'<div style="margin-top:10px;">3. Revenez ici et entrez le code affiché par l’application :</div>'
+      +'<div style="font-size:12px;color:#9AA29D;margin-top:4px;">Si cette page se recharge, une nouvelle clé est créée : supprimez alors l’ancienne entrée « Bleenr » dans l’app et recommencez.</div>';
+    var cp=o.querySelector('#mfa-copy');
+    if(cp) cp.onclick=function(){
+      var done2=function(){ cp.textContent='Clé copiée ✓'; setTimeout(function(){ cp.textContent='Copier la clé'; },2500); };
+      if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(secret).then(done2,function(){ prompt('Clé de configuration :',secret); });
+      else prompt('Clé de configuration :',secret);
+    };
   } else {
     body.textContent='Entrez le code à 6 chiffres affiché par votre application d’authentification.';
   }
