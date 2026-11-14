@@ -668,6 +668,10 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M2.5 13.5V8.5M6.5 13.5V4.5M10.5 13.5V6.5M14 13.5H1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           Rapports
         </button>
+        <button class="nav-item" data-page="admin-stats" onclick="showPage('admin-stats')">
+          <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M1.5 12.5l4-4.5 3 2.5 6-6.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.5 4h4v4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Statistiques
+        </button>
         <button class="nav-item" data-page="admin-issues" onclick="showPage('admin-issues')" style="position:relative;">
           <svg class="nav-ico" viewBox="0 0 16 16" fill="none"><path d="M7 2.2L1.3 12.2a1.1 1.1 0 001 1.6h11.4a1.1 1.1 0 001-1.6L9 2.2a1.1 1.1 0 00-2 0z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 6.5v3M8 11.6v.1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           Signalements <span class="nav-badge" id="badge-admin-issues" style="display:none;background:#C0392B;" title="Signalements ouverts"></span>
@@ -1303,6 +1307,15 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div><h2>Rapports</h2><p>G&eacute;n&eacute;rez les rapports et factures de la plateforme</p></div>
       </div>
       <div id="admin-reports-content"><div class="page-loading"><div class="page-spinner"></div></div></div>
+    </div>
+
+    <!-- Admin: Statistiques -->
+    <div id="page-admin-stats" class="page">
+      <div class="pg-head">
+        <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l6-7 4 4 8-9"/><path d="M15 6h6v6"/></svg></div>
+        <div><h2>Statistiques</h2><p>Inscriptions, connexions et courses</p></div>
+      </div>
+      <div id="admin-stats-content"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
 
     <!-- Admin: Signalements -->

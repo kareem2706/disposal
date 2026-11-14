@@ -9,7 +9,7 @@ window.showPage = function(pageId){
   const pageNames = { dashboard:t('dashboard'), rides:t('rides'), calendar:'Calendrier', 'd-calendar':'Calendrier', invoices:t('invoices'),
     profile:t('profile'), 'd-dashboard':t('d-dashboard'), marketplace:t('marketplace'), missions:t('missions'),
     'd-invoices':'Factures', 'passengers':'Passagers',
-    'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses', 'admin-billing':'Facturation', 'admin-reports':'Rapports', 'admin-issues':'Signalements', 'admin-campaigns':'Campagnes e-mail', 'admin-settings':'Réglages' };
+    'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses', 'admin-billing':'Facturation', 'admin-reports':'Rapports', 'admin-stats':'Statistiques', 'admin-issues':'Signalements', 'admin-campaigns':'Campagnes e-mail', 'admin-settings':'Réglages' };
   var ptEl=document.getElementById('page-title');if(ptEl)ptEl.textContent=pageNames[pageId]||'';
   var piEl=document.getElementById('page-title-icon');if(piEl){var _srcIc=pg.querySelector('.pg-head-icon');piEl.innerHTML=_srcIc?_srcIc.innerHTML:'';piEl.classList.toggle('has-icon',!!_srcIc);}
 
@@ -55,6 +55,7 @@ async function loadPageData(pageId){
     case 'admin-rides':    await _withAdmin(function(){ return loadAdminRides(); }); break;
     case 'admin-billing':  await _withAdmin(function(){ return loadAdminBilling(); }); break;
     case 'admin-reports':  await _withAdmin(function(){ return loadAdminReports(); }); break;
+    case 'admin-stats':    await _withAdmin(function(){ return loadAdminStats(); }); break;
     case 'admin-issues':   await _withAdmin(function(){ return loadAdminIssues(); }); break;
     case 'admin-campaigns': await _withAdmin(function(){ return loadAdminCampaigns(); }); break;
     case 'admin-settings': await _withAdmin(function(){ return loadAdminSettings(); }); break;
