@@ -18,7 +18,7 @@ create or replace function public._place_label(p_id text)
 returns text language plpgsql volatile security definer set search_path = public, extensions, pg_temp as $$
 declare v_key text; v_res record; j jsonb; nm text; ad text;
 begin
-  if p_id is null or p_id !~ '^[A-Za-z0-9_-]{10,300}$' then return null; end if;
+  if p_id is null or length(p_id) not between 10 and 400 or p_id !~ '^[A-Za-z0-9_-]+$' then return null; end if;
   select decrypted_secret into v_key from vault.decrypted_secrets where name = 'google_maps_key';
   if v_key is null then return ''; end if;
   begin
