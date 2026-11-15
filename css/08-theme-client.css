@@ -242,3 +242,10 @@ body.th-client:not(.pg-rides) .mob-actions{display:none!important;}
   .th-client .ccal > .cc-daybox{grid-column:2;grid-row:1/span 4;position:sticky;top:24px;}
   .cc-day{height:58px;}
 }
+
+/* Fiche d'une demande ouverte (mobile) : rien de la page en dessous ne doit apparaître */
+@media(max-width:900px){
+  body.rd-open .app-main .page.active,body.rd-open .mobile-topbar,body.rd-open .ch-fab,body.rd-open .notif-fixed{visibility:hidden!important;}
+  .modal-overlay.rd-panel .modal{overscroll-behavior:contain;}
+  .modal-overlay.rd-panel{overscroll-behavior:contain;}
+}
