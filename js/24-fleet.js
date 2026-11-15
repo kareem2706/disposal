@@ -1032,12 +1032,15 @@ function _renderClientRide(r){
   var from=_chShortAddr(cleanAddr(r.from_address)), to=k==='disposal'?'':_chShortAddr(cleanAddr(r.to_address));
   if(k==='mixed'){ var segs=parseMixedNotes(r.notes||''); if(segs.length){ from=_chShortAddr(segs[0].from); to=segs.length>1?'+'+(segs.length-1):''; } }
   var esc=function(x){ return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;'); };
-  var route='<span class="chr-a">'+esc(from)+'</span>'+(to&&to!=='\u2014'?'<span class="chr-to">\u2192</span><span class="chr-a">'+esc(to)+'</span>':(k==='disposal'&&r.duration_hours?'<span class="chr-to">\u00b7</span><span class="chr-a">'+esc(r.duration_hours)+' h</span>':''));
+  var route='<span class="chr-a">'+esc(from)+'</span>'
+    +(to&&to!=='\u2014'?'<span class="chr-a"><i class="chr-to">\u2192</i>'+esc(to)+'</span>'
+      :(k==='disposal'&&r.duration_hours?'<span class="chr-a"><i class="chr-to">\u00b7</i>'+esc(r.duration_hours)+' h</span>':''));
   var price=r.final_price?'<span class="chr-price">'+parseFloat(r.final_price).toFixed(2).replace('.',',')+' \u20ac</span>':'';
   return '<div class="ride-card chr" onclick="openRideDetail(this)" data-ride=\''+JSON.stringify(r).replace(/\'/g,'&#39;')+'\'>'
     +'<div class="chr-date"><span class="chr-mon">'+mon+'</span><span class="chr-day">'+day+'</span>'+(r.ride_time?'<span class="chr-time">'+String(r.ride_time).slice(0,5)+'</span>':'')+'</div>'
-    +'<div class="chr-body"><div class="chr-type"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+_CH_IC[k]+'</svg>'+esc(lbl)+'</div>'
-    +'<div class="chr-route">'+route+'</div><div class="chr-foot">'+statusPill+price+'</div></div>'
+    +'<div class="chr-body"><div class="chr-type"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+_CH_IC[k]+'</svg><span>'+esc(lbl)+'</span></div>'
+    +'<div class="chr-st">'+statusPill+'</div>'
+    +'<div class="chr-route">'+route+'</div>'+price+'</div>'
     +'<svg class="chr-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>'
   +'</div>';
 }

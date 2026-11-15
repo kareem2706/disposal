@@ -1140,5 +1140,6 @@
   "ch.t_disp": "Hourly hire",
   "ch.t_mixed": "Mixed trip",
   "ch.t_personal": "Personal mission",
-  "ch.demandes_recentes": "Current requests"
+  "ch.demandes_recentes": "Current requests",
+  "ch.espace": "Your client area"
 };

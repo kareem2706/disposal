@@ -81,6 +81,7 @@ window.saveProfile = async function(){
 // ── RIDE ACTIONS ──────────────────────────────────────
 // Carte du tableau de bord client → « Mes demandes » déjà filtrée
 window._goRides = function(filter){
+  if(filter==='waiting'||filter==='offers'||filter==='pending_payment') filter='open';
   document.querySelectorAll('#rides-filters .btn').forEach(function(b){
     var on=(b.getAttribute('onclick')||'').indexOf("filterRides('"+filter+"'")===0;
     b.className = on ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';

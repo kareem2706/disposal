@@ -1140,5 +1140,6 @@
   "ch.t_disp": "Puesta a disposición",
   "ch.t_mixed": "Trayecto mixto",
   "ch.t_personal": "Misión personal",
-  "ch.demandes_recentes": "Solicitudes en curso"
+  "ch.demandes_recentes": "Solicitudes en curso",
+  "ch.espace": "Su espacio cliente"
 };

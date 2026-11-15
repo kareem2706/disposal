@@ -6,7 +6,7 @@ window.showPage = function(pageId){
   if(!pg) return;
   pg.classList.add('active');
 
-  const pageNames = { dashboard:t('dashboard'), rides:t('rides'), calendar:'Calendrier', 'd-calendar':'Calendrier', invoices:t('invoices'),
+  const pageNames = { home:'', dashboard:t('dashboard'), rides:t('rides'), calendar:'Calendrier', 'd-calendar':'Calendrier', invoices:t('invoices'),
     profile:t('profile'), 'd-dashboard':t('d-dashboard'), marketplace:t('marketplace'), missions:t('missions'),
     'd-invoices':'Factures', 'passengers':'Passagers',
     'admin-fleets':'Fleets', 'admin-clients':'Clients', 'admin-dashboard':'Tableau de bord', 'admin-rides':'Courses', 'admin-billing':'Facturation', 'admin-reports':'Rapports', 'admin-stats':'Statistiques', 'admin-issues':'Signalements', 'admin-campaigns':'Campagnes e-mail', 'admin-settings':'Réglages' };
@@ -17,9 +17,36 @@ window.showPage = function(pageId){
   document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === pageId));
   document.getElementById('sidebar').classList.remove('open');
 
+  // Espace client : classe de la page affichée + bouton « Filtres » dans l'en-tête sur mobile
+  document.body.className=document.body.className.replace(/\bpg-[\w-]+/g,'').trim(); document.body.classList.add('pg-'+pageId);
+  try{ _chPlaceFilters(); }catch(_e){}
+  try{ window.scrollTo(0,0); }catch(_e){}
+
   // Load page data
   loadPageData(pageId);
 };
+var _chMq=window.matchMedia?window.matchMedia('(max-width:900px)'):null;
+function _chMobile(){ return document.body.classList.contains('th-client') && !!(_chMq&&_chMq.matches); }
+function _chPlaceFilters(){
+  var w=document.getElementById('lf-btn-rides'); w=w&&w.parentNode; if(!w) return;
+  var slot=document.getElementById('mob-actions'), bar=document.getElementById('rides-filters');
+  if(_chMobile()){ if(w.parentNode!==slot) slot.appendChild(w); }
+  else if(bar && w.parentNode!==bar) bar.appendChild(w);
+}
+if(_chMq&&_chMq.addEventListener) _chMq.addEventListener('change',function(){ try{ _chPlaceFilters(); }catch(e){} });
+// Écran principal client : prénom, avatar, compteur « Mes demandes »
+async function loadClientHome(){
+  var p=currentProfile||{}, fn=(p.first_name||'').trim();
+  var hl=document.getElementById('ch-hello'); if(hl) hl.textContent=t('ch.bonjour')+(fn?' '+fn:'');
+  var av=document.getElementById('ch-av');
+  if(av){ if(p.avatar_url){ av.innerHTML='<img src="'+String(p.avatar_url).replace(/"/g,'')+'" alt="">'; } else av.textContent=((fn||p.company_name||(currentUser&&currentUser.email)||'?')[0]||'?').toUpperCase(); }
+  var rb=document.getElementById('ch-role'), nb=document.getElementById('nav-acct-badge'); if(rb&&nb&&nb.textContent) rb.textContent=nb.textContent;
+  var pb=document.getElementById('ch-pass'), np=document.getElementById('nav-passengers-btn'); if(pb&&np) pb.style.display=np.style.display==='none'?'none':'';
+  if(!sb || localStorage.getItem(DEMO_MODE_KEY) || !currentUser) return;
+  var r=await sb.from('rides').select('id,status').eq('client_id',currentUser.id).in('status',['waiting','offers','pending_payment','confirmed','active']);
+  var n=(r.data||[]).length, cc=document.getElementById('ch-count');
+  if(cc){ cc.textContent=n>99?'99+':String(n); cc.style.display=n?'':'none'; }
+}
 
 // ── PAGE DATA ─────────────────────────────────────────
 // Code de l'administration (admin.js) : chargé seulement quand un admin ouvre une page d'admin
@@ -37,6 +64,7 @@ async function loadPageData(pageId){
   _loadRefundRules();
   if(currentUser?.email===ADMIN_EMAIL) _withAdmin(function(){ _refreshAdminFleetsBadge(); });
   switch(pageId){
+    case 'home':          await loadClientHome(); break;
     case 'dashboard':     await loadClientDashboard(); break;
     case 'rides':         await loadRides(); break;
     case 'invoices':      await loadInvoices(); break;
@@ -171,6 +199,8 @@ async function loadClientDashboard(){
 }
 
 // CLIENT RIDES
+// Filtre « En attente » : en attente d'offres, offres reçues, paiement à faire
+var _RIDES_OPEN=['waiting','offers','pending_payment'];
 async function loadRides(filter){
   if(window._chgExpire) _chgExpire();
   // Sans filtre explicite (ouverture de la page, mise à jour en direct) : on garde le filtre sélectionné
@@ -181,7 +211,8 @@ async function loadRides(filter){
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     var q = sb.from('rides').select('*').eq('client_id', uid)
       .order('ride_date',{ascending:false}).order('ride_time',{ascending:false});
-    if(filter !== 'all') q = q.eq('status', filter);
+    if(filter === 'open') q = q.in('status', _RIDES_OPEN);
+    else if(filter !== 'all') q = q.eq('status', filter);
     var res = await q;
     if(res.error) console.error('loadRides error:', res.error);
     rides = res.data || [];
@@ -197,7 +228,7 @@ async function loadRides(filter){
       }
     }
   } else {
-    rides = getDemoRides().filter(function(r){ return filter==='all'||r.status===filter; });
+    rides = getDemoRides().filter(function(r){ return filter==='all'||r.status===filter||(filter==='open'&&_RIDES_OPEN.indexOf(r.status)>=0); });
   }
 
   rides.sort(_byNewest); // most recent first

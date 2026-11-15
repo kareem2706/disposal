@@ -118,7 +118,7 @@ function enterApp(){
       showPage('d-dashboard');
     });
   } else {
-    showPage(role === 'driver' ? 'd-dashboard' : 'dashboard');
+    showPage(role === 'driver' ? 'd-dashboard' : (!isAdmin && role==='client' && _chMobile() ? 'home' : 'dashboard'));
   }
 
   // Subscribe to realtime notifications
