@@ -1016,33 +1016,63 @@ function _chShortAddr(a){
   var city=p[p.length-1].replace(/^(B-|F-|L-|NL-)?\d{4,5}\s*[A-Z]{0,2}\s+/,'').trim();
   return city && city.toLowerCase()!==p[0].toLowerCase() ? p[0]+', '+city : p[0];
 }
+// Icônes des types de trajet : les mêmes que l'écran « Nouvelle demande »
 var _CH_IC={
-  ab:'<path d="M6 19a2 2 0 100-4 2 2 0 000 4zM18 9a2 2 0 100-4 2 2 0 000 4z"/><path d="M8 17h6.5a3.5 3.5 0 000-7h-5a3.5 3.5 0 010-7H16"/>',
-  disposal:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
-  mixed:'<path d="M4 7h12l-3-3M20 17H8l3 3"/>',
-  personal:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0114 0"/>'
+  ab:'<circle cx="6" cy="24" r="3"/><circle cx="26" cy="8" r="3"/><path d="M9 23.5c4-.5 4.5-4.5 7-7.5s4.5-5.5 7-7"/>',
+  disposal:'<circle cx="16" cy="16" r="11"/><path d="M16 10v6.5l4 2.5"/>',
+  mixed:'<circle cx="4.5" cy="26" r="2.6"/><circle cx="27.5" cy="6" r="2.6"/><path d="M7 24.6c2.2-.8 3.6-2.2 4.6-3.8M20.4 11.2c1-1.6 2.4-3 4.6-3.8"/><circle cx="16" cy="16" r="6"/><path d="M16 12.8v3.4l2.2 1.4"/>',
+  event:'<path d="M3 15l1.5-4.5h9L15 15v4H3zM17 13l1.5-4.5h9L29 13v4H17z"/><path d="M5 19v2M13 19v2M19 17v2M27 17v2"/>',
+  personal:'<circle cx="16" cy="11" r="5"/><path d="M6 28a10 10 0 0120 0"/>'
 };
+function _chIc(k){ return '<svg width="20" height="20" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+_CH_IC[k]+'</svg>'; }
+var _chEsc=function(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
+function _chDate(ds, tm){
+  var d=ds?new Date(ds+'T00:00:00'):null, lg=(typeof currentLang!=='undefined'&&currentLang)||'fr';
+  var mon=d?d.toLocaleDateString(lg,{month:'short'}).replace('.','').toUpperCase():'', day=d?String(d.getDate()):'--';
+  return '<div class="chr-date"><span class="chr-mon">'+mon+'</span><span class="chr-day">'+day+'</span>'+(tm?'<span class="chr-time">'+String(tm).slice(0,5)+'</span>':'')+'</div>';
+}
+// Structure commune à toutes les cartes : date | type + statut | 2 lignes de trajet | prix | flèche
+function _chCard(attrs, date, k, lbl, status, l1, l2, price){
+  return '<div class="ride-card chr" '+attrs+'>'+date
+    +'<div class="chr-body"><div class="chr-type">'+_chIc(k)+'<span>'+_chEsc(lbl)+'</span></div>'
+    +'<div class="chr-st">'+status+'</div>'
+    +'<div class="chr-route"><span class="chr-a">'+l1+'</span>'+(l2?'<span class="chr-a">'+l2+'</span>':'')+'</div>'
+    +(price?'<span class="chr-price">'+price+'</span>':'')+'</div>'
+    +'<svg class="chr-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>'
+  +'</div>';
+}
+function _chMoney(v){ return parseFloat(v).toFixed(2).replace('.',',')+' \u20ac'; }
 function _renderClientRide(r){
   var offerCnt=r._offerCount!==undefined?r._offerCount:(r.offers&&r.offers[0]?parseInt(r.offers[0].count)||0:0);
   var statusPill=(r.no_show_at?_noShowPill()+' ':'')+(_chgPending(r)?_chgConfirmedPill(r):getStatusPill(r.status, offerCnt)+_chgPill(r));
   var k=r.status==='personal'?'personal':(r.trip_type==='disposal'||r.trip_type==='mixed')?r.trip_type:'ab';
   var lbl=t(k==='personal'?'ch.t_personal':k==='disposal'?'ch.t_disp':k==='mixed'?'ch.t_mixed':'ch.t_ab');
-  var d=r.ride_date?new Date(r.ride_date+'T00:00:00'):null, lg=(typeof currentLang!=='undefined'&&currentLang)||'fr';
-  var mon=d?d.toLocaleDateString(lg,{month:'short'}).replace('.','').toUpperCase():'', day=d?String(d.getDate()):'--';
-  var from=_chShortAddr(cleanAddr(r.from_address)), to=k==='disposal'?'':_chShortAddr(cleanAddr(r.to_address));
-  if(k==='mixed'){ var segs=parseMixedNotes(r.notes||''); if(segs.length){ from=_chShortAddr(segs[0].from); to=segs.length>1?'+'+(segs.length-1):''; } }
-  var esc=function(x){ return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;'); };
-  var route='<span class="chr-a">'+esc(from)+'</span>'
-    +(to&&to!=='\u2014'?'<span class="chr-a"><i class="chr-to">\u2192</i>'+esc(to)+'</span>'
-      :(k==='disposal'&&r.duration_hours?'<span class="chr-a"><i class="chr-to">\u00b7</i>'+esc(r.duration_hours)+' h</span>':''));
-  var price=r.final_price?'<span class="chr-price">'+parseFloat(r.final_price).toFixed(2).replace('.',',')+' \u20ac</span>':'';
-  return '<div class="ride-card chr" onclick="openRideDetail(this)" data-ride=\''+JSON.stringify(r).replace(/\'/g,'&#39;')+'\'>'
-    +'<div class="chr-date"><span class="chr-mon">'+mon+'</span><span class="chr-day">'+day+'</span>'+(r.ride_time?'<span class="chr-time">'+String(r.ride_time).slice(0,5)+'</span>':'')+'</div>'
-    +'<div class="chr-body"><div class="chr-type"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+_CH_IC[k]+'</svg><span>'+esc(lbl)+'</span></div>'
-    +'<div class="chr-st">'+statusPill+'</div>'
-    +'<div class="chr-route">'+route+'</div>'+price+'</div>'
-    +'<svg class="chr-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>'
-  +'</div>';
+  var from=_chShortAddr(cleanAddr(r.from_address)), to=k==='disposal'?'':_chShortAddr(cleanAddr(r.to_address)), l2='';
+  if(k==='mixed'){ var segs=parseMixedNotes(r.notes||''); if(segs.length){ from=_chShortAddr(segs[0].from); var last=segs[segs.length-1]; to=_chShortAddr(last.to||last.from||''); } }
+  if(to && to!=='\u2014') l2='<i class="chr-to">\u2192</i>'+_chEsc(to);
+  else if(k==='disposal' && r.duration_hours) l2='<i class="chr-to">\u00b7</i>'+_chEsc(r.duration_hours)+' h';
+  var attrs='onclick="openRideDetail(this)" data-ride=\''+JSON.stringify(r).replace(/\'/g,'&#39;')+'\'';
+  return _chCard(attrs, _chDate(r.ride_date, r.ride_time), k, lbl, statusPill, _chEsc(from), l2, r.final_price?_chMoney(r.final_price):'');
+}
+// Événement ou trajet mixte regroupé : même carte que les autres demandes
+function _renderClientGroup(g){
+  var rides=g.rides.slice().sort(function(a,b){ return String(a.ride_date+a.ride_time).localeCompare(String(b.ride_date+b.ride_time)); });
+  var f=rides[0]||{}, lst=rides[rides.length-1]||{}, n=rides.length, mixed=g.kind==='mixed';
+  var cnt=function(st){ return rides.filter(function(r){ return st.indexOf(r.status)>=0; }).length; };
+  var conf=cnt(['confirmed','active','done','pending_payment']), cx=cnt(['cancelled']), done=cnt(['done']);
+  var offers=rides.reduce(function(s,r){ return s+((r.status==='offers'||r.status==='waiting')?(r._offerCount||(r.offers&&r.offers[0]?parseInt(r.offers[0].count)||0:0)):0); },0);
+  var paid=rides.reduce(function(s,r){ return s+((['confirmed','active','done'].indexOf(r.status)>=0&&r.final_price)?parseFloat(r.final_price):0); },0);
+  var st;
+  if(cx===n) st=getStatusPill('cancelled',0);
+  else if(done===n-cx) st=getStatusPill('done',0);
+  else if(conf===n-cx) st=getStatusPill('confirmed',0);
+  else if(conf>0) st='<span class="pill confirmed">'+conf+' / '+(n-cx)+'</span>';
+  else st=getStatusPill(offers?'offers':'waiting', offers);
+  var l1, l2;
+  if(mixed){ l1=_chEsc(_chShortAddr(cleanAddr(f.from_address))); var to=_chShortAddr(cleanAddr(lst.to_address||lst.from_address)); l2=to&&to!=='\u2014'?'<i class="chr-to">\u2192</i>'+_chEsc(to):''; }
+  else { l1=_chEsc(g.name); l2=_chEsc(_evSummary(rides)); }
+  var attrs='data-ev-kind="'+(mixed?'mixed':'event')+'" data-ev-from="'+String(f.ride_date||'').slice(0,10)+'" data-ev-to="'+String(lst.ride_date||'').slice(0,10)+'" onclick="openEventDetail(\''+String(g.id).replace(/'/g,'')+'\')"';
+  return _chCard(attrs, _chDate(f.ride_date, f.ride_time), mixed?'mixed':'event', t(mixed?'ch.t_mixed':'ch.t_event'), st, l1, l2, paid>0?_chMoney(paid):'').replace('class="ride-card chr"','class="ride-card chr ev-card"');
 }
 
 function renderRideItem(r){

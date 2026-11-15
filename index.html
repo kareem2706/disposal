@@ -765,8 +765,8 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <!-- CLIENT : écran principal (mobile) -->
     <div id="page-home" class="page">
       <div id="client-home" class="ch">
-        <div class="ch-top"><img class="ch-logo" src="logo_text_dark.png" alt="Bleenr"><span class="ch-role" id="ch-role">Client</span></div>
-        <div class="ch-me" onclick="showPage('profile')"><div class="ch-av" id="ch-av">?</div><div><h1 class="ch-hello"><span id="ch-hello" data-i18n="ch.bonjour">Bonjour</span> <span aria-hidden="true">👋</span></h1><p class="ch-sub" data-i18n="ch.espace">Votre espace client</p></div></div>
+        <div class="ch-top"><img class="ch-logo" src="logo_text_dark.png" alt="Bleenr"></div>
+        <div class="ch-me" onclick="showPage('profile')"><div class="ch-av" id="ch-av">?</div><div><h1 class="ch-hello"><span id="ch-hello" data-i18n="ch.bonjour">Bonjour</span> <span aria-hidden="true">👋</span><span class="ch-role" id="ch-role">Client</span></h1><p class="ch-sub" data-i18n="ch.espace">Votre espace client</p></div></div>
         <button type="button" class="ch-cta" onclick="cancelRideModal();openModal('m-new-ride');setTimeout(function(){try{_initPaxSelector();}catch(e){}},80);">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v8M8 12h8"/></svg>
           <span data-i18n="ap.new_request">Nouvelle demande</span><svg class="ch-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
@@ -782,8 +782,6 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0116 0v2"/><rect x="3" y="13.5" width="4" height="6" rx="1.5"/><rect x="17" y="13.5" width="4" height="6" rx="1.5"/><path d="M19 19.5c0 1.4-1.6 2-4 2h-2"/></svg>
           <span class="ch-help-tx"><b data-i18n="ch.aide">Aide &amp; support</b><span data-i18n="ch.aide_sub">Une question ? Contactez-nous</span></span><svg class="ch-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
         </a>
-        <button type="button" class="ch-out" onclick="signOut()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.7a8 8 0 1011.4 0"/></svg><span data-i18n="ap.logout">Déconnexion</span></button>
-        <div class="ch-lang"><button class="lang-btn" onclick="setLang('fr')">FR</button><button class="lang-btn" onclick="setLang('en')">EN</button><button class="lang-btn" onclick="setLang('es')">ES</button></div>
       </div>
     </div>
 
@@ -1002,6 +1000,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <div id="pf-panels"></div>
       <div id="pf-main-cols" class="two-col" style="max-width:900px;">
         <div id="pf-identity-card" class="card" style="padding:28px 28px 24px;">
+          <div class="pf-blk pf-blk-me">
           <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
             <div id="profile-av" class="user-av" style="width:52px;height:52px;font-size:18px;">?</div>
             <div><div id="profile-fullname" style="font-size:16px;font-weight:600;">&#x2014;</div><div id="profile-email-disp" class="text-xs">&#x2014;</div></div>
@@ -1009,7 +1008,9 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div id="pf-names-grid" class="form-grid"><div class="input-group"><label data-i18n="ap.prenom">Pr&#xe9;nom</label><input id="pf-fname"></div><div class="input-group"><label data-i18n="ap.nom">Nom</label><input id="pf-lname"></div></div>
           <div id="pf-company-wrap" class="input-group" style="display:none;"><label data-i18n="ap.nom_de_l_entreprise">Nom de l&#x27;entreprise</label><input id="pf-company"></div>
           <div class="input-group"><label data-i18n="ap.telephone">T&#xe9;l&#xe9;phone</label><input id="pf-phone" type="tel"></div>
-          <div class="input-group"><label data-i18n="pf.language">Langue</label><select id="pf-lang" data-noi18n class="lang-sel" onchange="setLang(this.value)"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option></select><div class="text-xs" style="margin-top:4px;" data-i18n="pf.language_hint">Langue de l’application, des e-mails et des documents. Enregistrée immédiatement.</div></div>
+          <div id="pf-vat-wrap" class="input-group" style="display:none;"><label data-i18n="ap.n_de_tva">N&#xb0; de TVA</label><input id="pf-vat"></div>
+          </div>
+          <div class="pf-blk pf-blk-addr">
           <div id="pf-addr-wrap" class="input-group" style="display:none;">
             <label data-i18n="ap.adresse" style="font-weight:600;font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;display:block;">Adresse</label>
             <div class="form-grid" style="gap:8px;">
@@ -1149,8 +1150,12 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
             </select></div>
             </div>
           </div>
-          <div id="pf-vat-wrap" class="input-group" style="display:none;"><label data-i18n="ap.n_de_tva">N&#xb0; de TVA</label><input id="pf-vat"></div>
-          <button data-i18n="ap.sauvegarder" class="btn btn-primary btn-full" onclick="saveProfile()">Sauvegarder</button>
+          </div>
+          <button data-i18n="ap.sauvegarder" class="btn btn-primary btn-full pf-save" onclick="saveProfile()">Sauvegarder</button>
+          <div class="pf-blk pf-blk-lang">
+          <div class="input-group pf-lang-grp"><label data-i18n="pf.language">Langue</label><select id="pf-lang" data-noi18n class="lang-sel" onchange="setLang(this.value)"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option></select><div class="text-xs" style="margin-top:4px;" data-i18n="pf.language_hint">Langue de l’application, des e-mails et des documents. Enregistrée immédiatement.</div></div>
+            <div class="ch-lang pf-ch-lang"><button class="lang-btn" onclick="setLang('fr')">FR</button><button class="lang-btn" onclick="setLang('en')">EN</button><button class="lang-btn" onclick="setLang('es')">ES</button></div>
+          </div>
         </div>
         <div>
           <div id="pf-notif-card" class="card" style="padding:24px;">
@@ -1222,6 +1227,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div id="fleet-drivers-list" style="font-size:13px;color:var(--ink3);">Chargement...</div>
         </div>
       </div>
+      <button type="button" class="ch-out pf-out" onclick="signOut()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.7a8 8 0 1011.4 0"/></svg><span data-i18n="ap.logout">Déconnexion</span></button>
     </div>
 
     <!-- ═══ ADMIN PAGES ═══ -->

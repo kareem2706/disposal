@@ -49,9 +49,9 @@ body.th-client{
 
 /* ── Écran principal client (page-home) ── */
 .th-client #client-home{display:block;max-width:560px;margin:0 auto;padding:4px 0 30px;}
-.ch-top{display:flex;align-items:center;gap:12px;margin:2px 0 28px;}
-.ch-logo{height:24px;width:auto;display:block;}
-.ch-role{background:var(--lime);color:var(--ink);font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:999px;}
+.ch-top{display:flex;align-items:center;gap:12px;margin:0 0 28px;}
+.ch-logo{height:34px;width:auto;display:block;filter:brightness(0);}
+.ch-role{display:inline-block;vertical-align:4px;margin-left:10px;background:var(--lime);color:var(--ink);font-size:12px;font-weight:600;letter-spacing:0;padding:3px 11px;border-radius:999px;}
 .ch-me{display:flex;align-items:center;gap:16px;margin-bottom:26px;cursor:pointer;}
 .ch-av{width:56px;height:56px;border-radius:50%;flex-shrink:0;background:#4A4F4C;color:#fff;display:flex;align-items:center;justify-content:center;font:600 22px 'DM Sans',sans-serif;overflow:hidden;}
 .ch-av img{width:100%;height:100%;object-fit:cover;}
@@ -147,3 +147,21 @@ body.th-client{
 .th-client .nr-st.done i{background:var(--ink);color:#fff;}
 .th-client .nr-st.done:not(:last-child):after{background:var(--ink);}
 body.th-client:not(.pg-rides) .mob-actions{display:none!important;}
+
+/* ── Profil client : blocs séparés, langue puis déconnexion en bas ── */
+.pf-out,.pf-ch-lang{display:none;}
+.th-client #pf-identity-card{background:transparent!important;box-shadow:none!important;padding:0!important;}
+.th-client .pf-blk{background:#fff;border-radius:18px;box-shadow:var(--ch-sh);padding:22px 20px 8px;margin-bottom:14px;}
+.th-client .pf-blk-addr #pf-addr-wrap{margin-bottom:14px;}
+.th-client .pf-blk-addr:not(:has(#pf-addr-wrap[style*="block"])){display:none;}
+.th-client #pf-names-grid{row-gap:0;}
+.th-client .pf-save{margin:4px 0 26px;}
+.th-client .pf-blk-lang{padding:20px;}
+.th-client .pf-lang-grp{margin:0;}
+.th-client .pf-lang-grp select{display:none;}
+.th-client .pf-lang-grp label{margin-bottom:12px;}
+.th-client .pf-ch-lang{display:flex;margin:0;}
+.th-client .pf-out{display:flex;margin:18px 0 10px;padding:16px 4px;}
+.th-client .pf-ch-lang{background:var(--sand);box-shadow:none;margin-top:4px;}
+.th-client .pf-ch-lang .lang-btn{padding:9px 24px;}
+@media(min-width:901px){ .chr-route .chr-a + .chr-a:not(:has(.chr-to))::before{content:'\00b7';margin-right:6px;color:var(--ink4);} }

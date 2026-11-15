@@ -1137,9 +1137,10 @@
   "ch.aide_sub": "¿Una pregunta? Contáctenos",
   "ch.quel_service": "¿Qué tipo de servicio desea?",
   "ch.t_ab": "Trayecto simple",
-  "ch.t_disp": "Puesta a disposición",
+  "ch.t_disp": "Disposición",
   "ch.t_mixed": "Trayecto mixto",
   "ch.t_personal": "Misión personal",
   "ch.demandes_recentes": "Solicitudes en curso",
-  "ch.espace": "Su espacio cliente"
+  "ch.espace": "Su espacio cliente",
+  "ch.t_event": "Evento"
 };
