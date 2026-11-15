@@ -254,3 +254,5 @@ body.th-client:not(.pg-rides) .mob-actions{display:none!important;}
 .cc-top b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .cc-top .pill{flex-shrink:0;}
 .cc-rt{font-size:13px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.th-client #client-stats{grid-auto-rows:1fr;align-items:stretch;}
+.th-client #client-stats .stat-card{height:100%;}
