@@ -189,3 +189,8 @@ body.th-client:not(.pg-rides) .mob-actions{display:none!important;}
 /* Profil : code postal et ville sur la même ligne */
 .th-client #pf-addr-wrap .form-grid{grid-template-columns:minmax(0,1fr) minmax(0,2fr)!important;}
 .th-client #pf-addr-wrap .form-grid .full{grid-column:1/-1;}
+
+/* Ordinateur : déconnexion et langue sont dans le profil ; Aide & support en pied de menu */
+.th-client .app-sidebar .sidebar-footer{display:none!important;}
+.th-client #client-help-card{padding:0 12px 18px!important;}
+.th-client #client-help-card > div{padding:14px 16px!important;}
