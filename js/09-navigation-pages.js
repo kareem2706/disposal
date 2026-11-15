@@ -150,6 +150,11 @@ async function loadClientDashboard(){
   try{ var _bc=rides.filter(function(r){ return r.status==='confirmed'||r.status==='active'; }).length, _bE=document.getElementById('badge-rides');
     if(_bE){ _bE.textContent=_bc>99?'99+':String(_bc); _bE.style.display=_bc?'':'none'; }
     var _fN=document.getElementById('rf-conf-n'); if(_fN) _fN.textContent=_bc?' ('+_bc+')':''; }catch(_e){}
+  // Accueil client : prénom + nombre de demandes en cours (ni terminées ni annulées)
+  try{ var _fn=(currentProfile&&(currentProfile.first_name||'').trim())||'', _hl=document.getElementById('ch-hello');
+    if(_hl) _hl.textContent=t('ch.bonjour')+(_fn?' '+_fn:'');
+    var _oc=rides.filter(function(r){ return ['waiting','offers','pending_payment','confirmed','active'].indexOf(r.status)>=0; }).length, _cc=document.getElementById('ch-count');
+    if(_cc){ _cc.textContent=_oc>99?'99+':String(_oc); _cc.style.display=_oc?'':'none'; } }catch(_e){}
   // Rides in progress (driver on the way or pick-up done) — same block as the driver dashboard
   var _inProgress = function(r){ return r.status==='active' || (r.status==='confirmed' && r.on_way_at); };
   _renderDriverActiveRides(rides.filter(_inProgress), 'active-ride-wrap', true);

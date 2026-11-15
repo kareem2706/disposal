@@ -1007,7 +1007,43 @@ function getStatusPill(status, offerCount){
   return map[status] || '';
 }
 
+// ── Carte « demande » de l'espace client (thème client : plateforme de réservation) ──
+function _chShortAddr(a){
+  a=String(a||'').trim(); if(!a) return '\u2014';
+  var p=a.split(/\s*,\s*/).filter(Boolean);
+  if(p.length>1 && /^(belgique|belgium|belgi[eë]|belgien|france|nederland|netherlands|pays-bas|luxembourg|deutschland|germany|allemagne|españa|spain|espagne)$/i.test(p[p.length-1])) p.pop();
+  if(p.length<2) return p[0]||a;
+  var city=p[p.length-1].replace(/^(B-|F-|L-|NL-)?\d{4,5}\s*[A-Z]{0,2}\s+/,'').trim();
+  return city && city.toLowerCase()!==p[0].toLowerCase() ? p[0]+', '+city : p[0];
+}
+var _CH_IC={
+  ab:'<path d="M6 19a2 2 0 100-4 2 2 0 000 4zM18 9a2 2 0 100-4 2 2 0 000 4z"/><path d="M8 17h6.5a3.5 3.5 0 000-7h-5a3.5 3.5 0 010-7H16"/>',
+  disposal:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  mixed:'<path d="M4 7h12l-3-3M20 17H8l3 3"/>',
+  personal:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0114 0"/>'
+};
+function _renderClientRide(r){
+  var offerCnt=r._offerCount!==undefined?r._offerCount:(r.offers&&r.offers[0]?parseInt(r.offers[0].count)||0:0);
+  var statusPill=(r.no_show_at?_noShowPill()+' ':'')+(_chgPending(r)?_chgConfirmedPill(r):getStatusPill(r.status, offerCnt)+_chgPill(r));
+  var k=r.status==='personal'?'personal':(r.trip_type==='disposal'||r.trip_type==='mixed')?r.trip_type:'ab';
+  var lbl=t(k==='personal'?'ch.t_personal':k==='disposal'?'ch.t_disp':k==='mixed'?'ch.t_mixed':'ch.t_ab');
+  var d=r.ride_date?new Date(r.ride_date+'T00:00:00'):null, lg=(typeof currentLang!=='undefined'&&currentLang)||'fr';
+  var mon=d?d.toLocaleDateString(lg,{month:'short'}).replace('.','').toUpperCase():'', day=d?String(d.getDate()):'--';
+  var from=_chShortAddr(cleanAddr(r.from_address)), to=k==='disposal'?'':_chShortAddr(cleanAddr(r.to_address));
+  if(k==='mixed'){ var segs=parseMixedNotes(r.notes||''); if(segs.length){ from=_chShortAddr(segs[0].from); to=segs.length>1?'+'+(segs.length-1):''; } }
+  var esc=function(x){ return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;'); };
+  var route='<span class="chr-a">'+esc(from)+'</span>'+(to&&to!=='\u2014'?'<span class="chr-to">\u2192</span><span class="chr-a">'+esc(to)+'</span>':(k==='disposal'&&r.duration_hours?'<span class="chr-to">\u00b7</span><span class="chr-a">'+esc(r.duration_hours)+' h</span>':''));
+  var price=r.final_price?'<span class="chr-price">'+parseFloat(r.final_price).toFixed(2).replace('.',',')+' \u20ac</span>':'';
+  return '<div class="ride-card chr" onclick="openRideDetail(this)" data-ride=\''+JSON.stringify(r).replace(/\'/g,'&#39;')+'\'>'
+    +'<div class="chr-date"><span class="chr-mon">'+mon+'</span><span class="chr-day">'+day+'</span>'+(r.ride_time?'<span class="chr-time">'+String(r.ride_time).slice(0,5)+'</span>':'')+'</div>'
+    +'<div class="chr-body"><div class="chr-type"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+_CH_IC[k]+'</svg>'+esc(lbl)+'</div>'
+    +'<div class="chr-route">'+route+'</div><div class="chr-foot">'+statusPill+price+'</div></div>'
+    +'<svg class="chr-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>'
+  +'</div>';
+}
+
 function renderRideItem(r){
+  if(document.body.classList.contains('th-client')) return _renderClientRide(r);
   var offerCnt=r._offerCount!==undefined?r._offerCount:(r.offers&&r.offers[0]?parseInt(r.offers[0].count)||0:0);
   var statusPill=(r.no_show_at?_noShowPill()+' ':'')+(_chgPending(r)?_chgConfirmedPill(r):getStatusPill(r.status, offerCnt)+_chgPill(r));
   var typeLabel=tripTypeLabel(r.trip_type);

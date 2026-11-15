@@ -73,6 +73,7 @@ function enterApp(){
   const isAdminDriver = isAdmin && role === 'driver';
   currentRole = isAdmin ? 'admin' : role;
   _applyFleetTheme(!isAdmin && ((role==='driver' && FLEET_THEME==='lemon') || (role!=='driver' && CLIENT_THEME==='lemon')));
+  document.body.classList.toggle('th-client', !isAdmin && role==='client' && CLIENT_THEME==='lemon');
   _activityPing();
   document.getElementById('nav-client').style.display = (!isAdmin && role === 'client') ? 'block' : 'none';
   document.getElementById('nav-driver').style.display = (isAdminDriver || (!isAdmin && role === 'driver')) ? 'block' : 'none';

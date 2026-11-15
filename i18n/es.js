@@ -1130,5 +1130,15 @@
   "au.err_terms": "Para crear su cuenta, acepte las condiciones generales y la política de privacidad.",
   "au.terms_title": "Condiciones generales",
   "au.terms_intro": "Antes de continuar, acepte las condiciones generales y la política de privacidad de Bleenr.",
-  "au.terms_continue": "Continuar"
+  "au.terms_continue": "Continuar",
+  "ch.bonjour": "Hola",
+  "ch.bienvenue": "Bienvenido a su espacio cliente",
+  "ch.aide": "Ayuda y soporte",
+  "ch.aide_sub": "¿Una pregunta? Contáctenos",
+  "ch.quel_service": "¿Qué tipo de servicio desea?",
+  "ch.t_ab": "Trayecto simple",
+  "ch.t_disp": "Puesta a disposición",
+  "ch.t_mixed": "Trayecto mixto",
+  "ch.t_personal": "Misión personal",
+  "ch.demandes_recentes": "Solicitudes en curso"
 };

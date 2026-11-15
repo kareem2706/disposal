@@ -765,6 +765,33 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
         <div><h2 data-i18n="ap.tableau_de_bord">Tableau de bord</h2><p data-i18n="ap.apercu_de_vos_activites">Aperçu de vos activités</p></div>
       </div>
+      <!-- Accueil client (thème client : plateforme de réservation) -->
+      <div id="client-home" class="ch">
+        <h1 class="ch-hello"><span id="ch-hello" data-i18n="ch.bonjour">Bonjour</span> <span aria-hidden="true">👋</span></h1>
+        <p class="ch-sub" data-i18n="ch.bienvenue">Bienvenue dans votre espace client</p>
+        <button type="button" class="ch-cta" onclick="cancelRideModal();openModal('m-new-ride');setTimeout(function(){try{_initPaxSelector();}catch(e){}},80);">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 8v8M8 12h8"/></svg>
+          <span data-i18n="ap.new_request">Nouvelle demande</span><svg class="ch-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <div class="ch-links">
+          <button type="button" class="ch-link" onclick="_goRides('all')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15.5v-2.3c0-.7.4-1.3 1-1.6l1.6-.8 2-3.3c.4-.6 1-1 1.7-1h4.6c.6 0 1.2.3 1.6.8L18.3 11l1.7.4c.6.2 1 .7 1 1.4v2.7"/><path d="M3 15.5h1.5M9.5 15.5h5M19.5 15.5H21"/><circle cx="7" cy="15.5" r="2"/><circle cx="17" cy="15.5" r="2"/><path d="M6 11h12"/></svg>
+            <span class="ch-lbl" data-i18n="ap.mes_demandes">Mes demandes</span><span class="ch-badge" id="ch-count" style="display:none;"></span><svg class="ch-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <button type="button" class="ch-link" onclick="showPage('calendar')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+            <span class="ch-lbl" data-i18n="ap.calendrier">Calendrier</span><svg class="ch-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <button type="button" class="ch-link" onclick="showPage('invoices')">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
+            <span class="ch-lbl" data-i18n="ap.factures">Factures</span><svg class="ch-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+        <a class="ch-help" href="mailto:info@bleenr.com">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0116 0v2"/><rect x="3" y="13.5" width="4" height="6" rx="1.5"/><rect x="17" y="13.5" width="4" height="6" rx="1.5"/><path d="M19 19.5c0 1.4-1.6 2-4 2h-2"/></svg>
+          <span class="ch-help-tx"><b data-i18n="ch.aide">Aide &amp; support</b><span data-i18n="ch.aide_sub">Une question ? Contactez-nous</span></span><svg class="ch-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </a>
+      </div>
       <div class="sc-hd"><span data-i18n="ap.mes_demandes" class="section-title">Mes demandes</span><button data-i18n="ap.voir_tout" class="btn btn-ghost btn-sm" onclick="_goRides('all')">Voir tout →</button></div><div class="stats-row" id="client-stats"></div>
       <div id="active-ride-wrap" style="display:none;">
         <div class="tracking-card" id="tracking-card-content"></div>
@@ -1575,6 +1602,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
     <input type="hidden" id="ride-edit-id" value="">
     <div class="nr-steps" id="nr-steps"></div>
     <div class="nr-choose" id="nr-choose">
+      <div class="nr-q ch-only" data-i18n="ch.quel_service">Quel type de service souhaitez-vous ?</div>
       <button type="button" class="nr-opt ai" id="nr-opt-ai" style="display:none;" onclick="_nrPick('ai')"><span class="nr-ic"><svg viewBox="0 0 32 32"><path d="M16 4l2.6 8.4L27 15l-8.4 2.6L16 26l-2.6-8.4L5 15l8.4-2.6z"/></svg></span><span class="nr-tx"><b data-i18n-html="md.decrivez_votre_itineraire_ia">D&eacute;crivez votre itin&eacute;raire <i class="ai-tag">IA</i></b><span data-i18n="md.ecrivez_votre_besoin_avec_vos">&Eacute;crivez votre besoin avec vos mots, nous pr&eacute;parons la demande pour vous.</span></span><span class="nr-chev">&rsaquo;</span></button>
       <button type="button" class="nr-opt g" onclick="_nrPick('ab')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="6" cy="24" r="3"/><circle cx="26" cy="8" r="3"/><path d="M9 23.5c4-.5 4.5-4.5 7-7.5s4.5-5.5 7-7"/></svg></span><span class="nr-tx"><b data-i18n="md.trajet_simple">Trajet simple</b><span data-i18n="md.transfert_simple_dun_point_a">Transfert simple d&rsquo;un point A &agrave; un point B.</span></span><span class="nr-chev">&rsaquo;</span></button>
       <button type="button" class="nr-opt o" onclick="_nrPick('disposal')"><span class="nr-ic"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M16 10v6.5l4 2.5"/></svg></span><span class="nr-tx"><b data-i18n="md.mise_a_disposition">Mise &agrave; disposition</b><span data-i18n="md.un_chauffeur_a_votre_disposition">Un chauffeur &agrave; votre disposition pendant plusieurs heures.</span></span><span class="nr-chev">&rsaquo;</span></button>

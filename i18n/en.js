@@ -1130,5 +1130,15 @@
   "au.err_terms": "To create your account, please accept the terms and conditions and the privacy policy.",
   "au.terms_title": "Terms and conditions",
   "au.terms_intro": "Before continuing, please accept Bleenr's terms and conditions and privacy policy.",
-  "au.terms_continue": "Continue"
+  "au.terms_continue": "Continue",
+  "ch.bonjour": "Hello",
+  "ch.bienvenue": "Welcome to your client area",
+  "ch.aide": "Help & support",
+  "ch.aide_sub": "A question? Contact us",
+  "ch.quel_service": "Which service would you like?",
+  "ch.t_ab": "Transfer",
+  "ch.t_disp": "Hourly hire",
+  "ch.t_mixed": "Mixed trip",
+  "ch.t_personal": "Personal mission",
+  "ch.demandes_recentes": "Current requests"
 };
