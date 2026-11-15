@@ -249,3 +249,8 @@ body.th-client:not(.pg-rides) .mob-actions{display:none!important;}
   .modal-overlay.rd-panel .modal{overscroll-behavior:contain;}
   .modal-overlay.rd-panel{overscroll-behavior:contain;}
 }
+.cc-tx{align-items:stretch;}
+.cc-top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;}
+.cc-top b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cc-top .pill{flex-shrink:0;}
+.cc-rt{font-size:13px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
