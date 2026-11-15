@@ -12,7 +12,8 @@
     marketplace: { page:'page-marketplace', bar:'#page-marketplace .mktabs', lists:['mk-client','mk-sub','mk-mine-list'],
                    types:[['ab','lf.ab'],['disposal','lf.disposal'],['mixed','lf.mixed']] },
     rides:       { page:'page-rides',       bar:'#rides-filters',            lists:['all-rides-list'],
-                   types:[['ab','lf.ab'],['disposal','lf.disposal'],['mixed','lf.mixed'],['event','lf.event']] }
+                   types:[['ab','lf.ab'],['disposal','lf.disposal'],['mixed','lf.mixed'],['event','lf.event']],
+                   periods:['all','custom'] }   // clients : toutes les dates ou dates choisies
   };
   var PERIODS = [['all','lf.p_all'],['today','lf.p_today'],['week','lf.p_week'],['month','lf.p_month'],['next_month','lf.p_next_month'],['last_month','lf.p_last_month'],['custom','lf.p_custom']];
   var state = {};   // key → { type:'all', period:'all', from:'', to:'' }
@@ -74,7 +75,7 @@
     return '<div class="lf-sec"><div class="lf-lbl">'+esc(t('lf.type'))+'</div><div class="lf-chips">'
         + chip('type','all','lf.all',s.type) + c.types.map(function(x){ return chip('type',x[0],x[1],s.type); }).join('') + '</div></div>'
       + '<div class="lf-sec"><div class="lf-lbl">'+esc(t('lf.period'))+'</div><div class="lf-chips">'
-        + PERIODS.map(function(x){ return chip('period',x[0],x[1],s.period); }).join('') + '</div>'
+        + PERIODS.filter(function(x){ return !c.periods || c.periods.indexOf(x[0])>=0; }).map(function(x){ return chip('period',x[0],x[1],s.period); }).join('') + '</div>'
         + (s.period==='custom' ? '<div class="lf-dates"><label>'+esc(t('lf.from'))+'<input type="date" value="'+esc(s.from)+'" onchange="_lfDate(\''+key+'\',\'from\',this.value)"></label>'
             + '<label>'+esc(t('lf.to'))+'<input type="date" value="'+esc(s.to)+'" onchange="_lfDate(\''+key+'\',\'to\',this.value)"></label></div>' : '')
       + '</div>'

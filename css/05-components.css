@@ -495,3 +495,5 @@ option[hidden]{display:none;}
 /* Bouton « Nouvelle demande » : icône et texte alignés sur les autres liens du menu */
 .sidebar-cta{justify-content:flex-start;gap:10px;padding-left:14px;padding-right:14px;}
 .sidebar-cta > svg{width:16px;height:16px;flex-shrink:0;}
+.lf-dates label{min-width:0;}
+.lf-dates input{width:100%;min-width:0;box-sizing:border-box;-webkit-appearance:none;appearance:none;display:block;}
