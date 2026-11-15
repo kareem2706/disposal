@@ -3,6 +3,7 @@ var _rdHist=false, _rdClosing=false;
 function _rdCode(id){ var r=id==='m-ar-detail'?window._lastArRide:window._lastDetailRide; return r?(r.booking_code||String(r.id||'')):''; }
 function _rdOpened(id){
   document.body.classList.add('rd-open');
+  try{ var _m=document.querySelector('#'+id+' .modal'); if(_m) _m.scrollTop=0; }catch(e){}
   var isDetail=(id==='m-ride-detail'||id==='m-ar-detail');
   var code=isDetail?_rdCode(id):'', url=location.pathname+location.search+(code?'#course/'+encodeURIComponent(code):(isDetail?'':location.hash));
   try{ if(_rdHist) history.replaceState({rd:id},'',url); else { history.pushState({rd:id},'',url); _rdHist=true; } }catch(e){}

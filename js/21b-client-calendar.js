@@ -14,8 +14,10 @@ function _ccCap(s){ return s?s.charAt(0).toUpperCase()+s.slice(1):s; }
 
 window._ccSetFilter=function(g){ _calFilter=g; loadCalendar(false); };
 window._ccPick=function(ds){ _ccSel=ds; if(typeof loadCalendar==='function') loadCalendar(false); };
+// Fiche ouverte depuis le calendrier : affichée depuis le haut
+function _ccTop(){ var f=function(){ var m=document.querySelector('#m-ride-detail .modal'); if(m) m.scrollTop=0; var b=document.querySelector('#m-ride-detail .modal-body'); if(b) b.scrollTop=0; }; f(); setTimeout(f,60); setTimeout(f,300); }
 window._ccOpen=function(el){
-  try{ var r=JSON.parse(decodeURIComponent(el.dataset.enc)); r=r._orig||r; var tmp=document.createElement('div'); tmp.dataset.ride=JSON.stringify(r).replace(/'/g,'&#39;'); openRideDetail(tmp); }catch(e){}
+  try{ var r=JSON.parse(decodeURIComponent(el.dataset.enc)); r=r._orig||r; var tmp=document.createElement('div'); tmp.dataset.ride=JSON.stringify(r).replace(/'/g,'&#39;'); try{ window.scrollTo(0,0); }catch(_e){} openRideDetail(tmp); _ccTop(); }catch(e){}
 };
 
 function _renderClientCal(all){
