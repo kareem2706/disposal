@@ -1142,5 +1142,13 @@
   "ch.t_personal": "Personal mission",
   "ch.demandes_recentes": "Current requests",
   "ch.espace": "Your client area",
-  "ch.t_event": "Event"
+  "ch.t_event": "Event",
+  "ap.tout": "All",
+  "cc.confirmees": "Confirmed",
+  "cc.annulees": "Cancelled",
+  "cc.aucune": "No request on this day",
+  "cc.une_conf": "1 confirmed request",
+  "cc.n_conf": "{n} confirmed requests",
+  "cc.une_dem": "1 request",
+  "cc.n_dem": "{n} requests"
 };

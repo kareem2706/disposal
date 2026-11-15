@@ -1142,5 +1142,13 @@
   "ch.t_personal": "Misión personal",
   "ch.demandes_recentes": "Solicitudes en curso",
   "ch.espace": "Su espacio cliente",
-  "ch.t_event": "Evento"
+  "ch.t_event": "Evento",
+  "ap.tout": "Todo",
+  "cc.confirmees": "Confirmadas",
+  "cc.annulees": "Canceladas",
+  "cc.aucune": "Ninguna solicitud este día",
+  "cc.une_conf": "1 solicitud confirmada",
+  "cc.n_conf": "{n} solicitudes confirmadas",
+  "cc.une_dem": "1 solicitud",
+  "cc.n_dem": "{n} solicitudes"
 };

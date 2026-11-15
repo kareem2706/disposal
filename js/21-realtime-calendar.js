@@ -247,6 +247,7 @@ window.loadCalendar=async function(force){
     _calRides=_calFilter ? (_calCache[ck]||[]).filter(function(r){return r.status===_calFilter;}) : (_calCache[ck]||[]);
   }
   if(!_calWS){var d=new Date();var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_calWS=d;}
+  if(document.body.classList.contains('th-client') && typeof _renderClientCal==='function'){ _renderClientCal(typeof ck!=='undefined'&&_calCache[ck]?_calCache[ck]:_calRides); return; }
   _renderCalGrid('cal-grid','cal-title',_calY,_calM,_calView,_calWS,_calRides,calPrevMonth,calNextMonth,calSetView);
 };
 

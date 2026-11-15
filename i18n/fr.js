@@ -1142,5 +1142,13 @@
   "ch.t_personal": "Mission personnelle",
   "ch.demandes_recentes": "Demandes en cours",
   "ch.espace": "Votre espace client",
-  "ch.t_event": "Événement"
+  "ch.t_event": "Événement",
+  "ap.tout": "Tout",
+  "cc.confirmees": "Confirmées",
+  "cc.annulees": "Annulées",
+  "cc.aucune": "Aucune demande ce jour",
+  "cc.une_conf": "1 demande confirmée",
+  "cc.n_conf": "{n} demandes confirmées",
+  "cc.une_dem": "1 demande",
+  "cc.n_dem": "{n} demandes"
 };
