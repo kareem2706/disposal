@@ -1159,6 +1159,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div class="input-group pf-lang-grp"><label data-i18n="pf.language">Langue</label><select id="pf-lang" data-noi18n class="lang-sel" onchange="setLang(this.value)"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option></select><div class="text-xs" style="margin-top:4px;" data-i18n="pf.language_hint">Langue de l’application, des e-mails et des documents. Enregistrée immédiatement.</div></div>
             <div class="ch-lang pf-ch-lang"><button class="lang-btn" onclick="setLang('fr')">FR</button><button class="lang-btn" onclick="setLang('en')">EN</button><button class="lang-btn" onclick="setLang('es')">ES</button></div>
           </div>
+          <button type="button" class="ch-out pf-out" onclick="signOut()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.7a8 8 0 1011.4 0"/></svg><span data-i18n="ap.logout">Déconnexion</span></button>
         </div>
         <div>
           <div id="pf-notif-card" class="card" style="padding:24px;">
@@ -1230,7 +1231,6 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div id="fleet-drivers-list" style="font-size:13px;color:var(--ink3);">Chargement...</div>
         </div>
       </div>
-      <button type="button" class="ch-out pf-out" onclick="signOut()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.7a8 8 0 1011.4 0"/></svg><span data-i18n="ap.logout">Déconnexion</span></button>
     </div>
 
     <!-- ═══ ADMIN PAGES ═══ -->

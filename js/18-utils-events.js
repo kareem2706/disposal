@@ -519,7 +519,7 @@ window.openEventDetail=async function(id, silent){
     var dd=(f.ride_date&&l.ride_date&&f.ride_date!==l.ride_date)?_fd(f.ride_date,{day:'numeric',month:'short'})+' \u2013 '+_fd(l.ride_date,{day:'numeric',month:'short'}):_fd(f.ride_date,{weekday:'short',day:'numeric',month:'short'});
     dd=dd?dd.charAt(0).toUpperCase()+dd.slice(1):'';
     var _mx=ev.kind==='mixed'||(rides[0]&&rides[0].event_kind==='mixed'); ev.kind=_mx?'mixed':'event';
-    if(title) title.innerHTML='<span class="rd-hd2">'+(_mx?'':'<span class="rd-evline" style="margin:0;"><span>'+t('app.evenement')+'</span></span>')+'<b class="rd-hd2-code">'+_rdEsc(ev.name)+'</b><span class="rd-hd2-sub">'+_rdEsc([dd, rides.length+' véhicule'+(rides.length>1?'s':''), ev.contact_name?'contact : '+ev.contact_name:''].filter(Boolean).join(' · '))+'</span></span>';
+    if(title) title.innerHTML='<span class="rd-hd2"><b class="rd-hd2-code">'+_rdEsc(ev.name)+'</b><span class="rd-hd2-sub">'+_rdEsc([dd, rides.length+' véhicule'+(rides.length>1?'s':'')].filter(Boolean).join(' · '))+'</span></span>';
     var nConf=rides.filter(function(r){ return ['confirmed','active','done','pending_payment'].indexOf(r.status)>=0; }).length;
     var nOff=rides.filter(function(r){ return r.status==='offers'; }).length, nWait=rides.filter(function(r){ return r.status==='waiting'; }).length;
     var sh=function(a){ return String(cleanAddr(a)||'').split(',')[0].trim(); };
