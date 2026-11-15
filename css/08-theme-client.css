@@ -194,3 +194,4 @@ body.th-client:not(.pg-rides) .mob-actions{display:none!important;}
 .th-client .app-sidebar .sidebar-footer{display:none!important;}
 .th-client #client-help-card{padding:0 12px 18px!important;}
 .th-client #client-help-card > div{padding:14px 16px!important;}
+.th-client .sidebar-logo img{filter:brightness(0);}
