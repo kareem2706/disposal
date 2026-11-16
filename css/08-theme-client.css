@@ -268,3 +268,26 @@ body.th-client:not(.pg-rides) .mob-actions{display:none!important;}
 
 /* Fleets : même présentation, contenus propres aux fleets */
 body:not(.is-fleet) .ch-fleet,body.is-fleet .ch-cli{display:none!important;}
+
+/* Tableau de bord fleet : textes alignés d'une carte à l'autre, répartition sous le nombre */
+.th-client #driver-stats .stat-card{align-content:start;}
+.th-client #driver-stats .sc-split{grid-column:2;}
+
+/* Fleets (mobile) : bouton flottant « Sous-traiter » */
+.ch-fab-sub{display:none;}
+@media(max-width:900px){
+  body.th-client.is-fleet.pg-marketplace .ch-fab-sub,body.th-client.is-fleet.pg-missions .ch-fab-sub,
+  body.th-client.is-fleet.pg-d-dashboard .ch-fab-sub,body.th-client.is-fleet.pg-d-calendar .ch-fab-sub{display:inline-flex;}
+  body.th-client.is-fleet.pg-marketplace .page.active,body.th-client.is-fleet.pg-missions .page.active,
+  body.th-client.is-fleet.pg-d-dashboard .page.active,body.th-client.is-fleet.pg-d-calendar .page.active{padding-bottom:110px;}
+  .th-client #mk-mine > div:first-child:has(> .btn-green){display:none;}
+}
+
+body:not(.is-fleet) .ch-fab-sub{display:none!important;}
+body.is-fleet .ch-fab:not(.ch-fab-sub){display:none!important;}
+/* Factures fleet (mobile) : totaux en lignes « libellé … montant », libellés sur une ligne */
+@media(max-width:600px){
+  .inv-tot{grid-template-columns:1fr!important;gap:8px!important;}
+  .inv-tot > div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
+  .inv-tot > div > div:first-child{margin-bottom:0!important;font-size:13px!important;white-space:nowrap;}
+}

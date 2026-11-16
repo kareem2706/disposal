@@ -761,6 +761,8 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       </div>
     </div>
 
+    <!-- Espace fleet (mobile) : bouton flottant « Sous-traiter » -->
+    <button type="button" class="ch-fab ch-fab-sub" onclick="openSubRideModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="ch.soustraiter_btn">Sous-traiter</span></button>
     <!-- Espace client (mobile) : bouton flottant « Nouvelle demande » (tableau de bord, mes demandes, calendrier) -->
     <button type="button" class="ch-fab" onclick="cancelRideModal();openModal('m-new-ride');setTimeout(function(){try{_initPaxSelector();}catch(e){}},80);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="ap.new_request">Nouvelle demande</span></button>
     <!-- CLIENT PAGES -->

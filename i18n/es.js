@@ -1158,5 +1158,6 @@
   "ch.soustraiter": "Subcontratar una misión",
   "cc.perso": "Personales",
   "ch.espace_fleet": "Su espacio flota",
-  "cc.terminees": "Completadas"
+  "cc.terminees": "Completadas",
+  "ch.soustraiter_btn": "Subcontratar"
 };

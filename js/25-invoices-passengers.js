@@ -275,9 +275,9 @@ window._renderDriverInvoiceMonth = async function(){
 
   listEl.innerHTML = '<div class="card" style="padding:0;">'
     + header
-    + '<div style="padding:14px 20px;border-bottom:1px solid var(--sand2);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">'
+    + '<div class="inv-tot" style="padding:14px 20px;border-bottom:1px solid var(--sand2);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">'
       +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">'+t('app.total_brut_htva')+'</div><div style="font-size:18px;font-weight:700;">'+fmt(totHt)+'</div></div>'
-      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">'+t('app.commission_bleenr')+cRate+'%)</div><div style="font-size:18px;font-weight:700;color:var(--red);">−'+fmt(totComm)+'</div></div>'
+      +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;white-space:nowrap;">'+t('app.commission_bleenr')+cRate+'%)</div><div style="font-size:18px;font-weight:700;color:var(--red);">−'+fmt(totComm)+'</div></div>'
       +'<div><div style="font-size:11px;color:var(--ink3);margin-bottom:4px;">'+t('app.ca_chauffeur')+'</div><div style="font-size:18px;font-weight:700;color:var(--green);">'+fmt(r2(totHt-totComm))+'</div></div>'
     +'</div>'
     + '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;">'

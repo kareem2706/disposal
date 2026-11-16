@@ -454,7 +454,7 @@ async function loadDriverDashboard(){
     if(!subs) return '';
     var ic=function(bg,col,path){ return '<span style="width:16px;height:16px;border-radius:50%;background:'+bg+';color:'+col+';display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">'+path+'</svg></span>'; };
     // Sur une ligne sous le nombre : icône + nombre uniquement (libellé au survol)
-    return '<div style="display:flex;align-items:center;gap:14px;margin-top:6px;font-size:13px;">'
+    return '<div class="sc-split" style="display:flex;align-items:center;gap:14px;margin-top:6px;font-size:13px;">'
       +'<span title="'+cli+' '+t('app.client')+(cli>1?'s':'')+'" style="display:inline-flex;align-items:center;gap:6px;">'+ic('var(--green-bg)','var(--green)','<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>')+'<b style="color:var(--ink);">'+cli+'</b></span>'
       +'<span title="'+subs+' '+t('app.sous_traitance')+(subs>1?'s':'')+'" style="display:inline-flex;align-items:center;gap:6px;">'+ic('var(--amber-bg)','var(--amber)','<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>')+'<b style="color:var(--ink);">'+subs+'</b></span>'
       +'</div>';

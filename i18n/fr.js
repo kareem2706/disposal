@@ -1158,5 +1158,6 @@
   "ch.soustraiter": "Sous-traiter une mission",
   "cc.perso": "Personnelles",
   "ch.espace_fleet": "Votre espace fleet",
-  "cc.terminees": "Terminées"
+  "cc.terminees": "Terminées",
+  "ch.soustraiter_btn": "Sous-traiter"
 };
