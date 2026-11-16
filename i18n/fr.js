@@ -1153,5 +1153,9 @@
   "cc.n_dem": "{n} demandes",
   "nr.verify": "Vérifiez votre demande",
   "nr.verify_sub": "Avant de la publier aux chauffeurs",
-  "nr.publish": "Publier la demande"
+  "nr.publish": "Publier la demande",
+  "ch.courses_dispo": "Courses disponibles",
+  "ch.soustraiter": "Sous-traiter une mission",
+  "cc.perso": "Personnelles",
+  "ch.espace_fleet": "Votre espace fleet"
 };

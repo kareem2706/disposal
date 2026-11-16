@@ -287,6 +287,7 @@ window.loadDriverCalendar=async function(force){
     _dCalRides=_dCalFilter ? (_dCalCache[ck]||[]).filter(function(r){return r.status===_dCalFilter;}) : (_dCalCache[ck]||[]);
   }
   if(!_dCalWS){var d=new Date();var dow=d.getDay();dow=dow===0?6:dow-1;d.setDate(d.getDate()-dow);_dCalWS=d;}
+  if(document.body.classList.contains('th-client') && typeof _renderClientCal==='function'){ _renderClientCal(typeof ck!=='undefined'&&_dCalCache[ck]?_dCalCache[ck]:_dCalRides, 'fleet'); return; }
   _renderCalGrid('d-cal-grid','d-cal-title',_dCalY,_dCalM,_dCalView,_dCalWS,_dCalRides);
 };
 

@@ -1153,5 +1153,9 @@
   "cc.n_dem": "{n} solicitudes",
   "nr.verify": "Revise su solicitud",
   "nr.verify_sub": "Antes de publicarla a los chóferes",
-  "nr.publish": "Publicar la solicitud"
+  "nr.publish": "Publicar la solicitud",
+  "ch.courses_dispo": "Trayectos disponibles",
+  "ch.soustraiter": "Subcontratar una misión",
+  "cc.perso": "Personales",
+  "ch.espace_fleet": "Su espacio flota"
 };

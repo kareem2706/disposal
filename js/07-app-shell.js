@@ -73,7 +73,9 @@ function enterApp(){
   const isAdminDriver = isAdmin && role === 'driver';
   currentRole = isAdmin ? 'admin' : role;
   _applyFleetTheme(!isAdmin && ((role==='driver' && FLEET_THEME==='lemon') || (role!=='driver' && CLIENT_THEME==='lemon')));
-  document.body.classList.toggle('th-client', !isAdmin && role==='client' && CLIENT_THEME==='lemon');
+  // Présentation « plateforme » (écran principal, bouton retour, cartes) : clients et fleets
+  document.body.classList.toggle('th-client', !isAdmin && ((role==='client' && CLIENT_THEME==='lemon') || (role==='driver' && FLEET_THEME==='lemon')));
+  document.body.classList.toggle('is-fleet', !isAdmin && role==='driver');
   _activityPing();
   document.getElementById('nav-client').style.display = (!isAdmin && role === 'client') ? 'block' : 'none';
   document.getElementById('nav-driver').style.display = (isAdminDriver || (!isAdmin && role === 'driver')) ? 'block' : 'none';
@@ -115,10 +117,10 @@ function enterApp(){
     showPage('admin-dashboard');
   } else if(role === 'driver' && sb && !localStorage.getItem(DEMO_MODE_KEY)){
     loadMyOffers().then(function(){
-      showPage('d-dashboard');
+      showPage(_chMobile() ? 'home' : 'd-dashboard');
     });
   } else {
-    showPage(role === 'driver' ? 'd-dashboard' : (!isAdmin && role==='client' && _chMobile() ? 'home' : 'dashboard'));
+    showPage(_chMobile() ? 'home' : (role === 'driver' ? 'd-dashboard' : 'dashboard'));
   }
 
   // Subscribe to realtime notifications

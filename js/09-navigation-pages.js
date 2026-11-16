@@ -41,8 +41,16 @@ async function loadClientHome(){
   var av=document.getElementById('ch-av');
   if(av){ if(p.avatar_url){ av.innerHTML='<img src="'+String(p.avatar_url).replace(/"/g,'')+'" alt="">'; } else av.textContent=((fn||p.company_name||(currentUser&&currentUser.email)||'?')[0]||'?').toUpperCase(); }
   var rb=document.getElementById('ch-role'), nb=document.getElementById('nav-acct-badge'); if(rb&&nb&&nb.textContent) rb.textContent=nb.textContent;
+  if(currentRole==='driver'){ if(rb) rb.textContent='Fleet'; var sb2=document.querySelector('#client-home .ch-sub'); if(sb2) sb2.textContent=t('ch.espace_fleet'); }
   var pb=document.getElementById('ch-pass'), np=document.getElementById('nav-passengers-btn'); if(pb&&np) pb.style.display=np.style.display==='none'?'none':'';
   if(!sb || localStorage.getItem(DEMO_MODE_KEY) || !currentUser) return;
+  if(currentRole==='driver'){
+    // Fleet : missions à venir (confirmées / en cours)
+    var fr=await sb.from('rides').select('id').eq('driver_id',currentUser.id).in('status',['confirmed','active']);
+    var fn2=(fr.data||[]).length, fc=document.getElementById('ch-fcount');
+    if(fc){ fc.textContent=fn2>99?'99+':String(fn2); fc.style.display=fn2?'':'none'; }
+    return;
+  }
   var r=await sb.from('rides').select('id,status').eq('client_id',currentUser.id).in('status',['waiting','offers','pending_payment','confirmed','active']);
   var n=(r.data||[]).length, cc=document.getElementById('ch-count');
   if(cc){ cc.textContent=n>99?'99+':String(n); cc.style.display=n?'':'none'; }

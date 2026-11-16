@@ -1153,5 +1153,9 @@
   "cc.n_dem": "{n} requests",
   "nr.verify": "Check your request",
   "nr.verify_sub": "Before publishing it to drivers",
-  "nr.publish": "Publish the request"
+  "nr.publish": "Publish the request",
+  "ch.courses_dispo": "Available rides",
+  "ch.soustraiter": "Subcontract a mission",
+  "cc.perso": "Personal",
+  "ch.espace_fleet": "Your fleet area"
 };

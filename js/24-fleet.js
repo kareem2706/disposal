@@ -1052,7 +1052,7 @@ function _renderClientRide(r){
   if(to && to!=='\u2014') l2='<i class="chr-to">\u2192</i>'+_chEsc(to);
   else if(k==='disposal' && r.duration_hours) l2='<i class="chr-to">\u00b7</i>'+_chEsc(r.duration_hours)+' h';
   var attrs='onclick="openRideDetail(this)" data-ride=\''+JSON.stringify(r).replace(/\'/g,'&#39;')+'\'';
-  return _chCard(attrs, _chDate(r.ride_date, r.ride_time), k, lbl, statusPill, _chEsc(from), l2, r.final_price?_chMoney(r.final_price):'');
+  return _chCard(attrs, _chDate(r.ride_date, r.ride_time), k, lbl, statusPill, _chEsc(from), l2, (r.final_price && currentRole==='client')?_chMoney(r.final_price):'');   // fleet : jamais le prix payé par le client
 }
 // Événement ou trajet mixte regroupé : même carte que les autres demandes
 function _renderClientGroup(g){

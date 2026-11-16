@@ -5,23 +5,35 @@
 //  • sous la grille : les demandes du jour sélectionné (ouvre la fiche au clic).
 // Les données viennent de loadCalendar() (js/21-realtime-calendar.js) : _calCache / _calRides.
 // ════════════════════════════════════════════════════════════════
-var _ccSel=null;
-var _CC_GRP={ confirmed:['confirmed','active','done'], waiting:['waiting','offers','pending_payment'], cancelled:['cancelled'] };
-var _CC_DOT={ confirmed:'#3DAA5C', active:'#3DAA5C', done:'#B9BDBA', waiting:'#E0A526', offers:'#E0A526', pending_payment:'#E0A526', cancelled:'#E05A4F' };
+var _ccSel=null, _ccMode='client';
+// Client : demandes (_cal*) ; fleet : missions (_dCal*) — même présentation
+function _ccC(){
+  return _ccMode==='fleet'
+    ? { box:'dccal', y:_dCalY, m:_dCalM, view:_dCalView, ws:_dCalWS, filter:_dCalFilter, prev:'dCalPrev', next:'dCalNext',
+        setFilter:function(g){ _dCalFilter=g; loadDriverCalendar(false); }, reload:function(){ loadDriverCalendar(false); }, setView:function(v,ds){ dCalView(v,ds); },
+        chips:[['confirmed','cc.confirmees','#3DAA5C'],['personal','cc.perso','#7A55C2'],['cancelled','cc.annulees','#E05A4F']] }
+    : { box:'ccal', y:_calY, m:_calM, view:_calView, ws:_calWS, filter:_calFilter, prev:'calPrevMonth', next:'calNextMonth',
+        setFilter:function(g){ _calFilter=g; loadCalendar(false); }, reload:function(){ loadCalendar(false); }, setView:function(v,ds){ calSetView(v,ds); },
+        chips:[['confirmed','cc.confirmees','#3DAA5C'],['waiting','ap.en_attente','#E0A526'],['cancelled','cc.annulees','#E05A4F']] };
+}
+var _CC_GRP={ personal:['personal'], confirmed:['confirmed','active','done'], waiting:['waiting','offers','pending_payment'], cancelled:['cancelled'] };
+var _CC_DOT={ confirmed:'#3DAA5C', active:'#3DAA5C', done:'#B9BDBA', waiting:'#E0A526', offers:'#E0A526', pending_payment:'#E0A526', cancelled:'#E05A4F', personal:'#7A55C2' };
 function _ccLang(){ return (typeof currentLang!=='undefined'&&currentLang)||'fr'; }
 function _ccYmd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function _ccCap(s){ return s?s.charAt(0).toUpperCase()+s.slice(1):s; }
 
-window._ccSetFilter=function(g){ _calFilter=g; loadCalendar(false); };
-window._ccPick=function(ds){ _ccSel=ds; if(typeof loadCalendar==='function') loadCalendar(false); };
+window._ccSetFilter=function(g){ _ccC().setFilter(g); };
+window._ccPick=function(ds){ _ccSel=ds; _ccC().reload(); };
 // Fiche ouverte depuis le calendrier : affichée depuis le haut
 function _ccTop(){ var f=function(){ var m=document.querySelector('#m-ride-detail .modal'); if(m) m.scrollTop=0; var b=document.querySelector('#m-ride-detail .modal-body'); if(b) b.scrollTop=0; }; f(); setTimeout(f,60); setTimeout(f,300); }
 window._ccOpen=function(el){
   try{ var r=JSON.parse(decodeURIComponent(el.dataset.enc)); r=r._orig||r; var tmp=document.createElement('div'); tmp.dataset.ride=JSON.stringify(r).replace(/'/g,'&#39;'); try{ window.scrollTo(0,0); }catch(_e){} openRideDetail(tmp); _ccTop(); }catch(e){}
 };
 
-function _renderClientCal(all){
-  var box=document.getElementById('ccal'); if(!box) return;
+function _renderClientCal(all, mode){
+  _ccMode=mode||'client'; var C=_ccC();
+  var _calY=C.y, _calM=C.m, _calView=C.view, _calWS=C.ws, _calFilter=C.filter;
+  var box=document.getElementById(C.box); if(!box) return;
   var lg=_ccLang(), td=new Date(), tds=_ccYmd(td);
   var rides=_calExpand(all||[]);
   var inGrp=function(r,g){ return !g || (_CC_GRP[g]||[g]).indexOf(r.status)>=0; };
@@ -76,10 +88,10 @@ function _renderClientCal(all){
 
   var arrow=function(dir,fn){ return '<button type="button" class="cc-nav" onclick="'+fn+'()" aria-label="'+dir+'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="'+(dir==='prev'?'M15 6l-6 6 6 6':'M9 6l6 6-6 6')+'"/></svg></button>'; };
   box.innerHTML=
-    '<div class="cc-head">'+arrow('prev','calPrevMonth')+'<h2 class="cc-title">'+_chEsc(title)+'</h2>'+arrow('next','calNextMonth')+'</div>'
+    '<div class="cc-head">'+arrow('prev',C.prev)+'<h2 class="cc-title">'+_chEsc(title)+'</h2>'+arrow('next',C.next)+'</div>'
     +'<div class="cc-seg"><button type="button" class="'+(_calView!=='week'?'on':'')+'" onclick="_ccView(\'month\')">'+t('ap.mois')+'</button><button type="button" class="'+(_calView==='week'?'on':'')+'" onclick="_ccView(\'week\')">'+t('ap.semaine')+'</button></div>'
-    +'<div class="cc-chips">'+chip('',t('ap.tout'))+chip('confirmed',t('cc.confirmees'),'#3DAA5C')+chip('waiting',t('ap.en_attente'),'#E0A526')+chip('cancelled',t('cc.annulees'),'#E05A4F')+'</div>'
+    +'<div class="cc-chips">'+chip('',t('ap.tout'))+C.chips.map(function(c){ return chip(c[0],t(c[1]),c[2]); }).join('')+'</div>'
     +'<div class="cc-card"><div class="cc-dn">'+DN.map(function(x){ return '<span>'+x+'</span>'; }).join('')+'</div><div class="cc-grid">'+cells+'</div></div>'
     +'<div class="cc-card cc-daybox"><div class="cc-dhead"><div><h3>'+_chEsc(dTitle)+'</h3><p>'+_chEsc(sub)+'</p></div></div>'+(list?'<div class="cc-list">'+list+'</div>':'')+'</div>';
 }
-window._ccView=function(v){ calSetView(v, _ccSel); };
+window._ccView=function(v){ _ccC().setView(v, _ccSel); };

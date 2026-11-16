@@ -264,3 +264,7 @@ body.th-client:not(.pg-rides) .mob-actions{display:none!important;}
 .th-client .ch-hide{display:none!important;}
 .th-client .section-title.ch-only{display:inline!important;}
 .th-client #client-stats{margin-bottom:26px;}
+.th-client #page-d-calendar > .card{display:none!important;}
+
+/* Fleets : même présentation, contenus propres aux fleets */
+body:not(.is-fleet) .ch-fleet,body.is-fleet .ch-cli{display:none!important;}

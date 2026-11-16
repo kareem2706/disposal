@@ -484,7 +484,7 @@ function _evSummary(rides){
   return rides.length+' véhicule'+(rides.length>1?'s':'')+' · '+Object.keys(cnt).map(function(k){ return cnt[k]+' '+k; }).join(' · ');
 }
 function renderEventItem(g){
-  if(document.body.classList.contains('th-client') && typeof _renderClientGroup==='function') return _renderClientGroup(g);
+  if(document.body.classList.contains('th-client') && currentRole==='client' && typeof _renderClientGroup==='function') return _renderClientGroup(g);
   var rides=g.rides.slice().sort(function(a,b){ return String(a.ride_date+a.ride_time).localeCompare(String(b.ride_date+b.ride_time)); });
   var f=rides[0]||{}, d=f.ride_date?new Date(f.ride_date+'T00:00:00'):null;
   var day=d?String(d.getDate()).padStart(2,'0'):'--', mon=d?d.toLocaleDateString('fr-FR',{month:'short'}).toUpperCase().replace('.',''):'';
