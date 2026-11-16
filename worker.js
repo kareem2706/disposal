@@ -6,6 +6,11 @@
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
+    // Une seule adresse pour Google : https://www.bleenr.com (http et bleenr.com sans www → redirection permanente)
+    if ((url.protocol === 'http:' || url.hostname === 'bleenr.com') && /(^|\.)bleenr\.com$/.test(url.hostname)) {
+      url.protocol = 'https:'; url.hostname = 'www.bleenr.com';
+      return Response.redirect(url.toString(), 301);
+    }
     if (url.pathname === '/auth/google') {
       const back = (h) => new Response(null, { status: 303, headers: { Location: '/' + h, 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } });
       if (req.method !== 'POST') return back('');

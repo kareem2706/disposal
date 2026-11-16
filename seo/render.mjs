@@ -33,7 +33,7 @@ export function render(p, l, site) {
   const book = bookHref(p, l);
   const langs = LANGS.map((x) => `<a href="${pagePath(p, x)}" hreflang="${x}"${x === l ? ' class="on" aria-current="page"' : ''}>${x.toUpperCase()}</a>`).join('');
   const more = PAGES.filter((o) => o.id !== p.id).map((o) => `<a href="${pagePath(o, l)}">${esc(o[l].short)}<span>&rarr;</span></a>`).join('');
-  const legalHref = ['legal/mentions-legales.html', 'legal/conditions.html', 'legal/confidentialite.html'];
+  const legalHref = ['legal/mentions-legales', 'legal/conditions', 'legal/confidentialite'];
   return `<!DOCTYPE html>
 <html lang="${l}">
 <head>

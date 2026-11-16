@@ -334,7 +334,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div><h5 data-i18n="ld.ft_dest">Destinations</h5><a data-i18n="ld.ft_bru" href="/chauffeur-prive-aeroport-bruxelles/">A&eacute;roport de Bruxelles</a><a data-i18n="ld.ft_crl" href="/chauffeur-prive-aeroport-charleroi/">A&eacute;roport de Charleroi</a><a data-i18n="ld.ft_bxl" href="/chauffeur-prive-bruxelles/">Bruxelles</a><a data-i18n="ld.ft_anr" href="/chauffeur-prive-anvers/">Anvers</a><a data-i18n="ld.ft_gnt" href="/chauffeur-prive-gand/">Gand</a><a data-i18n="ld.ft_lge" href="/chauffeur-prive-liege/">Li&egrave;ge</a><a data-i18n="ld.ft_event" href="/chauffeur-evenement/">&Eacute;v&eacute;nements</a></div>
         <div><h5 data-i18n="ld.chauffeurs">Chauffeurs</h5><button data-i18n="ld.devenir_partenaire" onclick="showLandingAuth('register')">Devenir partenaire</button><button data-i18n="ld.espace_chauffeur" onclick="showLandingAuth('login')">Espace chauffeur</button></div>
         <div><h5 data-i18n="ld.compte">Compte</h5><button data-i18n="ld.creer_un_compte" onclick="showLandingAuth('register')">Cr&eacute;er un compte</button><button data-i18n="ld.connexion" onclick="showLandingAuth('login')">Connexion</button></div>
-        <div><h5>Bleenr</h5><a data-i18n="ld.mentions_legales" href="legal/mentions-legales.html">Mentions l&eacute;gales</a><a data-i18n="ld.conditions_generales" href="legal/conditions.html">Conditions g&eacute;n&eacute;rales</a><a data-i18n="ld.confidentialite" href="legal/confidentialite.html">Confidentialit&eacute;</a><a data-i18n="ld.contact" href="mailto:{{company.email}}">Contact</a></div>
+        <div><h5>Bleenr</h5><a data-i18n="ld.mentions_legales" href="legal/mentions-legales">Mentions l&eacute;gales</a><a data-i18n="ld.conditions_generales" href="legal/conditions">Conditions g&eacute;n&eacute;rales</a><a data-i18n="ld.confidentialite" href="legal/confidentialite">Confidentialit&eacute;</a><a data-i18n="ld.contact" href="mailto:{{company.email}}">Contact</a></div>
       </div>
       <div class="ld-foot-b"><span>&copy; {{year}} Bleenr</span></div>
     </div>
@@ -458,7 +458,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <label class="terms-switch" for="inp-terms">
             <input type="checkbox" id="inp-terms" onchange="_termsChanged()">
             <span class="terms-sw" aria-hidden="true"></span>
-            <span class="terms-txt" data-i18n-html="au.terms_accept_html">J'accepte les <a href="legal/conditions.html" target="_blank" rel="noopener">conditions générales</a> et la <a href="legal/confidentialite.html" target="_blank" rel="noopener">politique de confidentialité</a> de Bleenr.</span>
+            <span class="terms-txt" data-i18n-html="au.terms_accept_html">J'accepte les <a href="legal/conditions" target="_blank" rel="noopener">conditions générales</a> et la <a href="legal/confidentialite" target="_blank" rel="noopener">politique de confidentialité</a> de Bleenr.</span>
           </label>
           <div id="auth-err-terms" class="auth-error"></div>
           <div class="sso-stack">
@@ -515,7 +515,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
       <div id="panel-phone" style="display:none;"></div>
       <div id="panel-email" style="display:none;"></div>
 
-      <p data-i18n-html="au.en_continuant_vous_acceptez_nos" style="text-align:center;font-size:11px;color:#aaa;margin-top:16px;line-height:1.6;">En continuant, vous acceptez nos <a href="legal/conditions.html" target="_blank" style="color:var(--green);text-decoration:underline;">Conditions d'utilisation</a> et notre <a href="legal/confidentialite.html" target="_blank" style="color:var(--green);text-decoration:underline;">Politique de confidentialité</a>.</p>
+      <p data-i18n-html="au.en_continuant_vous_acceptez_nos" style="text-align:center;font-size:11px;color:#aaa;margin-top:16px;line-height:1.6;">En continuant, vous acceptez nos <a href="legal/conditions" target="_blank" style="color:var(--green);text-decoration:underline;">Conditions d'utilisation</a> et notre <a href="legal/confidentialite" target="_blank" style="color:var(--green);text-decoration:underline;">Politique de confidentialité</a>.</p>
     </div>
 
     <!-- Step 2: OTP -->
