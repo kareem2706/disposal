@@ -972,7 +972,7 @@ function _openRideDetailImpl(el){
         ft='<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'+t('app.annuler_la_sous_traitance')+'</button>'+closeBtn;
       } else if(isExtSub){
         var subPriceLbl=r.final_price?parseFloat(r.final_price).toFixed(0)+'\u20ac':'';
-        var priceLeft=r.final_price?'<div style="margin-right:auto;font-size:13px;font-weight:600;color:var(--amber);">'+t('app2.prix_demande')+' '+parseFloat(r.final_price).toFixed(0)+' € HTVA</div>':'<div style="margin-right:auto;"></div>';
+        var priceLeft=r.final_price?'<div class="rd-ft-price" style="margin-right:auto;font-size:13px;font-weight:600;color:var(--amber);">'+t('app2.prix_demande')+' '+parseFloat(r.final_price).toFixed(0)+' € HTVA</div>':'<div style="margin-right:auto;"></div>';
         ft=priceLeft+closeBtn+'<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')">'+t('app.accepter')+'</button>';
       } else if(hasMyOffer){
         ft=_offerActionsMenu(rId,safeRd)+'<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">'+t('app2.vous_avez_soumis_une_offre')+' '+parseFloat(hasMyOffer.price).toFixed(0)+'\u20ac</div>'+closeBtn;
@@ -987,7 +987,7 @@ function _openRideDetailImpl(el){
         ft=_offerActionsMenu(rId,safeRd)+'<div style="margin-right:auto;font-size:14px;color:var(--green);font-weight:600;">'+t('app2.vous_avez_soumis_une_offre')+' '+parseFloat(hasMyOffer2.price).toFixed(0)+'\u20ac</div>'+closeBtn;
       } else if(isExtSub2){
         var subPriceLbl2=r.final_price?parseFloat(r.final_price).toFixed(0)+'\u20ac':'';
-        var priceLeft2=r.final_price?'<div style="margin-right:auto;font-size:13px;font-weight:600;color:var(--amber);">'+t('app2.prix_demande')+' '+parseFloat(r.final_price).toFixed(0)+' € HTVA</div>':'<div style="margin-right:auto;"></div>';
+        var priceLeft2=r.final_price?'<div class="rd-ft-price" style="margin-right:auto;font-size:13px;font-weight:600;color:var(--amber);">'+t('app2.prix_demande')+' '+parseFloat(r.final_price).toFixed(0)+' € HTVA</div>':'<div style="margin-right:auto;"></div>';
         ft=priceLeft2+closeBtn+'<button class="btn btn-green" onclick="closeModal(\'m-ride-detail\');acceptSubcontract(\''+rId+'\')">'+t('app.accepter')+'</button>';
       } else if(isOwnSub2){
         ft='<button class="btn btn-danger btn-sm" onclick="deleteRide(this.dataset.id)" data-id="'+rId+'">'+t('app.annuler')+'</button>'+closeBtn;

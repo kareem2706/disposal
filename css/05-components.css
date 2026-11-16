@@ -334,6 +334,8 @@ option[hidden]{display:none;}
   .modal-ft > div[style*="margin-right:auto"]{order:99;margin-right:0!important;margin-left:auto!important;}
   .modal-ft:has(> .ft-rate) > div[style*="margin-right:auto"]{order:0;margin-left:0!important;margin-right:auto!important;}
   .modal-ft > .ft-rate{order:1;}
+  .modal-ft > div.rd-ft-price{order:0!important;margin-left:0!important;margin-right:auto!important;}
+  .modal-ft:has(> .rd-ft-price) > .btn-green{order:2;margin-left:auto!important;}
   .modal-ft:not(:has(> :not(.m-close-mob))){display:none!important;}
 }
 @media(max-width:900px){#m-ride-detail .modal:not(:has(#detail-ft > :not(.m-close-mob))) #detail-map-wrap{margin-bottom:20px!important;}}
