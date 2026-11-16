@@ -139,10 +139,15 @@ window.openPersonalMissionModal=function(editRide){
 };
 
 window._editPersonalFromDetail=function(){
-  // Find the button with data-ride and parse the ride
-  var btn=document.querySelector('#pm-footer')?.previousElementSibling;
-  // Use a simpler approach: store the ride in a global
-  if(window._lastDetailRide)openPersonalMissionModal(window._lastDetailRide);
+  // Ferme la fiche puis ouvre le formulaire une fois le retour d'historique terminé
+  // (sinon le popstate de la fermeture refermait aussitôt le formulaire)
+  var ride=window._lastDetailRide; if(!ride) return;
+  var done=false;
+  var go=function(){ if(done) return; done=true; window.removeEventListener('popstate',go);
+    setTimeout(function(){ openPersonalMissionModal(ride); }, 80); };
+  window.addEventListener('popstate',go);
+  closeModal('m-ride-detail');
+  setTimeout(go, 450);
 };
 
 window.deletePersonalMission=function(id){
