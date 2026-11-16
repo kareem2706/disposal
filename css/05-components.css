@@ -519,3 +519,9 @@ option[hidden]{display:none;}
 .nrr-instr b{color:var(--ink2);font-weight:600;}
 .nrr-info{display:flex;align-items:center;gap:10px;background:#EEF6F0;color:#1F5C3A;border-radius:14px;padding:13px 16px;font-size:13.5px;margin-top:4px;}
 @media(max-width:600px){ .nrr-hd h3{font-size:24px;} .nrr-dt{margin-left:54px;width:100%;font-size:13px;margin-top:-4px;} }
+/* Bandeau « Bon voyage » : photo (berline au coucher du soleil), texte sur la partie sombre à gauche */
+.rdv-hero{background:#0A0A0A url(assets/ride-hero.webp) right 62%/cover no-repeat;min-height:118px;padding:22px 22px 20px;}
+.rdv-hero:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.78) 0%,rgba(0,0,0,.55) 45%,rgba(0,0,0,0) 80%);pointer-events:none;}
+.rdv-hero:after{display:none;}
+.rdv-hero > *{position:relative;z-index:1;max-width:72%;text-shadow:0 1px 8px rgba(0,0,0,.45);}
+@media(max-width:600px){ .rdv-hero{background-position:78% 60%;} .rdv-hero:before{background:linear-gradient(90deg,rgba(0,0,0,.85) 0%,rgba(0,0,0,.65) 50%,rgba(0,0,0,.15) 85%);} .rdv-hero > *{max-width:78%;} }
