@@ -106,6 +106,21 @@ window.openRideDetail=function(el){
 };
 
 // Ride key info (date/time, passengers, vehicle) shown as prominent chips at the top of a ride detail
+// Mission personnelle : notes = « Titre — Durée:Xh — Plaque:XXX — note|tags »
+function _pmParse(notes){
+  var parts=String(notes||'').split('|')[0].split(' \u2014 ').map(function(x){ return x.trim(); });
+  var o={label:'',plate:'',note:''}, rest=[];
+  parts.forEach(function(p,i){
+    if(!p) return;
+    var m=p.match(/^Plaque:(.+)$/); if(m){ o.plate=m[1].trim(); return; }
+    if(/^Dur\u00e9e:/.test(p)) return;
+    if(i===0){ o.label=p; return; }
+    rest.push(p);
+  });
+  o.note=rest.join(' \u2014 ');
+  return o;
+}
+function _plateBadge(pl){ return '<span class="rd-plate" style="display:inline-flex;align-items:center;background:#fff;color:#C8102E;border:1.5px solid #C8102E;border-radius:6px;padding:4px 9px;font:700 13px/1.1 \'DM Sans\',sans-serif;letter-spacing:.06em;white-space:nowrap;">'+_rdEsc(pl.toUpperCase())+'</span>'; }
 function _rideMetaChips(r){
   if(r.trip_type==='mixed' && parseMixedNotes(r.notes||'').length) return '';
   var chips=[];
@@ -122,6 +137,7 @@ function _rideMetaChips(r){
   if(r.passengers) chips.push('<span style="'+soft+'">'+ico('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0114 0v1"/>')+r.passengers+' passager'+(r.passengers>1?'s':'')+'</span>');
   if(r.vehicle_type){ var vl={lowcost:'Economy',business:'Business',van:'Van',luxe:'Luxe',bus:'Bus',any:'Toute gamme'}[r.vehicle_type]||r.vehicle_type;
     chips.push('<span style="'+soft+'">'+ico('<path d="M5 17h14M6 17v2M18 17v2M3 13l2-6h14l2 6v4H3z"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/>')+vl+'</span>'); }
+  if(r.status==='personal'){ var _pp=_pmParse(r.notes); if(_pp.plate) chips.push(_plateBadge(_pp.plate)); }
   // Événement : simple ligne de texte au-dessus des pastilles (pas une pastille)
   var _evLine=(r.event_name&&r.event_kind!=='mixed')?'<div class="rd-evline">'+_rdEsc(r.event_name)+'</div>':'';
   var _fl=_rdTag(r.notes,'flight'), _tr=_rdTag(r.notes,'train');
@@ -166,6 +182,7 @@ function _openRideDetailImpl(el){
   var _durH=((r.notes||'').match(/Durée:([^\s|,]+)/)||[])[1]||'';
   var _route=isMixed?(mixedSegs.length?mixedSegs.length+' trajets':''):isDisp?[_city(r.from_address),_durH].filter(Boolean).join(' \u00b7 '):[_city(r.from_address),_city(r.to_address)].filter(Boolean).join(' \u2192 ');
   var _sub2=_rdEsc(_tLbl+(_route?' \u00b7 '+_route:''));
+  if(r.status==='personal'){ var _pl=_pmParse(r.notes).label; if(_pl) _sub2=_rdEsc(_pl); }
   // Trajet mixte : même en-tête que les événements (libellé, code, période · trajets · contact)
   if(isMixed&&mixedSegs.length){
     var _fdm=function(x,o){ return x?new Date(x+'T00:00:00').toLocaleDateString('fr-BE',o).replace(/\./g,''):''; };
@@ -277,6 +294,7 @@ function _openRideDetailImpl(el){
 
   var rawNotes=r.notes||'';
   var cleanNotes=rawNotes.replace(/^Mixte:.*$/,'').replace(/Durée:[^\s|]+/g,'').replace(/\|pax:[^|]*/g,'').replace(/\|(tel|pemail|pref|flight2?|train2?):[^|]*/g,'').replace(/\|note_drv:[^|]*/g,'').replace(/\|offer_note:[^|]*/g,'').trim();
+  if(r.status==='personal') cleanNotes=_pmParse(rawNotes).note;
   if(cleanNotes && r.status!=='confirmed' && r.status!=='done' && r.status!=='active'){
     body+='<div class="rd-instr"><div class="rd-cap" style="margin-bottom:4px;">'+(r.status==='personal'?'Note':'Instructions du client')+'</div>'
       +'<div style="font-size:14px;color:var(--ink);line-height:1.45;">'+_rdEsc(cleanNotes)+'</div></div>';
