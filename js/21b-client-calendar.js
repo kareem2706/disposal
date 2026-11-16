@@ -55,7 +55,7 @@ function _renderClientCal(all, mode){
   // Compteurs (période affichée, tous statuts)
   var inRange=rides.filter(function(r){ return dsList.indexOf(r.ride_date)>=0; });
   var cnt=function(g){ return inRange.filter(function(r){ return inGrp(r,g); }).length; };
-  var chip=function(g,lbl,col){ var on=(_calFilter||'')===g;
+  var chip=function(g,lbl,col){ var on=(_calFilter||'')===g; if(g && !on && !cnt(g)) return '';   // filtre vide : masqué
     return '<button type="button" class="cc-chip'+(on?' on':'')+'" onclick="_ccSetFilter(\''+g+'\')">'+(col?'<i style="background:'+col+'"></i>':'')+lbl+(g?'<b>'+cnt(g)+'</b>':'')+'</button>'; };
 
   var DN=[]; for(var j=0;j<7;j++){ DN.push(new Date(2024,0,1+j).toLocaleDateString(lg,{weekday:'narrow'}).toUpperCase()); }
