@@ -123,8 +123,7 @@ window.openPersonalMissionModal=function(editRide){
     if(typeof _lugSet==='function'){_lugSet('pm-lugL',editRide.luggage_large);_lugSet('pm-lugS',editRide.luggage_small);}
     var pl=document.getElementById('pm-plate');if(pl)pl.value=plateFromNotes||'';
     if(footerEl)footerEl.innerHTML=
-      '<button style="background:none;border:none;color:var(--red);font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:5px;padding:0;margin-right:auto;" onclick="deletePersonalMission(\''+editRide.id+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'+t('app.supprimer')+'</button>'
-      +'<button class="btn btn-secondary" onclick="closeModal(\'m-personal-mission\')">'+t('app.annuler')+'</button>'
+      '<button class="btn btn-secondary" onclick="closeModal(\'m-personal-mission\')">'+t('app.annuler')+'</button>'
       +'<button class="btn btn-green" id="btn-save-personal-mission" onclick="savePersonalMission(this)">'+t('app.enregistrer')+'</button>';
   }else{
     if(editIdEl)editIdEl.value='';
