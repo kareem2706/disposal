@@ -8,9 +8,9 @@
 (function(){
   var CFG = {
     missions:    { page:'page-missions',    bar:'#page-missions .mktabs',    lists:['ms-upcoming','ms-done','ms-cancelled'],
-                   types:[['client','lf.clients'],['sub','lf.subs']] },
+                   types:[['client','lf.clients'],['sub','lf.subs']], periods:['all','custom'] },
     marketplace: { page:'page-marketplace', bar:'#page-marketplace .mktabs', lists:['mk-client','mk-sub','mk-mine-list'],
-                   types:[['ab','lf.ab'],['disposal','lf.disposal'],['mixed','lf.mixed']] },
+                   types:[['ab','lf.ab'],['disposal','lf.disposal'],['mixed','lf.mixed']], periods:['all','custom'] },
     rides:       { page:'page-rides',       bar:'#rides-filters',            lists:['all-rides-list'],
                    types:[['ab','lf.ab'],['disposal','lf.disposal'],['mixed','lf.mixed'],['event','lf.event']],
                    periods:['all','custom'] }   // clients : toutes les dates ou dates choisies
