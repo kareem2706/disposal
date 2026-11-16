@@ -3,6 +3,8 @@
 // Les valeurs passées ici doivent DÉJÀ être échappées par l'appelant.
 
 const GREEN = "#1B5E3B";
+const BLACK = "#111312";
+const LEMON = "#D9F477";
 const INK = "#16201B";
 const INK2 = "#3F4743";
 const INK3 = "#7C8580";
@@ -27,8 +29,8 @@ export function mailLayout(o: MailOpts) {
   const btn = o.cta
     ? `<!--CTA--><tr><td style="padding:22px 32px 0;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td align="center" bgcolor="${GREEN}" style="border-radius:10px;">
-            <a href="${o.cta.url}" style="display:block;padding:15px 20px;font-family:${FONT};font-size:15px;font-weight:600;color:#FFFFFF;text-decoration:none;border-radius:10px;">${o.cta.label}&nbsp;&nbsp;&rarr;</a>
+          <td align="center" bgcolor="${LEMON}" style="border-radius:10px;background:${LEMON};">
+            <a href="${o.cta.url}" style="display:block;padding:15px 20px;font-family:${FONT};font-size:15px;font-weight:600;color:${BLACK};text-decoration:none;border-radius:10px;">${o.cta.label}&nbsp;&nbsp;&rarr;</a>
           </td></tr></table>
       </td></tr><!--/CTA-->`
     : "";
@@ -42,7 +44,7 @@ ${o.preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border-radius:16px;border:1px solid #EAE8E2;">
       <tr><td style="padding:30px 32px 0;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td style="font-family:${FONT};font-size:26px;font-weight:700;letter-spacing:-.03em;color:${GREEN};">Bleenr</td>
+          <td style="font-family:${FONT};font-size:26px;font-weight:700;letter-spacing:-.03em;color:${BLACK};">Bleenr</td>
           <td align="right" style="font-family:${FONT};font-size:12.5px;color:${INK3};">Chauffeurs privés</td>
         </tr></table>
       </td></tr>
@@ -56,8 +58,8 @@ ${o.preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0
       ${o.note ? `<tr><td align="center" style="padding:14px 32px 0;font-family:${FONT};font-size:13px;line-height:1.5;color:${INK3};">${o.note}</td></tr>` : ""}
       <tr><td style="padding:26px 32px 26px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${LINE};"><tr>
-          <td style="padding-top:18px;font-family:${FONT};font-size:12.5px;color:${INK3};"><b style="color:${GREEN};font-size:14px;letter-spacing:-.02em;">Bleenr</b>&nbsp;·&nbsp;Chauffeurs privés</td>
-          <td align="right" style="padding-top:18px;font-family:${FONT};font-size:12.5px;color:${INK3};">Besoin d'aide ? <a href="mailto:${SUPPORT}" style="color:${GREEN};text-decoration:underline;">${SUPPORT}</a></td>
+          <td style="padding-top:18px;font-family:${FONT};font-size:12.5px;color:${INK3};"><b style="color:${BLACK};font-size:14px;letter-spacing:-.02em;">Bleenr</b>&nbsp;·&nbsp;Chauffeurs privés</td>
+          <td align="right" style="padding-top:18px;font-family:${FONT};font-size:12.5px;color:${INK3};">Besoin d'aide ? <a href="mailto:${SUPPORT}" style="color:${BLACK};text-decoration:underline;">${SUPPORT}</a></td>
         </tr></table>
       </td></tr>
     </table>

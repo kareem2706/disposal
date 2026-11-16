@@ -57,7 +57,7 @@ function inline(s: string, prenom: string) {
   return esc(s)
     .replace(/\{prenom\}/g, esc(prenom))
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/(https:\/\/[^\s<]+[^\s<.,;:!?)])/g, '<a href="$1" style="color:#1B5E3B;font-weight:600;">$1</a>');
+    .replace(/(https:\/\/[^\s<]+[^\s<.,;:!?)])/g, '<a href="$1" style="color:#111312;font-weight:600;">$1</a>');
 }
 type Content = { subject: string; title?: string; body: string; cta_label?: string; cta_url?: string };
 function render(c: Content, prenom: string, unsub: string) {
