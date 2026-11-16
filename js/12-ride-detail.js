@@ -672,8 +672,8 @@ function _openRideDetailImpl(el){
     if(bodyElMain){
       // Nom du passager (toujours) ; à défaut, le prénom du compte
       var _fn=_rdTag(r.notes,'pax')||((currentProfile&&currentProfile.first_name)||'').trim();
-      var _rdD=r.ride_date?new Date(r.ride_date+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short'}):'';
-      _rdD=_rdD?(_rdD.charAt(0).toUpperCase()+_rdD.slice(1)).replace(/\./g,''):'';
+      var _rdD=r.ride_date?new Date(r.ride_date+'T00:00:00').toLocaleDateString('fr-BE',{weekday:'short',day:'numeric',month:'short',year:'numeric'}):'';
+      _rdD=_rdD?(_rdD.charAt(0).toUpperCase()+_rdD.slice(1)).replace(/^(\w+)\./,'$1'):'';
       var _short=function(a){ return String(a||'').split(',')[0].trim(); };
       var _durM=(r.notes||'').match(/Durée:([^\s|,]+)/);
       var _trj=_short(cleanAddr(r.from_address||''))+(isMixed?'':isDisp?(_durM?' \u00b7 Mise \u00e0 disposition '+_durM[1]:''):(r.to_address?' \u2192 '+_short(r.to_address):''));
@@ -683,7 +683,8 @@ function _openRideDetailImpl(el){
       var _docIc='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>';
       bodyElMain.insertAdjacentHTML('afterbegin',
         '<div class="rdv-hero"><b>'+_rdEsc(_heroT)+'</b>'
-          +'<p>'+_rdEsc([_rdD+(r.ride_time?' \u00e0 '+r.ride_time.slice(0,5):''), _trj].filter(Boolean).join(' \u00b7 '))+'</p></div>'
+          +(_rdD?'<p class="rdv-l"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>'+_rdEsc(_rdD+(r.ride_time?' \u00b7 '+r.ride_time.slice(0,5):''))+'</span></p>':'')
+          +(_trj?'<p class="rdv-l"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0113 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg><span>'+_rdEsc(_trj)+'</span></p>':'')+'</div>'
         +(r.change_state?'':'<div class="rdv-vch"><div class="vi">'+_docIc+'</div><div style="min-width:0"><div class="rdv-t">'+t('app.voucher_de_transport')+'</div><div class="rdv-s">'+t('app2.a_presenter_a_votre_chauffeur')+'</div></div>'
           +'<button class="rdv-dl" type="button" onclick="generateRideVoucher(\''+String(r.id).replace(/'/g,'')+'\')">'+_dlIc+'<span>'+t('app2.telecharger')+'</span></button></div>'));
       // Date, passagers et trajet sont dans le bandeau : on retire les pastilles et la carte du trajet (sauf course mixte)

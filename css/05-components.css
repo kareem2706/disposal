@@ -529,3 +529,7 @@ option[hidden]{display:none;}
 .rdv-vch{background:#F4F4F1;border:none;}
 .rdv-vch .vi{background:#fff;color:var(--ink);border:none;}
 .rdv-row .vi,.rdv-ln .vi{background:#F2F2EE;color:var(--ink);}
+.rdv-hero p.rdv-l{display:flex;align-items:center;gap:9px;margin-top:8px;font-size:13.5px;opacity:.95;}
+.rdv-hero b + p.rdv-l{margin-top:12px;}
+.rdv-hero p.rdv-l svg{flex-shrink:0;opacity:.9;}
+.rdv-hero p.rdv-l span{min-width:0;}
