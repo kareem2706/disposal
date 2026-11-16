@@ -291,3 +291,4 @@ body.is-fleet .ch-fab:not(.ch-fab-sub){display:none!important;}
   .inv-tot > div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;}
   .inv-tot > div > div:first-child{margin-bottom:0!important;font-size:13px!important;white-space:nowrap;}
 }
+.th-client .sidebar-cta svg *{stroke:var(--ink)!important;}
