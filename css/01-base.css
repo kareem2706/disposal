@@ -67,7 +67,7 @@ code{background:var(--sand3);padding:2px 6px;border-radius:4px;font-family:monos
 .role-opt-desc{display:none;}
 .sso-stack{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px;}
 .sso-row{display:flex;align-items:center;justify-content:center;gap:9px;padding:12px 10px;border-radius:3px;border:1px solid #E4E4E0;background:#fff;cursor:pointer;font-size:13px;font-weight:400;color:#0E0E0E;font-family:'DM Sans',sans-serif;transition:all var(--t);width:100%;}
-.sso-row:hover{border-color:#1B5E3B;background:#F5FBF7;}
+.sso-row:hover{border-color:#E4E4E0;background:#fff;box-shadow:0 6px 18px rgba(14,20,16,.1);}
 .sso-row svg{flex-shrink:0;}.sso-row.gis-host{position:relative;overflow:hidden;}.gis-ov{position:absolute;inset:0;opacity:.01;z-index:2;overflow:hidden;}.sso-arrow{display:none!important;}
 .sso-arrow{margin-left:auto;opacity:.3;}
 .auth-or{display:flex;align-items:center;gap:12px;margin:18px 0;color:#A8A8A4;font-size:11px;letter-spacing:.14em;}
@@ -142,8 +142,8 @@ input.fld-err,select.fld-err,textarea.fld-err{border-color:#C0392B!important;box
 #screen-auth .btn-ghost{color:#5A7A5A;border-radius:100px}
 #screen-auth .btn-ghost:hover{color:#0E1410;background:#ECE6D8}
 #screen-auth .sso-stack{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
-#screen-auth .sso-row{justify-content:center;border-radius:100px;border:1px solid rgba(14,20,16,.14);background:#fff;padding:13px 12px;font:500 13.5px 'DM Sans',sans-serif;color:#0E1410}
-#screen-auth .sso-row:hover{border-color:#1B5E3B;background:#fff}
+#screen-auth .sso-row{justify-content:center;border-radius:100px;border:1px solid transparent;background:#fff;padding:13px 12px;font:500 13.5px 'DM Sans',sans-serif;color:#0E1410;box-shadow:0 1px 2px rgba(14,20,16,.06),0 4px 14px rgba(14,20,16,.08)}
+#screen-auth .sso-row:hover,#screen-auth .sso-row:focus-within,#screen-auth .sso-row:focus-visible{border-color:transparent;background:#fff;outline:none;box-shadow:0 2px 4px rgba(14,20,16,.08),0 10px 24px rgba(14,20,16,.13);transform:translateY(-1px)}
 #screen-auth .auth-or{margin:18px 0;color:#9EB0A3;font-size:11px;letter-spacing:.16em}
 #screen-auth .auth-or::before,#screen-auth .auth-or::after{background:rgba(14,20,16,.1)}
 #screen-auth .role-opt{background:#fff;border:1.5px solid transparent;border-radius:18px;padding:26px 14px 22px;transition:all .25s}
