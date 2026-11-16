@@ -1157,5 +1157,6 @@
   "ch.courses_dispo": "Trayectos disponibles",
   "ch.soustraiter": "Subcontratar una misión",
   "cc.perso": "Personales",
-  "ch.espace_fleet": "Su espacio flota"
+  "ch.espace_fleet": "Su espacio flota",
+  "cc.terminees": "Completadas"
 };

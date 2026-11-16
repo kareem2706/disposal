@@ -11,12 +11,12 @@ function _ccC(){
   return _ccMode==='fleet'
     ? { box:'dccal', y:_dCalY, m:_dCalM, view:_dCalView, ws:_dCalWS, filter:_dCalFilter, prev:'dCalPrev', next:'dCalNext',
         setFilter:function(g){ _dCalFilter=g; loadDriverCalendar(false); }, reload:function(){ loadDriverCalendar(false); }, setView:function(v,ds){ dCalView(v,ds); },
-        chips:[['confirmed','cc.confirmees','#3DAA5C'],['personal','cc.perso','#7A55C2'],['cancelled','cc.annulees','#E05A4F']] }
+        chips:[['confirmed','cc.confirmees','#3DAA5C'],['done','cc.terminees','#B9BDBA'],['personal','cc.perso','#7A55C2'],['cancelled','cc.annulees','#E05A4F']] }
     : { box:'ccal', y:_calY, m:_calM, view:_calView, ws:_calWS, filter:_calFilter, prev:'calPrevMonth', next:'calNextMonth',
         setFilter:function(g){ _calFilter=g; loadCalendar(false); }, reload:function(){ loadCalendar(false); }, setView:function(v,ds){ calSetView(v,ds); },
-        chips:[['confirmed','cc.confirmees','#3DAA5C'],['waiting','ap.en_attente','#E0A526'],['cancelled','cc.annulees','#E05A4F']] };
+        chips:[['confirmed','cc.confirmees','#3DAA5C'],['waiting','ap.en_attente','#E0A526'],['done','cc.terminees','#B9BDBA'],['cancelled','cc.annulees','#E05A4F']] };
 }
-var _CC_GRP={ personal:['personal'], confirmed:['confirmed','active','done'], waiting:['waiting','offers','pending_payment'], cancelled:['cancelled'] };
+var _CC_GRP={ personal:['personal'], confirmed:['confirmed','active'], done:['done'], waiting:['waiting','offers','pending_payment'], cancelled:['cancelled'] };
 var _CC_DOT={ confirmed:'#3DAA5C', active:'#3DAA5C', done:'#B9BDBA', waiting:'#E0A526', offers:'#E0A526', pending_payment:'#E0A526', cancelled:'#E05A4F', personal:'#7A55C2' };
 function _ccLang(){ return (typeof currentLang!=='undefined'&&currentLang)||'fr'; }
 function _ccYmd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }

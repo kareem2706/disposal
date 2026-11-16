@@ -1157,5 +1157,6 @@
   "ch.courses_dispo": "Courses disponibles",
   "ch.soustraiter": "Sous-traiter une mission",
   "cc.perso": "Personnelles",
-  "ch.espace_fleet": "Votre espace fleet"
+  "ch.espace_fleet": "Votre espace fleet",
+  "cc.terminees": "Terminées"
 };

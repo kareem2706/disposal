@@ -1157,5 +1157,6 @@
   "ch.courses_dispo": "Available rides",
   "ch.soustraiter": "Subcontract a mission",
   "cc.perso": "Personal",
-  "ch.espace_fleet": "Your fleet area"
+  "ch.espace_fleet": "Your fleet area",
+  "cc.terminees": "Completed"
 };
