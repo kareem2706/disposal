@@ -182,7 +182,7 @@ function _openRideDetailImpl(el){
   var _durH=((r.notes||'').match(/Durée:([^\s|,]+)/)||[])[1]||'';
   var _route=isMixed?(mixedSegs.length?mixedSegs.length+' trajets':''):isDisp?[_city(r.from_address),_durH].filter(Boolean).join(' \u00b7 '):[_city(r.from_address),_city(r.to_address)].filter(Boolean).join(' \u2192 ');
   var _sub2=_rdEsc(_tLbl+(_route?' \u00b7 '+_route:''));
-  if(r.status==='personal'){ var _pl=_pmParse(r.notes).label; if(_pl) _sub2=_rdEsc(_pl); }
+  if(r.status==='personal'){ var _pl=_pmParse(r.notes).label; if(_pl) _sub2='<b style="color:var(--ink);font-weight:700;">'+_rdEsc(_pl)+'</b>'; }
   // Trajet mixte : même en-tête que les événements (libellé, code, période · trajets · contact)
   if(isMixed&&mixedSegs.length){
     var _fdm=function(x,o){ return x?new Date(x+'T00:00:00').toLocaleDateString('fr-BE',o).replace(/\./g,''):''; };

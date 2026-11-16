@@ -37,7 +37,6 @@ function _renderClientCal(all, mode){
   var lg=_ccLang(), td=new Date(), tds=_ccYmd(td);
   var rides=_calExpand(all||[]);
   var inGrp=function(r,g){ return !g || (_CC_GRP[g]||[g]).indexOf(r.status)>=0; };
-  var shown=rides.filter(function(r){ return inGrp(r,_calFilter); });
 
   // Jours affichés
   var days=[], title;
@@ -55,6 +54,9 @@ function _renderClientCal(all, mode){
   // Compteurs (période affichée, tous statuts)
   var inRange=rides.filter(function(r){ return dsList.indexOf(r.ride_date)>=0; });
   var cnt=function(g){ return inRange.filter(function(r){ return inGrp(r,g); }).length; };
+  // Filtre actif devenu vide (ex. dernière mission personnelle supprimée) : retour à « Tout »
+  if(_calFilter && !cnt(_calFilter)){ _calFilter=''; if(_ccMode==='fleet') _dCalFilter=''; else window._calFilter=''; }
+  var shown=rides.filter(function(r){ return inGrp(r,_calFilter); });
   var chip=function(g,lbl,col){ var on=(_calFilter||'')===g; if(g && !on && !cnt(g)) return '';   // filtre vide : masqué
     return '<button type="button" class="cc-chip'+(on?' on':'')+'" onclick="_ccSetFilter(\''+g+'\')">'+(col?'<i style="background:'+col+'"></i>':'')+lbl+(g?'<b>'+cnt(g)+'</b>':'')+'</button>'; };
 
