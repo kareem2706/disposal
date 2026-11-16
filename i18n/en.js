@@ -1150,5 +1150,8 @@
   "cc.une_conf": "1 confirmed request",
   "cc.n_conf": "{n} confirmed requests",
   "cc.une_dem": "1 request",
-  "cc.n_dem": "{n} requests"
+  "cc.n_dem": "{n} requests",
+  "nr.verify": "Check your request",
+  "nr.verify_sub": "Before publishing it to drivers",
+  "nr.publish": "Publish the request"
 };

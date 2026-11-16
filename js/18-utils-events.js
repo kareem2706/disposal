@@ -252,28 +252,38 @@ window._nrShowRecap=function(d){
   if(d.type==='mixed' && _mixPMVal()==='one'){ pn=(document.getElementById('mix-cname')||{}).value||''; pt=(document.getElementById('mix-cphone')||{}).value||''; }
   if(trips.some(function(t){ return t.pname||t.ptel; })){ pn=''; pt=''; }
   var ttl={ab:'Transfert simple',disposal:'Mise à disposition',mixed:'Trajet mixte'}[d.type]||'Demande';
-  var h='<div class="evr-hd" style="background:#F3F8F4;"><div class="k" style="color:#2E7A4F;">'+t('app.recapitulatif_de_la_demande')+'</div>'+(d.type==='mixed'?'<div class="t">'+esc(ttl)+'</div>':'')
-    +'<div class="s">'+esc([trips.length>1?trips.length+' trajets':'', pn?(d.type==='mixed'?'contact : ':'passager : ')+pn+(pt?' · '+pt:''):(d.type==='mixed'&&trips.some(function(t){ return t.pname; })?'un contact par trajet':'')].filter(Boolean).join(' · ')||'Vérifiez les informations avant de publier.')+'</div></div>';
+  // Icônes fines (mêmes que le reste de l'espace client)
+  var SV=function(p,w){ return '<svg width="'+(w||16)+'" height="'+(w||16)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>'; };
+  var IC={ cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>', veh:'<rect x="3" y="7.5" width="18" height="12" rx="2.5"/><path d="M8.5 7.5V6a2 2 0 012-2h3a2 2 0 012 2v1.5"/>',
+    pax:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0114 0"/>', lug:'<rect x="6" y="7" width="12" height="13" rx="2"/><path d="M9.5 7V4.5h5V7M9 20v1M15 20v1"/>',
+    dur:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>', fl:'<path d="M2.5 13.5l19-6-6 13-3-5.5z"/>', trn:'<rect x="5" y="3.5" width="14" height="14" rx="3"/><path d="M5 11h14M8.5 21l2-3.5M15.5 21l-2-3.5"/>', ct:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2"/>' };
+  var pill=function(ic,v){ return v?'<span class="nrr-chip">'+SV(IC[ic],14)+'<span>'+v+'</span></span>':''; };
+  var sub=[trips.length>1?trips.length+' trajets':'', pn?(d.type==='mixed'?'contact : ':'passager : ')+pn+(pt?' · '+pt:''):(d.type==='mixed'&&trips.some(function(t){ return t.pname; })?'un contact par trajet':'')].filter(Boolean).join(' · ');
+  var h='<div class="nrr-hd"><h3>'+t('nr.verify')+'</h3><p>'+t('nr.verify_sub')+'</p>'+(d.type==='mixed'||sub?'<div class="nrr-meta">'+esc([d.type==='mixed'?ttl:'',sub].filter(Boolean).join(' · '))+'</div>':'')+'</div>';
   trips.forEach(function(t,i){
-    h+='<div class="evr-trip"><div class="evr-th">'+(trips.length>1?'<span class="n">'+(i+1)+'</span>'+_T('app.trajet')+' '+(i+1)+' <span class="ty">· '+(t.disp?'Mise à disposition':'Transfert simple')+'</span>':'<span>'+(t.disp?'Mise à disposition':'Transfert simple')+'</span>')+'<span class="dt">'+esc(fd(t.date))+(t.time?' · '+esc(t.time):'')+'</span></div>'
-      +'<div class="evr-rt"><div><i style="background:'+(t.disp?'#E09A2B':'#4E8F69')+'"></i><span>'+esc(t.from||'—')+'</span></div>'+(!t.disp&&t.to?'<div><i style="background:#D8705F"></i><span>'+esc(t.to)+'</span></div>':'')+'</div>'
-      +'<div class="evr-kv">'+chip('',cls(t.veh))+(t.pax?'<span><b>'+esc(t.pax)+'</b> '+_T('app.passager')+(String(t.pax)==='1'?'':'s')+'</span>':'')
-      +(t.lug?'<span>'+_T('app.bagages')+' <b>'+esc(t.lug)+'</b></span>':'')
-      +(t.disp&&t.dur?'<span>'+_T('app.duree')+' <b>'+esc(t.dur)+' h</b></span>':'')
-      +t.fl.map(function(x){ return chip('Vol',x); }).join('')+t.trn.map(function(x){ return chip('Train',x); }).join('')
-      +(t.pname||t.ptel?'<span>'+_T('app.contact')+' <b>'+esc([t.pname,t.ptel].filter(Boolean).join(' · '))+'</b></span>':'')+'</div>'
-      +(t.instr?'<div style="font-size:12.5px;color:var(--ink3);margin-top:12px;padding-top:12px;border-top:1px solid #F0EEE9;line-height:1.45;"><span style="color:var(--ink2);font-weight:600;">'+_T('app.instructions_2')+' </span>'+esc(t.instr)+'</div>':'')
+    var k=t.disp?'disposal':'ab', lbl=t.disp?'Mise à disposition':'Transfert simple';
+    h+='<div class="nrr-card">'
+      +'<div class="nrr-top"><span class="nrr-ic">'+(typeof _chIc==='function'?_chIc(k):'')+'</span><b>'+(trips.length>1?(i+1)+'. ':'')+esc(lbl)+'</b>'
+      +'<span class="nrr-dt">'+SV(IC.cal,17)+'<span>'+esc(fd(t.date))+(t.time?' · '+esc(t.time):'')+'</span></span></div>'
+      +'<div class="nrr-rt"><div><i style="background:'+(t.disp?'#E09A2B':'#2E9A55')+'"></i><span>'+esc(t.from||'—')+'</span></div>'+(!t.disp&&t.to?'<em></em><div><i style="background:#E0605A"></i><span>'+esc(t.to)+'</span></div>':'')+'</div>'
+      +'<div class="nrr-chips">'+pill('veh',esc(cls(t.veh)))+(t.pax?pill('pax',esc(t.pax)+' '+_T('app.passager')+(String(t.pax)==='1'?'':'s')):'')
+      +(t.lug?pill('lug',esc(t.lug)):'')+(t.disp&&t.dur?pill('dur',esc(t.dur)+' h'):'')
+      +t.fl.map(function(x){ return pill('fl',esc(x)); }).join('')+t.trn.map(function(x){ return pill('trn',esc(x)); }).join('')
+      +(t.pname||t.ptel?pill('ct',esc([t.pname,t.ptel].filter(Boolean).join(' · '))):'')+'</div>'
+      +(t.instr?'<div class="nrr-instr"><b>'+_T('app.instructions_2')+'</b> '+esc(t.instr)+'</div>':'')
       +'</div>';
   });
-  h+='<div class="evr-tot">'+'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.01"/></svg><span>'+((d.type==='mixed'&&_mixDrvVal()==='any')?trips.length+' demandes séparées seront envoyées aux chauffeurs (une par trajet) : chaque trajet peut être pris par un chauffeur différent.':'Votre demande sera envoyée aux chauffeurs, qui vous feront leurs offres.')+'</span></div>';
+  h+='<div class="nrr-info">'+SV('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.01"/>',18)+'<span>'+((d.type==='mixed'&&_mixDrvVal()==='any')?trips.length+' demandes séparées seront envoyées aux chauffeurs (une par trajet) : chaque trajet peut être pris par un chauffeur différent.':'Votre demande sera envoyée aux chauffeurs, qui vous feront leurs offres.')+'</span></div>';
   box.innerHTML=h;
   m.classList.add('nr-recap-on');
+  var sb=document.getElementById('btn-submit-ride'); if(sb) sb.innerHTML=t('nr.publish')+' &rarr;';
   var tl=document.getElementById('ride-modal-title'); if(tl) tl.textContent='Récapitulatif';
   var b=m.querySelector('.modal-body'); if(b) b.scrollTop=0;
 };
 window._nrRecapBack=function(){
   var m=document.getElementById('m-new-ride'); if(!m) return;
   m.classList.remove('nr-recap-on');
+  var sb=document.getElementById('btn-submit-ride'); if(sb) sb.innerHTML=t('btn_publish')+' &rarr;';
   var tl=document.getElementById('ride-modal-title'); if(tl) tl.textContent=t('new_ride_title');
 };
 window._evEditBack=function(){

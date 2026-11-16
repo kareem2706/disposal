@@ -1150,5 +1150,8 @@
   "cc.une_conf": "1 demande confirmée",
   "cc.n_conf": "{n} demandes confirmées",
   "cc.une_dem": "1 demande",
-  "cc.n_dem": "{n} demandes"
+  "cc.n_dem": "{n} demandes",
+  "nr.verify": "Vérifiez votre demande",
+  "nr.verify_sub": "Avant de la publier aux chauffeurs",
+  "nr.publish": "Publier la demande"
 };

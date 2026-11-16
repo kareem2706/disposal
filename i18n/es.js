@@ -1150,5 +1150,8 @@
   "cc.une_conf": "1 solicitud confirmada",
   "cc.n_conf": "{n} solicitudes confirmadas",
   "cc.une_dem": "1 solicitud",
-  "cc.n_dem": "{n} solicitudes"
+  "cc.n_dem": "{n} solicitudes",
+  "nr.verify": "Revise su solicitud",
+  "nr.verify_sub": "Antes de publicarla a los chóferes",
+  "nr.publish": "Publicar la solicitud"
 };
