@@ -103,6 +103,12 @@ async function sendOne(to: string, type: string, data: Record<string, string>) {
 // ── Mise en page (commune à tous les e-mails : ../_shared/mail.ts) ──
 const b = (v?: string) => (v ? `<b style="color:#16201B;">${v}</b>` : "");
 const hi = (n?: string) => `Bonjour${n ? " " + n : ""},<br>`;
+// Sous-traitance entre fleets : pas de paiement via Bleenr, prix fixé par le donneur d'ordre (HTVA)
+const isSub = (d: Record<string, string>) => d.subcontract === "yes";
+const subPrice = (d: Record<string, string>) => {
+  const n = String(d.price ?? "").replace(/\s*(€|&euro;).*$/i, "").trim();
+  return n ? n + " € HTVA" : "";
+};
 // Carte du trajet + infos utiles (passager, référence, chauffeur, véhicule, montant)
 function trip(d: Record<string, string>, o: { price?: boolean; title?: string } = {}) {
   return tripCard(d, {
@@ -110,7 +116,7 @@ function trip(d: Record<string, string>, o: { price?: boolean; title?: string } 
     info: [
       ["Passager", d.passenger ?? ""], ["Référence", d.code ?? ""],
       ["Chauffeur", d.driver ?? ""], ["Véhicule", d.vehicle ?? ""], ["Bagages", d.luggage ?? ""],
-      ...(o.price === false ? [] : [["Montant TVAC", d.price ?? ""] as [string, string]]),
+      ...(o.price === false ? [] : [(isSub(d) ? ["Prix proposé", subPrice(d)] : ["Montant TVAC", d.price ?? ""]) as [string, string]]),
     ],
   });
 }
@@ -134,6 +140,14 @@ function build({ type, data = {} }: Payload) {
       });
 
     case "ride_created":
+      if (isSub(d)) return mail(`Sous-traitance publiée — ${d.code ?? ""}`, {
+        title: "Votre sous-traitance est publiée.",
+        preheader: "Les chauffeurs partenaires peuvent maintenant l'accepter.",
+        intro: `${hi(d.clientName)}votre sous-traitance ${b(d.code)} est en ligne. Les chauffeurs partenaires peuvent l'accepter au prix que vous avez proposé.`,
+        card: trip(d, { title: "La course" }),
+        cta: { label: "Voir ma sous-traitance", url },
+        note: "Nous vous préviendrons dès qu'un chauffeur l'aura acceptée.",
+      });
       return mail(`Demande publiée — ${d.code ?? ""}`, {
         title: "Votre demande est publiée.",
         preheader: "Les chauffeurs partenaires peuvent maintenant vous envoyer leurs offres.",
@@ -166,6 +180,14 @@ function build({ type, data = {} }: Payload) {
     }
 
     case "ride_confirmed_client":
+      if (isSub(d)) return mail(`Sous-traitance acceptée — ${d.code ?? ""}`, {
+        title: "Votre sous-traitance a été acceptée.",
+        preheader: "Un chauffeur partenaire a repris votre course.",
+        intro: `${hi(d.clientName)}un chauffeur partenaire a accepté votre sous-traitance ${b(d.code)}. La course lui est attribuée.`,
+        card: trip(d, { title: "La course" }),
+        after: callout("Règlement", "Aucun paiement ne passe par Bleenr pour une sous-traitance : le prix proposé se règle directement entre vous." + (d.driverPhone ? `<br><br>Vous pouvez joindre le chauffeur au ${b(d.driverPhone)}.` : ""), "info"),
+        cta: { label: "Voir la course", url },
+      });
       return mail(`Course confirmée — ${d.code ?? ""}`, {
         title: "Votre course est confirmée.",
         preheader: "Paiement reçu, votre chauffeur est réservé.",
@@ -177,6 +199,14 @@ function build({ type, data = {} }: Payload) {
       });
 
     case "ride_confirmed_driver":
+      if (isSub(d)) return mail(`Sous-traitance acceptée — ${d.code ?? ""}`, {
+        title: "La mission vous est attribuée.",
+        intro: `${hi(d.driverName)}vous avez accepté la sous-traitance ${b(d.code)}${subPrice(d) ? ` au prix proposé de ${b(subPrice(d))}` : ""}. La mission vous est attribuée.`,
+        card: trip(d, { title: "Votre mission" }),
+        after: callout("Règlement", "Aucun paiement ne passe par Bleenr pour une sous-traitance : le prix se règle directement avec le chauffeur qui vous l'a confiée.", "info"),
+        cta: { label: "Voir ma mission", url },
+        note: "Pensez à télécharger votre ordre de mission depuis l'application.",
+      });
       return mail(`Mission confirmée — ${d.code ?? ""}`, {
         title: "Votre mission est confirmée.",
         intro: `${hi(d.driverName)}votre offre a été acceptée et le paiement est reçu. La mission ${b(d.code)} vous est attribuée.`,
@@ -190,7 +220,7 @@ function build({ type, data = {} }: Payload) {
         title: "Course annulée.",
         intro: `${hi(d.name)}la course ${b(d.code)} a été annulée.`,
         card: trip(d),
-        after: callout("Remboursement", d.refund === "yes"
+        after: isSub(d) ? "" : callout("Remboursement", d.refund === "yes"
           ? "Un remboursement intégral sera effectué sous 5 à 10 jours ouvrables, sur le moyen de paiement utilisé."
           : "Conformément aux conditions générales, cette annulation tardive ne donne pas lieu à un remboursement.", d.refund === "yes" ? "info" : "warn"),
         cta: { label: "Ouvrir Bleenr", url },
@@ -237,6 +267,14 @@ function build({ type, data = {} }: Payload) {
       });
 
     case "new_marketplace_ride":
+      if (isSub(d)) return mail(`Nouvelle sous-traitance disponible — ${d.code ?? ""}`, {
+        title: "Nouvelle sous-traitance disponible.",
+        preheader: "Un chauffeur partenaire propose une course en sous-traitance.",
+        intro: `${hi(d.driverName)}un chauffeur partenaire propose la course ${b(d.code)} en sous-traitance, à un prix fixé.`,
+        card: trip(d, { title: "La course" }),
+        cta: { label: "Voir la sous-traitance", url },
+        note: "La course est attribuée au premier chauffeur qui l'accepte. Aucune commission Bleenr.",
+      });
       return mail(`Nouvelle course disponible — ${d.code ?? ""}`, {
         title: "Nouvelle course disponible.",
         preheader: "Une demande correspondant à votre flotte vient d'être publiée.",
@@ -511,6 +549,7 @@ Deno.serve(async (req: Request) => {
           luggage: [r.luggage_large ? r.luggage_large + " valise" + (r.luggage_large > 1 ? "s" : "") : "", r.luggage_small ? r.luggage_small + " sac" + (r.luggage_small > 1 ? "s" : "") : ""].filter(Boolean).join(" · "),
           // prix fixe uniquement pour une sous-traitance (jamais le prix d'un client)
           price: r.is_subcontract && r.final_price ? Number(r.final_price).toFixed(2).replace(".", ",") + " € HTVA" : "",
+          subcontract: r.is_subcontract ? "yes" : "",
         }));
         if (r.is_subcontract) payload.exclude_user_id = r.client_id;
       }

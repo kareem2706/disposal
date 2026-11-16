@@ -29,8 +29,8 @@ export function mailLayout(o: MailOpts) {
   const btn = o.cta
     ? `<!--CTA--><tr><td style="padding:22px 32px 0;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
-          <td align="center" bgcolor="${LEMON}" style="border-radius:10px;background:${LEMON};">
-            <a href="${o.cta.url}" style="display:block;padding:15px 20px;font-family:${FONT};font-size:15px;font-weight:600;color:${BLACK};text-decoration:none;border-radius:10px;">${o.cta.label}&nbsp;&nbsp;&rarr;</a>
+          <td align="center" bgcolor="${LEMON}" style="border-radius:10px;background-color:${LEMON};background-image:linear-gradient(${LEMON},${LEMON});">
+            <a href="${o.cta.url}" style="display:block;padding:15px 20px;font-family:${FONT};font-size:15px;font-weight:600;color:${BLACK};text-decoration:none;border-radius:10px;background-color:${LEMON};background-image:linear-gradient(${LEMON},${LEMON});">${o.cta.label}&nbsp;&nbsp;&rarr;</a>
           </td></tr></table>
       </td></tr><!--/CTA-->`
     : "";
