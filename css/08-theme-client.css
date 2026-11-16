@@ -289,6 +289,8 @@ body.is-fleet .ch-fab:not(.ch-fab-sub){display:none!important;}
 .ch-fab-perso{display:none!important;}
 @media(max-width:900px){
   body.th-client.is-fleet.pg-d-calendar .ch-fab-perso{display:inline-flex!important;}
+  .th-client .ch-fab-perso{background:#7A55C2;color:#fff;box-shadow:0 8px 24px rgba(122,85,194,.35);}
+  body.th-client.is-fleet.pg-d-calendar .page.active button[onclick="openPersonalMissionModal()"]{display:none!important;}
   body.th-client.is-fleet.pg-d-calendar .ch-fab-sub:not(.ch-fab-perso){display:none!important;}
   body.th-client.modal-open .ch-fab-perso,body.rd-open .ch-fab-perso{display:none!important;}
 }
