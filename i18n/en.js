@@ -1159,5 +1159,6 @@
   "cc.perso": "Personal",
   "ch.espace_fleet": "Your fleet area",
   "cc.terminees": "Completed",
-  "ch.soustraiter_btn": "Subcontract"
+  "ch.soustraiter_btn": "Subcontract",
+  "ch.add_perso": "Add personal mission"
 };

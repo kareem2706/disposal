@@ -1159,5 +1159,6 @@
   "cc.perso": "Personnelles",
   "ch.espace_fleet": "Votre espace fleet",
   "cc.terminees": "Terminées",
-  "ch.soustraiter_btn": "Sous-traiter"
+  "ch.soustraiter_btn": "Sous-traiter",
+  "ch.add_perso": "Ajouter mission personnelle"
 };

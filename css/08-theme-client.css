@@ -285,6 +285,13 @@ body:not(.is-fleet) .ch-fleet,body.is-fleet .ch-cli{display:none!important;}
 
 body:not(.is-fleet) .ch-fab-sub{display:none!important;}
 body.is-fleet .ch-fab:not(.ch-fab-sub){display:none!important;}
+/* Calendrier fleet : « Ajouter mission personnelle » à la place de « Sous-traiter » */
+.ch-fab-perso{display:none!important;}
+@media(max-width:900px){
+  body.th-client.is-fleet.pg-d-calendar .ch-fab-perso{display:inline-flex!important;}
+  body.th-client.is-fleet.pg-d-calendar .ch-fab-sub:not(.ch-fab-perso){display:none!important;}
+  body.th-client.modal-open .ch-fab-perso,body.rd-open .ch-fab-perso{display:none!important;}
+}
 /* Factures fleet (mobile) : totaux en lignes « libellé … montant », libellés sur une ligne */
 @media(max-width:600px){
   .inv-tot{grid-template-columns:1fr!important;gap:8px!important;}
