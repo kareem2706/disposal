@@ -923,7 +923,7 @@ var _arAllRides = [];
 var _arProfiles = {}; // id -> {name}
 
 window.arResetFilters = function(){
-  var els = ['ar-filter-status','ar-filter-client','ar-filter-driver','ar-filter-from','ar-filter-to'];
+  var els = ['ar-filter-status','ar-filter-type','ar-filter-client','ar-filter-driver','ar-filter-from','ar-filter-to'];
   els.forEach(function(id){ var el=document.getElementById(id); if(el){ el.value=''; } });
   loadAdminRides();
 };
@@ -1135,6 +1135,9 @@ window.loadAdminRides = async function(){
     var fromVal   = document.getElementById('ar-filter-from')?.value   || '';
     var toVal     = document.getElementById('ar-filter-to')?.value     || '';
     if(statusVal) q = q.eq('status', statusVal);
+    var typeVal = document.getElementById('ar-filter-type')?.value || '';
+    if(typeVal==='sub') q = q.eq('is_subcontract', true);
+    else if(typeVal==='client') q = q.or('is_subcontract.is.null,is_subcontract.eq.false');
     if(fromVal)   q = q.gte('ride_date', fromVal);
     if(toVal)     q = q.lte('ride_date', toVal);
 
@@ -1647,7 +1650,11 @@ window.refreshAdminDashboard = async function() {
     var set = function(id,val){ var el=document.getElementById(id); if(el) el.textContent=val; };
     set('admin-stat-clients', totalClients);
     set('admin-stat-fleets',  totalFleets);
-    set('admin-stat-rides',   totalRides);
+    // Courses terminées : total + détail clients / sous-traitances
+    var _doneSub = allRides.filter(function(r){ return r.status==='done' && r.is_subcontract; }).length;
+    set('admin-stat-rides',   totalRides + _doneSub);
+    set('admin-stat-rides-cli', totalRides);
+    set('admin-stat-rides-sub', _doneSub);
     // Bank transfers waiting for the admin's payment confirmation
     var _pendingPay = allRides.filter(function(r){ return r.status==='pending_payment'; }).length;
     var _ppEl = document.getElementById('admin-stat-rides-pending');

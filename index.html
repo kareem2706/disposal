@@ -1274,6 +1274,11 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div class="stat-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
           <div class="stat-label">Courses effectuées</div>
           <div class="stat-val" id="admin-stat-rides">—</div>
+          <!-- Détail : courses clients / sous-traitances terminées -->
+          <div class="adm-split" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+            <span title="Courses clients terminées" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#1B5E3B;background:#E3F1E8;border-radius:999px;padding:4px 10px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><b id="admin-stat-rides-cli">—</b> clients</span>
+            <span title="Sous-traitances terminées" style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--amber);background:var(--amber-bg);border-radius:999px;padding:4px 10px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg><b id="admin-stat-rides-sub">—</b> sous-traitances</span>
+          </div>
           <div id="admin-stat-rides-pending" style="display:none;margin-top:8px;font-size:12px;font-weight:600;color:#1E4D7B;background:#EAF1FB;border-radius:8px;padding:4px 10px;width:fit-content;cursor:pointer;" onclick="showPage('admin-rides');setTimeout(function(){var f=document.getElementById('ar-filter-status');if(f){f.value='pending_payment';if(typeof loadAdminRides==='function')loadAdminRides();}},50);" title="Voir les courses en attente de confirmation"></div>
         </div>
         <div class="stat-card sc sc-o">
@@ -1535,6 +1540,14 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
               <option value="confirmed">Confirmée</option>
               <option value="done">Terminée</option>
               <option value="cancelled">Annulée</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;">Type</label>
+            <select id="ar-filter-type" onchange="loadAdminRides()" style="padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--sand3);font-size:13px;font-family:'DM Sans',sans-serif;background:white;min-width:150px;">
+              <option value="">Tous les types</option>
+              <option value="client">Courses clients</option>
+              <option value="sub">Sous-traitances</option>
             </select>
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;">
