@@ -591,7 +591,7 @@ body .rd-veh-card{background:#fff!important;border:1px solid #E8E6E1;}
 body .rd-veh-card span[style*="border-radius:9px"]{background:#F3F2EE!important;color:var(--ink)!important;}
 body .rd-veh-card div[style*="border-top"]{border-top-color:#ECEAE5!important;}
 body .rd-pax-card div[style*="text-transform:uppercase"],body.th-lemon .rd-pax-card div[style*="text-transform:uppercase"],body .rd-veh-card div[style*="text-transform:uppercase"]{color:#3F4743!important;font-weight:700!important;letter-spacing:.06em!important;}
-body .rd-veh-card span[style*="font-family:monospace"]{background:#F3F2EE!important;border:1px solid #D9D7D1!important;color:var(--ink)!important;font-family:inherit!important;letter-spacing:.03em!important;}
+body .rd-veh-card span[style*="font-family:monospace"]{background:#fff!important;border:1.5px solid #C8102E!important;color:#C8102E!important;font-family:inherit!important;font-weight:700!important;letter-spacing:.06em!important;border-radius:6px!important;}
 body .rd-veh-card .drv-asg-btn{color:var(--ink2)!important;}
 /* Prix demandé : pastille lemon */
 .modal-ft > .rd-ft-price{background:#EEF8C4;color:var(--ink)!important;border-radius:999px;padding:9px 16px;font-weight:700!important;}
