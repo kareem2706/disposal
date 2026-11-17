@@ -2,6 +2,8 @@
 function showScreen(name){
   document.documentElement.classList.remove('boot-landing');
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  // Accueil public ou connexion : plus aucun habillage de l'espace connecté (boutons flottants, thème, page)
+  if(name!=='app'){ var _b=document.body; ['th-client','is-fleet','rd-open'].forEach(function(c){ _b.classList.remove(c); }); _b.className=_b.className.replace(/\bpg-[\w-]+/g,'').trim(); }
   document.getElementById('screen-' + name)?.classList.add('active');
   if(name==='auth' && window._gisMount) _gisMount();
 }

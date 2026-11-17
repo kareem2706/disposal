@@ -9,15 +9,17 @@ _onReady(async () => {
 
   if(localStorage.getItem(DEMO_MODE_KEY)==='1'){initDemoMode();window._appReadyResolve();return;}
 
+  // Session enregistrée sur l'appareil : on attend plus longtemps (réseau mobile lent) avant d'afficher l'accueil public
+  var _hasStoredSession=false; try{ for(var _k in localStorage){ if(/^sb-.*-auth-token$/.test(_k)){ _hasStoredSession=true; break; } } }catch(_e){}
   var _safetyTimer = setTimeout(function(){
     var _ls=document.getElementById('app-loader');
-    if(_ls && _ls.style.display!=='none'){
+    if(_ls && _ls.style.display!=='none' && !currentUser){
       console.warn('Safety timeout: forcing landing screen');
       _ls.style.display='none';
       _entering=false;
       showScreen('landing');
     }
-  }, 5000);
+  }, _hasStoredSession ? 20000 : 5000);
   try {
     console.log('[init] starting...');
     // Bibliothèque Supabase indisponible sur le CDN principal : seconde source
