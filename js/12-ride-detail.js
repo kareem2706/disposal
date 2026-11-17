@@ -761,7 +761,7 @@ function _openRideDetailImpl(el){
           phPax.outerHTML = '<div class="rd-card" id="pax-info-block">'
             + '<div class="rd-cap" style="margin-bottom:8px;">'+t('app.informations_du_passager')+'</div>'
             + '<div class="rd-line"><span class="rd-ic">'+_paxIc+'</span><div style="min-width:0;flex:1"><div class="rd-strong">'+_rdEsc(dispName)+'</div></div>'
-              + (dispPhone ? '<a class="rd-call" href="tel:'+_rdEsc(dispPhone.replace(/[^\d+]/g,''))+'">'+_rdEsc(dispPhone)+'</a>' : '')
+              + (dispPhone ? _rdCallBtn(dispPhone) : '')
             + '</div>'
             + '<div class="rd-hr"></div>'
             + '<div class="rd-cap" style="margin-bottom:6px;">'+t('app.note_au_chauffeur')+'</div>'

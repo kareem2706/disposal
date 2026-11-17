@@ -595,3 +595,8 @@ body .rd-veh-card span[style*="font-family:monospace"]{background:#fff!important
 body .rd-veh-card .drv-asg-btn{color:var(--ink2)!important;}
 /* Prix demandé : pastille lemon */
 .modal-ft > .rd-ft-price{background:#EEF8C4;color:var(--ink)!important;border-radius:999px;padding:9px 16px;font-weight:700!important;}
+
+/* Bouton d'appel : téléphone sur pastille lemon */
+.rd-call-btn{margin-left:auto;flex-shrink:0;width:34px;height:34px;border-radius:50%;background:#D9F477;color:#0E1410!important;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;transition:filter .15s;}
+.rd-call-btn:hover{filter:brightness(.95);}
+body .rd-pax-card a.rd-call-btn,body .rd-veh-card a.rd-call-btn,body.th-lemon .rd-pax-card a.rd-call-btn{background:#D9F477!important;color:#0E1410!important;}

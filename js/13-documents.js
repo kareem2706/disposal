@@ -119,6 +119,11 @@ async function _clientFleetData(r){
   return out;
 }
 // ── Blocs « Informations du passager » et « Véhicule et chauffeur » (même présentation fleet / client) ──
+// Bouton d'appel : icône téléphone sur pastille lemon (le numéro reste en infobulle)
+function _rdCallBtn(ph){
+  if(!ph) return '';
+  return '<a class="rd-call-btn" href="tel:'+_rdEsc(String(ph).replace(/[^\d+]/g,''))+'" title="Appeler '+_rdEsc(ph)+'" aria-label="Appeler '+_rdEsc(ph)+'"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1 1 .4 1.9.7 2.8a2 2 0 01-.5 2.1L8 9.9a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.6 2.8.7a2 2 0 011.7 2z"/></svg></a>';
+}
 function _rdInfoBlocks(o){
   var row=function(ic,main,extra){ return '<div style="display:flex;align-items:center;gap:10px;padding:7px 0;">'
     +'<span style="width:30px;height:30px;border-radius:9px;background:#fff;color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;">'+ic+'</span>'
@@ -133,7 +138,7 @@ function _rdInfoBlocks(o){
   var cap=function(t){ return '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:4px;">'+t+'</div>'; };
   var sub=function(t,txt){ return '<div style="border-top:1px solid #d0e4f7;margin-top:6px;padding-top:10px;">'+cap(t)
     +(txt?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+_rdEsc(txt)+'</div>':'<div style="font-size:12px;color:var(--ink4);">Aucune note</div>')+'</div>'; };
-  var tel=function(ph){ return ph?'<a href="tel:'+_rdEsc(String(ph).replace(/[^\d+]/g,''))+'" style="font-size:12.5px;color:var(--blue);text-decoration:none;white-space:nowrap;">'+_rdEsc(ph)+'</a>':''; };
+  var tel=function(ph){ return _rdCallBtn(ph); };
   var none='<span style="color:var(--ink4);">Non renseigné</span>';
   var p=o.pax||{}, v=o.veh, d=o.drv;
   var h='<div class="rd-pax-card" style="'+box+'">'+cap('Informations du passager')
@@ -271,7 +276,7 @@ function _rdFleetHtml(fd, opt){
     +(v&&v.plate?'<span style="margin-left:auto;font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.04em;background:#fff;border:1.5px solid #C0392B;border-radius:6px;padding:3px 8px;color:#C0392B;white-space:nowrap;">'+_rdEsc(v.plate)+'</span>':'')+'</div>';
   if(d&&(d.name||d.phone)){
     h+='<div class="rd-line"><span class="rd-ic">'+userIc+'</span><div style="min-width:0;flex:1"><div class="rd-strong">'+_rdEsc(d.name||'Chauffeur')+'</div>'+(d.company?'<div class="rd-muted">'+_rdEsc(d.company)+'</div>':'')+'</div>'
-      +(d.phone&&!opt.noPhone?'<a class="rd-call" href="tel:'+_rdEsc(d.phone.replace(/[^\d+]/g,''))+'">'+_rdEsc(d.phone)+'</a>':'')+'</div>';
+      +(d.phone&&!opt.noPhone?_rdCallBtn(d.phone):'')+'</div>';
   }
   return h;
 }
