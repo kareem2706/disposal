@@ -107,6 +107,8 @@
     if((!fl&&!tr&&!fl2&&!tr2)||!canSee(r)) return '';
     css();
     var live=LIVE.indexOf(r.status)>=0;
+    // Le numéro est déjà dans les pastilles en haut de la fiche : ce bloc ne sert qu'au statut en direct
+    if(!live) return '';
     var card=function(kind,num,slot){
       return '<div class="tr-card" id="tr-'+(slot||kind)+'"><div class="tr-hd"><span class="tr-ic">'+ICON[kind]+'</span><div style="min-width:0"><div class="tr-ttl">'+(kind==='flight'?'Vol ':'Train ')+esc(num)+'</div>'
         +'<div class="tr-sub">'+(live?'Chargement du statut…':'Renseigné par le client')+'</div></div></div></div>';
@@ -131,7 +133,7 @@
     var head='<div class="tr-hd"><span class="tr-ic">'+ICON[it.kind]+'</span><div style="min-width:0"><div class="tr-ttl">'+esc((it.kind==='flight'?'Vol ':'Train ')+(it.ok&&it.label?it.label:it.number))+'</div>'
       +'<div class="tr-sub">'+esc(it.ok?[it.airline,(it.focus==='arr'?(it.kind==='flight'?'Atterrissage suivi':'Arrivée suivie'):(it.kind==='flight'?'Décollage suivi':'Départ suivi'))].filter(Boolean).join(' · '):(it.message||'Statut indisponible'))+'</div></div>'
       +(it.ok?'<span class="tr-pill tr-'+esc(it.state||'unknown')+'">'+esc(it.statusText||'')+'</span>':'')+'</div>';
-    if(!it.ok){ el.innerHTML=head; return; }
+    if(!it.ok){ el.remove(); return; }   // statut introuvable : le numéro reste dans les pastilles
     var upd=it.updatedAt?new Date(it.updatedAt):new Date();
     el.innerHTML=head+'<div class="tr-cols">'+point(it.dep,'Départ',it.focus==='dep',it.kind)+point(it.arr,'Arrivée',it.focus==='arr',it.kind)+'</div>'
       +'<div class="tr-foot">'+t('app.mis_a_jour_a')+' '+String(upd.getHours()).padStart(2,'0')+':'+String(upd.getMinutes()).padStart(2,'0')+' '+t('app.actualise_automatiquement')+'</div>';
@@ -148,7 +150,7 @@
         ((res.data&&res.data.items)||[]).forEach(render);
       }catch(e){
         console.warn('[transport-status]', e);
-        ['flight','train','flight2','train2'].forEach(function(k){ var el=document.querySelector('#tr-'+k+' .tr-sub'); if(el&&/Chargement/.test(el.textContent)) el.textContent='Statut momentanément indisponible'; });
+        ['flight','train','flight2','train2'].forEach(function(k){ var el=document.querySelector('#tr-'+k+' .tr-sub'); if(el&&/Chargement/.test(el.textContent)) el.closest('.tr-card').remove(); });
       }
     };
     load();
