@@ -1339,7 +1339,9 @@ window.arOpenDetail = async function(row){
   if(r.final_price){
     var _pr = await _ridePrice(r);
     var tvac = _pr.tvac, htva = _pr.htva, tvaAmt = _pr.tva;
-    var _cp = await _commPctForDriver(r.driver_id);
+    // Sous-traitance : réglée entre fleets, hors Bleenr — aucune commission
+    var _isSubR = !!r.is_subcontract;
+    var _cp = _isSubR ? 0 : await _commPctForDriver(r.driver_id);
     var commission = parseFloat((htva * _cp / 100).toFixed(2));
     var driverNet = parseFloat((htva - commission).toFixed(2));
     var fmt = function(v){ return v.toFixed(2).replace('.',',')+' €'; };
@@ -1347,10 +1349,11 @@ window.arOpenDetail = async function(row){
     infoRows += '<div style="padding:7px 0;border-bottom:1px solid var(--sand2);">'
       +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">Détail du prix</div>'
       +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Prix HTVA</span><span>'+fmt(htva)+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Commission plateforme ('+_pctTxt(_cp)+' %)</span><span style="color:var(--red);">− '+fmt(commission)+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Total</span><span style="color:var(--green);font-weight:600;">'+fmt(driverNet)+'</span></div>'
+      +(_isSubR ? '' : '<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Commission plateforme ('+_pctTxt(_cp)+' %)</span><span style="color:var(--red);">− '+fmt(commission)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">Total</span><span style="color:var(--green);font-weight:600;">'+fmt(driverNet)+'</span></div>')
       +'<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;"><span style="color:var(--ink3);">TVA '+_pr.pct+'%</span><span>'+fmt(tvaAmt)+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;padding:5px 0 2px;border-top:1px solid var(--sand3);margin-top:4px;"><span>Total TVAC</span><span>'+fmt(tvac)+'</span></div>'
+      +(_isSubR ? '<div style="font-size:11.5px;color:var(--ink3);margin-top:6px;">Sous-traitance : prix fixé par la fleet, réglé directement entre fleets (hors Bleenr), sans commission.</div>' : '')
     +'</div>';
   }
 
