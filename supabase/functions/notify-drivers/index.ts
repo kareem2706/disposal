@@ -65,6 +65,7 @@ const EN: Record<string, string> = {
   "En chemin": "On the way", "Le chauffeur est en route vers la prise en charge.": "The driver is heading to the pick-up.",
   "Client à bord": "Client on board", "Le passager est à bord, la mise à disposition a commencé.": "The passenger is on board, the hourly hire has started.",
   "En route vers la destination": "Heading to the destination", "Le passager est à bord, direction ": "The passenger is on board, heading to ", "la destination": "the destination",
+  "Sous-traitance acceptée": "Subcontract accepted", " a accepté votre course.": " accepted your ride.", "Un chauffeur partenaire": "A partner driver",
   "Course terminée": "Ride completed", "Le sous-traitant a terminé la course.": "The subcontractor has completed the ride.",
   // lignes envoyées par subcontract_push.sql
   "Le véhicule a été retiré": "The vehicle was removed", "Véhicule assigné : ": "Vehicle assigned: ", "Changement de véhicule : ": "Vehicle changed: ",
@@ -195,11 +196,19 @@ async function pushPoster(rec: Ride, title: string, lead: string | ((l: Lang) =>
     body: typeof lead === "function" ? lead(l) : lead,   // sobre : uniquement ce qui a changé (la référence est dans le titre)
     sound: "default", data: { ride_id: rec.id, kind: "sub_update" }, channelId: "default",
   }));
-  return msgs.length ? (await sendAll(msgs)).sent : 0;
+  const res = msgs.length ? await sendAll(msgs) : { sent: 0, dead: [] as string[] };
+  console.log("sub_update", rec.booking_code ?? rec.id, title, "tokens", msgs.length, "sent", res.sent);
+  return res.sent;
 }
 async function subRideEvents(rec: Ride, old: Ride | null) {
   if (!old || !rec?.is_subcontract || !rec.client_id || !rec.driver_id || rec.driver_id === rec.client_id) return 0;
-  if (rec.driver_id !== old.driver_id) return 0;   // acceptation : gérée ailleurs
+  // Acceptation par un autre chauffeur / fleet : le donneur d'ordre est prévenu
+  if (rec.driver_id !== old.driver_id) {
+    if (old.driver_id || !["confirmed", "active"].includes(rec.status)) return 0;
+    const pr: any[] = await rest(`profiles?id=eq.${rec.driver_id}&select=company_name,first_name,last_name`).catch(() => []);
+    const who = (pr[0]?.company_name || [pr[0]?.first_name, pr[0]?.last_name].filter(Boolean).join(" ") || "").trim();
+    return await pushPoster(rec, "Sous-traitance acceptée", (l) => (who || T(l, "Un chauffeur partenaire")) + T(l, " a accepté votre course."));
+  }
   let n = 0;
   const nn = tag(rec.notes, "offer_note"), on = tag(old.notes, "offer_note");
   if (nn !== on) n += await pushPoster(rec, "Sous-traitance mise à jour", (l) => nn ? T(l, on ? "Note modifiée : " : "Note ajoutée : ") + nn.slice(0, 160) : T(l, "La note a été supprimée"));
