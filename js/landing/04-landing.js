@@ -436,3 +436,18 @@ document.getElementById('screen-landing') && (function(){
   setChap(0); frame();
   if(reduced) rvs.forEach(function(el){ el.classList.add('in'); });
 })();
+
+// Lien direct vers l'inscription fleet (e-mails, campagnes) : https://www.bleenr.com/?inscription=fleet
+_onReady(function(){
+  try{
+    var q = new URLSearchParams(location.search);
+    if((q.get('inscription') || '').toLowerCase() !== 'fleet') return;
+    q.delete('inscription');
+    history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash);
+    _loadApp().then(function(){
+      if(typeof currentUser !== 'undefined' && currentUser) return;   // déjà connecté : rien à faire
+      window.showLandingAuth('register');
+      setTimeout(function(){ try{ selectRole('driver'); regNextStep(); }catch(e){} }, 60);
+    });
+  }catch(e){}
+});
