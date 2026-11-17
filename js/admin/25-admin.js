@@ -1621,8 +1621,9 @@ window.refreshAdminDashboard = async function() {
     var [clientsRes, fleetsRes, ridesRes] = await Promise.all([
       sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','client'),
       sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','driver'),
-      sb.from('rides').select('id,final_price,ride_date,status,is_subcontract,payment_method,refund_due,refund_done_at')
-    ]);
+      sb.from('rides').select('id,final_price,ride_date,status,is_subcontract,payment_method,refund_due,refund_done_at'),
+      sb.from('fleet_drivers').select('id', {count:'exact',head:true})
+    ]).then(function(a){ window._admDrvCount=a[3]&&a[3].count||0; return a; });
 
     var totalClients = clientsRes.count || 0;
     var totalFleets  = fleetsRes.count  || 0;
@@ -1710,6 +1711,22 @@ window.refreshAdminDashboard = async function() {
     set('admin-sum-refund-stripe', refundStripe > 0 ? '− '+fmt(refundStripe) : '0,00 €');
     set('admin-sum-refund-total',  refundTotal  > 0 ? '− '+fmt(refundTotal)  : '0,00 €');
     set('admin-sum-fleets',  totalFleets);
+
+    // Sous-traitances : volume (prix fixé, HTVA) des sous-traitances attribuées / en cours / terminées, et taux
+    var _subOk = function(r){ return r.is_subcontract && ['confirmed','active','done'].indexOf(r.status)>=0; };
+    var _sumP = function(a){ return a.reduce(function(s,r){ return s+(parseFloat(r.final_price)||0); },0); };
+    var subAll = allRides.filter(_subOk);
+    set('admin-stat-subvol', fmt(_sumP(subAll)));
+    set('admin-stat-subvol-sub', subAll.length+' sous-traitance'+(subAll.length>1?'s':'')+' attribuée'+(subAll.length>1?'s':'')+' (HTVA)');
+    var subs = filteredRides.filter(function(r){ return r.is_subcontract && r.status!=='personal'; });
+    var nC = subs.length, nX = subs.filter(function(r){ return r.status==='cancelled'; }).length, nD = subs.filter(function(r){ return r.status==='done'; }).length;
+    var pct = function(n){ return nC ? ' · '+(Math.round(1000*n/nC)/10).toString().replace('.',',')+' %' : ''; };
+    set('admin-sum-sub-period-label', periodLbl);
+    set('admin-sum-drivers', window._admDrvCount||0);
+    set('admin-sum-sub-created', nC);
+    set('admin-sum-sub-cancelled', nX+pct(nX));
+    set('admin-sum-sub-done', nD+pct(nD));
+    set('admin-sum-sub-vol', fmt(_sumP(subs.filter(_subOk))));
   } catch(e) {
     console.error('loadAdminDashboard error', e);
   }

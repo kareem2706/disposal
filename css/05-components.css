@@ -577,3 +577,4 @@ option[hidden]{display:none;}
   .fl-dn{white-space:normal;}
   .fl-val{width:100%;padding-left:44px;}
 }
+@media(min-width:1101px){#admin-top-stats{grid-template-columns:repeat(5,1fr);}}

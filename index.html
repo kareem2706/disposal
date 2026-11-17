@@ -1283,6 +1283,12 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div class="stat-val stat-money" id="admin-stat-ca">—</div>
           <div class="stat-sub">Commissions plateforme (HTVA)</div>
         </div>
+        <div class="stat-card sc sc-g">
+          <div class="stat-card-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg></div>
+          <div class="stat-label">Volume sous-traitance</div>
+          <div class="stat-val stat-money" id="admin-stat-subvol">—</div>
+          <div class="stat-sub" id="admin-stat-subvol-sub">Montant total des sous-traitances (HTVA)</div>
+        </div>
       </div>
       <div id="admin-live-rides" style="display:none;"></div>
       <!-- Period filter -->
@@ -1343,9 +1349,32 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           </div>
         </div>
         <div class="card" style="padding:0;">
-          <div class="card-hd" style="font-weight:700;">Fleets</div>
-          <div style="padding:18px 20px;">
-            <div style="font-size:14.5px;font-weight:700;">Inscrits : <span id="admin-sum-fleets">—</span></div>
+          <div class="card-hd" style="font-weight:700;">Fleets &amp; sous-traitances <span id="admin-sum-sub-period-label" style="font-size:11px;font-weight:400;color:var(--ink3);margin-left:6px;"></span></div>
+          <div style="padding:14px 20px;display:flex;flex-direction:column;gap:0;">
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;color:var(--ink3);">Fleets inscrites</span>
+              <span style="font-size:13px;font-weight:600;" id="admin-sum-fleets">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;color:var(--ink3);">Chauffeurs enregistrés</span>
+              <span style="font-size:13px;font-weight:600;" id="admin-sum-drivers">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;color:var(--ink3);">Sous-traitances créées</span>
+              <span style="font-size:13px;font-weight:600;" id="admin-sum-sub-created">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;color:var(--ink3);">Annulées</span>
+              <span style="font-size:13px;font-weight:600;color:var(--red);" id="admin-sum-sub-cancelled">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;color:var(--ink3);">Terminées</span>
+              <span style="font-size:13px;font-weight:600;color:var(--green);" id="admin-sum-sub-done">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;">
+              <span style="font-size:12.5px;font-weight:600;">Volume (HTVA)</span>
+              <span style="font-size:14px;font-weight:700;" id="admin-sum-sub-vol">—</span>
+            </div>
           </div>
         </div>
       </div>
