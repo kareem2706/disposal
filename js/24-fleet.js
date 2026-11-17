@@ -484,8 +484,8 @@ async function loadFleetVehicles(){
         ?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:8px;">'+t('app2.rejete')+'</span>'
         :'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-weight:600;margin-left:8px;">'+t('app.en_attente')+'</span>';
     var _plate=v.plate?'<span class="fl-plate">'+_chEsc(String(v.plate).toUpperCase())+'</span>':'';
-    return _grpHd+'<div class="fl-item"><div class="fl-hd"><div class="fl-ttl"><div class="fl-name"><b>'+_chEsc((v.brand||'')+' '+(v.model||''))+'</b>'+_flStatus(vStatus)+'</div>'
-      +(_plate?'<div class="fl-sub">'+_plate+'</div>':'')+amenHtml+'</div>'+_flActions('editVehicle','deleteVehicle',safeId)+'</div>'
+    return _grpHd+'<div class="fl-item"><div class="fl-hd"><div class="fl-ttl"><div class="fl-name"><b>'+_chEsc((v.brand||'')+' '+(v.model||''))+'</b>'+_plate+_flStatus(vStatus)+'</div>'
+      +amenHtml+'</div>'+_flActions('editVehicle','deleteVehicle',safeId)+'</div>'
       +_flDocs(docs,['carte_grise','assurance','controle_technique','vignette_identification'])+'</div>';
   }).join('');
 }
