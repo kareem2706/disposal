@@ -35,6 +35,7 @@ returns boolean language sql stable security definer set search_path = public as
   select exists (select 1 from fleet_vehicles where fleet_id = auth.uid() and coalesce(active, true) and status = 'validated')
      and exists (select 1 from fleet_drivers  where fleet_id = auth.uid() and coalesce(active, true) and status = 'validated');
 $$;
+revoke execute on function public.fleet_assets_ready() from public, anon;
 grant execute on function public.fleet_assets_ready() to authenticated;
 
 create or replace function public.api_offer_submit(p_ride uuid, p_price numeric, p_message text, p_vehicle uuid, p_km jsonb)
