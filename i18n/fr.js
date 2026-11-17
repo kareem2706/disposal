@@ -614,6 +614,8 @@
   "app2.pour_recevoir_des_demandes_vous": "Pour recevoir des demandes, vous devez d’abord faire vérifier votre compte : ajoutez vos documents société, vos véhicules et vos chauffeurs dans votre profil. Bleenr les validera ensuite.",
   "app2.prenom_et_nom_sont_requis": "Prénom et nom sont requis",
   "app2.prix": "Prix ↑",
+  "sub.votre_offre": "Votre offre",
+  "sub.offre_acceptee": "Montant de l’offre acceptée",
   "app2.prix_demande": "Prix demandé :",
   "app2.proposition_du_chauffeur": "· proposition du chauffeur",
   "app2.rejete": "Rejeté",

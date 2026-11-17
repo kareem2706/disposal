@@ -607,3 +607,9 @@ body .sub-cli-box{background:#F8F7F4!important;}
 /* Cartes missions : pastille sous-traitance */
 .chr-st{align-items:center;}
 .chr-st .chr-sub{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--amber-bg);color:var(--amber);flex-shrink:0;}
+
+/* Fiche sous-traitance : montant selon le rôle (Votre offre / Montant de l'offre acceptée) */
+#detail-ft.has-sub-amt{flex-wrap:wrap;}
+#detail-ft .rd-sub-amt{flex:0 0 100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#EEF8C4;color:var(--ink);border-radius:14px;padding:10px 14px;font-size:13.5px;}
+#detail-ft .rd-sub-amt span{font-weight:500;}
+#detail-ft .rd-sub-amt b{font-weight:700;font-size:15px;white-space:nowrap;}

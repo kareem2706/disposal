@@ -1025,7 +1025,18 @@ function _openRideDetailImpl(el){
       ft=(subDonePrice||'')+closeBtn;
     }
   }
-  var ftEl=document.getElementById('detail-ft');if(ftEl)ftEl.innerHTML=ft;
+  // Sous-traitance : montant affiché selon le rôle — la fleet qui a publié voit « Votre offre »,
+  // la fleet qui a accepté voit « Montant de l'offre acceptée » (ligne pleine largeur en bas de la fiche)
+  if(r.is_subcontract && r.final_price && currentUser && r.status!=='personal'){
+    var _subRole = r.client_id===currentUser.id ? 'poster' : (r.driver_id===currentUser.id ? 'taker' : '');
+    if(_subRole){
+      ft = ft.replace(/<div class="rd-ft-price"[^>]*>[^<]*<\/div>/,'<div style="margin-right:auto;"></div>')
+             .replace(/<div style="margin-right:auto;padding:6px 12px;background:var\(--amber-bg\)[^>]*>[^<]*<\/div>/,'<div style="margin-right:auto;"></div>');
+      ft = '<div class="rd-sub-amt"><span>'+(_subRole==='poster'?t('sub.votre_offre'):t('sub.offre_acceptee'))+'</span><b>'
+         + parseFloat(r.final_price).toFixed(2).replace('.',',')+' € HTVA</b></div>' + ft;
+    }
+  }
+  var ftEl=document.getElementById('detail-ft');if(ftEl){ ftEl.innerHTML=ft; ftEl.classList.toggle('has-sub-amt', !!ftEl.querySelector('.rd-sub-amt')); }
   // Signalement déjà ouvert : l'action est remplacée par un libellé non cliquable
   if(isClient && ftEl && ftEl.querySelector('.rd-prob-item')){
     (async function(rid){
