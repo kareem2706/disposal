@@ -251,17 +251,10 @@ async function loadFleetDocs(){
   if(statusEl)statusEl.innerHTML=_sectionStatusHtml(_fleetDocsData);
   if(error||!data||data.length===0){el.innerHTML='<div style="color:var(--ink4);font-size:12px;">'+t('app2.aucun_document_ajoute')+'</div>';return;}
   var docLabels={licence_lvc:'Licence LVC',assurance_rc:'Assurance RC Pro',kbis:'Extrait Kbis/BCE',statuts:'Statuts',autre:'Autre'};
-  el.innerHTML=data.map(function(d){
+  el.innerHTML='<div class="fl-item fl-co">'+data.map(function(d){
     var safeId=d.id.replace(/'/g,'');
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--sand2);">'
-      +'<div style="flex:1;min-width:0;">'
-      +'<a href="'+d.file_url+'" target="_blank" style="display:inline-block;font-size:11px;padding:3px 8px;background:var(--blue-bg);color:var(--blue);border-radius:5px;text-decoration:none;font-weight:500;">'+(docLabels[d.doc_type]||d.doc_type)+'</a>'
-      +'</div>'
-      +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
-      +'<button style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:2px;" title="'+t('app.modifier')+'" onclick="editFleetDoc(\''+safeId+'\',\''+d.doc_type+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
-      +'<button style="background:none;border:none;color:var(--red);cursor:pointer;padding:2px;" title="'+t('app.supprimer')+'" onclick="deleteFleetDoc(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>'
-      +'</div></div>';
-  }).join('');
+    return '<div class="fl-corow">'+_flDocRow(d, docLabels[d.doc_type]||d.doc_type)+_flActions("editFleetDocRow","deleteFleetDoc",safeId)+'</div>';
+  }).join('')+'</div>';
 }
 
 window.openFleetDocModal=function(editId,editType){
@@ -304,6 +297,7 @@ window.checkFleetDocTypeStatus=function(){
 };
 
 window.editFleetDoc=function(id,docType){openFleetDocModal(id,docType);};
+window.editFleetDocRow=function(id){ var d=(_fleetDocsData||[]).find(function(x){return x.id===id;}); openFleetDocModal(id, d?d.doc_type:'autre'); };
 
 window.saveFleetDoc=async function(){
   var errEl=document.getElementById('fd-err');
@@ -463,7 +457,7 @@ async function loadFleetVehicles(){
     if(v.vehicle_class!==_lastCls){
       _lastCls=v.vehicle_class;
       var _nb=data.filter(function(x){return x.vehicle_class===v.vehicle_class;}).length;
-      _grpHd='<div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);padding:14px 0 4px;border-bottom:1px solid var(--sand2);">'+(classLabels[v.vehicle_class]||v.vehicle_class||'—')+' <span style="font-weight:500;color:var(--ink4);">· '+_nb+'</span></div>';
+      _grpHd='<div class="fl-grp">'+(classLabels[v.vehicle_class]||v.vehicle_class||'—')+' <span style="font-weight:500;color:var(--ink4);">· '+_nb+'</span></div>';
     }
     var docsHtml=docs.length>0
       ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+docs.map(_docBadge).join('')+'</div>'
@@ -489,14 +483,10 @@ async function loadFleetVehicles(){
       :vStatus==='rejected'
         ?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:8px;">'+t('app2.rejete')+'</span>'
         :'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-weight:600;margin-left:8px;">'+t('app.en_attente')+'</span>';
-    return _grpHd+'<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
-      +'<div style="flex:1;min-width:0;"><div style="font-weight:500;font-size:13px;display:flex;align-items:center;">'+v.brand+' '+v.model+vStatusBadge+'</div>'
-      +'<div style="font-size:11px;color:var(--ink4);">'+(v.color||'')+' \u00b7 '+(classLabels[v.vehicle_class]||v.vehicle_class)+(v.plate?' \u00b7 '+v.plate:'')+'</div>'
-      +amenHtml+docsHtml+'</div>'
-      +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
-      +'<button style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:2px;" title="'+t('app.modifier')+'" onclick="editVehicle(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
-      +'<button style="background:none;border:none;color:var(--red);cursor:pointer;padding:2px;" title="'+t('app.supprimer')+'" onclick="deleteVehicle(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>'
-      +'</div></div>';
+    var _plate=v.plate?'<span class="fl-plate">'+_chEsc(String(v.plate).toUpperCase())+'</span>':'';
+    return _grpHd+'<div class="fl-item"><div class="fl-hd"><div class="fl-ttl"><div class="fl-name"><b>'+_chEsc((v.brand||'')+' '+(v.model||''))+'</b>'+_flStatus(vStatus)+'</div>'
+      +(_plate?'<div class="fl-sub">'+_plate+'</div>':'')+amenHtml+'</div>'+_flActions('editVehicle','deleteVehicle',safeId)+'</div>'
+      +_flDocs(docs,['carte_grise','assurance','controle_technique','vignette_identification'])+'</div>';
   }).join('');
 }
 
@@ -596,6 +586,44 @@ function _docBadge(dc){
   return '<a href="'+dc.file_url+'" target="_blank" style="font-size:10px;padding:2px 7px;background:'+bg+';color:'+col+';border-radius:4px;text-decoration:none;font-weight:500;white-space:nowrap;">'+lbl+extra+'</a>';
 }
 var _LICENSE_LABELS={bruxelles:'Licence bruxelloise',wallonie:'Licence wallonne',flandre:'Licence flamande'};
+
+// ── Présentation des listes du profil fleet (chauffeurs, véhicules, documents) ──
+var _DOC_FULL={carte_grise:"Certificat d'immatriculation",assurance:"Certificat d'assurance",controle_technique:'Contrôle technique',vignette_identification:"Vignette d'identification",permis_conduire:'Permis de conduire',carte_identite:"Carte d'identité",certificat_capacite:'Certificat de capacité',carte_vtc:'Carte VTC'};
+var _FL_IC={
+  doc:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5h8l3.5 3.5v13.5h-11.5z"/><path d="M14.5 3.5v3.5h3.5"/><path d="M9.5 12h5.5M9.5 15.5h5.5"/></svg>',
+  ok:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  warn:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5L2.5 20h19z"/><path d="M12 10v4M12 17h.01"/></svg>',
+  ko:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>',
+  wait:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>'
+};
+function _flStatus(st){
+  var c=function(k){ return String(t(k)).replace(/^[\u2713\u2714\u2715\u2717\u25cf\u23f3\s]+/,''); };
+  if(st==='validated') return '<span class="fl-st fl-ok">'+_FL_IC.ok+c('app2.valide')+'</span>';
+  if(st==='rejected') return '<span class="fl-st fl-ko">'+_FL_IC.ko+c('app2.rejete')+'</span>';
+  return '<span class="fl-st fl-wait">'+_FL_IC.wait+c('app.en_attente')+'</span>';
+}
+function _flActions(editFn,delFn,id){
+  return '<div class="fl-act"><button type="button" title="'+t('app.modifier')+'" onclick="'+editFn+'(\''+id+'\')"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+    +'<button type="button" class="fl-del" title="'+t('app.supprimer')+'" onclick="'+delFn+'(\''+id+'\')"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button></div>';
+}
+// Une ligne par document : nom (ouvre le PDF) + validité
+function _flDocRow(dc, label){
+  var right='';
+  if(dc.expires_at){
+    var days=Math.floor((new Date(String(dc.expires_at).slice(0,10)+'T23:59:59')-new Date())/86400000);
+    if(days<0) right='<span class="fl-val fl-ko">'+_FL_IC.ko+'Expiré le '+_docFmt(dc.expires_at)+'</span>';
+    else if(days<=30) right='<span class="fl-val fl-warn">'+_FL_IC.warn+'Expire le '+_docFmt(dc.expires_at)+'</span>';
+    else right='<span class="fl-val fl-ok">'+_FL_IC.ok+"Valide jusqu'au "+_docFmt(dc.expires_at)+'</span>';
+  } else if(dc.uploaded_at){
+    right='<span class="fl-val fl-muted">Ajouté le '+_docFmt(dc.uploaded_at)+'</span>';
+  }
+  return '<a class="fl-doc" href="'+dc.file_url+'" target="_blank" rel="noopener"><span class="fl-dic">'+_FL_IC.doc+'</span><span class="fl-dn">'+_chEsc(label||_DOC_FULL[dc.doc_type]||dc.doc_type)+'</span>'+right+'</a>';
+}
+function _flDocs(docs, order){
+  if(!docs.length) return '';
+  var o=order||[]; docs=docs.slice().sort(function(a,b){ var x=o.indexOf(a.doc_type), y=o.indexOf(b.doc_type); return (x<0?99:x)-(y<0?99:y); });
+  return '<div class="fl-docs">'+docs.map(function(dc){ return _flDocRow(dc); }).join('')+'</div>';
+}
 
 window.openVehicleModal=function(){
   window._editVehicleId=null;
@@ -830,23 +858,10 @@ async function loadFleetDriversList(){
   el.innerHTML=data.map(function(d){
     var safeId=d.id.replace(/'/g,'');
     var docs=drvDocsMap[d.id]||[];
-    var docsHtml=docs.length>0
-      ?'<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+docs.map(_docBadge).join('')+'</div>'
-      :'';
-    var dStatus=d.status||'pending';
-    var dStatusBadge=dStatus==='validated'
-      ?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--ok-bg,var(--green-bg));color:var(--ok,var(--green));font-weight:600;margin-left:8px;">'+t('app2.valide')+'</span>'
-      :dStatus==='rejected'
-        ?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:8px;">'+t('app2.rejete')+'</span>'
-        :'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-weight:600;margin-left:8px;">'+t('app.en_attente')+'</span>';
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--sand2);">'
-      +'<div style="flex:1;min-width:0;"><div style="font-weight:500;font-size:13px;display:flex;align-items:center;">'+d.first_name+' '+d.last_name+dStatusBadge+'</div>'
-      +'<div style="font-size:11px;color:var(--ink4);">'+[d.phone||'',d.email||'',_LICENSE_LABELS[d.license_region]||''].filter(Boolean).join(' \u00b7 ')+'</div>'
-      +docsHtml+'</div>'
-      +'<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">'
-      +'<button style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:2px;" title="'+t('app.modifier')+'" onclick="editDriver(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-8 8H3v-3L11 2z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
-      +'<button style="background:none;border:none;color:var(--red);cursor:pointer;padding:2px;" title="'+t('app.supprimer')+'" onclick="deleteDriver(\''+safeId+'\')"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><polyline points="3,4 13,4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 4V3h6v1M6 7v5M10 7v5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4 4l.7 8.5a1 1 0 001 .9h4.6a1 1 0 001-.9L12 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></button>'
-      +'</div></div>';
+    var sub=[d.phone||'',d.email||'',_LICENSE_LABELS[d.license_region]||''].filter(Boolean).map(_chEsc).join(' \u00b7 ');
+    return '<div class="fl-item"><div class="fl-hd"><div class="fl-ttl"><div class="fl-name"><b>'+_chEsc((d.first_name||'')+' '+(d.last_name||''))+'</b>'+_flStatus(d.status||'pending')+'</div>'
+      +(sub?'<div class="fl-sub">'+sub+'</div>':'')+'</div>'+_flActions('editDriver','deleteDriver',safeId)+'</div>'
+      +_flDocs(docs,['permis_conduire','carte_identite','certificat_capacite','carte_vtc'])+'</div>';
   }).join('');
 }
 

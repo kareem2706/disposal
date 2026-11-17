@@ -536,3 +536,44 @@ option[hidden]{display:none;}
 .rdv-hero b + p.rdv-l{margin-top:12px;}
 .rdv-hero p.rdv-l svg{flex-shrink:0;opacity:.9;}
 .rdv-hero p.rdv-l span{min-width:0;}
+
+/* ── Profil fleet : chauffeurs, véhicules, documents (une fiche par élément, un document par ligne) ── */
+#fleet-drivers-list,#fleet-vehicles-list,#fleet-docs-list{display:flex;flex-direction:column;gap:12px;}
+.fl-grp{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink4);padding:10px 2px 0;}
+.fl-item{background:#FAFAF8;border-radius:16px;padding:18px 18px 8px;}
+.fl-item.fl-co{padding:6px 18px;}
+.fl-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.fl-ttl{min-width:0;flex:1;}
+.fl-name{display:flex;align-items:center;flex-wrap:wrap;gap:8px;}
+.fl-name b{font-size:15.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em;}
+.fl-sub{font-size:13px;color:var(--ink3);margin-top:6px;line-height:1.5;}
+.fl-st{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;}
+.fl-st.fl-ok{background:#E8F5EC;color:#1F7A3D;}
+.fl-st.fl-ko{background:#FDECEA;color:#C0392B;}
+.fl-st.fl-wait{background:#FFF4DB;color:#9A6400;}
+.fl-act{display:flex;gap:4px;flex-shrink:0;}
+.fl-act button{width:34px;height:34px;border-radius:10px;border:none;background:transparent;color:var(--ink3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+.fl-act button:hover{background:#EFEEEA;color:var(--ink);}
+.fl-act button.fl-del{color:#C0392B;}
+.fl-act button.fl-del:hover{background:#FDECEA;}
+.fl-docs{margin-top:14px;border-top:1px solid #EEECE7;}
+.fl-doc{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #EEECE7;text-decoration:none;color:var(--ink);min-width:0;flex:1;}
+.fl-docs .fl-doc:last-child{border-bottom:none;}
+.fl-dic{width:32px;height:32px;border-radius:9px;background:#F1EFEA;color:var(--ink2);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.fl-dn{flex:1;min-width:0;font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fl-doc:hover .fl-dn{text-decoration:underline;}
+.fl-val{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:500;white-space:nowrap;flex-shrink:0;}
+.fl-val.fl-ok{color:#1F7A3D;}
+.fl-val.fl-warn{color:#9A6400;}
+.fl-val.fl-ko{color:#C0392B;}
+.fl-val.fl-muted{color:var(--ink4);}
+.fl-corow{display:flex;align-items:center;gap:10px;border-bottom:1px solid #EEECE7;}
+.fl-corow:last-child{border-bottom:none;}
+.fl-corow .fl-doc{border-bottom:none;}
+.fl-plate{display:inline-flex;align-items:center;background:#fff;color:#C8102E;border:1.5px solid #C8102E;border-radius:6px;padding:3px 9px;font:700 12.5px/1.2 'DM Sans',sans-serif;letter-spacing:.06em;white-space:nowrap;}
+@media(max-width:600px){
+  .fl-item{padding:16px 14px 6px;}
+  .fl-doc{flex-wrap:wrap;row-gap:2px;}
+  .fl-dn{white-space:normal;}
+  .fl-val{width:100%;padding-left:44px;}
+}
