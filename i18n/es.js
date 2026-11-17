@@ -1160,5 +1160,12 @@
   "ch.espace_fleet": "Su espacio flota",
   "cc.terminees": "Completadas",
   "ch.soustraiter_btn": "Subcontratar",
-  "ch.add_perso": "Añadir misión personal"
+  "ch.add_perso": "Añadir misión personal",
+  "fv.veh_title": "Ningún vehículo verificado",
+  "fv.veh_text": "Ya no puede hacer ofertas ni aceptar viajes subcontratados. Un documento de su vehículo ha caducado o está pendiente de verificación: actualícelo en su perfil.",
+  "fv.veh_btn": "Mis vehículos",
+  "fv.drv_title": "Ningún conductor verificado",
+  "fv.drv_text": "Ya no puede hacer ofertas ni aceptar viajes subcontratados. Un documento de su conductor ha caducado o está pendiente de verificación: actualícelo en su perfil.",
+  "fv.drv_btn": "Mis conductores",
+  "fv.non_verifie": "No verificado"
 };

@@ -484,7 +484,7 @@ async function loadFleetVehicles(){
         ?'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--red-bg);color:var(--red);font-weight:600;margin-left:8px;">'+t('app2.rejete')+'</span>'
         :'<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:var(--amber-bg);color:var(--amber);font-weight:600;margin-left:8px;">'+t('app.en_attente')+'</span>';
     var _plate=v.plate?'<span class="fl-plate">'+_chEsc(String(v.plate).toUpperCase())+'</span>':'';
-    return _grpHd+'<div class="fl-item"><div class="fl-hd"><div class="fl-ttl"><div class="fl-name"><b>'+_chEsc((v.brand||'')+' '+(v.model||''))+'</b>'+_plate+_flStatus(vStatus)+'</div>'
+    return _grpHd+'<div class="fl-item"><div class="fl-hd"><div class="fl-ttl"><div class="fl-name"><b>'+_chEsc((v.brand||'')+' '+(v.model||''))+'</b>'+_plate+_flStatus(vStatus, _flHasExpired(docs))+'</div>'
       +amenHtml+'</div>'+_flActions('editVehicle','deleteVehicle',safeId)+'</div>'
       +_flDocs(docs,['carte_grise','assurance','controle_technique','vignette_identification'])+'</div>';
   }).join('');
@@ -596,10 +596,11 @@ var _FL_IC={
   ko:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>',
   wait:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>'
 };
-function _flStatus(st){
+function _flStatus(st, expired){
   var c=function(k){ return String(t(k)).replace(/^[\u2713\u2714\u2715\u2717\u25cf\u23f3\s]+/,''); };
   if(st==='validated') return '<span class="fl-st fl-ok">'+_FL_IC.ok+c('app2.valide')+'</span>';
   if(st==='rejected') return '<span class="fl-st fl-ko">'+_FL_IC.ko+c('app2.rejete')+'</span>';
+  if(expired) return '<span class="fl-st fl-ko">'+_FL_IC.ko+c('fv.non_verifie')+'</span>';
   return '<span class="fl-st fl-wait">'+_FL_IC.wait+c('app.en_attente')+'</span>';
 }
 function _flActions(editFn,delFn,id){
@@ -619,6 +620,7 @@ function _flDocRow(dc, label){
   }
   return '<a class="fl-doc" href="'+dc.file_url+'" target="_blank" rel="noopener"><span class="fl-dic">'+_FL_IC.doc+'</span><span class="fl-dn">'+_chEsc(label||_DOC_FULL[dc.doc_type]||dc.doc_type)+'</span>'+right+'</a>';
 }
+function _flHasExpired(docs){ var td=_docToday(); return (docs||[]).some(function(x){ return x.expires_at && String(x.expires_at).slice(0,10)<td; }); }
 function _flDocs(docs, order){
   if(!docs.length) return '';
   var o=order||[]; docs=docs.slice().sort(function(a,b){ var x=o.indexOf(a.doc_type), y=o.indexOf(b.doc_type); return (x<0?99:x)-(y<0?99:y); });
@@ -859,7 +861,7 @@ async function loadFleetDriversList(){
     var safeId=d.id.replace(/'/g,'');
     var docs=drvDocsMap[d.id]||[];
     var sub=[d.phone||'',d.email||'',_LICENSE_LABELS[d.license_region]||''].filter(Boolean).map(_chEsc).join(' \u00b7 ');
-    return '<div class="fl-item"><div class="fl-hd"><div class="fl-ttl"><div class="fl-name"><b>'+_chEsc((d.first_name||'')+' '+(d.last_name||''))+'</b>'+_flStatus(d.status||'pending')+'</div>'
+    return '<div class="fl-item"><div class="fl-hd"><div class="fl-ttl"><div class="fl-name"><b>'+_chEsc((d.first_name||'')+' '+(d.last_name||''))+'</b>'+_flStatus(d.status||'pending', _flHasExpired(docs))+'</div>'
       +(sub?'<div class="fl-sub">'+sub+'</div>':'')+'</div>'+_flActions('editDriver','deleteDriver',safeId)+'</div>'
       +_flDocs(docs,['permis_conduire','carte_identite','certificat_capacite','carte_vtc'])+'</div>';
   }).join('');

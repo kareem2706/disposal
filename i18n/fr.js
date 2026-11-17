@@ -1160,5 +1160,12 @@
   "ch.espace_fleet": "Votre espace fleet",
   "cc.terminees": "Terminées",
   "ch.soustraiter_btn": "Sous-traiter",
-  "ch.add_perso": "Ajouter mission personnelle"
+  "ch.add_perso": "Ajouter mission personnelle",
+  "fv.veh_title": "Aucun véhicule vérifié",
+  "fv.veh_text": "Vous ne pouvez plus faire d'offre ni accepter de course en sous-traitance. Un document de votre véhicule a expiré ou attend la vérification : mettez-le à jour dans votre profil.",
+  "fv.veh_btn": "Mes véhicules",
+  "fv.drv_title": "Aucun chauffeur vérifié",
+  "fv.drv_text": "Vous ne pouvez plus faire d'offre ni accepter de course en sous-traitance. Un document de votre chauffeur a expiré ou attend la vérification : mettez-le à jour dans votre profil.",
+  "fv.drv_btn": "Mes chauffeurs",
+  "fv.non_verifie": "Non vérifié"
 };

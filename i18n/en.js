@@ -1160,5 +1160,12 @@
   "ch.espace_fleet": "Your fleet area",
   "cc.terminees": "Completed",
   "ch.soustraiter_btn": "Subcontract",
-  "ch.add_perso": "Add personal mission"
+  "ch.add_perso": "Add personal mission",
+  "fv.veh_title": "No verified vehicle",
+  "fv.veh_text": "You can no longer make offers or accept subcontracted rides. One of your vehicle's documents has expired or is awaiting verification: update it in your profile.",
+  "fv.veh_btn": "My vehicles",
+  "fv.drv_title": "No verified driver",
+  "fv.drv_text": "You can no longer make offers or accept subcontracted rides. One of your driver's documents has expired or is awaiting verification: update it in your profile.",
+  "fv.drv_btn": "My drivers",
+  "fv.non_verifie": "Not verified"
 };

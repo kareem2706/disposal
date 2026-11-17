@@ -41,7 +41,7 @@ async function loadClientHome(){
   var av=document.getElementById('ch-av');
   if(av){ if(p.avatar_url){ av.innerHTML='<img src="'+String(p.avatar_url).replace(/"/g,'')+'" alt="">'; } else av.textContent=((fn||p.company_name||(currentUser&&currentUser.email)||'?')[0]||'?').toUpperCase(); }
   var rb=document.getElementById('ch-role'), nb=document.getElementById('nav-acct-badge'); if(rb&&nb&&nb.textContent) rb.textContent=nb.textContent;
-  if(currentRole==='driver'){ if(rb) rb.textContent='Fleet'; var sb2=document.querySelector('#client-home .ch-sub'); if(sb2) sb2.textContent=t('ch.espace_fleet'); }
+  if(currentRole==='driver'){ try{ _renderDriverVerifyBanner(); }catch(_e){} if(rb) rb.textContent='Fleet'; var sb2=document.querySelector('#client-home .ch-sub'); if(sb2) sb2.textContent=t('ch.espace_fleet'); }
   var pb=document.getElementById('ch-pass'), np=document.getElementById('nav-passengers-btn'); if(pb&&np) pb.style.display=np.style.display==='none'?'none':'';
   if(!sb || localStorage.getItem(DEMO_MODE_KEY) || !currentUser) return;
   if(currentRole==='driver'){
@@ -527,7 +527,7 @@ function _driverCanHandleRide(r){
 // Banner shown to a fleet that is not verified yet
 async function _renderDriverVerifyBanner(){
   var el=document.getElementById('driver-verify-banner'); if(!el) return;
-  if(!currentProfile || currentUser?.email===ADMIN_EMAIL || localStorage.getItem(DEMO_MODE_KEY)==='1'){ el.style.display='none'; return; }
+  if(!currentProfile || currentRole!=='driver' || currentUser?.email===ADMIN_EMAIL || localStorage.getItem(DEMO_MODE_KEY)==='1'){ el.style.display='none'; return; }
   // Refresh the status: the admin may have validated the fleet during the session
   if(sb && currentUser?.id){
     try{
@@ -540,8 +540,20 @@ async function _renderDriverVerifyBanner(){
   var html='';
   if(currentProfile.fleet_verified!=='validated')
     html+=_fleetBanner(t('app2.votre_compte_nest_pas_encore'), t('app2.pour_recevoir_des_demandes_vous'), t('app2.completer_mon_profil'), "showPage('profile')");
+  // Véhicule / chauffeur vérifié requis pour faire une offre (doc_expiry_status.sql) — le serveur bloque aussi
+  if(currentProfile.fleet_verified==='validated' && sb && currentUser?.id){
+    try{
+      var _rv=await sb.from('fleet_vehicles').select('status').eq('fleet_id',currentUser.id).eq('active',true);
+      var _rd=await sb.from('fleet_drivers').select('status').eq('fleet_id',currentUser.id).eq('active',true);
+      var _okV=(_rv.data||[]).some(function(x){ return x.status==='validated'; }), _okD=(_rd.data||[]).some(function(x){ return x.status==='validated'; });
+      if(!_rv.error && !_okV) html+=_fleetBanner(t('fv.veh_title'), t('fv.veh_text'), t('fv.veh_btn'), "showPage('profile');setTimeout(function(){try{_pfShowTab('fleet')}catch(e){}},150)");
+      if(!_rd.error && !_okD) html+=_fleetBanner(t('fv.drv_title'), t('fv.drv_text'), t('fv.drv_btn'), "showPage('profile');setTimeout(function(){try{_pfShowTab('drivers')}catch(e){}},150)");
+    }catch(_e){}
+  }
   if(_fleetStripeOk===false)
     html+=_fleetBanner(t('st.banner_title'), _fleetStripePending?t('st.banner_pending'):t('st.banner_text'), t(_fleetStripePending?'st.complete':'st.banner_btn'), "_goStripeProfile()");
+  var _hb=document.getElementById('ch-fleet-banner');
+  if(_hb){ _hb.innerHTML=html; _hb.style.display=html?'block':'none'; }
   if(!html){ el.style.display='none'; el.innerHTML=''; return; }
   el.innerHTML=html;
   el.style.display='block';
