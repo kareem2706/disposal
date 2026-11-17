@@ -1949,6 +1949,11 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div class="input-group"><label>E-mail</label><input id="sub-cli-email" type="email" placeholder="client@exemple.com"></div>
           <div class="input-group"><label>R&eacute;f&eacute;rence / n&deg; de vol</label><input id="sub-cli-ref" placeholder="SN 3712, dossier 2024-118…"></div>
         </div>
+        <!-- Welcome sign : affiché au client par le chauffeur qui accepte (welcome_sign.sql) -->
+        <div style="font-size:12px;font-weight:600;margin:12px 0 2px;">Welcome sign <span style="font-weight:400;color:var(--ink3);">(facultatif)</span></div>
+        <div style="font-size:11.5px;color:var(--ink3);margin-bottom:8px;">Le chauffeur l&rsquo;affiche au client pour &ecirc;tre identifi&eacute; (logo de votre soci&eacute;t&eacute;, pancarte&hellip;).</div>
+        <div id="sub-ws-box"></div>
+        <input id="sub-ws-file" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" style="display:none" onchange="_wsPick(this)">
       </div>
       <!-- Diffusion : tous les chauffeurs ou une sélection (subcontract_targets.sql) -->
       <div class="input-group" style="margin-top:14px;"><label data-i18n="sub.send_to">Envoyer à</label>

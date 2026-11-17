@@ -328,7 +328,7 @@ window._debugRides = async function(){
 };
 
 
-window.openSubRideModal=function(){if(window._lugCapsLoad)_lugCapsLoad();['sub-cli-name','sub-cli-tel','sub-cli-email','sub-cli-ref'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});if(window._subAudReset)_subAudReset();openModal('m-subcontract');};
+window.openSubRideModal=function(){if(window._lugCapsLoad)_lugCapsLoad();['sub-cli-name','sub-cli-tel','sub-cli-email','sub-cli-ref'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});if(window._subAudReset)_subAudReset();if(window._wsReset)_wsReset();openModal('m-subcontract');};
 
 
 async function loadNotifications(){

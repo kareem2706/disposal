@@ -788,6 +788,7 @@ function _openRideDetailImpl(el){
   }
   var _extra = document.getElementById('detail-extra');
   if(_extra){ _extra.innerHTML=''; _extra.style.display='none'; }
+  if(window._wsDetail && r.is_subcontract && r.welcome_sign) window._wsDetail(r, gen);
   if(isClient && r.status==='done' && sb && localStorage.getItem(DEMO_MODE_KEY)!=='1'){
     var bodyD=document.getElementById('detail-body');
     if(bodyD){

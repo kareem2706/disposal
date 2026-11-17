@@ -666,10 +666,13 @@ window.submitSubcontract = async function(){
       if(rideData.final_price) _subMail.price = parseFloat(rideData.final_price).toFixed(2).replace('.',',')+' \u20ac HTVA';
       window.sendMail('ride_created', currentProfile.email, _subMail);
     }
+    // Welcome sign joint : envoyé puis rattaché à la course par le serveur
+    var _wsOk = (window._wsUpload && rideData.id) ? await window._wsUpload(rideData.id) : true;
     _notifyMarketplaceDrivers(rideData);
     if(btn) setLoading(btn, false, t('btn_publish')+' \u2192');
     closeModal('m-subcontract');
     showToast(t('toast_subcontract'));
+    if(!_wsOk) setTimeout(function(){ showToast('\u26a0\ufe0f Sous-traitance publiée, mais le welcome sign n\u2019a pas pu être envoyé'); }, 400);
     await loadDriverDashboard();
     if(typeof loadMarketplace==='function')await loadMarketplace();
   } catch(e){
