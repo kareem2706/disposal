@@ -136,8 +136,9 @@ function _rdInfoBlocks(o){
   };
   var box='padding:12px 14px;background:#EEF4FB;border-radius:var(--r);';
   var cap=function(t){ return '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:4px;">'+t+'</div>'; };
-  var sub=function(t,txt){ return '<div style="border-top:1px solid #d0e4f7;margin-top:6px;padding-top:10px;">'+cap(t)
-    +(txt?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+_rdEsc(txt)+'</div>':'<div style="font-size:12px;color:var(--ink4);">Aucune note</div>')+'</div>'; };
+  // Note vide : bloc « Message du client » / « Note du sous-traitant » non affiché
+  var sub=function(t,txt){ if(!txt||!String(txt).trim()) return ''; return '<div style="border-top:1px solid #d0e4f7;margin-top:6px;padding-top:10px;">'+cap(t)
+    +'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+_rdEsc(txt)+'</div></div>'; };
   var tel=function(ph){ return _rdCallBtn(ph); };
   var none='<span style="color:var(--ink4);">Non renseigné</span>';
   var p=o.pax||{}, v=o.veh, d=o.drv;
