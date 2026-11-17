@@ -603,3 +603,7 @@ body .rd-pax-card a.rd-call-btn,body .rd-veh-card a.rd-call-btn,body.th-lemon .r
 
 /* Sous-traitance : bloc « Informations du client » en gris très clair */
 body .sub-cli-box{background:#F8F7F4!important;}
+
+/* Cartes missions : pastille sous-traitance */
+.chr-st{align-items:center;}
+.chr-st .chr-sub{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--amber-bg);color:var(--amber);flex-shrink:0;}

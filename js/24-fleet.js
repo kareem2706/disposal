@@ -1069,7 +1069,10 @@ function _renderClientRide(r){
   if(to && to!=='\u2014') l2='<i class="chr-to">\u2192</i>'+_chEsc(to);
   else if(k==='disposal' && r.duration_hours) l2='<i class="chr-to">\u00b7</i>'+_chEsc(r.duration_hours)+' h';
   var attrs='onclick="openRideDetail(this)" data-ride=\''+JSON.stringify(r).replace(/\'/g,'&#39;')+'\'';
-  return _chCard(attrs, _chDate(r.ride_date, r.ride_time), k, lbl, statusPill, _chEsc(from), l2, (r.final_price && currentRole==='client')?_chMoney(r.final_price):'');   // fleet : jamais le prix payé par le client
+  var html=_chCard(attrs, _chDate(r.ride_date, r.ride_time), k, lbl, statusPill, _chEsc(from), l2, (r.final_price && currentRole==='client')?_chMoney(r.final_price):'');   // fleet : jamais le prix payé par le client
+  // Sous-traitance : pastille « personnes » après le type (comme dans la fiche)
+  if(r.is_subcontract) html=html.replace('<div class="chr-st">','<div class="chr-st"><span class="chr-sub" title="'+_chEsc(t('app.sous_traitee'))+'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>');
+  return html;
 }
 // Événement ou trajet mixte regroupé : même carte que les autres demandes
 function _renderClientGroup(g){
