@@ -624,9 +624,10 @@ function _openRideDetailImpl(el){
         }
         if(_isSubPoster){
           // The posting fleet reads the subcontractor's note (written by the fleet who accepted); no note before acceptance
-          noteCard = (r.status==='waiting'||r.status==='offers') ? ''
+          // Pas de note : bloc non affiché
+          noteCard = (r.status==='waiting'||r.status==='offers'||!offerNote) ? ''
             : '<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:6px;">'+t('app.note_du_sous_traitant')+'</div>'
-              +(offerNote?'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+_rdEsc(offerNote)+'</div>':'<div style="font-size:12px;color:var(--ink4);">'+t('app.aucune_note')+'</div>')+'</div>';
+              +'<div style="font-size:12.5px;color:var(--ink2);font-style:italic;">'+_rdEsc(offerNote)+'</div></div>';
         }
         // Bloc « Véhicule et chauffeur » (+ note au client) une fois la mission attribuée
         if(r.status!=='waiting' && r.status!=='offers'){
@@ -763,9 +764,9 @@ function _openRideDetailImpl(el){
             + '<div class="rd-line"><span class="rd-ic">'+_paxIc+'</span><div style="min-width:0;flex:1"><div class="rd-strong">'+_rdEsc(dispName)+'</div></div>'
               + (dispPhone ? _rdCallBtn(dispPhone) : '')
             + '</div>'
-            + '<div class="rd-hr"></div>'
-            + '<div class="rd-cap" style="margin-bottom:6px;">'+t('app.note_au_chauffeur')+'</div>'
-            + (currentNote ? '<div class="rd-note">'+_rdEsc(currentNote)+'</div>' : '<div class="rd-muted">'+t('app.aucune_note')+'</div>')
+            + (currentNote ? '<div class="rd-hr"></div>'
+              + '<div class="rd-cap" style="margin-bottom:6px;">'+t('app.note_au_chauffeur')+'</div>'
+              + '<div class="rd-note">'+_rdEsc(currentNote)+'</div>' : '')
             + '</div>';
           window._rdPax = { id:_rideIdForPax, name:dispName, phone:dispPhone, note:currentNote };
         }
