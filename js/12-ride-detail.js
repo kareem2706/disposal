@@ -479,8 +479,7 @@ function _openRideDetailImpl(el){
   (function(){
     var wrap=document.getElementById('detail-map-wrap');
     if(!wrap)return;
-    // Hide map for confirmed rides (client and driver)
-    if(r.status==='confirmed'||r.status==='active'||(isClient&&r.status==='done'&&sb&&localStorage.getItem(DEMO_MODE_KEY)!=='1')){
+    if(r.status==='confirmed'||r.status==='active'||r.status==='done'||r.status==='no_show'){   // terminée : plus de carte (client et chauffeur)
       wrap.style.display='none';
       var sp=document.getElementById('detail-map-spacer');if(sp)sp.style.height='0px';
     } else {
