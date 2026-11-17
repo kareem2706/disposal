@@ -143,7 +143,7 @@ function _rdInfoBlocks(o){
     +(o.paxNoteLabel?sub(o.paxNoteLabel, p.note):'')
     +'</div>';
   var vTxt=v?[((v.brand||'')+' '+(v.model||'')).trim(), v.color||''].filter(Boolean).join(' · '):'';
-  h+='<div style="'+box+'margin-top:12px;">'+cap(o.vehTitle||'Véhicule et chauffeur')
+  h+='<div class="rd-veh-card" style="'+box+'margin-top:12px;">'+cap(o.vehTitle||'Véhicule et chauffeur')
     +row(I.car, vTxt?'<b>'+_rdEsc(vTxt)+'</b>':none,
          v&&v.plate?'<span style="font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.04em;background:#fff;border:1.5px solid #C0392B;border-radius:6px;padding:3px 8px;color:#C0392B;white-space:nowrap;">'+_rdEsc(v.plate)+'</span>':'')
     +row(I.usr, d&&d.name?'<b>'+_rdEsc(d.name)+'</b>':none, d?tel(d.phone):'')

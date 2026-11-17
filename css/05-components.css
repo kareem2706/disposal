@@ -578,3 +578,11 @@ option[hidden]{display:none;}
   .fl-val{width:100%;padding-left:44px;}
 }
 @media(min-width:1101px){#admin-top-stats{grid-template-columns:repeat(5,1fr);}}
+
+/* Bloc « Véhicule et chauffeur » : lemon très clair */
+.rd-veh-card{background:#F6FBE0!important;}
+.rd-veh-card div[style*="text-transform:uppercase"]{color:#6B7A1F!important;}
+.rd-veh-card div[style*="border-top"]{border-top-color:#E3EDB5!important;}
+.rd-veh-card span[style*="border-radius:9px"]{background:#fff!important;color:var(--ink)!important;}
+.rd-veh-card a[href^="tel:"]{color:var(--ink)!important;}
+.rd-veh-card .drv-asg-btn{color:#56631A!important;}

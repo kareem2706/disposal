@@ -641,7 +641,7 @@ function _openRideDetailImpl(el){
             +'<div style="flex:1;min-width:0;font-size:13px;">'+main+'</div>'+(extra||'')+'</div>'; };
           var _none='<span style="color:var(--ink4);">'+t('app.non_assigne_2')+'</span>';
           var _noteHtml=(noteCard||'').replace(/^<div id="[^"]*" style="[^"]*">/,'').replace(/<\/div>$/,'');
-          var asgBlock='<div id="'+drvNoteId+'" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
+          var asgBlock='<div id="'+drvNoteId+'" class="rd-veh-card" style="padding:12px 14px;background:#EEF4FB;border-radius:var(--r);">'
             +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'
               +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">'+(_isSubPoster?'Véhicule et chauffeur du sous-traitant':'Véhicule et chauffeur')+'</div>'
               +(_canAsg?'<button class="drv-asg-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;font-family:\'DM Sans\',sans-serif;">'+_editIco+' '+t('app.modifier')+'</button>':'')
