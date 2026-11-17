@@ -1100,6 +1100,7 @@
   "ld.story_title": "Cinq moments, <em>zéro surprise.</em>",
   "ld.band": "Prix fixe — Chauffeurs vérifiés — Vous choisissez — Prix fixe —",
   "ld.publier_un_trajet": "Publier un trajet →",
+  "ld.map_titre": "Des demandes partout.<br/>Des <em>chauffeurs</em> pour tout le monde.",
   "ld.demander_classe": "Demander cette classe →",
   "ld.nouvelle_demande": "Nouvelle demande",
   "ld.offer_business": "Berline Business",

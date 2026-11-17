@@ -1100,6 +1100,7 @@
   "ld.story_title": "Cinco momentos, <em>cero sorpresas.</em>",
   "ld.band": "Precio fijo — Chóferes verificados — Usted elige — Precio fijo —",
   "ld.publier_un_trajet": "Publicar un trayecto →",
+  "ld.map_titre": "Solicitudes en todas partes.<br/><em>Conductores</em> para todos.",
   "ld.demander_classe": "Solicitar esta clase →",
   "ld.nouvelle_demande": "Nueva solicitud",
   "ld.offer_business": "Berlina Business",

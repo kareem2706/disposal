@@ -1100,6 +1100,7 @@
   "ld.story_title": "Five moments, <em>zero surprises.</em>",
   "ld.band": "Fixed price — Verified chauffeurs — You choose — Fixed price —",
   "ld.publier_un_trajet": "Post a ride →",
+  "ld.map_titre": "Requests everywhere.<br/><em>Drivers</em> for everyone.",
   "ld.demander_classe": "Request this class →",
   "ld.nouvelle_demande": "New request",
   "ld.offer_business": "Business sedan",
