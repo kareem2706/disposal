@@ -338,28 +338,41 @@ async function _renderDInvSub(listEl, header, from, to){
   var fmt=function(v){ return parseFloat(v).toFixed(2).replace('.',',')+' \u20ac'; };
   var esc=_billingEsc;
   var th=function(l,right,pad){ return '<th style="padding:10px 12px'+(pad?' 10px 20px':'')+';text-align:'+(right?'right':'left')+';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);white-space:nowrap;">'+l+'</th>'; };
+  // Un bloc par société (sous-traitant ou donneur d'ordre), avec ses totaux, puis le total du mois
   var section=function(title, sub, rows, who, total, color){
     if(!rows.length) return '<div style="padding:18px 20px;border-top:1px solid var(--sand2);"><div style="font-size:14px;font-weight:700;">'+title+'</div><div style="font-size:12.5px;color:var(--ink3);margin-top:4px;">'+t('app.aucune_mission_ce_mois_ci')+'</div></div>';
-    var ht=0;
-    var body=rows.map(function(r){
-      var h=r2(parseFloat(r.final_price)||0); ht+=h;
-      var nm=(names[r.id]||{})[who]||'\u2014';
-      var from2=(r.from_address||'\u2014').split(',')[0];
-      var route=r.trip_type==='disposal'?from2+' (Mise à disposition)':from2+' \u2192 '+String(r.to_address||'').split(',')[0];
-      return '<tr style="border-bottom:1px solid var(--sand2);">'
-        +'<td style="padding:10px 12px 10px 20px;font-size:11px;font-family:monospace;font-weight:600;color:var(--ink2);vertical-align:top;white-space:nowrap;">'+esc(r.booking_code||r.id.slice(0,8))+'</td>'
-        +'<td style="padding:10px 12px;vertical-align:top;"><div style="font-size:12.5px;color:var(--ink3);">'+formatDate(r.ride_date||'')+(r.ride_time?' · '+r.ride_time.slice(0,5):'')+'</div><div style="font-size:12.5px;color:var(--ink);">'+esc(route)+'</div></td>'
-        +'<td style="padding:10px 12px;font-size:12.5px;vertical-align:top;">'+esc(nm)+'</td>'
-        +'<td style="padding:10px 20px 10px 12px;font-size:12.5px;font-weight:600;text-align:right;white-space:nowrap;vertical-align:top;">'+fmt(h)+'</td></tr>';
+    var groups={}, order=[];
+    rows.forEach(function(r){ var nm=(names[r.id]||{})[who]||'—'; if(!groups[nm]){ groups[nm]=[]; order.push(nm); } groups[nm].push(r); });
+    order.sort(function(a,b){ return a.localeCompare(b,'fr'); });
+    var pay=who==='taker_company', allHt=0;
+    var tr=function(l,v,b,c){ return '<tr><td colspan="2" style="padding:5px 12px 5px 20px;font-size:'+(b?'13.5px;font-weight:700':'12.5px;color:var(--ink3)')+';">'+l+'</td><td style="padding:5px 20px 5px 12px;text-align:right;white-space:nowrap;font-size:'+(b?'13.5px;font-weight:700;color:'+(c||'var(--ink)'):'12.5px;font-weight:600')+';">'+v+'</td></tr>'; };
+    var blocks=order.map(function(nm){
+      var g=groups[nm], ht=0;
+      var body=g.map(function(r){
+        var h=r2(parseFloat(r.final_price)||0); ht+=h;
+        var from2=(r.from_address||'—').split(',')[0];
+        var route=r.trip_type==='disposal'?from2+' (Mise à disposition)':from2+' → '+String(r.to_address||'').split(',')[0];
+        return '<tr style="border-bottom:1px solid var(--sand2);">'
+          +'<td style="padding:10px 12px 10px 20px;font-size:11px;font-family:monospace;font-weight:600;color:var(--ink2);vertical-align:top;white-space:nowrap;">'+esc(r.booking_code||r.id.slice(0,8))+'</td>'
+          +'<td style="padding:10px 12px;vertical-align:top;"><div style="font-size:12.5px;color:var(--ink3);">'+formatDate(r.ride_date||'')+(r.ride_time?' · '+r.ride_time.slice(0,5):'')+'</div><div style="font-size:12.5px;color:var(--ink);">'+esc(route)+'</div></td>'
+          +'<td style="padding:10px 20px 10px 12px;font-size:12.5px;font-weight:600;text-align:right;white-space:nowrap;vertical-align:top;">'+fmt(h)+'</td></tr>';
+      }).join('');
+      ht=r2(ht); allHt+=ht; var tv=r2(ht*vat/100), tt=r2(ht+tv);
+      return '<div style="margin:0 16px 14px;border:1px solid var(--sand2);border-radius:14px;overflow:hidden;">'
+        +'<div style="padding:12px 16px;background:var(--sand,#F3F2EE);display:flex;align-items:center;justify-content:space-between;gap:10px;">'
+          +'<div style="display:flex;align-items:center;gap:10px;min-width:0;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--ink2);"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3"/></svg>'
+          +'<div style="min-width:0;"><div style="font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(nm)+'</div><div style="font-size:11.5px;color:var(--ink3);">'+g.length+' course'+(g.length>1?'s':'')+'</div></div></div>'
+          +'<div style="text-align:right;flex-shrink:0;"><div style="font-size:11px;color:var(--ink3);">'+(pay?'À payer':'À recevoir')+' TVAC</div><div style="font-size:16px;font-weight:700;color:'+color+';">'+fmt(tt)+'</div></div></div>'
+        +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr style="border-bottom:1px solid var(--sand3);">'+th(t('app.code'),0,1)+th(t('app.trajet'))+'<th style="padding:10px 20px 10px 12px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Prix HTVA</th></tr></thead>'
+        +'<tbody>'+body+'</tbody><tfoot>'+tr('Total HTVA',fmt(ht))+tr('TVA ('+vat+'%)',fmt(tv))+tr('Total TVAC',fmt(tt),1,color)+'<tr><td colspan="3" style="height:6px;"></td></tr></tfoot></table></div></div>';
     }).join('');
-    ht=r2(ht); var tv=r2(ht*vat/100), tt=r2(ht+tv);
-    var tr=function(l,v,b){ return '<tr><td colspan="3" style="padding:6px 12px 6px 20px;font-size:'+(b?'14px;font-weight:700':'12.5px;color:var(--ink3)')+';">'+l+'</td><td style="padding:6px 20px 6px 12px;text-align:right;white-space:nowrap;font-size:'+(b?'13.5px;font-weight:700;color:'+color:'12.5px;font-weight:600')+';">'+v+'</td></tr>'; };
+    allHt=r2(allHt); var aTv=r2(allHt*vat/100), aTt=r2(allHt+aTv);
     return '<div style="border-top:1px solid var(--sand2);">'
-      +'<div style="padding:16px 20px 10px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;"><div><div style="font-size:14px;font-weight:700;">'+title+'</div><div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+sub+'</div></div>'
-        +'<div style="text-align:right;"><div style="font-size:11px;color:var(--ink3);">'+rows.length+' course'+(rows.length>1?'s':'')+' · TVAC</div><div style="font-size:18px;font-weight:700;color:'+color+';">'+fmt(tt)+'</div></div></div>'
-      +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr style="border-bottom:2px solid var(--sand3);">'+th(t('app.code'),0,1)+th(t('app.trajet'))+th(who==='taker_company'?'Sous-traitant':'Donneur d\u2019ordre')+'<th style="padding:10px 20px 10px 12px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Prix HTVA</th></tr></thead>'
-      +'<tbody>'+body+'</tbody><tfoot><tr><td colspan="4" style="padding:0;border-top:1px solid var(--sand3);"></td></tr>'
-      +tr('Total HTVA',fmt(ht))+tr('TVA ('+vat+'%)',fmt(tv))+tr(who==='taker_company'?'Total à payer (TVAC)':'Total à recevoir (TVAC)',fmt(tt),1)+'<tr><td colspan="4" style="height:8px;"></td></tr></tfoot></table></div></div>';
+      +'<div style="padding:16px 20px 12px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;"><div><div style="font-size:14px;font-weight:700;">'+title+'</div><div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+sub+'</div></div>'
+        +'<div style="text-align:right;"><div style="font-size:11px;color:var(--ink3);">'+rows.length+' course'+(rows.length>1?'s':'')+' · '+order.length+' société'+(order.length>1?'s':'')+' · TVAC</div><div style="font-size:18px;font-weight:700;color:'+color+';">'+fmt(aTt)+'</div></div></div>'
+      +blocks
+      +(order.length>1?'<div style="margin:0 16px 16px;padding:10px 16px;border-radius:12px;background:var(--sand,#F3F2EE);display:flex;justify-content:space-between;font-size:13.5px;font-weight:700;"><span>'+(pay?'Total à payer (TVAC)':'Total à recevoir (TVAC)')+'</span><span style="color:'+color+';">'+fmt(aTt)+'</span></div>':'')
+      +'</div>';
   };
   listEl.innerHTML='<div class="card" style="padding:0;">'+header
     +section('Mes sous-traitances','Courses que vous avez confiées : à régler au sous-traitant',mine,'taker_company','var(--ink)')
