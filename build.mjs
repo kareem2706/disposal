@@ -137,12 +137,13 @@ for (const p of ['assets', 'i18n', 'logo.png', 'logo_text.png', 'logo_text_light
   if (fs.existsSync(path.join(root, p))) fs.cpSync(path.join(root, p), path.join(out, p), { recursive: true });
 }
 // Version anglaise de l'e-mail de prélancement, consultable en ligne (lien « Read in English » du mail français)
-{ const src = path.join(root, 'emails', 'prelancement-fleets-D-en.html');
-  if (fs.existsSync(src)) {
-    fs.mkdirSync(path.join(out, 'email'), { recursive: true });
-    const h = fs.readFileSync(src, 'utf8')
-      .replace('<head>', '<head>\n<meta name="robots" content="noindex">')
-      .replace(/\{\{\{RESEND_UNSUBSCRIBE_URL\}\}\}/g, 'mailto:info@bleenr.com?subject=Unsubscribe');
-    fs.writeFileSync(path.join(out, 'email', 'prelancement-en.html'), h);
-  } }
+for (const [srcName, outName] of [['prelancement-fleets-D-en.html', 'prelancement-en.html'], ['prelancement-fleets-E-en.html', 'prelancement-v2-en.html']]) {
+  const src = path.join(root, 'emails', srcName);
+  if (!fs.existsSync(src)) continue;
+  fs.mkdirSync(path.join(out, 'email'), { recursive: true });
+  const h = fs.readFileSync(src, 'utf8')
+    .replace('<head>', '<head>\n<meta name="robots" content="noindex">')
+    .replace(/\{\{\{RESEND_UNSUBSCRIBE_URL\}\}\}/g, 'mailto:info@bleenr.com?subject=Unsubscribe');
+  fs.writeFileSync(path.join(out, 'email', outName), h);
+}
 console.log('Site construit dans _site/ (version ' + ver + ', environnement ' + envName + ', branche ' + branch + ')');
