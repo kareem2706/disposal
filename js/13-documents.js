@@ -132,7 +132,8 @@ function _rdInfoBlocks(o){
     usr:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>',
     car:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M5 17a2 2 0 01-2-2v-3l2-5h14l2 5v3a2 2 0 01-2 2M5 17v2M19 17v2"/><circle cx="7.5" cy="13.5" r="1"/><circle cx="16.5" cy="13.5" r="1"/></svg>',
     mail:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
-    ref:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L2 12V2h10l8.6 8.6a2 2 0 010 2.8z"/><circle cx="7" cy="7" r="1.5"/></svg>'
+    ref:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 01-2.8 0L2 12V2h10l8.6 8.6a2 2 0 010 2.8z"/><circle cx="7" cy="7" r="1.5"/></svg>',
+    bld:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3"/></svg>'
   };
   var box='padding:12px 14px;background:#EEF4FB;border-radius:var(--r);';
   var cap=function(t){ return '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-bottom:4px;">'+t+'</div>'; };
@@ -143,6 +144,8 @@ function _rdInfoBlocks(o){
   var none='<span style="color:var(--ink4);">Non renseigné</span>';
   var p=o.pax||{}, v=o.veh, d=o.drv;
   var h='<div class="rd-pax-card" style="'+box+'">'+cap('Informations du passager')
+    // Sous-traitance (fleet qui a accepté) : société qui a sous-traité la course
+    +(o.posterCompany?row(I.bld,'<span style="color:var(--ink3);">Sous-traité par </span><b>'+_rdEsc(o.posterCompany)+'</b>'):'')
     +row(I.usr, p.name?'<b>'+_rdEsc(p.name)+'</b>':none, tel(p.phone))
     +(p.email?row(I.mail,'<a href="mailto:'+_rdEsc(p.email)+'" style="color:var(--blue);text-decoration:none;">'+_rdEsc(p.email)+'</a>'):'')
     +(p.ref?row(I.ref,'<span style="color:var(--ink3);">Réf. : </span><b>'+_rdEsc(p.ref)+'</b>'):'')
@@ -150,6 +153,8 @@ function _rdInfoBlocks(o){
     +'</div>';
   var vTxt=v?[((v.brand||'')+' '+(v.model||'')).trim(), v.color||''].filter(Boolean).join(' · '):'';
   h+='<div class="rd-veh-card" style="'+box+'margin-top:12px;">'+cap(o.vehTitle||'Véhicule et chauffeur')
+    // Sous-traitance (fleet qui a publié) : société qui a accepté la course
+    +(o.company?row(I.bld,'<b>'+_rdEsc(o.company)+'</b>'):'')
     +row(I.car, vTxt?'<b>'+_rdEsc(vTxt)+'</b>':none,
          v&&v.plate?'<span style="font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.04em;background:#fff;border:1.5px solid #C0392B;border-radius:6px;padding:3px 8px;color:#C0392B;white-space:nowrap;">'+_rdEsc(v.plate)+'</span>':'')
     +row(I.usr, d&&d.name?'<b>'+_rdEsc(d.name)+'</b>':none, d?tel(d.phone):'')

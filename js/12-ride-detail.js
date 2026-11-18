@@ -563,6 +563,11 @@ function _openRideDetailImpl(el){
             if(!_asgDrv && offerForNote.fleet_driver_id){ var _rp=await sb.rpc('ride_assigned_driver',{p_ride:r.id}); _asgDrv=(_rp.data&&_rp.data[0])||null; }
           }catch(_e){ console.warn('assignment fetch', _e); }
         }
+        // Sous-traitance : qui est qui (fonction serveur ride_subcontract_parties)
+        var _parties=null;
+        if(r.is_subcontract){ try{ var _pp=await sb.rpc('ride_subcontract_parties',{p_ride:r.id}); _parties=_pp.data||null; }catch(_e){} }
+        if(_isSubPoster && _parties && _parties.driver_name) _asgDrv={ first_name:_parties.driver_name, last_name:'', phone:_parties.driver_phone||(_asgDrv&&_asgDrv.phone)||'' };
+        var _bldIc='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-3h4v3"/></svg>';
         if(!cp){
           // Still show note card even without client profile
           cp = {first_name:'', last_name:''};
@@ -594,6 +599,7 @@ function _openRideDetailImpl(el){
           +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">'+t('app.informations_du_passager')+'</div>'
             +(_isSubPoster && !(r.status==='active'||r.status==='done'||r.pickup_at)?'<button class="sub-pax-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;">'+_editIco+(paxMatch||telMatch?' Modifier':' Ajouter')+'</button>':'')
           +'</div>'
+          +(!_isSubPoster && _parties && _parties.poster_company ? _pxRow(_bldIc, '<span style="color:var(--ink3);">Sous-traité par </span><b>'+_rdEsc(_parties.poster_company)+'</b>') : '')
           +_pxRow(_pxUsr, '<b>'+_rdEsc(cName)+'</b>',
                   cPhone?'<a href="tel:'+_rdEsc(cPhone)+'" style="font-size:12.5px;color:var(--blue);text-decoration:none;white-space:nowrap;">'+_rdEsc(cPhone)+'</a>':'')
           +(_pxEmail?_pxRow(_pxMail, '<a href="mailto:'+_rdEsc(_pxEmail)+'" style="color:var(--blue);text-decoration:none;">'+_rdEsc(_pxEmail)+'</a>'):'')
@@ -647,6 +653,7 @@ function _openRideDetailImpl(el){
               +'<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);">'+(_isSubPoster?'Véhicule et chauffeur du sous-traitant':'Véhicule et chauffeur')+'</div>'
               +(_canAsg?'<button class="drv-asg-btn" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;padding:0;display:flex;align-items:center;gap:4px;font-family:\'DM Sans\',sans-serif;">'+_editIco+' '+t('app.modifier')+'</button>':'')
             +'</div>'
+            +(_isSubPoster && _parties && _parties.taker_company ? _row(_bldIc, '<b>'+_rdEsc(_parties.taker_company)+'</b>') : '')
             +_row(_carIc, _vehTxt?'<b>'+_rdEsc(_vehTxt)+'</b>':_none,
                   _asgVeh&&_asgVeh.plate?'<span style="font-family:monospace;font-size:12px;font-weight:700;letter-spacing:.04em;background:#fff;border:1.5px solid #C0392B;border-radius:6px;padding:3px 8px;color:#C0392B;white-space:nowrap;">'+_rdEsc(_asgVeh.plate)+'</span>':'')
             +_row(_usrIc, _drvTxt?'<b>'+_rdEsc(_drvTxt)+'</b>':_none,
@@ -866,6 +873,9 @@ function _openRideDetailImpl(el){
         ]);
         var dv=fdr.data;
         if(!dv && o.fleet_driver_id){ try{ var rp=await sb.rpc('ride_assigned_driver',{p_ride:r.id}); dv=(rp.data&&rp.data[0])||null; }catch(_e){} }
+        // Sous-traitance : société et chauffeur (fleet qui publie) / société qui a sous-traité (fleet qui accepte)
+        var pt=null; if(r.is_subcontract){ try{ var _pr=await sb.rpc('ride_subcontract_parties',{p_ride:r.id}); pt=_pr.data||null; }catch(_e){} }
+        if(_poster && pt && pt.driver_name) dv={ first_name:pt.driver_name, last_name:'', phone:pt.driver_phone||(dv&&dv.phone)||'' };
         if(window._detailGen!==myGen) return;
         var n=r.notes||'';
         _extra.innerHTML = '<div style="margin-bottom:20px;">'+_rdInfoBlocks({
@@ -873,6 +883,7 @@ function _openRideDetailImpl(el){
           paxNoteLabel:'Message du client',
           veh:vh.data, drv: dv ? { name:((dv.first_name||'')+' '+(dv.last_name||'')).trim(), phone:dv.phone||'' } : null,
           vehTitle: _poster ? 'Véhicule et chauffeur du sous-traitant' : 'Véhicule et chauffeur',
+          company: _poster && pt ? pt.taker_company : '', posterCompany: !_poster && pt ? pt.poster_company : '',
           drvNoteLabel: r.is_subcontract ? 'Note du sous-traitant' : 'Note au client', drvNote:_rdTag(n,'offer_note')
         })+'</div>';
       }catch(e){ console.warn('done fleet summary error:', e); _extra.innerHTML=''; _extra.style.display='none'; }
