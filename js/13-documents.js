@@ -4,7 +4,7 @@ function _pdfBase(title,bodyHtml){
   return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>'+title+'</title>'
     +'<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:"Helvetica Neue",Arial,sans-serif;color:#1A1A18;background:#fff;padding:36px;}h1{font-family:Georgia,serif;font-size:22px;letter-spacing:.1em;margin-bottom:24px;}table{width:100%;border-collapse:collapse;margin-bottom:4px;}td{padding:7px 12px;font-size:13px;border-bottom:1px solid #E8E8E8;}td:first-child{color:#777;width:38%;}td:last-child{font-weight:600;}.section{margin-bottom:22px;}.section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:8px;border-bottom:2px solid #1A1A18;padding-bottom:4px;}.footer{margin-top:40px;font-size:10px;color:#999;text-align:center;border-top:1px solid #E8E8E8;padding-top:12px;}@media print{button{display:none!important;}}</style>'
     +'</head><body><h1>BLEENR</h1>'+bodyHtml
-    +'<div style="text-align:center;margin-top:28px;"><button onclick="window.print()" style="padding:9px 24px;background:#1A1A18;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">Imprimer / PDF</button></div>'
+    +'<div style="text-align:center;margin-top:28px;"><button onclick="window.print()" style="padding:12px 28px;background:#D9F477;color:#111312;border:none;border-radius:999px;font-size:13.5px;font-weight:700;cursor:pointer;">Imprimer / PDF</button></div>'
     +'<div class="footer">DISPOSAL SRL — bleenr.com</div></body></html>';
 }
 
@@ -14,25 +14,25 @@ var _BLEENR_DOC_CSS='*{box-sizing:border-box;margin:0;padding:0}'
   +'.page{max-width:820px;margin:0 auto}.page+.page{margin-top:60px;padding-top:44px;border-top:1px dashed #CCC}'
   +'.top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:34px}'
   +'.logo{height:46px;width:auto}.meta{text-align:right;font-size:12px;color:#444}'
-  +'.kind{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#1B5E3B;font-weight:700}'
+  +'.kind{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#111312;font-weight:700}'
   +'.num{font-size:21px;font-weight:800;color:#1A1A18;margin:2px 0 8px}'
   +'.parties{display:flex;justify-content:space-between;gap:40px;margin-bottom:22px}.party{flex:1}.party.r{text-align:right}'
   +'.lbl{font-size:12px;color:#666;margin-bottom:2px}.pname{font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:.01em}'
   +'.miss{color:#C0392B}'
   +'table.lines{width:100%;border-collapse:collapse;margin-top:8px}'
-  +'table.lines th{background:#F2F7F4;color:#1B5E3B;font-size:11.5px;font-weight:700;padding:10px;border:1px solid #CFE0D6}'
+  +'table.lines th{background:#D9F477;color:#111312;font-size:11.5px;font-weight:700;padding:10px;border:1px solid #C5E35C}'
   +'table.lines td{padding:10px;border:1px solid #E1E6E3;vertical-align:top}'
   +'table.kv{width:100%;border-collapse:collapse;margin-top:8px}'
-  +'table.kv th{width:190px;background:#F2F7F4;color:#1B5E3B;font-size:11.5px;font-weight:700;padding:10px;border:1px solid #CFE0D6;text-align:left;vertical-align:top}'
+  +'table.kv th{width:190px;background:#D9F477;color:#111312;font-size:11.5px;font-weight:700;padding:10px;border:1px solid #C5E35C;text-align:left;vertical-align:top}'
   +'table.kv td{padding:10px;border:1px solid #E1E6E3;vertical-align:top}'
-  +'.sect{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#1B5E3B;font-weight:700;margin:22px 0 4px}'
+  +'.sect{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#111312;font-weight:700;margin:22px 0 4px}'
   +'.c{text-align:center}.r{text-align:right;white-space:nowrap}.b{font-weight:700}.sub{font-size:11px;color:#777;margin-top:2px}'
   +'.cx{color:#C0392B;font-style:italic}'
   +'.sum{display:flex;justify-content:flex-end;margin-top:22px}.sum table{width:340px;border-collapse:collapse}'
   +'.sum td{padding:4px 0}.sum .grand td{font-weight:800;font-size:14px;padding-top:8px;border-top:2px solid #1A1A18}'
   +'.sum .note{font-weight:700;text-align:right;padding-top:6px}'
   +'.box{margin-top:34px;border:1.5px solid #1A1A18;padding:18px 20px}'
-  +'.boxt{color:#1FA34A;font-size:19px;font-weight:800;margin-bottom:8px}.box div{margin-bottom:4px}.muted{color:#666;font-size:11.5px}'
+  +'.boxt{color:#111312;font-size:19px;font-weight:800;margin-bottom:8px}.box div{margin-bottom:4px}.muted{color:#666;font-size:11.5px}'
   +'.foot{margin-top:26px;text-align:center;font-size:10.5px;color:#999}'
   +'.warn{background:#FEF3DC;color:#92650A;padding:10px 12px;border-radius:6px;margin-bottom:16px}'
   +'@page{size:A4;margin:16mm 15mm}'   // marges haut / bas / gauche / droite sur chaque page imprimée ou PDF
@@ -42,7 +42,7 @@ var _BLEENR_DOC_CSS='*{box-sizing:border-box;margin:0;padding:0}'
 function _bleenrDocHtml(title, inner){
   return '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>'+_billingEsc(title)+'</title><style>'+_BLEENR_DOC_CSS+'</style></head><body>'
     +inner
-    +'<div class="np" style="text-align:center;margin-top:30px;"><button onclick="window.print()" style="padding:10px 26px;background:#1B5E3B;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Imprimer / PDF</button></div>'
+    +'<div class="np" style="text-align:center;margin-top:30px;"><button onclick="window.print()" style="padding:12px 28px;background:#D9F477;color:#111312;border:none;border-radius:999px;font-size:13.5px;font-weight:700;cursor:pointer;">Imprimer / PDF</button></div>'
     +'</body></html>';
 }
 function _docDate(d){ d=d||new Date(); var p=function(n){return String(n).padStart(2,'0');}; return p(d.getDate())+'-'+p(d.getMonth()+1)+'-'+d.getFullYear(); }
@@ -232,7 +232,7 @@ function _routeBlockHtml(r, pfx){
   if(r.trip_type==='mixed'){ var _ml=_mixListHtml(r); if(_ml) return _ml; }
   var isDisp=r.trip_type==='disposal', isMixed=r.trip_type==='mixed';
   var dur=((r.notes||'').match(/Durée:([^\s|,]+)/)||[])[1]||'';
-  var gIc='<svg width="14" height="18" viewBox="0 0 24 30" fill="#1B5E3B"><path d="M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>';
+  var gIc='<svg width="14" height="18" viewBox="0 0 24 30" fill="#111312"><path d="M12 0C7.6 0 4 3.6 4 8c0 5.4 8 16 8 16s8-10.6 8-16c0-4.4-3.6-8-8-8zm0 11c-1.7 0-3-1.3-3-3s1.3-3 3-3 3 1.3 3 3-1.3 3-3 3z"/></svg>';
   var rIc='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
   var row=function(ic,lab,val,line){ return '<div style="display:flex;gap:14px;"><div style="display:flex;flex-direction:column;align-items:center;width:16px;flex-shrink:0;"><div style="margin-top:3px;">'+ic+'</div>'
     +(line?'<div style="width:2px;flex:1;background:var(--sand3);min-height:10px;margin-top:2px;"></div>':'')+'</div>'
@@ -351,7 +351,7 @@ function _docContractPage(d){
   var art=function(n,t,body){ return '<div class="ct-a"><h3>Article '+n+' — '+t+'</h3>'+body+'</div>'; };
   var ul=function(items){ return '<ul>'+items.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'; };
   return '<div class="page ct">'
-    +'<style>.ct .top{margin-bottom:22px}.ct .logo{height:36px}.ct .num{font-size:19px}.ct .sect{margin:6px 0 10px}.ct .ct-a{margin-top:18px;break-inside:avoid;page-break-inside:avoid}.ct h3{font-size:12.5px;font-weight:800;color:#1B5E3B;margin-bottom:6px}.ct p,.ct li{font-size:11.3px;line-height:1.65}.ct p+p{margin-top:6px}.ct ul{padding-left:18px;margin-top:2px}.ct li{margin:0 0 5px}.ct .ct-parties{display:flex;gap:18px;margin:8px 0 14px}.ct .ct-parties .party{flex:1;border:1px solid #E1E6E3;border-radius:8px;padding:12px 14px;font-size:11.3px;line-height:1.55}.ct .pname{font-size:12.5px;margin-bottom:2px}.ct .ct-sign{display:flex;gap:28px;margin-top:34px;break-inside:avoid;page-break-inside:avoid}.ct .ct-sign div{flex:1;border-top:1px solid #1A1A18;padding-top:8px;font-size:10.5px;color:#555}.ct .muted{line-height:1.6}.ct .foot{margin-top:18px}</style>'
+    +'<style>.ct .top{margin-bottom:22px}.ct .logo{height:36px}.ct .num{font-size:19px}.ct .sect{margin:6px 0 10px}.ct .ct-a{margin-top:18px;break-inside:avoid;page-break-inside:avoid}.ct h3{font-size:12.5px;font-weight:800;color:#111312;margin-bottom:6px}.ct p,.ct li{font-size:11.3px;line-height:1.65}.ct p+p{margin-top:6px}.ct ul{padding-left:18px;margin-top:2px}.ct li{margin:0 0 5px}.ct .ct-parties{display:flex;gap:18px;margin:8px 0 14px}.ct .ct-parties .party{flex:1;border:1px solid #E1E6E3;border-radius:8px;padding:12px 14px;font-size:11.3px;line-height:1.55}.ct .pname{font-size:12.5px;margin-bottom:2px}.ct .ct-sign{display:flex;gap:28px;margin-top:34px;break-inside:avoid;page-break-inside:avoid}.ct .ct-sign div{flex:1;border-top:1px solid #1A1A18;padding-top:8px;font-size:10.5px;color:#555}.ct .muted{line-height:1.6}.ct .foot{margin-top:18px}</style>'
     +_docTop('Contrat de transport', d.code, ['Annexe au '+(d.mode==='voucher'?'voucher':'l’ordre de mission'), 'Émis le : '+_docDate()])
     +'<div class="sect">Entre les parties</div>'
     +'<div class="ct-parties">'+party('Le transporteur',d.carrier)+party('Le client',d.client)+'</div>'
