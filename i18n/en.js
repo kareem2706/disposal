@@ -614,6 +614,7 @@
   "app2.pour_recevoir_des_demandes_vous": "To receive requests, you first need to get your account verified: add your company documents, vehicles and drivers in your profile. Bleenr will then approve them.",
   "app2.prenom_et_nom_sont_requis": "First and last name are required",
   "app2.prix": "Price ↑",
+  "sub.offre_maj": "Offer to update",
   "sub.votre_offre": "Your offer",
   "sub.offre_acceptee": "Accepted offer amount",
   "app2.prix_demande": "Requested price:",

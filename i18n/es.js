@@ -614,6 +614,7 @@
   "app2.pour_recevoir_des_demandes_vous": "Para recibir solicitudes, primero debe verificar su cuenta: añada en su perfil los documentos de la empresa, sus vehículos y sus chóferes. Después, Bleenr los validará.",
   "app2.prenom_et_nom_sont_requis": "El nombre y el apellido son obligatorios",
   "app2.prix": "Precio ↑",
+  "sub.offre_maj": "Oferta por actualizar",
   "sub.votre_offre": "Su oferta",
   "sub.offre_acceptee": "Importe de la oferta aceptada",
   "app2.prix_demande": "Precio solicitado:",
