@@ -364,13 +364,12 @@ window.openOfferModal = function(rideId, summary, rideObj){
 function renderMkItem(r,isSub,isMine){
   isSub=isSub||false; isMine=isMine||false;
   // Espace fleet / client (th-client) : même carte que « Mes missions » ; les actions (offre, accepter, suivre)
-  // sont dans la fiche de la course. À droite : le prix de la sous-traitance ou votre offre.
+  // sont dans la fiche de la course, comme les prix.
   if(document.body.classList.contains('th-client') && typeof _renderClientRide==='function'){
     var _h=_renderClientRide(r), _px='', _mo=_myOffers&&_myOffers[r.id];
     var _eur=function(v){ return parseFloat(v).toFixed(2).replace('.',',')+' \u20ac'; };
-    if((isSub||isMine) && r.final_price) _px=_eur(r.final_price)+' <small style="font-weight:500;color:var(--ink3);">HTVA</small>';
-    else if(_mo && _mo.outdated) _px='<span style="color:var(--amber);">\u26a0 '+t('sub.offre_maj')+'</span>';
-    else if(_mo) _px='<span style="color:var(--green);">'+t('sub.votre_offre')+' '+_eur(_mo.price)+'</span>';
+    // Prix uniquement dans la fiche de la course ; ici seulement l'alerte d'offre à mettre à jour
+    if(_mo && _mo.outdated) _px='<span style="color:var(--amber);">\u26a0 '+t('sub.offre_maj')+'</span>';
     if(_px) _h=_h.replace('</div><svg class="chr-chev"','<span class="chr-price">'+_px+'</span></div><svg class="chr-chev"');
     return _h;
   }
