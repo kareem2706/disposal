@@ -1627,7 +1627,7 @@ window.refreshAdminDashboard = async function() {
     var [clientsRes, fleetsRes, ridesRes] = await Promise.all([
       sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','client'),
       sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','driver'),
-      sb.from('rides').select('id,final_price,ride_date,status,is_subcontract,payment_method,refund_due,refund_done_at'),
+      sb.from('rides').select('id,final_price,ride_date,status,is_subcontract,payment_method,refund_due,refund_done_at,trip_type,event_id,event_kind'),
       sb.from('fleet_drivers').select('id', {count:'exact',head:true})
     ]).then(function(a){ window._admDrvCount=a[3]&&a[3].count||0; return a; });
 
@@ -1737,6 +1737,20 @@ window.refreshAdminDashboard = async function() {
     set('admin-sum-sub-cancelled', nX+pct(nX));
     set('admin-sum-sub-done', nD+pct(nD));
     set('admin-sum-sub-vol', fmt(_sumP(subs.filter(_subOk))));
+    // Demandes clients par type (période choisie) : trajet mixte / événement = 1 demande, quel que soit le nombre de trajets
+    var cli = filteredRides.filter(function(r){ return !r.is_subcontract && r.status!=='personal'; });
+    var nAb=0, nDisp=0, mixed={}, events={};
+    cli.forEach(function(r){
+      if(r.event_id){ (r.event_kind==='mixed' ? mixed : events)[r.event_id]=1; return; }
+      if(r.trip_type==='mixed') mixed[r.id]=1;
+      else if(r.trip_type==='disposal') nDisp++;
+      else nAb++;
+    });
+    set('admin-sum-type-period-label', periodLbl);
+    set('admin-sum-type-ab', nAb);
+    set('admin-sum-type-disposal', nDisp);
+    set('admin-sum-type-mixed', Object.keys(mixed).length);
+    set('admin-sum-type-event', Object.keys(events).length);
   } catch(e) {
     console.error('loadAdminDashboard error', e);
   }

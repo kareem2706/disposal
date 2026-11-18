@@ -1309,7 +1309,7 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         </div>
       </div>
       <!-- 3 summary cards -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;" class="admin-summary-grid" id="admin-summary-cards">
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;" class="admin-summary-grid" id="admin-summary-cards">
         <div class="card" style="padding:0;">
           <div class="card-hd">Finances <span id="admin-sum-period-label" style="font-size:11px;font-weight:400;color:var(--ink3);margin-left:6px;"></span></div>
           <div style="padding:14px 20px;display:flex;flex-direction:column;gap:0;">
@@ -1379,6 +1379,28 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
               <span style="font-size:12.5px;font-weight:600;">Volume (HTVA)</span>
               <span style="font-size:14px;font-weight:700;" id="admin-sum-sub-vol">—</span>
             </div>
+          </div>
+        </div>
+        <div class="card" style="padding:0;">
+          <div class="card-hd" style="font-weight:700;">Demandes par type <span id="admin-sum-type-period-label" style="font-size:11px;font-weight:400;color:var(--ink3);margin-left:6px;"></span></div>
+          <div style="padding:14px 20px;display:flex;flex-direction:column;gap:0;">
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;color:var(--ink3);">Courses simples</span>
+              <span style="font-size:13px;font-weight:600;" id="admin-sum-type-ab">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;color:var(--ink3);">Mises à disposition</span>
+              <span style="font-size:13px;font-weight:600;" id="admin-sum-type-disposal">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--sand2);">
+              <span style="font-size:12.5px;color:var(--ink3);">Trajets mixtes</span>
+              <span style="font-size:13px;font-weight:600;" id="admin-sum-type-mixed">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0;">
+              <span style="font-size:12.5px;color:var(--ink3);">Événements créés</span>
+              <span style="font-size:13px;font-weight:600;" id="admin-sum-type-event">—</span>
+            </div>
+            <div style="font-size:11px;color:var(--ink4);margin-top:6px;">Demandes clients (hors sous-traitances et missions personnelles). Un trajet mixte ou un événement compte pour 1, quel que soit son nombre de trajets.</div>
           </div>
         </div>
       </div>
