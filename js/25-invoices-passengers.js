@@ -201,6 +201,17 @@ window._renderDriverInvoiceMonth = async function(){
   var from = _dInvSelYear+'-'+m+'-01';
   var lastDay = new Date(_dInvSelYear, _dInvSelMonth, 0).getDate();
   var to = _dInvSelYear+'-'+m+'-'+(lastDay<10?'0'+lastDay:lastDay);
+  // Onglet « Sous-traitance » : vue séparée (pas de facturation Bleenr)
+  if(window._dInvTab==='sub'){
+    var navOnly='<div class="card-hd dinv-hd" style="display:flex;align-items:center;gap:8px;justify-content:space-between;">'
+      +'<div class="dinv-nav" style="display:flex;align-items:center;gap:6px;">'
+        +'<button onclick="_dInvStep(-1)" style="'+btnStyle+'">&lt;</button>'
+        +'<select onchange="_dInvSetMonth(parseInt(this.value))" style="'+selStyle+'">'+monthOpts+'</select>'
+        +'<select onchange="_dInvSetYear(parseInt(this.value))" style="'+selStyle+'">'+yearOpts+'</select>'
+        +'<button onclick="_dInvStep(1)" style="'+btnStyle+'">&gt;</button>'
+      +'</div></div>';
+    return _renderDInvSub(listEl, navOnly, from, to);
+  }
 
   var {data} = await sb.from('rides').select('*')
     .eq('driver_id',currentUser.id)
@@ -302,6 +313,60 @@ window._renderDriverInvoiceMonth = async function(){
     + '</table></div>'
   +'</div>';
 };
+
+// ── Onglets Clients / Sous-traitance ──
+window._dInvTab = 'client';
+window._dInvTabSet = function(tab){
+  window._dInvTab = tab;
+  document.querySelectorAll('#dinv-tabs .mktab').forEach(function(b){ b.classList.toggle('active', b.dataset.t===tab); });
+  var el=document.getElementById('d-invoices-list'); if(el) el.innerHTML='<div class="page-loading"><div class="page-spinner"></div></div>';
+  window._renderDriverInvoiceMonth();
+};
+
+// Sous-traitance du mois : « Mes sous-traitances » (publiées : à payer au sous-traitant) et
+// « Sous-traitances effectuées » (acceptées : à recevoir). Prix HTVA + TVA du pays (réglées entre fleets, hors Bleenr).
+async function _renderDInvSub(listEl, header, from, to){
+  var uid=currentUser.id;
+  var q=function(col){ return sb.from('rides').select('*').eq(col,uid).eq('is_subcontract',true).in('status',['done','confirmed','active'])
+    .not('final_price','is',null).gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true}); };
+  var res=await Promise.all([q('client_id'), q('driver_id')]);
+  var mine=(res[0].data||[]).filter(function(r){ return r.driver_id; }), done=res[1].data||[];
+  // Société de l'autre fleet (fonction serveur réservée aux deux parties)
+  var names={};
+  await Promise.all(mine.concat(done).map(function(r){ return sb.rpc('ride_subcontract_parties',{p_ride:r.id}).then(function(x){ names[r.id]=x.data||{}; }).catch(function(){}); }));
+  var _s=await _docBilling(), _cfg=_invCfg(_s), vat=_cfg.vatFor(currentProfile&&currentProfile.address_country), r2=_rptR2;
+  var fmt=function(v){ return parseFloat(v).toFixed(2).replace('.',',')+' \u20ac'; };
+  var esc=_billingEsc;
+  var th=function(l,right,pad){ return '<th style="padding:10px 12px'+(pad?' 10px 20px':'')+';text-align:'+(right?'right':'left')+';font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);white-space:nowrap;">'+l+'</th>'; };
+  var section=function(title, sub, rows, who, total, color){
+    if(!rows.length) return '<div style="padding:18px 20px;border-top:1px solid var(--sand2);"><div style="font-size:14px;font-weight:700;">'+title+'</div><div style="font-size:12.5px;color:var(--ink3);margin-top:4px;">'+t('app.aucune_mission_ce_mois_ci')+'</div></div>';
+    var ht=0;
+    var body=rows.map(function(r){
+      var h=r2(parseFloat(r.final_price)||0); ht+=h;
+      var nm=(names[r.id]||{})[who]||'\u2014';
+      var from2=(r.from_address||'\u2014').split(',')[0];
+      var route=r.trip_type==='disposal'?from2+' (Mise à disposition)':from2+' \u2192 '+String(r.to_address||'').split(',')[0];
+      return '<tr style="border-bottom:1px solid var(--sand2);">'
+        +'<td style="padding:10px 12px 10px 20px;font-size:11px;font-family:monospace;font-weight:600;color:var(--ink2);vertical-align:top;white-space:nowrap;">'+esc(r.booking_code||r.id.slice(0,8))+'</td>'
+        +'<td style="padding:10px 12px;vertical-align:top;"><div style="font-size:12.5px;color:var(--ink3);">'+formatDate(r.ride_date||'')+(r.ride_time?' · '+r.ride_time.slice(0,5):'')+'</div><div style="font-size:12.5px;color:var(--ink);">'+esc(route)+'</div></td>'
+        +'<td style="padding:10px 12px;font-size:12.5px;vertical-align:top;">'+esc(nm)+'</td>'
+        +'<td style="padding:10px 20px 10px 12px;font-size:12.5px;font-weight:600;text-align:right;white-space:nowrap;vertical-align:top;">'+fmt(h)+'</td></tr>';
+    }).join('');
+    ht=r2(ht); var tv=r2(ht*vat/100), tt=r2(ht+tv);
+    var tr=function(l,v,b){ return '<tr><td colspan="3" style="padding:6px 12px 6px 20px;font-size:'+(b?'14px;font-weight:700':'12.5px;color:var(--ink3)')+';">'+l+'</td><td style="padding:6px 20px 6px 12px;text-align:right;white-space:nowrap;font-size:'+(b?'13.5px;font-weight:700;color:'+color:'12.5px;font-weight:600')+';">'+v+'</td></tr>'; };
+    return '<div style="border-top:1px solid var(--sand2);">'
+      +'<div style="padding:16px 20px 10px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;"><div><div style="font-size:14px;font-weight:700;">'+title+'</div><div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+sub+'</div></div>'
+        +'<div style="text-align:right;"><div style="font-size:11px;color:var(--ink3);">'+rows.length+' course'+(rows.length>1?'s':'')+' · TVAC</div><div style="font-size:18px;font-weight:700;color:'+color+';">'+fmt(tt)+'</div></div></div>'
+      +'<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr style="border-bottom:2px solid var(--sand3);">'+th(t('app.code'),0,1)+th(t('app.trajet'))+th(who==='taker_company'?'Sous-traitant':'Donneur d\u2019ordre')+'<th style="padding:10px 20px 10px 12px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);">Prix HTVA</th></tr></thead>'
+      +'<tbody>'+body+'</tbody><tfoot><tr><td colspan="4" style="padding:0;border-top:1px solid var(--sand3);"></td></tr>'
+      +tr('Total HTVA',fmt(ht))+tr('TVA ('+vat+'%)',fmt(tv))+tr(who==='taker_company'?'Total à payer (TVAC)':'Total à recevoir (TVAC)',fmt(tt),1)+'<tr><td colspan="4" style="height:8px;"></td></tr></tfoot></table></div></div>';
+  };
+  listEl.innerHTML='<div class="card" style="padding:0;">'+header
+    +section('Mes sous-traitances','Courses que vous avez confiées : à régler au sous-traitant',mine,'taker_company','var(--ink)')
+    +section('Sous-traitances effectuées','Courses que vous avez réalisées : à facturer au donneur d\u2019ordre',done,'poster_company','var(--green)')
+    +'<div style="padding:12px 20px 16px;font-size:11.5px;color:var(--ink3);border-top:1px solid var(--sand2);">Les sous-traitances se règlent directement entre fleets, hors Bleenr, sans commission. Montants HTVA + TVA du pays.</div>'
+  +'</div>';
+}
 
 window.generateDriverInvoices = function(kind){
   // Fleet space: prestation invoices (fleet -> each client) or the commission invoice (Bleenr -> fleet)

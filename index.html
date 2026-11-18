@@ -1007,6 +1007,11 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
         <div class="pg-head-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></div>
         <div><h2 data-i18n="ap.factures">Factures</h2><p data-i18n="ap.vos_missions_facturees">Vos missions facturées</p></div>
       </div>
+      <!-- Factures clients / sous-traitance (25-invoices-passengers.js) -->
+      <div class="mktabs" id="dinv-tabs">
+        <button class="mktab active" data-t="client" onclick="_dInvTabSet('client')">Clients</button>
+        <button class="mktab" data-t="sub" onclick="_dInvTabSet('sub')">Sous-traitance</button>
+      </div>
       <div id="d-invoices-list"><div class="page-loading"><div class="page-spinner"></div></div></div>
     </div>
 
