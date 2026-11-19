@@ -613,3 +613,6 @@ body .sub-cli-box{background:#F8F7F4!important;}
 #detail-ft .rd-sub-amt{flex:0 0 100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#EEF8C4;color:var(--ink);border-radius:14px;padding:10px 14px;font-size:13.5px;}
 #detail-ft .rd-sub-amt span{font-weight:500;}
 #detail-ft .rd-sub-amt b{font-weight:700;font-size:15px;white-space:nowrap;}
+
+/* Supplément demandé : « Refuser » et « Payer » de même taille */
+.chg-act > .btn{flex:1 1 0;min-width:140px;justify-content:center;text-align:center;}
