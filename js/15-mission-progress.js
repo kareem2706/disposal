@@ -107,7 +107,7 @@ function _missionStepBtn(r){
   var b=function(step,label){ return '<button class="btn btn-green ms-btn" style="margin-left:8px;" onclick="missionStep(\''+id+'\',\''+step+'\',this)">'+label+'</button>'; };
   if(!r.on_way_at){
     var lk=_onWayLock(r);
-    if(lk) return '<button class="btn ms-btn" disabled style="margin-left:8px;background:#E4E8E3;color:var(--ink3);cursor:not-allowed;" title="'+_rdEsc(lk)+'">'+_rdEsc(lk)+'</button>';
+    if(lk) return '<button class="btn ms-btn ms-lock" disabled title="'+_rdEsc(lk)+'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'+_rdEsc(lk)+'</button>';
     return b('on_way','En chemin');
   }
   if(!r.pickup_at) return '<button class="btn ms-btn" style="margin-left:8px;background:#fff;color:#B3261E;border:1.5px solid #F5C2BC;" onclick="missionNoShow(\''+id+'\',this)">'+t('app.no_show')+'</button>'+b('pickup','Pick up terminé');
