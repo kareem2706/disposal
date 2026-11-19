@@ -1261,7 +1261,7 @@ window._chgChoice=function(rideId, why){
       +'<label class="chg-opt sm"><input type="radio" name="chg-pay" value="republish_credit"><span><b>'+t('app.garder')+' '+(paid?_chgEur(paid):'le montant payé')+' '+t('app.en_credit')+'</b><small>'+t('app.deduit_de_la_nouvelle_offre')+'</small></span></label>'
       +'</span></span></label>'
     +'<div id="chg-ch-err" class="auth-error"></div></div>'
-    +'<div class="modal-ft"><button class="btn btn-secondary" onclick="closeModal(\'m-chg-choice\')">'+t('app.retour')+'</button><button class="btn btn-green" onclick="_chgDecline(this,\''+_rdEsc(rideId)+'\')">'+t('app.confirmer')+'</button></div>'
+    +'<div class="modal-ft"><button class="btn btn-green" onclick="_chgDecline(this,\''+_rdEsc(rideId)+'\')">'+t('app.confirmer')+'</button></div>'
     +'</div></div>');
   openModal('m-chg-choice');
 };
