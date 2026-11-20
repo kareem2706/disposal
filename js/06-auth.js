@@ -69,7 +69,8 @@ function _showRegStep(step){
     var cf=document.getElementById('reg-client-fields'); if(cf) cf.style.display=isDriver?'none':'block';
     var df=document.getElementById('reg-driver-fields'); if(df) df.style.display=isDriver?'block':'none';
     // For client: show perso fields (fname/lname) OR pro fields (company), not both
-    var pf=document.getElementById('reg-perso-fields'); if(pf) pf.style.display=(!isDriver && !isPro)?'grid':'none';
+    var pf=document.getElementById('reg-perso-fields'); if(pf) pf.style.display='grid';
+    var cap=document.getElementById('reg-contact-cap'); if(cap) cap.style.display=(isDriver||isPro)?'block':'none';
     var prof=document.getElementById('reg-pro-fields'); if(prof) prof.style.display=(!isDriver && isPro)?'block':'none';
     var vat=document.getElementById('reg-vat'); if(vat) vat.style.display=(isDriver||isPro)?'block':'none';
   }
@@ -132,17 +133,15 @@ window.submitEmailReg = async function(){
 
   if(role==='driver'){
     company = (document.getElementById('inp-company-driver')?.value||'').trim();
-    fname = company; lname = '';
   } else if(clientType==='pro'){
     company = (document.getElementById('inp-company-client')?.value||'').trim();
     if(!company){ if(errEl){errEl.textContent=t('au.err_company_required');errEl.classList.add('show');} return; }
-    fname = company; lname = '';
-  } else {
-    fname = (document.getElementById('inp-fname')?.value||'').trim();
-    lname = (document.getElementById('inp-lname')?.value||'').trim();
   }
-
+  // Prénom / nom (personne de contact pour une fleet ou un client pro) : obligatoires pour tous
+  fname = (document.getElementById('inp-fname')?.value||'').trim();
+  lname = (document.getElementById('inp-lname')?.value||'').trim();
   if(role==='driver' && !company){ if(errEl){errEl.textContent=t('au.err_company_required');errEl.classList.add('show');} return; }
+  if(!fname || !lname){ if(errEl){errEl.textContent=t('au.err_names_required');errEl.classList.add('show');} return; }
   if(!sb){ if(errEl){errEl.textContent='Supabase non configuré';errEl.classList.add('show');} return; }
   if(errEl) errEl.classList.remove('show');
   var btn = document.getElementById('btn-reg-submit');
@@ -238,7 +237,8 @@ window.updateRegFields = function(){
 
 window.toggleClientType = function(){
   var isPro = document.getElementById('inp-pro-client').checked;
-  document.getElementById('reg-perso-fields').style.display = isPro?'none':'grid';
+  document.getElementById('reg-perso-fields').style.display = 'grid';
+  var cap=document.getElementById('reg-contact-cap'); if(cap) cap.style.display = isPro?'block':'none';
   document.getElementById('reg-pro-fields').style.display   = isPro?'block':'none';
 };
 

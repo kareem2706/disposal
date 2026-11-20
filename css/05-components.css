@@ -619,3 +619,7 @@ body .sub-cli-box{background:#F8F7F4!important;}
 
 /* « En chemin » pas encore disponible : bouton lisible, à la largeur de son texte */
 .btn.ms-btn.ms-lock,.modal-overlay.rd-panel:not(.rd-form) .modal-ft > .btn.ms-btn.ms-lock{width:auto!important;min-width:0!important;max-width:none!important;height:44px!important;padding:0 18px!important;margin-left:8px;font-size:13.5px!important;gap:8px;background:#F2F2EE!important;color:var(--ink2)!important;border:1px solid #E4E2DC!important;opacity:1!important;cursor:not-allowed;flex-shrink:1!important;}
+
+/* Champs obligatoires : astérisque après le libellé (survit à la traduction des libellés) */
+label.req::after{content:" *";color:#C8102E;font-weight:700;}
+.req-cap{font-size:12px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin:4px 0 8px;}

@@ -730,6 +730,8 @@
   "au.or": "OU",
   "au.parametres": "← Paramètres",
   "au.particulier": "Particulier",
+  "au.personne_contact": "Personne de contact",
+  "au.err_names_required": "Le prénom et le nom sont obligatoires.",
   "au.prenom": "Prénom",
   "au.prix_fixeaccepte_a_la_reservation": "<b>Prix fixe</b>accepté à la réservation",
   "au.professionnel": "Professionnel",

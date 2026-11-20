@@ -730,6 +730,8 @@
   "au.or": "OR",
   "au.parametres": "← Settings",
   "au.particulier": "Individual",
+  "au.personne_contact": "Contact person",
+  "au.err_names_required": "First and last name are required.",
   "au.prenom": "First name",
   "au.prix_fixeaccepte_a_la_reservation": "<b>Fixed price</b>agreed at booking",
   "au.professionnel": "Business",

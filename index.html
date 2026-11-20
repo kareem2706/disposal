@@ -478,18 +478,19 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div class="auth-or"><span data-i18n="au.or">OU</span></div>
           <!-- Registration fields -->
           <div id="reg-client-fields" style="display:none;">
-            <div id="reg-perso-fields" class="form-grid">
-              <div class="input-group"><label data-i18n="au.prenom">Prénom</label><input id="inp-fname" placeholder="Marie" autocomplete="given-name"></div>
-              <div class="input-group"><label data-i18n="au.nom">Nom</label><input id="inp-lname" placeholder="Dupont" autocomplete="family-name"></div>
-            </div>
             <div id="reg-pro-fields" style="display:none;">
-              <div class="input-group"><label data-i18n="au.nom_de_societe">Nom de société</label><input id="inp-company-client" placeholder="Acme SA" autocomplete="organization"></div>
+              <div class="input-group"><label class="req" data-i18n="au.nom_de_societe">Nom de société</label><input id="inp-company-client" placeholder="Acme SA" autocomplete="organization"></div>
             </div>
           </div>
           <div id="reg-driver-fields" style="display:none;">
-            <div class="input-group"><label data-i18n="au.nom_de_societe">Nom de société</label><input id="inp-company-driver" placeholder="Transport Dupont SPRL" autocomplete="organization"></div>
+            <div class="input-group"><label class="req" data-i18n="au.nom_de_societe">Nom de société</label><input id="inp-company-driver" placeholder="Transport Dupont SPRL" autocomplete="organization"></div>
           </div>
-          <div class="input-group"><label data-i18n="au.adresse_email">Adresse email</label><input id="inp-email-reg" type="email" placeholder="marie@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')submitEmailReg()"></div>
+          <div id="reg-contact-cap" class="req-cap" data-i18n="au.personne_contact" style="display:none;">Personne de contact</div>
+          <div id="reg-perso-fields" class="form-grid">
+            <div class="input-group"><label class="req" data-i18n="au.prenom">Prénom</label><input id="inp-fname" placeholder="Marie" autocomplete="given-name"></div>
+            <div class="input-group"><label class="req" data-i18n="au.nom">Nom</label><input id="inp-lname" placeholder="Dupont" autocomplete="family-name"></div>
+          </div>
+          <div class="input-group"><label class="req" data-i18n="au.adresse_email">Adresse email</label><input id="inp-email-reg" type="email" placeholder="marie@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')submitEmailReg()"></div>
           <div id="reg-vat" class="input-group" style="display:none;"><label data-i18n="au.n_de_tva_optionnel">N° de TVA (optionnel)</label><input id="inp-vat" placeholder="BE 0000.000.000"></div>
           <div id="auth-err-email-reg" class="auth-error"></div>
           <button data-i18n="au.recevoir_un_code" class="btn btn-primary btn-full" id="btn-reg-submit" onclick="submitEmailReg()">Recevoir un code →</button>
@@ -1029,8 +1030,9 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
             <div id="profile-av" class="user-av" style="width:52px;height:52px;font-size:18px;">?</div>
             <div><div id="profile-fullname" style="font-size:16px;font-weight:600;">&#x2014;</div><div id="profile-email-disp" class="text-xs">&#x2014;</div></div>
           </div>
-          <div id="pf-names-grid" class="form-grid"><div class="input-group"><label data-i18n="ap.prenom">Pr&#xe9;nom</label><input id="pf-fname"></div><div class="input-group"><label data-i18n="ap.nom">Nom</label><input id="pf-lname"></div></div>
-          <div id="pf-company-wrap" class="input-group" style="display:none;"><label data-i18n="ap.nom_de_l_entreprise">Nom de l&#x27;entreprise</label><input id="pf-company"></div>
+          <div id="pf-company-wrap" class="input-group" style="display:none;"><label class="req" data-i18n="ap.nom_de_l_entreprise">Nom de l&#x27;entreprise</label><input id="pf-company"></div>
+          <div id="pf-contact-cap" class="req-cap" data-i18n="au.personne_contact" style="display:none;">Personne de contact</div>
+          <div id="pf-names-grid" class="form-grid"><div class="input-group"><label class="req" data-i18n="ap.prenom">Pr&#xe9;nom</label><input id="pf-fname" autocomplete="given-name"></div><div class="input-group"><label class="req" data-i18n="ap.nom">Nom</label><input id="pf-lname" autocomplete="family-name"></div></div>
           <div class="input-group"><label data-i18n="ap.telephone">T&#xe9;l&#xe9;phone</label><input id="pf-phone" type="tel"></div>
           <div id="pf-vat-wrap" class="input-group" style="display:none;"><label data-i18n="ap.n_de_tva">N&#xb0; de TVA</label><input id="pf-vat"></div>
           </div>

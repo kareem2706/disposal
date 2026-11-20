@@ -369,9 +369,12 @@ function loadProfileForm(){
   var role=currentProfile.role||currentUser?.user_metadata?.role||'client',ct=currentProfile.client_type||'perso';
   var isP=(role==='client'&&ct==='perso'),showC=(role==='driver'||(role==='client'&&ct==='pro'));
   var show=function(id,v){var el=document.getElementById(id);if(el)el.style.display=v;};
-  show('pf-names-grid',isP?'grid':'none');show('pf-company-wrap',showC?'block':'none');show('pf-vat-wrap',showC?'block':'none');
+  // Prénom / nom obligatoires pour tous ; pour une fleet ou un client pro = personne de contact
+  show('pf-names-grid','grid');show('pf-contact-cap',showC?'block':'none');show('pf-company-wrap',showC?'block':'none');show('pf-vat-wrap',showC?'block':'none');
   show('pf-addr-wrap','block');
   var fn=currentProfile.first_name||'',ln=currentProfile.last_name||'',co=currentProfile.company_name||currentProfile.first_name||'';
+  // Anciens comptes : le prénom contenait le nom de société → champ vide à compléter
+  if(showC && fn && fn===co && !ln) fn='';
   var set=function(id,v){var el=document.getElementById(id);if(el)el.value=v;};
   set('pf-fname',fn);set('pf-lname',ln);set('pf-company',co);set('pf-phone',currentProfile.phone||'');set('pf-vat',currentProfile.vat_number||'');
   set('pf-street',currentProfile.address_street||'');set('pf-postal',currentProfile.address_postal||'');set('pf-city',currentProfile.address_city||'');
@@ -409,8 +412,10 @@ function loadProfileForm(){
     var isVerified = currentProfile.fleet_verified==='validated';
     var fnEl=document.getElementById('pf-fname');
     var lnEl=document.getElementById('pf-lname');
-    if(fnEl){fnEl.disabled=isVerified;fnEl.style.opacity=isVerified?'0.5':'1';fnEl.style.cursor=isVerified?'not-allowed':'text';}
-    if(lnEl){lnEl.disabled=isVerified;lnEl.style.opacity=isVerified?'0.5':'1';lnEl.style.cursor=isVerified?'not-allowed':'text';}
+    // Personne de contact : verrouillée une fois la fleet validée, sauf si elle n'a jamais été renseignée
+    var lockN = isVerified && !!(fnEl&&fnEl.value) && !!(lnEl&&lnEl.value);
+    if(fnEl){fnEl.disabled=lockN;fnEl.style.opacity=lockN?'0.5':'1';fnEl.style.cursor=lockN?'not-allowed':'text';}
+    if(lnEl){lnEl.disabled=lockN;lnEl.style.opacity=lockN?'0.5':'1';lnEl.style.cursor=lockN?'not-allowed':'text';}
     // Nom de société vérifié : grisé et non modifiable
     var coEl=document.getElementById('pf-company');
     if(coEl){coEl.disabled=isVerified;coEl.style.opacity=isVerified?'0.5':'1';coEl.style.cursor=isVerified?'not-allowed':'text';coEl.style.background=isVerified?'var(--sand2)':'';}

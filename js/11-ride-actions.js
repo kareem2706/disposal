@@ -49,11 +49,14 @@ window._ntToggle=async function(el){
 window.saveProfile = async function(){
   var gv=function(id){var e=document.getElementById(id);return e?e.value.trim():'';};
   var isValidatedDriver = (currentProfile?.role==='driver' || currentRole==='driver') && currentProfile?.fleet_verified==='validated';
-  // Prénom / nom : envoyés seulement quand les champs sont affichés (client particulier)
+  // Prénom / nom (personne de contact pour une fleet ou un client pro) et société : obligatoires,
+  // envoyés seulement quand les champs sont affichés et modifiables
+  var _ed=function(id){var e=document.getElementById(id);return !!(e&&!e.disabled);};
   var _vis=function(id){var e=document.getElementById(id);return !!(e&&e.style.display!=='none');};
-  var namesShown = !isValidatedDriver && _vis('pf-names-grid');
-  var coShown = !isValidatedDriver && _vis('pf-company-wrap');
-  if(namesShown && (!gv('pf-fname') || !gv('pf-lname'))){ showToast('⚠️ Le prénom et le nom sont obligatoires.'); return; }
+  var namesShown = _vis('pf-names-grid') && _ed('pf-fname') && _ed('pf-lname');
+  var coShown = _vis('pf-company-wrap') && _ed('pf-company');
+  if(namesShown && (!gv('pf-fname') || !gv('pf-lname'))){ showToast('⚠️ '+t('au.err_names_required')); return; }
+  if(coShown && !gv('pf-company')){ showToast('⚠️ '+t('au.err_company_required')); return; }
   const updates = {
     first_name:      namesShown ? gv('pf-fname') : undefined,
     last_name:       namesShown ? gv('pf-lname') : undefined,
