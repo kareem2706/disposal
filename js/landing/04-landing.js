@@ -443,7 +443,7 @@ _onReady(function(){
     var q = new URLSearchParams(location.search);
     if((q.get('inscription') || '').toLowerCase() !== 'fleet') return;
     q.delete('inscription');
-    ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(function(k){ q.delete(k); });   // adresse propre (la visite est déjà comptée)
+    ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(function(k){ q.delete(k); });   // adresse propre
     history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash);
     _loadApp().then(function(){
       if(typeof currentUser !== 'undefined' && currentUser) return;   // déjà connecté : rien à faire
