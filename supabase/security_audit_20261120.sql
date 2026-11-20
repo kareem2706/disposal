@@ -1,0 +1,6 @@
+-- 20/11/2026 — Audit de sécurité (migration « security_audit_20261120 », appliquée en production)
+-- • accept_subcontract : refuse une fleet non ciblée par une sous-traitance ciblée (ride_target_ok).
+-- • api_offer_submit : fleet validée uniquement ; demande ouverte (waiting / offers) ; jamais sur sa propre demande.
+-- • apply_signup_role : plus de bascule client ↔ fleet dès que le compte a servi (course, offre, véhicule, document, validation).
+-- • rides_count_since : réservé à l'admin.
+-- Voir aussi invoice_amounts_server.sql et fleet_contact_private.sql (même jour).
