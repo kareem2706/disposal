@@ -437,6 +437,16 @@ document.getElementById('screen-landing') && (function(){
   if(reduced) rvs.forEach(function(el){ el.classList.add('in'); });
 })();
 
+// Codes de campagne (utm_*) retirés de l'adresse dès l'ouverture : la navigation du site garde la même
+// adresse d'une page à l'autre, ils restaient donc affichés pendant toute la visite.
+(function(){
+  try{
+    var q = new URLSearchParams(location.search), had = false;
+    ['utm_source','utm_medium','utm_campaign','utm_content','utm_term'].forEach(function(k){ if(q.has(k)){ q.delete(k); had = true; } });
+    if(had) history.replaceState(history.state, '', location.pathname + (q.toString() ? '?' + q.toString() : '') + location.hash);
+  }catch(e){}
+})();
+
 // Lien direct vers l'inscription fleet (e-mails, campagnes) : https://www.bleenr.com/?inscription=fleet
 _onReady(function(){
   try{
