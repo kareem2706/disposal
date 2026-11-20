@@ -39,13 +39,12 @@ async function _invPeople(ids){
   return map;
 }
 
-// Sequential number, stored in fleet_invoices (same number when re-generated).
-// RPC invoice_number works for the admin, the fleet and the client.
-async function _invNumber(fleetId, kind, clientId, period, a, count){
+// Numéro séquentiel ET montants : attribués par le serveur (fonction invoice_number) à partir des
+// courses en base — le navigateur n'envoie plus aucun montant (rien ne peut être falsifié).
+async function _invNumber(fleetId, kind, clientId, period){
   try{
-    var r=await sb.rpc('invoice_number',{ p_fleet:fleetId, p_client:clientId||null, p_period:period, p_kind:kind,
-      p_htva:a.htva, p_vat_rate:a.vatRate, p_vat:a.vat, p_tvac:a.tvac, p_rc:!!a.rc, p_count:count });
-    if(!r.error && r.data) return { number:r.data };
+    var r=await sb.rpc('invoice_number',{ p_fleet:fleetId, p_client:clientId||null, p_period:period, p_kind:kind });
+    if(!r.error && r.data && r.data.number) return { number:r.data.number, srv:r.data };
   }catch(e){}
   // Numéro attribué uniquement par le serveur (fonction invoice_number)
   return { number:'PROVISOIRE', warn:'Numéro de facture non enregistré (fonction invoice_number indisponible) : document provisoire.' };
@@ -79,7 +78,9 @@ async function _invOpen(o){
   win.document.write('<p style="font-family:sans-serif;padding:30px;">Génération des factures…</p>');
   try{
     var e=_billingEsc;
-    var rides=(o.rides||[]).filter(function(r){ return r.driver_id && r.final_price && !r.is_subcontract; });
+    // Mêmes courses que le serveur : terminée / confirmée, ou annulée et non remboursée ; hors sous-traitance
+    var rides=(o.rides||[]).filter(function(r){ return r.driver_id && r.final_price && !r.is_subcontract
+      && (r.status==='done' || r.status==='confirmed' || (r.status==='cancelled' && r.payment_method && r.payment_method!=='refunded')); });
     var s=o.settings||await _docBilling();
     var cfg=_invCfg(s);
     var people=Object.assign({}, o.people||{});
@@ -112,7 +113,9 @@ async function _invOpen(o){
         var vatPct=cfg.vatFor((people[fid]||{}).address_country);
         var rows=list.map(function(r){ return rideRow(r,vatPct); });
         var base=_rptR2(rows.reduce(function(a,x){return a+x.unit;},0)), vat=_rptR3(base*vatPct/100), total=_rptR3(base+vat);
-        var num=await _invNumber(fid,'prestation',cid,period,{htva:base,vatRate:vatPct,vat:vat,tvac:total,rc:false},list.length);
+        var num=await _invNumber(fid,'prestation',cid,period);
+        // Totaux de la facture = montants enregistrés par le serveur
+        if(num.srv && !o.partial){ base=Number(num.srv.htva); vatPct=Number(num.srv.vat_rate); vat=Number(num.srv.vat); total=Number(num.srv.tvac); }
         pages.push(_invPage({ title:'Facture de prestation', number:num.number, warn:num.warn, periodRange:periodRange,
           issuer:fleetParty(fid), receiver:clientParty(cid), rows:rows,
           vatHead:'TVA '+vatPct+' %', base:base, vatAmt:vat, total:total,
@@ -133,7 +136,10 @@ async function _invOpen(o){
         var fc=(people[fids[j]]||{}).address_country;
         var cRate=cfg.commFor(fc), cVatR=cfg.cVatFor(fc), cRc=cfg.rcFor(fc);
         var cHt=_rptR3(htva*cRate/100), cVatAmt=_rptR3(cHt*cVatR/100), cTvac=_rptR3(cHt+cVatAmt);
-        var numC=await _invNumber(fids[j],'commission',null,period,{htva:cHt,vatRate:cVatR,vat:cVatAmt,tvac:cTvac,rc:cRc},fl.length);
+        var numC=await _invNumber(fids[j],'commission',null,period);
+        // Totaux de la facture = montants enregistrés par le serveur
+        if(numC.srv){ htva=Number(numC.srv.base); cRate=Number(numC.srv.comm_rate); cHt=Number(numC.srv.htva); cVatR=Number(numC.srv.vat_rate);
+          cVatAmt=Number(numC.srv.vat); cTvac=Number(numC.srv.tvac); cRc=!!numC.srv.rc; pTvac=_rptR3(htva+_rptR3(htva*pv/100)); }
         pages.push(_invPage({ title:'Facture de commission', number:numC.number, warn:numC.warn, periodRange:periodRange,
           issuer:bleenr, receiver:fleetParty(fids[j]),
           rows:[{ desc:'<b>Commission plateforme ('+cRate+' %)</b><div class="sub">'+fl.length+' course(s) — '+pLabel+' — base HTVA '+_rptMoney(htva)+'</div>', unit:cHt, vat:cVatAmt, total:cTvac }],
@@ -215,11 +221,11 @@ window._renderDriverInvoiceMonth = async function(){
 
   var {data} = await sb.from('rides').select('*')
     .eq('driver_id',currentUser.id)
-    .in('status',['done','confirmed'])
+    .in('status',['done','confirmed','cancelled'])
     .not('final_price','is',null)
     .gte('ride_date',from).lte('ride_date',to)
     .order('ride_date',{ascending:true});
-  var monthRides = (data||[]).filter(function(r){ return !r.is_subcontract; }).sort(_byNewest); // sous-traitances : hors facturation
+  var monthRides = (data||[]).filter(function(r){ return !r.is_subcontract && (r.status!=='cancelled' || (r.final_price && r.payment_method && r.payment_method!=='refunded')); }).sort(_byNewest); // sous-traitances : hors facturation ; annulée : seulement si payée et non remboursée
   window._dInvCurrentData = monthRides;
 
   var fmt = function(v){ return parseFloat(v).toFixed(2).replace('.',',')+' €'; };

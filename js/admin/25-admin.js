@@ -718,10 +718,10 @@ async function _rptRender(){
   el.innerHTML=head+'<div class="page-loading"><div class="page-spinner"></div></div>';
 
   try{
-    var rr=await sb.from('rides').select('*').in('status',['done','confirmed']).not('driver_id','is',null).not('final_price','is',null)
+    var rr=await sb.from('rides').select('*').in('status',['done','confirmed','cancelled']).not('driver_id','is',null).not('final_price','is',null)
       .gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true});
     if(rr.error) throw rr.error;
-    var rides=(rr.data||[]).filter(function(r){ return !r.is_subcontract; }); // sous-traitances : hors facturation
+    var rides=(rr.data||[]).filter(function(r){ return !r.is_subcontract && (r.status!=='cancelled' || (r.payment_method && r.payment_method!=='refunded')); }); // sous-traitances : hors facturation ; annulée : seulement si payée et non remboursée
     _rptRides=rides;
     var ids=[...new Set(rides.map(function(r){return r.driver_id;}).concat(rides.map(function(r){return r.client_id;})).filter(Boolean))];
     var people={};

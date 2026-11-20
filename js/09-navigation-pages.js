@@ -428,7 +428,7 @@ window.generateMonthInvoice = async function(monthKey, onlyIds){
   var d=new Date(parseInt(monthKey.slice(0,4)), parseInt(monthKey.slice(5,7)), 0);
   var to=monthKey+'-'+String(d.getDate()).padStart(2,'0');
   var res=await Promise.all([
-    sb.from('rides').select('*').eq('client_id', currentUser.id).eq('status','done').gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true}),
+    sb.from('rides').select('*').eq('client_id', currentUser.id).in('status',['done','confirmed']).gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true}),
     sb.from('rides').select('*').eq('client_id', currentUser.id).eq('status','cancelled').not('final_price','is',null).gte('ride_date',from).lte('ride_date',to).order('ride_date',{ascending:true})
   ]);
   var rides=(res[0].data||[]).concat((res[1].data||[]).filter(function(r){ return r.payment_method && r.payment_method!=='refunded'; }));
@@ -436,7 +436,7 @@ window.generateMonthInvoice = async function(monthKey, onlyIds){
   if(onlyIds && onlyIds.length) rides=rides.filter(function(r){ return onlyIds.indexOf(r.id)>=0; });   // courses cochées
   rides.sort(function(a,b){ return (a.ride_date||'').localeCompare(b.ride_date||''); });
   var people={}; if(currentProfile) people[currentUser.id]=Object.assign({email:currentUser.email},currentProfile);
-  _invOpen({ rides:rides, kind:'prestation', year:parseInt(monthKey.slice(0,4)), month:parseInt(monthKey.slice(5,7)), people:people });
+  _invOpen({ rides:rides, kind:'prestation', year:parseInt(monthKey.slice(0,4)), month:parseInt(monthKey.slice(5,7)), people:people, partial:!!(onlyIds && onlyIds.length) });
 };
 
 // DRIVER DASHBOARD

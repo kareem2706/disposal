@@ -1,0 +1,5 @@
+-- 20/11/2026 — Montants des factures calculés par le serveur (migration « invoice_amounts_server_side »).
+-- invoice_number(p_fleet, p_client, p_period, p_kind) → jsonb {number, htva, vat_rate, vat, tvac, rc, count, comm_rate, base}
+-- L'ancienne version qui acceptait des montants envoyés par le navigateur est supprimée.
+-- Courses facturées : terminée / confirmée, ou annulée non remboursée ; hors sous-traitance ; prix ÷ 1,06.
+-- Taux : _bill_rates(pays de la fleet) d'après billing_settings (comme core/billing.ts).
