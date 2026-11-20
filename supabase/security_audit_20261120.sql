@@ -4,3 +4,6 @@
 -- • apply_signup_role : plus de bascule client ↔ fleet dès que le compte a servi (course, offre, véhicule, document, validation).
 -- • rides_count_since : réservé à l'admin.
 -- Voir aussi invoice_amounts_server.sql et fleet_contact_private.sql (même jour).
+-- • contacts_after_payment : coordonnées fleet / chauffeur / client visibles seulement une fois la course payée
+--   (can_see_profile, ride_assigned_driver, invoice_parties) ; avant paiement, offer_fleets(ids) ne donne au
+--   client que nom de société, ville et note des fleets qui lui ont fait une offre.

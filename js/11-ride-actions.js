@@ -145,9 +145,8 @@ async function openOffersModal(rideId){
     if(offers.length > 0){
       const ids = [...new Set(offers.map(o => o.driver_id).filter(Boolean))];
       if(ids.length > 0){
-        const { data: pData } = await sb.from('profiles')
-          .select('id, first_name, last_name, company_name, rating, rating_count')
-          .in('id', ids);
+        // Avant paiement : nom de société, ville et note uniquement (coordonnées visibles après paiement)
+        const { data: pData } = await sb.rpc('offer_fleets', { p_ids: ids });
         if(pData){
           const pm = {};
           pData.forEach(p => { pm[p.id] = p; });
