@@ -146,7 +146,10 @@ window.submitEmailReg = async function(){
   if(errEl) errEl.classList.remove('show');
   var btn = document.getElementById('btn-reg-submit');
   if(btn) setLoading(btn,true,t('au.sending_code'));
-  var meta = {role, client_type:clientType, first_name:fname||null, last_name:lname||null, company_name:company||null, terms_accepted:true, terms_version:TERMS_VERSION};
+  // Fleet : la personne de contact est privée (table profile_contact, fleet + admin) ; le profil public ne porte que la société
+  var meta = role==='driver'
+    ? {role, client_type:null, first_name:company, last_name:null, company_name:company, contact_first_name:fname, contact_last_name:lname, terms_accepted:true, terms_version:TERMS_VERSION}
+    : {role, client_type:clientType, first_name:fname||null, last_name:lname||null, company_name:company||null, terms_accepted:true, terms_version:TERMS_VERSION};
   var vat = (document.getElementById('inp-vat')?.value||'').trim();
   var {error} = await _sendEmailCode(email, true, meta);
   if(btn) setLoading(btn,false,t('au.recevoir_un_code'));

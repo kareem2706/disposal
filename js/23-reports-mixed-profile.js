@@ -375,6 +375,8 @@ function loadProfileForm(){
   var fn=currentProfile.first_name||'',ln=currentProfile.last_name||'',co=currentProfile.company_name||currentProfile.first_name||'';
   // Anciens comptes : le prénom contenait le nom de société → champ vide à compléter
   if(showC && fn && fn===co && !ln) fn='';
+  // Fleet : la personne de contact vient de la table privée profile_contact (chargée plus bas)
+  if(role==='driver'){ fn=''; ln=''; }
   var set=function(id,v){var el=document.getElementById(id);if(el)el.value=v;};
   set('pf-fname',fn);set('pf-lname',ln);set('pf-company',co);set('pf-phone',currentProfile.phone||'');set('pf-vat',currentProfile.vat_number||'');
   set('pf-street',currentProfile.address_street||'');set('pf-postal',currentProfile.address_postal||'');set('pf-city',currentProfile.address_city||'');
@@ -413,9 +415,19 @@ function loadProfileForm(){
     var fnEl=document.getElementById('pf-fname');
     var lnEl=document.getElementById('pf-lname');
     // Personne de contact : verrouillée une fois la fleet validée, sauf si elle n'a jamais été renseignée
-    var lockN = isVerified && !!(fnEl&&fnEl.value) && !!(lnEl&&lnEl.value);
-    if(fnEl){fnEl.disabled=lockN;fnEl.style.opacity=lockN?'0.5':'1';fnEl.style.cursor=lockN?'not-allowed':'text';}
-    if(lnEl){lnEl.disabled=lockN;lnEl.style.opacity=lockN?'0.5':'1';lnEl.style.cursor=lockN?'not-allowed':'text';}
+    var _lockC=function(){
+      var lockN = isVerified && !!(fnEl&&fnEl.value) && !!(lnEl&&lnEl.value);
+      if(fnEl){fnEl.disabled=lockN;fnEl.style.opacity=lockN?'0.5':'1';fnEl.style.cursor=lockN?'not-allowed':'text';}
+      if(lnEl){lnEl.disabled=lockN;lnEl.style.opacity=lockN?'0.5':'1';lnEl.style.cursor=lockN?'not-allowed':'text';}
+    };
+    _lockC();
+    // Table privée profile_contact : lisible par la fleet et l'admin uniquement (jamais par les clients)
+    if(sb && currentUser) sb.from('profile_contact').select('first_name,last_name').eq('user_id',currentUser.id).maybeSingle().then(function(res){
+      var c=res&&res.data; if(!c) return;
+      currentProfile._contact=c;
+      if(fnEl) fnEl.value=c.first_name||''; if(lnEl) lnEl.value=c.last_name||'';
+      _lockC();
+    },function(){});
     // Nom de société vérifié : grisé et non modifiable
     var coEl=document.getElementById('pf-company');
     if(coEl){coEl.disabled=isVerified;coEl.style.opacity=isVerified?'0.5':'1';coEl.style.cursor=isVerified?'not-allowed':'text';coEl.style.background=isVerified?'var(--sand2)':'';}

@@ -140,8 +140,8 @@ function _adminFleetEditForm(f){
     +'<div class="form-grid">'
       +inp('af-company','Nom de soci\u00e9t\u00e9',f.company_name,'Goodrivers SRL')
       +inp('af-vat','Num\u00e9ro de TVA',f.vat_number,'BE0123456789')
-      +inp('af-fname','Pr\u00e9nom (contact)',f.first_name,'Jean')
-      +inp('af-lname','Nom (contact)',f.last_name,'Dupont')
+      +inp('af-fname','Pr\u00e9nom (contact)',(f._contact||{}).first_name,'Jean')
+      +inp('af-lname','Nom (contact)',(f._contact||{}).last_name,'Dupont')
       +inp('af-phone','T\u00e9l\u00e9phone',f.phone,'+32 4xx xx xx xx')
       +'<div class="input-group"><label>Email</label><input value="'+_afEsc(f.email)+'" disabled style="opacity:.6;cursor:not-allowed;" title="L\u2019email de connexion ne peut pas \u00eatre modifi\u00e9 ici"></div>'
       +inp('af-street','Rue et num\u00e9ro',f.address_street,'Avenue Louise 54',true)
@@ -177,15 +177,18 @@ window.adminSaveFleetIdentity=async function(){
   if(err) err.classList.remove('show');
   var upd={
     company_name:g('af-company')||null, vat_number:g('af-vat')||null,
-    first_name:g('af-fname')||null, last_name:g('af-lname')||null, phone:g('af-phone')||null,
+    phone:g('af-phone')||null,
     address_street:g('af-street')||null, address_postal:g('af-postal')||null,
     address_city:g('af-city')||null, address_country:g('af-country')||null
   };
-  if(!upd.company_name && !upd.first_name && !upd.last_name){ showError(err,'Indiquez au moins un nom de soci\u00e9t\u00e9 ou un contact'); return; }
+  if(!upd.company_name){ showError(err,'Nom de soci\u00e9t\u00e9 requis'); return; }
+  if(!g('af-fname') || !g('af-lname')){ showError(err,'Pr\u00e9nom et nom du contact requis'); return; }
   if(btn){ btn.disabled=true; btn.textContent='Enregistrement...'; }
   try{
     var {error}=await sb.rpc('api_admin_save',{ p_table:'profiles', p_id:id, p_data:upd });
     if(error) throw error;
+    var rc=await sb.rpc('api_admin_contact_save',{ p_user:id, p_first:g('af-fname'), p_last:g('af-lname') });
+    if(rc.error) throw rc.error;
     showToast('\u2705 Donn\u00e9es de la fleet mises \u00e0 jour');
     await showFleetDetail(id);
   }catch(e){
@@ -207,6 +210,9 @@ window.showFleetDetail=async function(fleetId){
     // Get fleet profile
     var {data:fleet,error:fe}=await sb.from('profiles').select('*').eq('id',fleetId).single();
     if(fe) throw fe;
+    // Personne de contact : table privée (la fleet et l'admin uniquement, jamais les clients)
+    var {data:ctc}=await sb.from('profile_contact').select('first_name,last_name').eq('user_id',fleetId).maybeSingle();
+    fleet._contact=ctc||{};
     // Get docs, vehicles, drivers
     var {data:docs}=await sb.from('fleet_documents').select('*').eq('fleet_id',fleetId).order('uploaded_at',{ascending:false});
     var {data:vehicles}=await sb.from('fleet_vehicles').select('*').eq('fleet_id',fleetId).order('created_at',{ascending:false});
@@ -245,7 +251,8 @@ window.showFleetDetail=async function(fleetId){
     var html='<div class="card" style="padding:22px;margin-bottom:16px;">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">'
       +'<div><div style="font-size:18px;font-weight:700;color:var(--ink);">'+name+'</div>'
-      +'<div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+(fleet.email||'\u2014')+' &middot; '+(fleet.phone||'\u2014')+'</div></div>'
+      +'<div style="font-size:12px;color:var(--ink3);margin-top:2px;">'+(fleet.email||'\u2014')+' &middot; '+(fleet.phone||'\u2014')+'</div>'
+      +'<div style="font-size:12px;color:var(--ink2);margin-top:2px;">Contact : '+_afEsc(((fleet._contact.first_name||'')+' '+(fleet._contact.last_name||'')).trim()||'\u2014')+'</div></div>'
       +'<div style="display:flex;align-items:center;">'+globalStatusBadge+globalBtn
         +'<button class="btn btn-secondary btn-sm" style="font-size:12px;padding:5px 14px;margin-left:8px;" onclick="adminToggleFleetEdit()">Modifier</button></div>'
       +'</div>'
@@ -632,7 +639,7 @@ window.adminSaveClient=async function(){
   var g=function(k){return (document.getElementById(k)?.value||'').trim();};
   if(err) err.classList.remove('show');
   var upd={
-    first_name:g('mac-fname')||null, last_name:g('mac-lname')||null, phone:g('mac-phone')||null,
+    first_name:g('mac-fname')||undefined, last_name:g('mac-lname')||undefined, /* prénom / nom : jamais null (obligatoires en base) */ phone:g('mac-phone')||null,
     address_street:g('mac-street')||null, address_postal:g('mac-postal')||null,
     address_city:g('mac-city')||null, address_country:g('mac-country')||null
   };

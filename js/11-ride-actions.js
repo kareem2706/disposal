@@ -57,9 +57,10 @@ window.saveProfile = async function(){
   var coShown = _vis('pf-company-wrap') && _ed('pf-company');
   if(namesShown && (!gv('pf-fname') || !gv('pf-lname'))){ showToast('⚠️ '+t('au.err_names_required')); return; }
   if(coShown && !gv('pf-company')){ showToast('⚠️ '+t('au.err_company_required')); return; }
+  var isFleet = (currentProfile?.role==='driver' || currentRole==='driver');
   const updates = {
-    first_name:      namesShown ? gv('pf-fname') : undefined,
-    last_name:       namesShown ? gv('pf-lname') : undefined,
+    first_name:      (namesShown && !isFleet) ? gv('pf-fname') : undefined,
+    last_name:       (namesShown && !isFleet) ? gv('pf-lname') : undefined,
     company_name:    coShown ? (gv('pf-company') || undefined) : undefined,
     phone:           gv('pf-phone'),
     vat_number:      gv('pf-vat'),
@@ -74,6 +75,12 @@ window.saveProfile = async function(){
   if(sb && !localStorage.getItem(DEMO_MODE_KEY)){
     const { error } = await sb.rpc('api_profile_update', { p: updates });
     if(error){ showToast(t('app.erreur_3') + error.message); return; }
+    // Fleet : personne de contact enregistrée à part (privée : la fleet et l'admin uniquement)
+    if(isFleet && namesShown){
+      const rc = await sb.rpc('api_contact_save', { p_first: gv('pf-fname'), p_last: gv('pf-lname') });
+      if(rc.error){ showToast(t('app.erreur_3') + rc.error.message); return; }
+      currentProfile._contact = rc.data;
+    }
   }
   Object.assign(currentProfile, updates);
   // Update nav

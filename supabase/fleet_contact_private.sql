@@ -1,0 +1,8 @@
+-- 20/11/2026 — Personne de contact d'une fleet : table privée profile_contact
+-- (lisible par la fleet elle-même et l'administrateur, jamais par les clients).
+-- Appliqué en production via migrations : fleet_contact_private, profile_sync_fleet_contact,
+-- admin_contact_save, admin_save_skip_null_notnull.
+-- Fonctions : api_contact_save(p_first, p_last), api_admin_contact_save(p_user, p_first, p_last).
+-- api_profile_update ignore prénom/nom pour une fleet ; api_profile_sync range contact_first_name /
+-- contact_last_name (métadonnées d'inscription) dans profile_contact ; api_admin_save n'écrit jamais
+-- null dans une colonne NOT NULL.
