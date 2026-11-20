@@ -49,10 +49,15 @@ window._ntToggle=async function(el){
 window.saveProfile = async function(){
   var gv=function(id){var e=document.getElementById(id);return e?e.value.trim():'';};
   var isValidatedDriver = (currentProfile?.role==='driver' || currentRole==='driver') && currentProfile?.fleet_verified==='validated';
+  // Prénom / nom : envoyés seulement quand les champs sont affichés (client particulier)
+  var _vis=function(id){var e=document.getElementById(id);return !!(e&&e.style.display!=='none');};
+  var namesShown = !isValidatedDriver && _vis('pf-names-grid');
+  var coShown = !isValidatedDriver && _vis('pf-company-wrap');
+  if(namesShown && (!gv('pf-fname') || !gv('pf-lname'))){ showToast('⚠️ Le prénom et le nom sont obligatoires.'); return; }
   const updates = {
-    first_name:      isValidatedDriver ? undefined : gv('pf-fname'),
-    last_name:       isValidatedDriver ? undefined : gv('pf-lname'),
-    company_name:    isValidatedDriver ? undefined : (gv('pf-company') || undefined),
+    first_name:      namesShown ? gv('pf-fname') : undefined,
+    last_name:       namesShown ? gv('pf-lname') : undefined,
+    company_name:    coShown ? (gv('pf-company') || undefined) : undefined,
     phone:           gv('pf-phone'),
     vat_number:      gv('pf-vat'),
     address_street:  gv('pf-street'),
