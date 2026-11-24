@@ -35,6 +35,7 @@ const stateOf = (r: { details_submitted?: boolean; payouts_enabled?: boolean; re
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  let beta = false;
   try {
     const token = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
     const { data: u, error: uErr } = await admin.auth.getUser(token);
@@ -43,8 +44,12 @@ Deno.serve(async (req: Request) => {
     if (await mfaBlocked(token, user.id)) return json({ error: MFA_MSG }, 403);
 
     const { data: prof } = await admin.from("profiles")
-      .select("id, role, email, company_name, first_name, last_name, address_country").eq("id", user.id).maybeSingle();
+      .select("id, role, email, company_name, first_name, last_name, address_country, stripe_beta").eq("id", user.id).maybeSingle();
     if (!prof || prof.role !== "driver") return json({ error: "Réservé aux flottes" }, 403);
+    beta = !!prof.stripe_beta;
+    // Inscription Stripe ouverte seulement aux fleets de test tant que billing_settings.stripe_connect_open = false
+    const { data: bs } = await admin.from("billing_settings").select("stripe_connect_open").order("id").limit(1).maybeSingle();
+    if (!bs?.stripe_connect_open && !prof.stripe_beta) return json({ error: "Les versements automatiques seront bientôt disponibles." }, 403);
 
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || "status");
@@ -95,6 +100,7 @@ Deno.serve(async (req: Request) => {
   } catch (e) {
     console.error("stripe-connect", e);
     const msg = String((e as any)?.message ?? "");
-    return json({ error: "Erreur Stripe" + (msg ? " : " + msg.slice(0, 200) : "") }, 400);
+    // détail technique seulement pour les fleets de test ; message simple pour les autres
+    return json({ error: beta ? "Erreur Stripe" + (msg ? " : " + msg.slice(0, 200) : "") : "Le service de paiement est momentanément indisponible. Réessayez plus tard." }, 400);
   }
 });

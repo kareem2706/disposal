@@ -7,3 +7,6 @@
 -- • contacts_after_payment : coordonnées fleet / chauffeur / client visibles seulement une fois la course payée
 --   (can_see_profile, ride_assigned_driver, invoice_parties) ; avant paiement, offer_fleets(ids) ne donne au
 --   client que nom de société, ville et note des fleets qui lui ont fait une offre.
+-- 24/11/2026 — stripe_connect_beta : inscription Stripe fermée par défaut (billing_settings.stripe_connect_open),
+--   ouverte aux fleets de test (profiles.stripe_beta, Goodrivers) ; fonction stripe_open() ; contrôle aussi dans
+--   l'Edge Function stripe-connect. Ouverture à tous : update billing_settings set stripe_connect_open = true;

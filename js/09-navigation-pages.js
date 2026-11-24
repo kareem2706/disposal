@@ -573,6 +573,8 @@ var _fleetStripeOk=null, _fleetStripePending=false;
 async function _loadFleetStripeOk(){
   if(!sb || !currentUser?.id || currentRole!=='driver' || currentUser.email===ADMIN_EMAIL || localStorage.getItem(DEMO_MODE_KEY)==='1'){ _fleetStripeOk=null; return; }
   try{
+    // Inscription Stripe pas encore ouverte à cette fleet : aucun bandeau ni blocage Stripe (le serveur reste juge)
+    var so=await sb.rpc('stripe_open'); if(so.error || so.data!==true){ _fleetStripeOk=null; return; }
     var r=await sb.from('fleet_stripe').select('payouts_enabled,details_submitted').eq('driver_id',currentUser.id).maybeSingle();
     if(r.error){ _fleetStripeOk=null; return; }
     _fleetStripeOk=!!(r.data&&r.data.payouts_enabled);

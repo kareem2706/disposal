@@ -125,6 +125,8 @@ var _stripeState=null;
 async function loadStripeStatus(){
   var card=document.getElementById('pf-stripe-card');
   if(!card || currentRole!=='driver' || localStorage.getItem(DEMO_MODE_KEY)==='1'){ if(card) card.style.display='none'; return; }
+  // Inscription Stripe : seulement pour les fleets de test tant qu'elle n'est pas ouverte à tous (serveur : stripe_open)
+  try{ var so=await sb.rpc('stripe_open'); if(so.error || so.data!==true){ card.style.display='none'; return; } }catch(e){ card.style.display='none'; return; }
   card.style.display='';
   var row=null, pays=[];
   try{
