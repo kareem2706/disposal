@@ -1194,3 +1194,23 @@ window.adminSetStatus=async function(table, id, newStatus){
   }catch(e){showToast('Erreur: '+(e.message||e));}
 };
 
+
+// ── Suppression du compte : demande enregistrée par le serveur (api_account_delete_request),
+// traitée par l'administrateur sous 30 jours (legal/suppression-compte) ──
+window.requestAccountDeletion=async function(){
+  if(!sb || !currentUser) return;
+  var ok=await _uiConfirm({ danger:true, title:'Supprimer votre compte ?',
+    sub:'Votre compte et vos données seront supprimés sous 30 jours (site et application). Les factures sont conservées le temps exigé par la loi. '
+      +'<a href="legal/suppression-compte.html" target="_blank" rel="noopener">En savoir plus</a>',
+    confirm:'Demander la suppression', cancel:'Annuler' });
+  if(!ok) return;
+  try{
+    var r=await sb.rpc('api_account_delete_request');
+    // fonction serveur pas encore disponible : demande par e-mail
+    if(r.error && /PGRST202|Could not find the function/i.test((r.error.code||'')+' '+(r.error.message||''))){
+      location.href='mailto:info@bleenr.com?subject='+encodeURIComponent('Suppression de mon compte Bleenr'); return;
+    }
+    if(r.error) throw r.error;
+    showToast('✅ Demande de suppression enregistrée : vous recevrez une confirmation par e-mail.');
+  }catch(e){ showToast('❌ '+(e.message||'Erreur')); }
+};

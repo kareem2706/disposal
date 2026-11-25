@@ -145,6 +145,7 @@
   "ap.pologne": "Pologne",
   "ap.portugal": "Portugal",
   "ap.pour_modifier_l_e_mail": "Pour modifier l'e-mail de connexion, contactez <a href=\"mailto:info@bleenr.com\" style=\"color:var(--green);font-weight:600;\">info@bleenr.com</a>.",
+  "ap.supprimer_compte": "Supprimer mon compte",
   "ap.prenom": "Prénom",
   "ap.profil": "Profil",
   "ap.qatar": "Qatar",

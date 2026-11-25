@@ -1253,6 +1253,8 @@ function _vw(){ return window._IPAD_MOB?Math.min(window.innerWidth,430):window.i
           <div id="fleet-drivers-list" style="font-size:13px;color:var(--ink3);">Chargement...</div>
         </div>
       </div>
+      <!-- Suppression du compte (legal/suppression-compte) : demande traitée sous 30 jours -->
+      <div class="pf-del"><a href="#" onclick="requestAccountDeletion();return false;" data-i18n="ap.supprimer_compte">Supprimer mon compte</a></div>
       <!-- Déconnexion : tout en bas du profil, après toutes les cartes -->
       <button type="button" class="ch-out pf-out" onclick="signOut()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v8"/><path d="M6.3 6.7a8 8 0 1011.4 0"/></svg><span data-i18n="ap.logout">Déconnexion</span></button>
     </div>
