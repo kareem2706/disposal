@@ -5,6 +5,10 @@ on:
   # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
+    # la redirection ne change que si ces fichiers changent : plus d'exécution (ni d'e-mail d'échec) à chaque mise à jour du site
+    paths:
+      - "scripts/gh-redirect.mjs"
+      - ".github/workflows/static.yml"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
