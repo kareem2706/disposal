@@ -10,3 +10,5 @@
 -- 24/11/2026 — stripe_connect_beta : inscription Stripe fermée par défaut (billing_settings.stripe_connect_open),
 --   ouverte aux fleets de test (profiles.stripe_beta, Goodrivers) ; fonction stripe_open() ; contrôle aussi dans
 --   l'Edge Function stripe-connect. Ouverture à tous : update billing_settings set stripe_connect_open = true;
+-- 25/11/2026 — account_deletion_requests : table + api_account_delete_request() (site, app, legal/suppression-compte) ;
+--   notification à l'admin ; suppression effectuée par l'admin sous 30 jours.
