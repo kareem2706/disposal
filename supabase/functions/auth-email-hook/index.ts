@@ -67,8 +67,10 @@ function build(d: EmailData, code: string, hash: string, account: string, forwar
   if (t === "recovery") {
     return {
       subject: "Réinitialisation de votre mot de passe Bleenr",
-      html: layout("Réinitialisez votre mot de passe.", forFor + "Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe." + (code ? " Vous pouvez aussi saisir ce code :" : ""),
-        code ? codeCard(esc(code), limit) : "", { label: "Choisir un nouveau mot de passe", url: verifyUrl(d, hash, "recovery") }),
+      // lien uniquement (pas de code) : le nouveau mot de passe se choisit sur la page ouverte par le bouton
+      html: layout("Réinitialisez votre mot de passe.", forFor.replace("Code destiné", "Lien destiné") +
+        "Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe. Ce lien est valable pendant une durée limitée.",
+        "", { label: "Choisir un nouveau mot de passe", url: verifyUrl(d, hash, "recovery") }),
     };
   }
   if (t === "email_change") {
