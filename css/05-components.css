@@ -610,7 +610,10 @@ body .sub-cli-box{background:#F8F7F4!important;}
 
 /* Fiche sous-traitance : montant selon le rôle (Votre offre / Montant de l'offre acceptée) */
 #detail-ft.has-sub-amt{flex-wrap:wrap;}
-#detail-ft .rd-sub-amt{flex:0 0 100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#EEF8C4;color:var(--ink);border-radius:14px;padding:10px 14px;font-size:13.5px;}
+/* menu ⋮ et montant sur la même ligne, le reste (bouton d'action) en dessous */
+#detail-ft.has-sub-amt > .ft-menu{order:0;flex:0 0 auto;}
+#detail-ft.has-sub-amt > :not(.ft-menu):not(.rd-sub-amt){order:2;}
+#detail-ft .rd-sub-amt{flex:1 1 calc(100% - 64px);min-width:0;order:1;display:flex;align-items:center;justify-content:space-between;gap:10px;background:#EEF8C4;color:var(--ink);border-radius:14px;padding:10px 14px;font-size:13.5px;}
 #detail-ft .rd-sub-amt span{font-weight:500;}
 #detail-ft .rd-sub-amt b{font-weight:700;font-size:15px;white-space:nowrap;}
 
