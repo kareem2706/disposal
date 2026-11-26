@@ -155,10 +155,12 @@ export function steps(title: string, items: string[]) {
 
 // Code à saisir (connexion, inscription…)
 export function codeCard(code: string, caption = "") {
-  return box(`<div style="text-align:center;">
-      <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:34px;font-weight:700;letter-spacing:12px;color:${GREEN};padding-left:12px;">${code}</div>
-      ${caption ? `<div style="font-family:${FONT};font-size:13px;color:${INK3};margin-top:8px;">${caption}</div>` : ""}
-    </div>`);
+  // Cadre noir, code en lemon (couleurs de l'app)
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td align="center" bgcolor="#0E1410" style="background:#0E1410;border-radius:12px;padding:24px 18px 20px;text-align:center;">
+      <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:34px;font-weight:700;letter-spacing:12px;color:${LEMON};padding-left:12px;">${code}</div>
+      ${caption ? `<div style="font-family:${FONT};font-size:13px;color:#9AA59E;margin-top:10px;">${caption}</div>` : ""}
+    </td></tr></table>`;
 }
 
 // Environnement de développement : secret MAIL_REDIRECT_ALL = une adresse → TOUS les e-mails lui sont envoyés,
