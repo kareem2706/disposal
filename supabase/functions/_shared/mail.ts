@@ -58,8 +58,7 @@ ${o.preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0
       ${o.note ? `<tr><td align="center" style="padding:14px 32px 0;font-family:${FONT};font-size:13px;line-height:1.5;color:${INK3};">${o.note}</td></tr>` : ""}
       <tr><td style="padding:26px 32px 26px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${LINE};"><tr>
-          <td style="padding-top:18px;font-family:${FONT};font-size:12.5px;color:${INK3};"><b style="color:${BLACK};font-size:14px;letter-spacing:-.02em;">Bleenr</b>&nbsp;·&nbsp;Chauffeurs privés</td>
-          <td align="right" style="padding-top:18px;font-family:${FONT};font-size:12.5px;color:${INK3};">Besoin d'aide ? <a href="mailto:${SUPPORT}" style="color:${BLACK};text-decoration:underline;">${SUPPORT}</a></td>
+          <td align="center" style="padding-top:18px;font-family:${FONT};font-size:12.5px;color:${INK3};">Besoin d'aide ? <a href="mailto:${SUPPORT}" style="color:${BLACK};text-decoration:underline;">${SUPPORT}</a></td>
         </tr></table>
       </td></tr>
     </table>
