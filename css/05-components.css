@@ -632,3 +632,7 @@ label.req::after{content:" *";color:#C8102E;font-weight:700;}
 .th-client .pf-del{padding:0 4px;}
 .pf-del a{font-size:12.5px;color:var(--ink3);text-decoration:underline;}
 .pf-del a:hover{color:var(--red);}
+
+/* Admin › Courses : bouton « Suivre la course » sur une course en cours */
+.ar-follow{display:inline-flex;align-items:center;margin-left:6px;white-space:nowrap;padding:5px 11px;font-size:11.5px;}
+.ar-card .ar-follow{margin:8px 0 0;}

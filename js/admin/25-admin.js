@@ -1280,6 +1280,12 @@ function _arRenderTable(rides, el){
       ? '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--amber-bg);color:var(--amber);margin-left:3px;flex-shrink:0;" title="Sous-traitée"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>'
       : '';
     var safeR = JSON.stringify(r).replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // Course en cours (chauffeur en route ou client à bord) : suivi en direct
+    var isLive = r.status==='active' || (r.status==='confirmed' && r.on_way_at);
+    var liveBtn = isLive
+      ? '<button type="button" class="btn btn-green btn-sm ar-follow" onclick="event.stopPropagation();openLiveTracking(\''+String(r.id).replace(/'/g,'')+'\')"><span class="live-dot" style="width:7px;height:7px;margin-right:6px;background:#fff;"></span>Suivre la course</button>'
+      : '';
+    if(isLive){ sLbl='En cours'; sBg='var(--green-bg)'; sCol='var(--green)'; }
 
     var refundBadge = ((r.status==='cancelled' && r.final_price && r.payment_method && r.payment_method!=='refunded' && r.payment_method!=='non_refundable') || (r.status!=='cancelled' && _partialRefund(r)>0))
       ? '<span style="font-size:10px;font-weight:700;background:var(--red-bg);color:var(--red);padding:2px 7px;border-radius:20px;margin-left:4px;white-space:nowrap;">⚠ Remb.</span>'
@@ -1290,6 +1296,7 @@ function _arRenderTable(rides, el){
       +'<div class="ar-c1"><span class="ar-code">'+code+'</span><span class="ar-pill" style="background:'+sBg+';color:'+sCol+';">'+sLbl+'</span>'+refundBadge+'</div>'
       +'<div class="ar-c2"><span>'+dateStr+'</span><span class="ar-pill" style="background:'+tBg+';color:'+tCol+';">'+tLbl+'</span>'+subIcon+'<b class="ar-price">'+price+'</b></div>'
       +'<div class="ar-c3"><span>'+_rdEsc(clientName)+'</span><span class="ar-arrow">→</span><span>'+_rdEsc(driverName)+'</span></div>'
+      +(liveBtn?'<div class="ar-c4">'+liveBtn+'</div>':'')
       +(rating?'<div class="ar-c4">'+ratingHtml+'</div>':'')
     +'</div>');
     return '<tr style="border-bottom:1px solid var(--sand2);cursor:pointer;transition:background .15s;" onclick="arOpenDetail(this)" data-ride=\''+safeR+'\' onmouseenter="this.style.background=\'var(--sand)\'" onmouseleave="this.style.background=\'\'">'
@@ -1298,7 +1305,7 @@ function _arRenderTable(rides, el){
       +'<td style="padding:10px 14px;font-size:12px;font-family:monospace;font-weight:600;color:var(--ink2);">'+code+'</td>'
       +'<td style="padding:10px 14px;font-size:13px;font-weight:500;">'+_rdEsc(clientName)+'</td>'
       +'<td style="padding:10px 14px;font-size:13px;">'+driverName+'</td>'
-      +'<td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;"><span style="font-size:11px;font-weight:600;background:'+sBg+';color:'+sCol+';padding:3px 9px;border-radius:20px;white-space:nowrap;">'+sLbl+'</span>'+refundBadge+'</div></td>'
+      +'<td style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;"><span style="font-size:11px;font-weight:600;background:'+sBg+';color:'+sCol+';padding:3px 9px;border-radius:20px;white-space:nowrap;">'+sLbl+'</span>'+refundBadge+liveBtn+'</div></td>'
       +(function(){var pm=r.payment_method||''; var pmMap={'stripe':'💳 Stripe','bank_transfer':'🏦 Virement','non_refundable':'Non remb.','refunded':'✅ Remboursé','cash':'💵 Cash'};var pmLabel=pmMap[pm]||(pm||'—'); return '<td style="padding:10px 14px;font-size:12px;color:var(--ink3);white-space:nowrap;">'+pmLabel+'</td>'; })()
       +'<td style="padding:10px 14px;font-size:13px;font-weight:600;text-align:right;white-space:nowrap;">'+price+'</td>'
       +'<td style="padding:10px 14px;white-space:nowrap;">'+ratingHtml+'</td>'
@@ -1764,7 +1771,7 @@ window.refreshAdminDashboard = async function() {
 };
 
 async function loadAdminDashboard() {
-  _loadAdminLive();
+  // Suivi des courses en cours : depuis la page Courses (bouton « Suivre »), plus sur le tableau de bord
   await refreshAdminDashboard();
 }
 
