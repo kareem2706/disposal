@@ -1638,16 +1638,21 @@ window.refreshAdminDashboard = async function() {
     }
 
     // Query clients and fleets (all time for top stats)
-    var [clientsRes, fleetsRes, ridesRes] = await Promise.all([
-      sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','client'),
-      sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','driver'),
-      sb.from('rides').select('id,final_price,ride_date,status,is_subcontract,payment_method,refund_due,refund_done_at,trip_type,event_id,event_kind'),
-      sb.from('fleet_drivers').select('id', {count:'exact',head:true})
-    ]).then(function(a){ window._admDrvCount=a[3]&&a[3].count||0; return a; });
+    // Comptes de démonstration (vérification Apple / Google, profiles.is_demo) : exclus des statistiques
+    var [clientsRes, fleetsRes, ridesRes, , demoRes] = await Promise.all([
+      sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','client').eq('is_demo',false),
+      sb.from('profiles').select('id', {count:'exact',head:true}).eq('role','driver').eq('is_demo',false),
+      sb.from('rides').select('id,client_id,driver_id,final_price,ride_date,status,is_subcontract,payment_method,refund_due,refund_done_at,trip_type,event_id,event_kind'),
+      sb.from('fleet_drivers').select('id,fleet_id'),
+      sb.from('profiles').select('id').eq('is_demo',true)
+    ]).then(function(a){
+      var demo={}; ((a[4]&&a[4].data)||[]).forEach(function(p){ demo[p.id]=1; }); window._admDemo=demo;
+      window._admDrvCount=((a[3]&&a[3].data)||[]).filter(function(d){ return !demo[d.fleet_id]; }).length; return a; });
 
     var totalClients = clientsRes.count || 0;
     var totalFleets  = fleetsRes.count  || 0;
-    var allRides     = ridesRes.data    || [];
+    var _demo = window._admDemo || {};
+    var allRides     = (ridesRes.data || []).filter(function(r){ return !_demo[r.client_id] && !_demo[r.driver_id]; });
 
     // All-time totals for top stat cards
     // Courses réellement effectuées (statut « terminée »)
